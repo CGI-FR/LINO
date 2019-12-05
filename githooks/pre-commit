@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+#git stash -q --keep-index
+make lint test
+#git stash pop -q

@@ -1,0 +1,29 @@
+version: '3.3'
+
+services:
+   source:
+     image: frantiseks/postgres-sakila
+     restart: always
+     environment:
+       POSTGRES_PASSWORD: sakila
+     ports:
+      - 5432:5432
+
+   dest:
+     image: frantiseks/postgres-sakila
+     restart: always
+     environment:
+       POSTGRES_PASSWORD: sakila
+     ports:
+      - 5433:5432
+
+   admin:
+     image: dockage/phppgadmin
+     restart: always
+     environment:
+       PHP_PG_ADMIN_SERVER_DESC: sakila
+       PHP_PG_ADMIN_SERVER_HOST: source
+       PHP_PG_ADMIN_SERVER_SSL_MODE: disable
+
+     ports:
+      - 80:80

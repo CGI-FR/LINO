@@ -1,0 +1,13 @@
+/bin/
+
+dataconnector.yaml
+tables.yaml
+relations.yaml
+ingress-descriptor.yaml
+ingress-descriptor.dot
+
+# IDE integration
+/.vscode/*
+!/.vscode/launch.json
+!/.vscode/tasks.json
+/.history

@@ -8,6 +8,7 @@ import (
 	"makeit.imfr.cgi.com/lino/internal/app/dataconnector"
 	"makeit.imfr.cgi.com/lino/internal/app/extract"
 	"makeit.imfr.cgi.com/lino/internal/app/id"
+	"makeit.imfr.cgi.com/lino/internal/app/load"
 	"makeit.imfr.cgi.com/lino/internal/app/relation"
 	"makeit.imfr.cgi.com/lino/internal/app/table"
 )
@@ -61,6 +62,7 @@ func init() {
 	rootCmd.AddCommand(relation.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(id.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(extract.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
+	rootCmd.AddCommand(load.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 }
 
 func initConfig() {
@@ -86,10 +88,12 @@ func initConfig() {
 
 	id.SetLogger(logger)
 	extract.SetLogger(logger)
+	load.SetLogger(logger)
 
 	dataconnector.Inject(dataconnectorStorage())
 	relation.Inject(dataconnectorStorage(), relationStorage(), relationExtractorFactory())
 	table.Inject(dataconnectorStorage(), tableStorage(), tableExtractorFactory())
 	id.Inject(idStorage(), relationStorage(), idExporter())
 	extract.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), extractDataSourceFactory(), extractRowExporter(os.Stdout))
+	load.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), loadDataDestinationFactory(), loadRowIterator(os.Stdin))
 }

@@ -16,6 +16,8 @@ func (p plan) RelationsFromTable(table Table) map[string]Relation {
 	for _, r := range p.relations {
 		if r.Parent().Name() == table.Name() {
 			result[r.Name()] = r
+		} else if r.Child().Name() == table.Name() {
+			result[r.Name()] = r
 		}
 	}
 	return result

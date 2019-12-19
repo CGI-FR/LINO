@@ -92,12 +92,12 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
 		relation := relation.Relation{
 			Name: relationName,
 			Parent: relation.Table{
-				Name: sourceSchema + "." + sourceTable,
-				Keys: []string{sourceColumn},
-			},
-			Child: relation.Table{
 				Name: targetSchema + "." + targetTable,
 				Keys: []string{targetColumn},
+			},
+			Child: relation.Table{
+				Name: sourceSchema + "." + sourceTable,
+				Keys: []string{sourceColumn},
 			},
 		}
 		relations = append(relations, relation)

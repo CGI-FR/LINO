@@ -23,7 +23,7 @@ var extractExporter extract.RowExporter
 
 // local flags
 var limit uint
-var pk int
+var pk string
 
 var logger extract.Logger
 
@@ -72,7 +72,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		},
 	}
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")
-	cmd.Flags().IntVarP(&pk, "filter", "f", -1, "filter on primary key of start table")
+	cmd.Flags().StringVarP(&pk, "filter", "f", "", "filter on primary key of start table")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
@@ -117,7 +117,7 @@ func getExtractionPlan() (extract.Plan, *extract.Error) {
 
 	stepList := getStepList(ep, relations, tables)
 
-	if pk == -1 {
+	if pk == "" {
 		filter = extract.NewFilter(limit, extract.Row{})
 	} else {
 		filter = extract.NewFilter(limit, extract.Row{stepList.Step(0).Entry().PrimaryKey(): pk})

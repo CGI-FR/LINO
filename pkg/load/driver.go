@@ -37,12 +37,15 @@ func filterRelation(row Row, relations map[string]Relation) (Row, map[Relation]R
 			case map[string]interface{}:
 				sr := Row{}
 				for k, v := range tv {
-					if vv, ok := v.(Value); !ok {
+					switch vv := v.(type) {
+					case nil: // nil is not interface {} !
+						sr[k] = vv
+					case interface{}:
+						sr[k] = vv
+					default:
 						logger.Trace(fmt.Sprintf("k = %s", k))
 						logger.Trace(fmt.Sprintf("t = %T", v))
 						logger.Trace(fmt.Sprintf("v = %s", v))
-					} else {
-						sr[k] = vv
 					}
 				}
 				frel[rel] = sr

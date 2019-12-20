@@ -1,5 +1,7 @@
 package dataconnector
 
+import "fmt"
+
 // Add an alias to the storage, if it does not exist
 func Add(s Storage, m *DataConnector) *Error {
 	exist, err := Get(s, m.Name)
@@ -27,7 +29,7 @@ func Get(s Storage, name string) (*DataConnector, *Error) {
 			return &a, nil
 		}
 	}
-	return nil, nil
+	return nil, &Error{Description: fmt.Sprintf("Data Connector %s not found", name)}
 }
 
 // List all stored aliases

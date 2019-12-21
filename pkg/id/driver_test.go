@@ -390,6 +390,19 @@ func TestUpdateStartTableCheckTable(t *testing.T) {
 	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("old"), id.NewIngressRelationList([]id.IngressRelation{})), storage.id)
 }
 
+func TestUpdateParentLookup(t *testing.T) {
+	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("A"), id.NewIngressRelationList([]id.IngressRelation{
+		adRelationString("A->B", false, true),
+	}))}
+
+	err := id.SetParentLookup("A_B", true, storage)
+
+	assert.Nil(t, err)
+	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("A"), id.NewIngressRelationList([]id.IngressRelation{
+		adRelationString("A->B", true, true),
+	})), storage.id)
+}
+
 func TestGetSteps(t *testing.T) {
 	for i, tt := range adShowTests {
 		t.Run(fmt.Sprintf("test get step %d", i), func(t *testing.T) {

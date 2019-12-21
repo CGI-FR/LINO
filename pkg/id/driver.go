@@ -59,6 +59,32 @@ func Create(startTable string, relReader RelationReader, storage Storage) *Error
 	return nil
 }
 
+// SetStartTable update ingress descriptor start table
+func SetStartTable(table Table, storage Storage) *Error {
+	id, err := storage.Read()
+
+	if err != nil {
+		return err
+	}
+
+	tableExist := false
+	for i := uint(0); i < id.Relations().Len(); i++ {
+		rel := id.Relations().Relation(i)
+		tableExist = tableExist || rel.Parent() == table || rel.Child() == table
+	}
+	if !tableExist {
+		return &Error{Description: fmt.Sprintf("Table %s doesn't exist", table.Name())}
+	}
+
+	updatedID := NewIngressDescriptor(table, id.Relations())
+
+	err = storage.Store(updatedID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetExtractionPlan returns the calculated extraction plan.
 func GetExtractionPlan(storage Storage) (ExtractionPlan, *Error) {
 	id, err := storage.Read()

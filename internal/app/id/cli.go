@@ -40,6 +40,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.AddCommand(newDisplayPlanCommand(fullName, err, out, in))
 	cmd.AddCommand(newShowGraphCommand(fullName, err, out, in))
 	cmd.AddCommand(newExportCommand(fullName, err, out, in))
+	cmd.AddCommand(newSetStartTableCommand(fullName, err, out, in))
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

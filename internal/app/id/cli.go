@@ -41,6 +41,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.AddCommand(newShowGraphCommand(fullName, err, out, in))
 	cmd.AddCommand(newExportCommand(fullName, err, out, in))
 	cmd.AddCommand(newSetStartTableCommand(fullName, err, out, in))
+	cmd.AddCommand(newSetChildLookupCommand(fullName, err, out, in))
 	cmd.AddCommand(newSetParentLookupCommand(fullName, err, out, in))
 	cmd.SetOut(out)
 	cmd.SetErr(err)

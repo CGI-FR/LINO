@@ -85,6 +85,37 @@ func SetStartTable(table Table, storage Storage) *Error {
 	return nil
 }
 
+// SetChildLookup update child lookup relation's parameter in ingress descriptor
+func SetChildLookup(relation string, flag bool, storage Storage) *Error {
+	id, err := storage.Read()
+
+	if err != nil {
+		return err
+	}
+
+	if !id.Relations().Contains(relation) {
+		return &Error{Description: fmt.Sprintf("Relation %s doesn't exist", relation)}
+	}
+
+	relations := make([]IngressRelation, id.Relations().Len())
+
+	for i := uint(0); i < id.Relations().Len(); i++ {
+		rel := id.Relations().Relation(i)
+		if rel.Name() == relation {
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), flag)
+		}
+		relations[i] = rel
+	}
+
+	updatedID := NewIngressDescriptor(id.StartTable(), NewIngressRelationList(relations))
+
+	err = storage.Store(updatedID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // SetParentLookup update parent lookup relation's parameter in ingress descriptor
 func SetParentLookup(relation string, flag bool, storage Storage) *Error {
 	id, err := storage.Read()

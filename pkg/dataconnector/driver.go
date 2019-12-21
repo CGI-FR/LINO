@@ -29,7 +29,7 @@ func Get(s Storage, name string) (*DataConnector, *Error) {
 			return &a, nil
 		}
 	}
-	return nil, &Error{Description: fmt.Sprintf("Data Connector %s not found", name)}
+	return nil, nil
 }
 
 // List all stored aliases

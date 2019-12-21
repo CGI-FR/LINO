@@ -7,9 +7,6 @@ import (
 	"makeit.imfr.cgi.com/lino/pkg/id"
 )
 
-// Version of the YAML strcuture.
-const Version string = "v1"
-
 // YAMLStructure of the file.
 type YAMLStructure struct {
 	Version           string                `yaml:"version"`

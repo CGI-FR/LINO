@@ -65,7 +65,7 @@ func (e extractor) extractStep(step Step, filter Filter, export func(Row) *Error
 					relatedToRow[rel.Name()] = []Row{}
 				}
 				if err := e.extractStep(nextStep, nextFilter, func(r Row) *Error {
-					if directionParent {
+					if !directionParent {
 						rowArray, ok := relatedToRow[rel.Name()].([]Row)
 						if !ok {
 							return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", nextStep.Entry().Name(), rel.Name())}
@@ -122,7 +122,7 @@ func (e extractor) exhaust(step Step, allRows map[string][]Row) *Error {
 					break
 				}
 
-				if directionParent {
+				if !directionParent {
 					if fromRow[relation.Name()] == nil {
 						fromRow[relation.Name()] = []Row{}
 					}
@@ -186,10 +186,10 @@ func relatedTo(from Table, follow Relation, data Row) Filter {
 	var row Row
 	switch from.Name() {
 	case follow.Parent().Name():
-		logger.Trace(fmt.Sprintf("extract: build filter %v=data[%v]=%v", follow.ChildKey(), follow.ParentKey(), data[follow.ParentKey()]))
+		logger.Trace(fmt.Sprintf("extract: build parent filter %v=data[%v]=%v", follow.ChildKey(), follow.ParentKey(), data[follow.ParentKey()]))
 		row = Row{follow.ChildKey(): data[follow.ParentKey()]}
 	case follow.Child().Name():
-		logger.Trace(fmt.Sprintf("extract: build filter %v=data[%v]=%v", follow.ParentKey(), follow.ChildKey(), data[follow.ChildKey()]))
+		logger.Trace(fmt.Sprintf("extract: build child filter %v=data[%v]=%v", follow.ParentKey(), follow.ChildKey(), data[follow.ChildKey()]))
 		row = Row{follow.ParentKey(): data[follow.ChildKey()]}
 	default:
 		logger.Error(fmt.Sprintf("extract: cannot build filter with row %v and relation %v to extract data from table %v", data, follow, from))

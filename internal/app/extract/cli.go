@@ -82,6 +82,9 @@ func getDataSource(dataconnectorName string) (extract.DataSource, *extract.Error
 	if e1 != nil {
 		return nil, &extract.Error{Description: e1.Error()}
 	}
+	if alias == nil {
+		return nil, &extract.Error{Description: fmt.Sprintf("Data Connector %s not found", dataconnectorName)}
+	}
 
 	u, e2 := dburl.Parse(alias.URL)
 	if e2 != nil {

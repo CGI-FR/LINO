@@ -368,6 +368,54 @@ var adShowTests = []struct {
 	}, */
 }
 
+func TestUpdateStartTable(t *testing.T) {
+	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("old"), id.NewIngressRelationList([]id.IngressRelation{
+		adRelationString("old->new", false, true),
+	}))}
+
+	err := id.SetStartTable(id.NewTable("new"), storage)
+
+	assert.Nil(t, err)
+	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("new"), id.NewIngressRelationList([]id.IngressRelation{
+		adRelationString("old->new", false, true),
+	})), storage.id)
+}
+
+func TestUpdateStartTableCheckTable(t *testing.T) {
+	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("old"), id.NewIngressRelationList([]id.IngressRelation{}))}
+
+	err := id.SetStartTable(id.NewTable("new"), storage)
+
+	assert.EqualError(t, err, "Table new doesn't exist")
+	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("old"), id.NewIngressRelationList([]id.IngressRelation{})), storage.id)
+}
+
+func TestUpdateParentLookup(t *testing.T) {
+	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("A"), id.NewIngressRelationList([]id.IngressRelation{
+		adRelationString("A->B", false, true),
+	}))}
+
+	err := id.SetParentLookup("A_B", true, storage)
+
+	assert.Nil(t, err)
+	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("A"), id.NewIngressRelationList([]id.IngressRelation{
+		adRelationString("A->B", true, true),
+	})), storage.id)
+}
+
+func TestUpdateChildLookup(t *testing.T) {
+	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("A"), id.NewIngressRelationList([]id.IngressRelation{
+		adRelationString("A->B", false, true),
+	}))}
+
+	err := id.SetChildLookup("A_B", false, storage)
+
+	assert.Nil(t, err)
+	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("A"), id.NewIngressRelationList([]id.IngressRelation{
+		adRelationString("A->B", false, false),
+	})), storage.id)
+}
+
 func TestGetSteps(t *testing.T) {
 	for i, tt := range adShowTests {
 		t.Run(fmt.Sprintf("test get step %d", i), func(t *testing.T) {

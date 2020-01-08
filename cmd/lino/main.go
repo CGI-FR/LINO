@@ -93,7 +93,7 @@ func initConfig() {
 	dataconnector.Inject(dataconnectorStorage())
 	relation.Inject(dataconnectorStorage(), relationStorage(), relationExtractorFactory())
 	table.Inject(dataconnectorStorage(), tableStorage(), tableExtractorFactory())
-	id.Inject(idStorage(), relationStorage(), idExporter())
+	id.Inject(idStorage(), relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
 	extract.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), extractDataSourceFactory(), extractRowExporter(os.Stdout))
 	load.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), loadDataDestinationFactory(), loadRowIterator(os.Stdin))
 }

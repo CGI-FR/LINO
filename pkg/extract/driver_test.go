@@ -37,7 +37,7 @@ func makeRel(from, to extract.Table) extract.Relation {
 	return actual[followed.Name()].([]extract.Row)
 } */
 
-func assertFollowedChild(t *testing.T, expected extract.Row, actual extract.Row, followed extract.Relation) extract.Row {
+func assertFollowedChild(t *testing.T, expected extract.Row, actual extract.Row, followed extract.Relation) []extract.Row {
 	fmt.Printf("assert %v is equal to %v after following %v\n", actual, expected, &followed)
 	cleanActual := extract.Row{}
 	for key, value := range actual {
@@ -47,8 +47,8 @@ func assertFollowedChild(t *testing.T, expected extract.Row, actual extract.Row,
 	}
 	assert.Equal(t, expected, cleanActual)
 	assert.NotNil(t, actual[followed.Name()])
-	assert.IsType(t, extract.Row{}, actual[followed.Name()])
-	return actual[followed.Name()].(extract.Row)
+	assert.IsType(t, []extract.Row{}, actual[followed.Name()])
+	return actual[followed.Name()].([]extract.Row)
 }
 
 func TestExtract1(t *testing.T) {
@@ -97,11 +97,11 @@ func TestExtract1(t *testing.T) {
 	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
 	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
 
-	C1 := assertFollowedChild(t, source[B.Name()][0], B1, BC)
-	C2 := assertFollowedChild(t, source[B.Name()][1], B2, BC)
+	C1 := assertFollowedChild(t, source[B.Name()][0], B1[0], BC)
+	C2 := assertFollowedChild(t, source[B.Name()][1], B2[0], BC)
 
-	assert.Equal(t, source[C.Name()][0], C1)
-	assert.Equal(t, source[C.Name()][1], C2)
+	assert.Equal(t, source[C.Name()][0], C1[0])
+	assert.Equal(t, source[C.Name()][1], C2[0])
 }
 
 func TestExtract2(t *testing.T) {
@@ -150,14 +150,14 @@ func TestExtract2(t *testing.T) {
 	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
 	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
 
-	assert.Equal(t, source[B.Name()][0], B1)
-	assert.Equal(t, source[B.Name()][1], B2)
+	assert.Equal(t, source[B.Name()][0], B1[0])
+	assert.Equal(t, source[B.Name()][1], B2[0])
 
 	C1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AC)
 	C2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AC)
 
-	assert.Equal(t, source[C.Name()][0], C1)
-	assert.Equal(t, source[C.Name()][1], C2)
+	assert.Equal(t, source[C.Name()][0], C1[0])
+	assert.Equal(t, source[C.Name()][1], C2[0])
 }
 
 func TestExtract3(t *testing.T) {
@@ -219,15 +219,15 @@ func TestExtract3(t *testing.T) {
 	C1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AC)
 	C2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AC)
 
-	D1 := assertFollowedChild(t, source[B.Name()][0], B1, BD)
-	D2 := assertFollowedChild(t, source[B.Name()][1], B2, BD)
-	D3 := assertFollowedChild(t, source[C.Name()][0], C1, CD)
-	D4 := assertFollowedChild(t, source[C.Name()][1], C2, CD)
+	D1 := assertFollowedChild(t, source[B.Name()][0], B1[0], BD)
+	D2 := assertFollowedChild(t, source[B.Name()][1], B2[0], BD)
+	D3 := assertFollowedChild(t, source[C.Name()][0], C1[0], CD)
+	D4 := assertFollowedChild(t, source[C.Name()][1], C2[0], CD)
 
-	assert.Equal(t, source[D.Name()][0], D1)
-	assert.Equal(t, source[D.Name()][1], D2)
-	assert.Equal(t, source[D.Name()][0], D3)
-	assert.Equal(t, source[D.Name()][1], D4)
+	assert.Equal(t, source[D.Name()][0], D1[0])
+	assert.Equal(t, source[D.Name()][1], D2[0])
+	assert.Equal(t, source[D.Name()][0], D3[0])
+	assert.Equal(t, source[D.Name()][1], D4[0])
 }
 
 func TestExtract4(t *testing.T) {
@@ -279,6 +279,6 @@ func TestExtract4(t *testing.T) {
 	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
 	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
 
-	assert.Equal(t, source[B.Name()][0], B1)
-	assert.Equal(t, source[B.Name()][1], B2)
+	assert.Equal(t, source[B.Name()][0], B1[0])
+	assert.Equal(t, source[B.Name()][1], B2[0])
 }

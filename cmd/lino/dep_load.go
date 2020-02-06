@@ -10,6 +10,7 @@ import (
 func loadDataDestinationFactory() map[string]domain.DataDestinationFactory {
 	return map[string]domain.DataDestinationFactory{
 		"postgres": infra.NewPostgresDataDestinationFactory(logger),
+		"goracle": infra.NewOracleDataDestinationFactory(logger),
 	}
 }
 

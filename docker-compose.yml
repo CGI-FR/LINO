@@ -27,3 +27,10 @@ services:
 
      ports:
       - 80:80
+
+      oracle_source:
+        image: store/oracle/database-enterprise:12.2.0.1
+        restart: always
+        ports:
+         - 1521:1521
+   

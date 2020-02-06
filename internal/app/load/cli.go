@@ -105,7 +105,7 @@ func getDataDestination(dataconnectorName string) (load.DataDestination, *load.E
 
 	datadestinationFactory, ok := datadestinationFactories[u.Unaliased]
 	if !ok {
-		return nil, &load.Error{Description: "no datadestination found for database type"}
+		return nil, &load.Error{Description: "no datadestination found for database type " + u.Unaliased}
 	}
 
 	return datadestinationFactory.New(alias.URL), nil

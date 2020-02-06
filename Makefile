@@ -19,6 +19,9 @@ PATCH := $(shell echo $(VERSION) | cut -f3 -d. | cut -f1 -d-)
 DOCKER_IMAGE = lino
 DOCKER_TAG ?= $(shell echo -n ${VERSION} | sed -e 's/[^A-Za-z0-9_\\.-]/_/g')
 
+DOCKER_IMAGE_VENOM= lino-venom
+DOCKER_IMAGE_TEST = lino-test
+
 .PHONY: help
 .DEFAULT_GOAL := help
 help:
@@ -61,7 +64,7 @@ endif
 
 .PHONY: build-%
 build-%: mkdir
-	GO111MODULE=on go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
+	GO111MODULE=on CGO_ENABLED=0 go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: build
 build: $(patsubst cmd/%,build-%,$(wildcard cmd/*)) ## Build all binaries
@@ -79,7 +82,7 @@ run: $(patsubst cmd/%,run-%,$(wildcard cmd/*)) ## Build and execute a binary
 
 .PHONY: release-%
 release-%: mkdir
-	GO111MODULE=on go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
+	GO111MODULE=on CGO_ENABLED=0 go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: release
 release: clean info lint $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
@@ -94,6 +97,24 @@ ifeq (${RELEASE}, 1)
 endif
 	@echo "Use this command to run lino"
 	@echo "    docker run --rm -ti -v $$(pwd):/home/lino ${DOCKER_IMAGE}:${DOCKER_TAG}"
+
+.PHONY: docker-venom
+docker-venom: info ## Build docker venom image locally
+	docker build -t ${DOCKER_IMAGE_VENOM}:${DOCKER_TAG} --build-arg IMAGE_NAME=${DOCKER_IMAGE_VENOM} --build-arg IMAGE_TAG=${DOCKER_TAG} --build-arg IMAGE_REVISION=${COMMIT_HASH} --build-arg IMAGE_DATE=${BUILD_DATE} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} tests/venom
+
+.PHONY: docker-test
+docker-test:  ## Build docker test image locally
+	docker build -t ${DOCKER_IMAGE_TEST}:${DOCKER_TAG} --build-arg IMAGE_NAME=${DOCKER_IMAGE_TEST} --build-arg IMAGE_TAG=${DOCKER_TAG} --build-arg IMAGE_REVISION=${COMMIT_HASH} --build-arg IMAGE_DATE=${BUILD_DATE} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} -f Dockerfile.test .
+
+.PHONY: run-docker-test
+run-docker-test: docker-test ## Exec docker test with venom
+	IMAGE_TAG=${DOCKER_TAG} docker-compose.exe stop source
+	IMAGE_TAG=${DOCKER_TAG} docker-compose.exe rm -f source
+	IMAGE_TAG=${DOCKER_TAG} docker-compose.exe stop dest
+	IMAGE_TAG=${DOCKER_TAG} docker-compose.exe rm -f dest
+	IMAGE_TAG=${DOCKER_TAG} docker-compose.exe up -d source dest
+	sleep 2
+	IMAGE_TAG=${DOCKER_TAG} docker-compose run --rm venom venom run "/tests/*/*yml"
 
 .PHONY: alias
 alias: ## Provides a lino alias to run docker image

@@ -11,3 +11,4 @@ ingress-descriptor.dot
 !/.vscode/launch.json
 !/.vscode/tasks.json
 /.history
+.vscode/

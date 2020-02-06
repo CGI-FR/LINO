@@ -16,3 +16,7 @@ func extractDataSourceFactory() map[string]domain.DataSourceFactory {
 func extractRowExporter(file *os.File) domain.RowExporter {
 	return infra.NewJSONRowExporter(file)
 }
+
+func traceListner(file *os.File) domain.TraceListener {
+	return infra.NewJSONTraceListener(file)
+}

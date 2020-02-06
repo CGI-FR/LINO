@@ -1,0 +1,18 @@
+name: unselect all relations
+testcases:
+- name: prepare test
+  steps:
+    # Clean working directory
+    - script: rm -f *
+    - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+    - script: lino relation extract source
+    - script: lino table extract source
+    - script: lino id create public.customer
+    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+- name: extract
+  steps:
+    - script: lino extract source --limit 1
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
+        - result.systemerr ShouldBeEmpty

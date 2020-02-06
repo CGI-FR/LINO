@@ -1,0 +1,41 @@
+# Build arguments
+ARG IMAGE_TAG=latest
+
+FROM lino-venom:${IMAGE_TAG} AS venom
+
+FROM golang:1.13 AS builder
+
+ENV GOFLAGS="-mod=readonly"
+
+RUN mkdir /home/lino
+
+RUN mkdir -p /workspace
+WORKDIR /workspace
+
+ARG GOPROXY
+
+COPY go.* /workspace/
+RUN go mod download
+
+COPY . /workspace
+
+ARG VERSION
+ARG BUILD_BY
+
+RUN make build
+
+
+FROM alpine
+
+COPY --from=builder /workspace/bin/lino /usr/local/bin
+RUN chown root:root /usr/local/bin/lino && \
+    chmod +x /usr/local/bin/lino
+COPY --from=venom /venom /usr/local/bin
+RUN mkdir -p /home/lino/
+WORKDIR /home/lino
+RUN mkdir -p /tests
+COPY ./tests/suites/ /tests/
+
+
+
+

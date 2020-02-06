@@ -79,7 +79,7 @@ testcases:
       assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldBeEmpty
-          - result.timeseconds ShouldBeLessThan 3 # FIXME #26 should be faster !
+          - result.timeseconds ShouldBeLessThan 1
 
 - name: extract round trip
   steps:

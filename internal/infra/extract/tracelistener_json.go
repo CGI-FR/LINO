@@ -11,9 +11,8 @@ import (
 
 // JSONTraceListener JSON event tracer
 type JSONTraceListener struct {
-	last   time.Time
-	events []Event
-	file   *os.File
+	last time.Time
+	file *os.File
 }
 
 // NewJSONTraceListener create JsonTraceListner
@@ -42,7 +41,6 @@ func (t JSONTraceListener) TraceStep(s extract.Step, filter extract.Filter) extr
 				return s.Follow().Name()
 			}
 			return ""
-
 		}(),
 		Filter: fmt.Sprintf("%v", filter.Values()),
 	}

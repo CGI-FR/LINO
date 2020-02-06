@@ -11,6 +11,12 @@ func SetLogger(l Logger) {
 
 // Extract data from source following the given extraction plan.
 func Extract(plan Plan, source DataSource, exporter RowExporter, diagnostic TraceListener) *Error {
+	if err := source.Open(); err != nil {
+		return err
+	}
+
+	defer source.Close()
+
 	e := extractor{source}
 	if err := e.extract(plan, exporter.Export, diagnostic); err != nil {
 		return err
@@ -148,7 +154,7 @@ func (e extractor) exhaust(step Step, allRows map[string][]Row) *Error {
 }
 
 func (e extractor) read(t Table, f Filter) ([]Row, *Error) {
-	iter, err := e.datasource.Read(t, f)
+	iter, err := e.datasource.RowReader(t, f)
 	if err != nil {
 		return nil, err
 	}

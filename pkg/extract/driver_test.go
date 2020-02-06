@@ -89,7 +89,7 @@ func TestExtract1(t *testing.T) {
 	}
 	datasource := &MemoryDataSource{source}
 
-	err := extract.Extract(plan, datasource, exporter)
+	err := extract.Extract(plan, datasource, exporter, extract.NoTraceListener{})
 
 	assert.Nil(t, err)
 	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
@@ -142,7 +142,7 @@ func TestExtract2(t *testing.T) {
 	}
 	datasource := &MemoryDataSource{source}
 
-	err := extract.Extract(plan, datasource, exporter)
+	err := extract.Extract(plan, datasource, exporter, extract.NoTraceListener{})
 
 	assert.Nil(t, err)
 	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
@@ -208,7 +208,7 @@ func TestExtract3(t *testing.T) {
 	}
 	datasource := &MemoryDataSource{source}
 
-	err := extract.Extract(plan, datasource, exporter)
+	err := extract.Extract(plan, datasource, exporter, extract.NoTraceListener{})
 
 	assert.Nil(t, err)
 	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
@@ -261,7 +261,7 @@ func TestExtract4(t *testing.T) {
 	}
 	datasource := &MemoryDataSource{source}
 
-	err := extract.Extract(plan, datasource, exporter)
+	err := extract.Extract(plan, datasource, exporter, extract.NoTraceListener{})
 
 	/* Expected result
 	map[

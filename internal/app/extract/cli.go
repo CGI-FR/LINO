@@ -43,7 +43,6 @@ func Inject(
 	dsfmap map[string]extract.DataSourceFactory,
 	rowExporter extract.RowExporter,
 	tl extract.TraceListener) {
-
 	dataconnectorStorage = dbas
 	relStorage = rs
 	tabStorage = ts

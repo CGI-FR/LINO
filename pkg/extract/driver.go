@@ -10,9 +10,9 @@ func SetLogger(l Logger) {
 }
 
 // Extract data from source following the given extraction plan.
-func Extract(plan Plan, source DataSource, exporter RowExporter) *Error {
+func Extract(plan Plan, source DataSource, exporter RowExporter, diagnostic TraceListener) *Error {
 	e := extractor{source}
-	if err := e.extract(plan, exporter.Export); err != nil {
+	if err := e.extract(plan, exporter.Export, diagnostic); err != nil {
 		return err
 	}
 
@@ -23,16 +23,17 @@ type extractor struct {
 	datasource DataSource
 }
 
-func (e extractor) extract(plan Plan, export func(Row) *Error) *Error {
+func (e extractor) extract(plan Plan, export func(Row) *Error, diagnostic TraceListener) *Error {
 	filter := plan.InitFilter()
-	if err := e.extractStep(plan.Steps().Step(0), filter, export); err != nil {
+	if err := e.extractStep(plan.Steps().Step(0), filter, export, diagnostic); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (e extractor) extractStep(step Step, filter Filter, export func(Row) *Error) *Error {
+func (e extractor) extractStep(step Step, filter Filter, export func(Row) *Error, diagnostic TraceListener) *Error {
 	rows, err := e.read(step.Entry(), filter)
+	diagnostic = diagnostic.TraceStep(step, filter)
 	if err != nil {
 		return err
 	}
@@ -60,7 +61,7 @@ func (e extractor) extractStep(step Step, filter Filter, export func(Row) *Error
 			relatedToRows := allRows[fromTable.Name()]
 			logger.Trace(fmt.Sprintf("extract: row #%v, %v related row(s)", i, len(relatedToRows)))
 			for _, relatedToRow := range relatedToRows {
-				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow)
+				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow, false)
 				if relatedToRow[rel.Name()] == nil {
 					relatedToRow[rel.Name()] = []Row{}
 				}
@@ -76,7 +77,7 @@ func (e extractor) extractStep(step Step, filter Filter, export func(Row) *Error
 						relatedToRow[rel.Name()] = r
 					}
 					return nil
-				}); err != nil {
+				}, diagnostic); err != nil {
 					return err
 				}
 			}
@@ -104,7 +105,7 @@ func (e extractor) exhaust(step Step, allRows map[string][]Row) *Error {
 			logger.Trace(fmt.Sprintf("extract: following relation %v has %v source row(s)", relation, len(fromRows)))
 			for i, fromRow := range fromRows {
 				logger.Trace(fmt.Sprintf("extract: following relation %v on row #%v (%v)", relation, i, fromRow))
-				nextFilter := relatedTo(fromTable, relation, fromRow)
+				nextFilter := relatedTo(fromTable, relation, fromRow, true)
 				logger.Trace(fmt.Sprintf("extract: following relation %v on row #%v with filter %v", relation, i, nextFilter))
 				toTable := relation.OppositeOf(fromTable.Name())
 				directionParent := toTable.Name() == relation.Parent().Name()
@@ -181,13 +182,18 @@ func findFromTable(rel Relation, relations RelationList, defaultTable Table) Tab
 	return defaultTable
 }
 
-func relatedTo(from Table, follow Relation, data Row) Filter {
+func relatedTo(from Table, follow Relation, data Row, exhaust bool) Filter {
 	logger.Trace(fmt.Sprintf("extract: build filter with row %v and relation %v to extract data from table %v", data, follow, from))
 	var row Row
 	switch from.Name() {
 	case follow.Parent().Name():
-		logger.Trace(fmt.Sprintf("extract: build parent filter %v=data[%v]=%v", follow.ChildKey(), follow.ParentKey(), data[follow.ParentKey()]))
-		row = Row{follow.ChildKey(): data[follow.ParentKey()]}
+		if exhaust {
+			logger.Trace(fmt.Sprintf("extract: build parent filter %v=data[%v]=%v", follow.ChildKey(), follow.ParentKey(), data[follow.ParentKey()]))
+			row = Row{follow.ChildKey(): data[follow.ParentKey()]}
+		} else {
+			logger.Trace(fmt.Sprintf("extract: build parent filter %v=data[%v]=%v", follow.ParentKey(), follow.ChildKey(), data[follow.ChildKey()]))
+			row = Row{follow.ParentKey(): data[follow.ChildKey()]}
+		}
 	case follow.Child().Name():
 		logger.Trace(fmt.Sprintf("extract: build child filter %v=data[%v]=%v", follow.ParentKey(), follow.ChildKey(), data[follow.ChildKey()]))
 		row = Row{follow.ParentKey(): data[follow.ChildKey()]}
@@ -198,7 +204,6 @@ func relatedTo(from Table, follow Relation, data Row) Filter {
 
 	return NewFilter(0, row)
 }
-
 func removeDuplicate(pk string, a, b []Row) []Row {
 	result := []Row{}
 loop:

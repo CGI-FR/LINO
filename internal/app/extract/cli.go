@@ -20,11 +20,12 @@ var tabStorage table.Storage
 var idStorage id.Storage
 var dataSourceFactories map[string]extract.DataSourceFactory
 var extractExporter extract.RowExporter
+var traceListener extract.TraceListener
 
 // local flags
 var limit uint
 var pk string
-
+var diagnostic bool
 var logger extract.Logger
 
 // SetLogger if needed, default no logger
@@ -34,13 +35,22 @@ func SetLogger(l extract.Logger) {
 }
 
 // Inject dependencies
-func Inject(dbas dataconnector.Storage, rs relation.Storage, ts table.Storage, ids id.Storage, dsfmap map[string]extract.DataSourceFactory, rowExporter extract.RowExporter) {
+func Inject(
+	dbas dataconnector.Storage,
+	rs relation.Storage,
+	ts table.Storage,
+	ids id.Storage,
+	dsfmap map[string]extract.DataSourceFactory,
+	rowExporter extract.RowExporter,
+	tl extract.TraceListener) {
+
 	dataconnectorStorage = dbas
 	relStorage = rs
 	tabStorage = ts
 	idStorage = ids
 	dataSourceFactories = dsfmap
 	extractExporter = rowExporter
+	traceListener = tl
 }
 
 // NewCommand implements the cli extract command
@@ -64,7 +74,15 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			e3 := extract.Extract(plan, datasource, extractExporter)
+			var tracer extract.TraceListener
+
+			tracer = extract.NoTraceListener{}
+
+			if diagnostic {
+				tracer = traceListener
+			}
+
+			e3 := extract.Extract(plan, datasource, extractExporter, tracer)
 			if e3 != nil {
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
@@ -73,6 +91,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	}
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")
 	cmd.Flags().StringVarP(&pk, "filter", "f", "", "filter on primary key of start table")
+	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

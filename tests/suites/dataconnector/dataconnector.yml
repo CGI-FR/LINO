@@ -1,0 +1,35 @@
+name: data connector
+testcases:
+- name: help
+  steps:
+    # Clean working directory
+  - type: exec
+    script: rm *
+    assertions:
+          - result.code ShouldEqual 1
+  - type: exec
+    script: lino dataconnector --help
+    assertions:
+        - result.code ShouldEqual 0
+        - result.timeseconds ShouldBeLessThan 1
+        - result.systemout ShouldContainSubstring Usage
+        - result.systemerr ShouldBeEmpty
+  - type: exec
+    script: lino dataconnector -h
+    assertions:
+        - result.code ShouldEqual 0
+        - result.timeseconds ShouldBeLessThan 1
+        - result.systemout ShouldContainSubstring Usage
+        - result.systemerr ShouldBeEmpty
+  - type: exec
+    script: lino dataconnector NoExistCommand
+    assertions:
+        - result.code ShouldEqual 0
+        - result.timeseconds ShouldBeLessThan 1
+        - result.systemout ShouldContainSubstring Usage
+        - result.systemerr ShouldBeEmpty
+  - type: exec
+    script: ls -l
+    assertions:
+        - result.systemout ShouldContainSubstring "total 0"
+        - result.systemerr ShouldBeEmpty

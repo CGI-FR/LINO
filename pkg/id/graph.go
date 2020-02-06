@@ -54,6 +54,10 @@ func newGraph(rels IngressRelationList) graph {
 	return ok
 } */
 
+func (g graph) Len() uint {
+	return g.relations.Len()
+}
+
 func (g graph) addRelation(r IngressRelation) {
 	parentName := r.Parent().Name()
 	childName := r.Child().Name()

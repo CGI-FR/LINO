@@ -47,3 +47,14 @@ func (l Nologger) Warn(msg string) {}
 
 // Error event.
 func (l Nologger) Error(msg string) {}
+
+// TraceListener receives diagnostic trace
+type TraceListener interface {
+	TraceStep(Step, Filter) TraceListener
+}
+
+// NoTraceListener default implementation do nothing.
+type NoTraceListener struct{}
+
+// TraceStep catch Step event.
+func (t NoTraceListener) TraceStep(s Step, filter Filter) TraceListener { return t }

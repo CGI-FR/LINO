@@ -1,0 +1,15 @@
+name: data connector
+testcases:
+- name: prepare test
+  steps:
+    # Clean working directory
+    - script: rm -f *
+    - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+
+- name: extract relations
+  steps:
+    - script: lino relation extract source
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldEqual "lino finds 40 relations from constraints"
+        - result.systemerr ShouldBeEmpty

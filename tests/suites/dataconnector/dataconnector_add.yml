@@ -1,0 +1,34 @@
+name: data connector add
+testcases:
+- name: add without command
+  steps:
+      # Clean working directory
+  - type: exec
+    script: rm -f *
+  - type: exec
+    script: lino dataconnector add
+    assertions:
+      - result.code ShouldEqual 1
+      - result.systemerr ShouldContainSubstring Usage
+  - type: exec
+    script: ls -l
+    assertions:
+      - result.systemout ShouldContainSubstring "total 0"
+- name: add dataconnector
+  steps:
+      # Clean working directory
+  - type: exec
+    script: rm -f *
+  - type: exec
+    script: lino dataconnector add source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldContainSubstring success
+  - type: exec
+    script: ls | wc
+    assertions:
+      - result.systemout ShouldContainSubstring "1"
+  - type: readfile
+    path: dataconnector.yaml
+    assertions:
+        - result.md5sum.dataconnector.yaml ShouldEqual 37355f5b48e71722ee717c21e0bb070f

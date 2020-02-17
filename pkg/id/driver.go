@@ -189,10 +189,9 @@ func GetExtractionPlan(storage Storage) (ExtractionPlan, *Error) {
 		steps = append(steps, step)
 		return true
 	})
-	logger.Debug("")
 
 	if err != nil {
-		return nil, err
+		logger.Warn(err.Error())
 	}
 
 	return NewExtractionPlan(steps, g.relations, g.tables), nil

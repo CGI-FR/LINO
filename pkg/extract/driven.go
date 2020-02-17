@@ -12,11 +12,13 @@ type DataSourceFactory interface {
 
 // DataSource to read in the extract process.
 type DataSource interface {
-	Read(source Table, filter Filter) (DataIterator, *Error)
+	Open() *Error
+	RowReader(source Table, filter Filter) (RowReader, *Error)
+	Close() *Error
 }
 
-// DataIterator over DataSource.
-type DataIterator interface {
+// RowReader over DataSource.
+type RowReader interface {
 	Next() bool
 	Value() (Row, *Error)
 }
@@ -47,3 +49,14 @@ func (l Nologger) Warn(msg string) {}
 
 // Error event.
 func (l Nologger) Error(msg string) {}
+
+// TraceListener receives diagnostic trace
+type TraceListener interface {
+	TraceStep(Step, Filter) TraceListener
+}
+
+// NoTraceListener default implementation do nothing.
+type NoTraceListener struct{}
+
+// TraceStep catch Step event.
+func (t NoTraceListener) TraceStep(s Step, filter Filter) TraceListener { return t }

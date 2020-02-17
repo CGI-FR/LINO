@@ -1,4 +1,5 @@
-FROM store/oracle/database-enterprise:12.2.0.1
+FROM oracle/database:18.4.0-xe
+COPY assets /opt/oracle/scripts/setup/
 
-COPY assets /
-RUN sqlplus sys/Oradoc_db1@//localhost:1521/ORCLCDB oracle-sakila-schema.sql
+ENV ORACLE_PWD=sakila
+

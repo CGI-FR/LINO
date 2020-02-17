@@ -43,7 +43,15 @@ func copyRow(r extract.Row) extract.Row {
 	return copy
 }
 
-func (ds *MemoryDataSource) Read(source extract.Table, filter extract.Filter) (extract.DataIterator, *extract.Error) {
+func (ds *MemoryDataSource) Open() *extract.Error {
+	return nil
+}
+
+func (ds *MemoryDataSource) Close() *extract.Error {
+	return nil
+}
+
+func (ds *MemoryDataSource) RowReader(source extract.Table, filter extract.Filter) (extract.RowReader, *extract.Error) {
 	rows, ok := ds.data[source.Name()]
 	result := []extract.Row{}
 	if ok {

@@ -45,6 +45,13 @@ var rootCmd = &cobra.Command{
 }
 
 func main() {
+	// CPU profiling code starts here
+	/* 	f, _ := os.Create("lino.cpu.prof")
+	   	defer f.Close()
+	   	pprof.StartCPUProfile(f)
+	   	defer pprof.StopCPUProfile() */
+	// CPU profiling code ends here
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -56,7 +63,6 @@ func init() {
 
 	// global flags
 	rootCmd.PersistentFlags().StringVarP(&loglevel, "verbosity", "v", "none", "set level of log verbosity : none (0), error (1), warn (2), info (3), debug (4), trace (5)")
-
 	rootCmd.AddCommand(dataconnector.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(table.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(relation.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
@@ -94,6 +100,6 @@ func initConfig() {
 	relation.Inject(dataconnectorStorage(), relationStorage(), relationExtractorFactory())
 	table.Inject(dataconnectorStorage(), tableStorage(), tableExtractorFactory())
 	id.Inject(idStorage(), relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
-	extract.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), extractDataSourceFactory(), extractRowExporter(os.Stdout))
+	extract.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), extractDataSourceFactory(), extractRowExporter(os.Stdout), traceListner(os.Stderr))
 	load.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), loadDataDestinationFactory(), loadRowIterator(os.Stdin))
 }

@@ -1,6 +1,7 @@
 package extract
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -31,6 +32,8 @@ func (e *PostgresDataSourceFactory) New(url string) extract.DataSource {
 type PostgresDataSource struct {
 	url    string
 	logger extract.Logger
+	dbx    *sqlx.DB
+	db     *sql.DB
 }
 
 // NewPostgresDataSource creates a new postgres datasource.
@@ -41,25 +44,41 @@ func NewPostgresDataSource(url string, logger extract.Logger) *PostgresDataSourc
 	}
 }
 
-func (ds *PostgresDataSource) Read(source extract.Table, filter extract.Filter) (extract.DataIterator, *extract.Error) {
+// Open a connection to the postgres DB
+func (ds *PostgresDataSource) Open() *extract.Error {
 	db, err := dburl.Open(ds.url)
 	if err != nil {
-		return nil, &extract.Error{Description: err.Error()}
+		return &extract.Error{Description: err.Error()}
 	}
-	defer db.Close()
+
+	ds.db = db
 
 	u, err := dburl.Parse(ds.url)
 	if err != nil {
-		return nil, &extract.Error{Description: err.Error()}
+		return &extract.Error{Description: err.Error()}
 	}
 
-	dbx := sqlx.NewDb(db, u.Unaliased)
+	ds.dbx = sqlx.NewDb(db, u.Unaliased)
 
-	err = dbx.Ping()
+	err = ds.dbx.Ping()
 	if err != nil {
-		return nil, &extract.Error{Description: err.Error()}
+		return &extract.Error{Description: err.Error()}
 	}
 
+	return nil
+}
+
+// Close a connection to the postgres DB
+func (ds *PostgresDataSource) Close() *extract.Error {
+	err := ds.dbx.Close()
+	if err != nil {
+		return &extract.Error{Description: err.Error()}
+	}
+	return nil
+}
+
+// RowReader iterate over rows in table with filter
+func (ds *PostgresDataSource) RowReader(source extract.Table, filter extract.Filter) (extract.RowReader, *extract.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("SELECT * FROM "))
 	sql.Write([]byte(source.Name()))
@@ -92,7 +111,7 @@ func (ds *PostgresDataSource) Read(source extract.Table, filter extract.Filter) 
 		ds.logger.Debug(fmt.Sprint(printSQL))
 	}
 
-	rows, err := dbx.Queryx(sql.String(), values...)
+	rows, err := ds.dbx.Queryx(sql.String(), values...)
 	if err != nil {
 		return nil, &extract.Error{Description: err.Error()}
 	}

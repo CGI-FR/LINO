@@ -1,6 +1,13 @@
 FROM golang:1.13 AS builder
+RUN apk update \
+    && apk upgrade \
+    && apk add --no-cache \
+    ca-certificates \
+    && update-ca-certificates 2>/dev/null || true
 
 ENV GOFLAGS="-mod=readonly"
+ENV HTTPS_PROXY="http://10.83.124.3:3128/"
+ENV HTTP_PROXY="http://10.83.124.3:3128/"
 
 RUN mkdir /home/lino
 

@@ -61,7 +61,7 @@ func (g graph) visitComponents(start string, visit func(r IngressRelation, comin
 	t := &reltraversal{g, g.condense(), myvisit, map[int]set{}, 0}
 	startTable, ok := t.g.tabmap[start]
 	if !ok {
-		return &Error{Description: "no table named " + start}
+		return &Error{Description: "table named " + start + " not connectected with relation(s) " + t.g.relations.String()}
 	}
 	return t.followActive(startTable, 0)
 }

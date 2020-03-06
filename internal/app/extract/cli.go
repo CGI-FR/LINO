@@ -136,7 +136,11 @@ func getExtractionPlan() (extract.Plan, *extract.Error) {
 	}
 	var filter extract.Filter
 
-	stepList := getStepList(ep, relations, tables)
+	stepList, err4 := getStepList(ep, relations, tables)
+
+	if err4 != nil {
+		return nil, &extract.Error{Description: err4.Error()}
+	}
 
 	if pk == "" {
 		filter = extract.NewFilter(limit, extract.Row{})
@@ -147,7 +151,7 @@ func getExtractionPlan() (extract.Plan, *extract.Error) {
 	return extract.NewPlan(filter, stepList), nil
 }
 
-func getStepList(ep id.ExtractionPlan, relations []relation.Relation, tables []table.Table) extract.StepList {
+func getStepList(ep id.ExtractionPlan, relations []relation.Relation, tables []table.Table) (extract.StepList, error) {
 	rmap := map[string]relation.Relation{}
 	for _, relation := range relations {
 		rmap[relation.Name] = relation
@@ -164,7 +168,6 @@ func getStepList(ep id.ExtractionPlan, relations []relation.Relation, tables []t
 	}
 
 	logger.Debug(fmt.Sprintf("there is %v step(s) to build", ep.Len()))
-	defer logger.Debug(fmt.Sprintf("finished building %v step(s) with success", ep.Len()))
 
 	converter := epToStepListConverter{
 		rmap:   rmap,
@@ -174,8 +177,12 @@ func getStepList(ep id.ExtractionPlan, relations []relation.Relation, tables []t
 		extmap: map[string]extract.Table{},
 		exsmap: map[uint]extract.Step{},
 	}
-
-	return converter.getSteps()
+	steps, err := converter.getSteps()
+	if err != nil {
+		return nil, err
+	}
+	logger.Debug(fmt.Sprintf("finished building %v step(s) with success", ep.Len()))
+	return steps, nil
 }
 
 type epToStepListConverter struct {
@@ -204,15 +211,20 @@ func (c epToStepListConverter) getTable(name string) extract.Table {
 	return extract.NewTable(table.Name, table.Keys[0]) // TODO : support multivalued primary keys
 }
 
-func (c epToStepListConverter) getRelation(name string) extract.Relation {
+func (c epToStepListConverter) getRelation(name string) (extract.Relation, error) {
 	if exrelation, ok := c.exrmap[name]; ok {
-		return exrelation
+		return exrelation, nil
+	}
+
+	if name == "" {
+		return extract.NewRelation(name, nil, nil, "", ""), nil
 	}
 
 	relation, ok := c.rmap[name]
 	if !ok {
-		logger.Error(fmt.Sprintf("missing relation %v in relations.yaml", name))
-		return extract.NewRelation(name, nil, nil, "", "")
+		err := fmt.Errorf("missing relation '%s' in relations.yaml", name)
+		logger.Error(err.Error())
+		return nil, err
 	}
 
 	logger.Trace(fmt.Sprintf("building relation %v", relation))
@@ -223,38 +235,50 @@ func (c epToStepListConverter) getRelation(name string) extract.Relation {
 		c.getTable(relation.Child.Name),
 		relation.Parent.Keys[0], // TODO : support multivalued keys
 		relation.Child.Keys[0],  // TODO : support multivalued keys
-	)
+	), nil
 }
 
-func (c epToStepListConverter) getRelationList(relations id.IngressRelationList) extract.RelationList {
+func (c epToStepListConverter) getRelationList(relations id.IngressRelationList) (extract.RelationList, error) {
 	exrelations := []extract.Relation{}
 	for idx := uint(0); idx < relations.Len(); idx++ {
-		exrelations = append(exrelations, c.getRelation(relations.Relation(idx).Name()))
+		rel, err := c.getRelation(relations.Relation(idx).Name())
+		if err != nil {
+			return nil, err
+		}
+		exrelations = append(exrelations, rel)
 	}
-	return extract.NewRelationList(exrelations)
+	return extract.NewRelationList(exrelations), nil
 }
 
-func (c epToStepListConverter) getCycleList(cycles id.CycleList) extract.CycleList {
+func (c epToStepListConverter) getCycleList(cycles id.CycleList) (extract.CycleList, error) {
 	excycles := []extract.Cycle{}
 	for idx := uint(0); idx < cycles.Len(); idx++ {
-		excycles = append(excycles, c.getRelationList(cycles.Cycle(idx)))
+		rel, err := c.getRelationList(cycles.Cycle(idx))
+		if err != nil {
+			return nil, err
+		}
+		excycles = append(excycles, rel)
 	}
-	return extract.NewCycleList(excycles)
+	return extract.NewCycleList(excycles), nil
 }
 
-func (c epToStepListConverter) getStepList(previousStep uint) extract.StepList {
+func (c epToStepListConverter) getStepList(previousStep uint) (extract.StepList, error) {
 	exsteps := []extract.Step{}
 	for _, step := range c.smap {
 		if step.PreviousStep() == previousStep {
-			exsteps = append(exsteps, c.getStep(step.Index()))
+			step, err := c.getStep(step.Index())
+			if err != nil {
+				return nil, err
+			}
+			exsteps = append(exsteps, step)
 		}
 	}
-	return extract.NewStepList(exsteps)
+	return extract.NewStepList(exsteps), nil
 }
 
-func (c epToStepListConverter) getStep(idx uint) extract.Step {
+func (c epToStepListConverter) getStep(idx uint) (extract.Step, error) {
 	if exstep, ok := c.exsmap[idx]; ok {
-		return exstep
+		return exstep, nil
 	}
 
 	step := c.smap[idx-1]
@@ -262,35 +286,56 @@ func (c epToStepListConverter) getStep(idx uint) extract.Step {
 	logger.Trace(fmt.Sprintf("building %v", step))
 
 	var exstep extract.Step
+	rel, err := c.getRelation(step.Following().Name())
+	if err != nil {
+		return nil, err
+	}
+	relList, err := c.getRelationList(step.Relations())
+	if err != nil {
+		return nil, err
+	}
+	cycleList, err := c.getCycleList(step.Cycles())
+	if err != nil {
+		return nil, err
+	}
+
+	stepList, err := c.getStepList(step.Index())
+	if err != nil {
+		return nil, err
+	}
 	if step.Index() > 1 {
 		exstep = extract.NewStep(
 			step.Index(),
 			c.getTable(step.Entry().Name()),
-			c.getRelation(step.Following().Name()),
-			c.getRelationList(step.Relations()),
-			c.getCycleList(step.Cycles()),
-			c.getStepList(step.Index()),
+			rel,
+			relList,
+			cycleList,
+			stepList,
 		)
 	} else {
 		exstep = extract.NewStep(
 			step.Index(),
 			c.getTable(step.Entry().Name()),
 			nil,
-			c.getRelationList(step.Relations()),
-			c.getCycleList(step.Cycles()),
-			c.getStepList(step.Index()),
+			relList,
+			cycleList,
+			stepList,
 		)
 	}
 
 	c.exsmap[idx] = exstep
 
-	return exstep
+	return exstep, nil
 }
 
-func (c epToStepListConverter) getSteps() extract.StepList {
+func (c epToStepListConverter) getSteps() (extract.StepList, error) {
 	exsteps := []extract.Step{}
 	for _, step := range c.smap {
-		exsteps = append(exsteps, c.getStep(step.Index()))
+		step, err := c.getStep(step.Index())
+		if err != nil {
+			return nil, err
+		}
+		exsteps = append(exsteps, step)
 	}
-	return extract.NewStepList(exsteps)
+	return extract.NewStepList(exsteps), nil
 }

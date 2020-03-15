@@ -3,10 +3,7 @@ testcases:
 - name: help
   steps:
     # Clean working directory
-  - type: exec
-    script: rm *
-    assertions:
-          - result.code ShouldEqual 1
+  - script: rm -f *
   - type: exec
     script: lino dataconnector --help
     assertions:

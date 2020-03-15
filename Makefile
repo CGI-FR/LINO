@@ -116,6 +116,16 @@ run-docker-test: docker-test ## Exec docker test with venom
 	sleep 2
 	IMAGE_TAG=${DOCKER_TAG} docker-compose run --rm venom venom run "/tests/*/*yml"
 
+.PHONY: venom-test
+venom-test: build ## Exec docker test with venom
+	docker-compose stop source
+	docker-compose stop dest
+	docker-compose rm -f source
+	docker-compose rm -f dest
+	docker-compose up -d source dest
+	sleep 5
+	cd example/ ; venom run ../tests/suites/*/*yml
+
 .PHONY: alias
 alias: ## Provides a lino alias to run docker image
 	@echo "alias lino='docker run --rm -ti -v \$$(pwd):/home/lino ${DOCKER_IMAGE}:${DOCKER_TAG}'"

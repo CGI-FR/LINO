@@ -1,5 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 set -e
-#git stash -q --keep-index
+if git status --porcelain | grep "^.M" > /dev/null
+then
+    echo "🚽 Add or stash unstaged changes before commit"
+    exit 1
+else
+    echo "👌 Nothing to stash"
+fi
 make lint test venom-test
-#git stash pop -q

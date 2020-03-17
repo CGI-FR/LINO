@@ -15,7 +15,6 @@ services:
       security_opt:
         - seccomp:unconfined
       entrypoint: zsh -c "while sleep 1000; do :; done"
-    
    source:
      image: frantiseks/postgres-sakila
      restart: always
@@ -44,7 +43,3 @@ services:
         PGADMIN_DEFAULT_PASSWORD: SuperSecret
     ports:
         - 80:80
-
-
-   venom:
-     image: lino-test:${IMAGE_TAG}

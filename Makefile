@@ -4,6 +4,7 @@ SHELL := /bin/bash # Use bash syntax
 
 # Build variables
 BUILD_DIR ?= bin
+EXAMPLE_DIR ?= example
 VERSION ?= $(shell git describe --tags --exact-match 2>/dev/null || git symbolic-ref -q --short HEAD)
 COMMIT_HASH ?= $(shell git rev-parse HEAD 2>/dev/null)
 BUILD_DATE ?= $(shell date +%FT%T%z)
@@ -114,7 +115,7 @@ venom-test: build ## Exec docker test with venom
 	docker-compose rm -f dest
 	docker-compose up -d source dest
 	sleep 5
-	cd example/ ; venom run ../tests/suites/*/*yml
+	mkdir -p ${EXAMPLE_DIR} && cd ${EXAMPLE_DIR} && venom run ../tests/suites/*/*yml
 
 .PHONY: alias
 alias: ## Provides a lino alias to run docker image

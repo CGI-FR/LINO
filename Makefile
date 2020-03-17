@@ -102,6 +102,10 @@ endif
 docker-venom: info ## Build docker venom image locally
 	docker build -t ${DOCKER_IMAGE_VENOM}:${DOCKER_TAG} --build-arg IMAGE_NAME=${DOCKER_IMAGE_VENOM} --build-arg IMAGE_TAG=${DOCKER_TAG} --build-arg IMAGE_REVISION=${COMMIT_HASH} --build-arg IMAGE_DATE=${BUILD_DATE} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} tests/venom
 
+.PHONY: mockery
+mockery:  ## generate mock for all interfaces in pakage
+	mockery -all -inpkg
+
 .PHONY: venom-test
 venom-test: build ## Exec docker test with venom
 	docker-compose stop source

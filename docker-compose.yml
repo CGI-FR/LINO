@@ -1,6 +1,20 @@
 version: '3.3'
 
 services:
+   vscode:
+      build: .devcontainer
+      volumes:
+        - ./:/workspace
+        - ~/.ssh:/home/vscode/.ssh:ro
+        - ~/.ssh:/root/.ssh:ro
+        - /var/run/docker.sock:/var/run/docker.sock
+      environment:
+        - TZ=Europe/Paris
+      cap_add:
+        - SYS_PTRACE
+      security_opt:
+        - seccomp:unconfined
+      entrypoint: zsh -c "while sleep 1000; do :; done"
    source:
      image: frantiseks/postgres-sakila
      restart: always
@@ -29,7 +43,3 @@ services:
         PGADMIN_DEFAULT_PASSWORD: SuperSecret
     ports:
         - 80:80
-
-
-   venom:
-     image: lino-test:${IMAGE_TAG}

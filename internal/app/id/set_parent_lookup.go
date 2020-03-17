@@ -30,7 +30,7 @@ func newSetParentLookupCommand(fullName string, err *os.File, out *os.File, in *
 				os.Exit(1)
 			}
 
-			fmt.Fprintln(out, fmt.Sprintf("successfully update relation %s in ingress descriptor", relation))
+			fmt.Fprintf(out, "successfully update relation %s in ingress descriptor\n", relation)
 		},
 	}
 	cmd.SetOut(out)

@@ -96,7 +96,7 @@ func initConfig() {
 	extract.SetLogger(logger)
 	load.SetLogger(logger)
 
-	dataconnector.Inject(dataconnectorStorage())
+	dataconnector.Inject(dataconnectorStorage(), dataPingerFactory())
 	relation.Inject(dataconnectorStorage(), relationStorage(), relationExtractorFactory())
 	table.Inject(dataconnectorStorage(), tableStorage(), tableExtractorFactory())
 	id.Inject(idStorage(), relationStorage(), idExporter(), idJSONStorage(*os.Stdout))

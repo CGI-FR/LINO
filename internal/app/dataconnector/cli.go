@@ -9,13 +9,15 @@ import (
 )
 
 var storage dataconnector.Storage
+var dataPingerFactory map[string]dataconnector.DataPingerFactory
 
 // local flags
 var readonly bool
 
 // Inject dependencies
-func Inject(dbas dataconnector.Storage) {
+func Inject(dbas dataconnector.Storage, dpf map[string]dataconnector.DataPingerFactory) {
 	storage = dbas
+	dataPingerFactory = dpf
 }
 
 // NewCommand implements the cli dataconnector command
@@ -29,6 +31,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	}
 	cmd.AddCommand(newAddCommand(fullName, err, out, in))
 	cmd.AddCommand(newListCommand(fullName, err, out, in))
+	cmd.AddCommand(newPingCommand(fullName, err, out, in))
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

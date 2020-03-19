@@ -8,3 +8,9 @@ import (
 func dataconnectorStorage() domain.Storage {
 	return infra.NewYAMLStorage()
 }
+
+func dataPingerFactory() map[string]domain.DataPingerFactory {
+	return map[string]domain.DataPingerFactory{
+		"postgres": infra.NewPostgresDataPingerFactory(logger),
+	}
+}

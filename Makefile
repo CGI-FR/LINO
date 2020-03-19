@@ -4,6 +4,8 @@ SHELL := /bin/bash # Use bash syntax
 
 # Build variables
 BUILD_DIR ?= bin
+TEST_WS_DIR ?= tests/workspace
+
 VERSION ?= $(shell git describe --tags --exact-match 2>/dev/null || git symbolic-ref -q --short HEAD)
 COMMIT_HASH ?= $(shell git rev-parse HEAD 2>/dev/null)
 BUILD_DATE ?= $(shell date +%FT%T%z)
@@ -102,15 +104,22 @@ endif
 docker-venom: info ## Build docker venom image locally
 	docker build -t ${DOCKER_IMAGE_VENOM}:${DOCKER_TAG} --build-arg IMAGE_NAME=${DOCKER_IMAGE_VENOM} --build-arg IMAGE_TAG=${DOCKER_TAG} --build-arg IMAGE_REVISION=${COMMIT_HASH} --build-arg IMAGE_DATE=${BUILD_DATE} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} tests/venom
 
-.PHONY: venom-test
-venom-test: build ## Exec docker test with venom
+.PHONY: mockery
+mockery:  ## generate mock for all interfaces in pakage
+	mockery -all -inpkg
+
+.PHONY: docker-clean
+docker-clean: ## Clean docker container
 	docker-compose stop source
 	docker-compose stop dest
 	docker-compose rm -f source
 	docker-compose rm -f dest
 	docker-compose up -d source dest
 	sleep 5
-	cd example/ ; venom run ../tests/suites/*/*yml
+
+.PHONY: venom-test
+venom-test: build docker-clean ## Exec tests with venom
+	mkdir -p ${TEST_WS_DIR} && cd ${TEST_WS_DIR} && venom run ../suites/*/*yml
 
 .PHONY: alias
 alias: ## Provides a lino alias to run docker image

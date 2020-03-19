@@ -10,6 +10,9 @@ import (
 
 var storage dataconnector.Storage
 
+// local flags
+var readonly bool
+
 // Inject dependencies
 func Inject(dbas dataconnector.Storage) {
 	storage = dbas

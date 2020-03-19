@@ -31,4 +31,22 @@ testcases:
   - type: readfile
     path: dataconnector.yaml
     assertions:
-        - result.md5sum.dataconnector.yaml ShouldEqual 37355f5b48e71722ee717c21e0bb070f
+        - result.md5sum.dataconnector.yaml ShouldEqual a43e74d9ac309c0fa62627584ffcfa0f
+- name: add dataconnector read only
+  steps:
+      # Clean working directory
+  - type: exec
+    script: rm -f *
+  - type: exec
+    script: lino dataconnector add --read-only source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldContainSubstring success
+  - type: exec
+    script: ls | wc
+    assertions:
+      - result.systemout ShouldContainSubstring "1"
+  - type: readfile
+    path: dataconnector.yaml
+    assertions:
+      - result.md5sum.dataconnector.yaml ShouldEqual 7b7581a0b17be6db4a34e765f3f03ed9

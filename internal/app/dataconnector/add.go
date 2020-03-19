@@ -21,8 +21,9 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 			url := args[1]
 
 			alias := dataconnector.DataConnector{
-				Name: name,
-				URL:  url,
+				Name:     name,
+				URL:      url,
+				ReadOnly: readonly,
 			}
 
 			e := dataconnector.Add(storage, &alias)
@@ -35,6 +36,7 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 			fmt.Fprintln(out)
 		},
 	}
+	cmd.Flags().BoolVarP(&readonly, "read-only", "r", false, "Write protection flag that prevents modification")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

@@ -20,8 +20,9 @@ type YAMLStructure struct {
 
 // YAMLDataConnector defines how to store a dataconnector in YAML format
 type YAMLDataConnector struct {
-	Name string `yaml:"name"`
-	URL  string `yaml:"url"`
+	Name     string `yaml:"name"`
+	URL      string `yaml:"url"`
+	ReadOnly bool   `yaml:"readonly"`
 }
 
 // NewYAMLStorage create a new YAML storage
@@ -43,8 +44,9 @@ func (s YAMLStorage) List() ([]dataconnector.DataConnector, *dataconnector.Error
 
 	for _, ym := range list.DataConnectors {
 		m := dataconnector.DataConnector{
-			Name: ym.Name,
-			URL:  ym.URL,
+			Name:     ym.Name,
+			URL:      ym.URL,
+			ReadOnly: ym.ReadOnly,
 		}
 		result = append(result, m)
 	}
@@ -60,8 +62,9 @@ func (s YAMLStorage) Store(m *dataconnector.DataConnector) *dataconnector.Error 
 	}
 
 	yml := YAMLDataConnector{
-		Name: m.Name,
-		URL:  m.URL,
+		Name:     m.Name,
+		URL:      m.URL,
+		ReadOnly: m.ReadOnly,
 	}
 
 	list.DataConnectors = append(list.DataConnectors, yml)

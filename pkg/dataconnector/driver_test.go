@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
 
@@ -40,17 +39,6 @@ func (s *ErrorStorage) List() ([]dataconnector.DataConnector, *dataconnector.Err
 // Store a dataconnector in memory
 func (s *ErrorStorage) Store(m *dataconnector.DataConnector) *dataconnector.Error {
 	return s.StoreError
-}
-
-func TestAddToEmptyStorage(t *testing.T) {
-	storage := &MemoryStorage{}
-	alias := &dataconnector.DataConnector{Name: "Test", URL: "test://localhost:1234"}
-
-	err := dataconnector.Add(storage, alias)
-	aliases, _ := storage.List()
-
-	assert.Nil(t, err, "An error occurred while using Add method")
-	assert.Equal(t, 1, len(aliases), "Only one alias should be stored")
 }
 
 func TestAddToNonEmptyStorage(t *testing.T) {
@@ -164,4 +152,39 @@ func TestListStorageListErrorHandling(t *testing.T) {
 	assert.NotNil(t, err, "List method should return an error")
 	assert.Nil(t, aliases, "No alias list should be returned")
 	assert.Equal(t, "ListError", err.Error(), "Error should contain the description provided by storage Store method")
+}
+
+func TestAdd(t *testing.T) {
+	type args struct {
+		s dataconnector.Storage
+		m *dataconnector.DataConnector
+	}
+	tests := []struct {
+		name string
+		args args
+		want *dataconnector.Error
+	}{
+		struct {
+			name string
+			args args
+			want *dataconnector.Error
+		}{name: "Empty storage", args: args{
+			&MemoryStorage{},
+			&dataconnector.DataConnector{Name: "Test", URL: "test://localhost:1234"},
+		}, want: nil},
+		struct {
+			name string
+			args args
+			want *dataconnector.Error
+		}{name: "read only alias", args: args{
+			&MemoryStorage{},
+			&dataconnector.DataConnector{Name: "readonly", URL: "test://localhost:1234", ReadOnly: true},
+		}, want: nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := dataconnector.Add(tt.args.s, tt.args.m)
+			assert.Equalf(t, tt.want, got, "Add() = %v, want %v", got, tt.want)
+		})
+	}
 }

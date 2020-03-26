@@ -1,0 +1,20 @@
+name: data connector ping
+testcases:
+- name: ping success
+  steps:
+      # Clean working directory
+  - script: rm -f *
+  - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+  - script: lino dataconnector ping source
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldContainSubstring "ping success"
+- name: ping failled
+  steps:
+      # Clean working directory
+  - script: rm -f *
+  - script: lino dataconnector add source postgresql://postgres:sakila@source:4432/postgres?sslmode=disable
+  - script: lino dataconnector ping source
+    assertions:
+      - result.code ShouldEqual 1
+      - result.systemout ShouldContainSubstring "ping failled"

@@ -4,6 +4,8 @@ SHELL := /bin/bash # Use bash syntax
 
 # Build variables
 BUILD_DIR ?= bin
+TEST_WS_DIR ?= tests/workspace
+
 VERSION ?= $(shell git describe --tags --exact-match 2>/dev/null || git symbolic-ref -q --short HEAD)
 COMMIT_HASH ?= $(shell git rev-parse HEAD 2>/dev/null)
 BUILD_DATE ?= $(shell date +%FT%T%z)
@@ -108,19 +110,22 @@ docker-oracle: info ## Build docker oracle image locally
 	docker build -t ${DOCKER_IMAGE_ORACLE}:${DOCKER_TAG} --build-arg IMAGE_NAME=${DOCKER_IMAGE_ORACLE} --build-arg IMAGE_TAG=${DOCKER_TAG} --build-arg IMAGE_REVISION=${COMMIT_HASH} --build-arg IMAGE_DATE=${BUILD_DATE} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} tests/oracle
 
 
-.PHONY: docker-test
-docker-test:  ## Build docker test image locally
-	docker build -t ${DOCKER_IMAGE_TEST}:${DOCKER_TAG} --network fr-proxy --build-arg IMAGE_NAME=${DOCKER_IMAGE_TEST} --build-arg IMAGE_TAG=${DOCKER_TAG} --build-arg IMAGE_REVISION=${COMMIT_HASH} --build-arg IMAGE_DATE=${BUILD_DATE} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} -f Dockerfile.test .
+.PHONY: mockery
+mockery:  ## generate mock for all interfaces in pakage
+	mockery -all -inpkg
 
-.PHONY: run-docker-test
-run-docker-test: docker-test ## Exec docker test with venom
-	IMAGE_TAG=${DOCKER_TAG} docker-compose.exe stop source
-	IMAGE_TAG=${DOCKER_TAG} docker-compose.exe rm -f source
-	IMAGE_TAG=${DOCKER_TAG} docker-compose.exe stop dest
-	IMAGE_TAG=${DOCKER_TAG} docker-compose.exe rm -f dest
-	IMAGE_TAG=${DOCKER_TAG} docker-compose.exe up -d source dest
-	sleep 2
-	IMAGE_TAG=${DOCKER_TAG} docker-compose run --rm venom venom run "/tests/*/*yml"
+.PHONY: docker-clean
+docker-clean: ## Clean docker container
+	docker-compose stop source
+	docker-compose stop dest
+	docker-compose rm -f source
+	docker-compose rm -f dest
+	docker-compose up -d source dest
+	sleep 5
+
+.PHONY: venom-test
+venom-test: build docker-clean ## Exec tests with venom
+	mkdir -p ${TEST_WS_DIR} && cd ${TEST_WS_DIR} && venom run ../suites/*/*yml
 
 .PHONY: alias
 alias: ## Provides a lino alias to run docker image

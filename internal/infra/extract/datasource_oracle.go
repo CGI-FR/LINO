@@ -97,10 +97,9 @@ func (ds *OracleDataSource) RowReader(source extract.Table, filter extract.Filte
 	if filter.Limit() > 0 {
 		fmt.Fprintf(sql, "rownum <= %v AND ", filter.Limit())
 	}
-	if len(filter.Values()) > 0 || filter.Limit() > 0  {
+	if len(filter.Values()) > 0 || filter.Limit() > 0 {
 		sql.Write([]byte("1=1 "))
 	}
-
 
 	if ds.logger != nil {
 		printSQL := sql.String()

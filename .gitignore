@@ -6,6 +6,8 @@ relations.yaml
 ingress-descriptor.yaml
 ingress-descriptor.dot
 
+tests/workspace/*
+
 # IDE integration
 /.vscode/*
 !/.vscode/launch.json

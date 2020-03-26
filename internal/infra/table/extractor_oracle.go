@@ -71,9 +71,9 @@ SELECT
 	tables := []table.Table{}
 
 	var (
-		tableSchema    string
-		tableName      string
-		keyColumns     string
+		tableSchema string
+		tableName   string
+		keyColumns  string
 	)
 
 	for rows.Next() {

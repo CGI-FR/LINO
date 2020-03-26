@@ -10,7 +10,7 @@ import (
 func extractDataSourceFactory() map[string]domain.DataSourceFactory {
 	return map[string]domain.DataSourceFactory{
 		"postgres": infra.NewPostgresDataSourceFactory(logger),
-		"godror": infra.NewOracleDataSourceFactory(logger),
+		"godror":   infra.NewOracleDataSourceFactory(logger),
 	}
 }
 

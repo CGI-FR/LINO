@@ -97,6 +97,9 @@ func getDataDestination(dataconnectorName string) (load.DataDestination, *load.E
 	if e1 != nil {
 		return nil, &load.Error{Description: e1.Error()}
 	}
+	if alias.ReadOnly {
+		return nil, &load.Error{Description: fmt.Sprintf("'%s' is a read only dataconnector", alias.Name)}
+	}
 
 	u, e2 := dburl.Parse(alias.URL)
 	if e2 != nil {

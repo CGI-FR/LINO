@@ -1,8 +1,6 @@
 package relation
 
 import (
-
-
 	"github.com/xo/dburl"
 	"makeit.imfr.cgi.com/lino/pkg/relation"
 
@@ -74,13 +72,13 @@ ORDER by 1, 2 asc
 
 	var (
 		relationSchema string
-		relationName string
-		sourceSchema string
-		sourceTable  string
-		sourceColumn string
-		targetSchema string
-		targetTable  string
-		targetColumn string
+		relationName   string
+		sourceSchema   string
+		sourceTable    string
+		sourceColumn   string
+		targetSchema   string
+		targetTable    string
+		targetColumn   string
 	)
 
 	for rows.Next() {

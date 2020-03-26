@@ -2,7 +2,7 @@
 
  LINO is a simple ETL (Extract Transform Load) tools to manage tests datas.
  The `lino` command line tool
-extract test data from a relational database to create a smallest
+pull test data from a relational database to create a smallest
 production-like database.
 
 ## Usage
@@ -185,13 +185,13 @@ $ mongoexport --db myproject --collection customer | lino load customer --jdbc j
 `jq` tool can be piped with the **LINO** output to prettify it.
 
 ```
-$ lino extract source | jq
+$ lino pull source | jq
 ```
 
-Extract sub field from the JSON stream
+Pull sub field from the JSON stream
 
 ```
-$ lino extract source --limit 3 | jq ".email"
+$ lino pull source --limit 3 | jq ".email"
 "MARY.SMITH@sakilacustomer.org"
 "PATRICIA.JOHNSON@sakilacustomer.org"
 "LINDA.WILLIAMS@sakilacustomer.org"
@@ -200,7 +200,7 @@ $ lino extract source --limit 3 | jq ".email"
 Project subfield to produce other *JSON* objects
 
 ```
-$ lino extract source --limit 3 | jq '{ "manager": .customer_store_id_fkey.store_manager_staff_id_fkey.first_name , "customer_email" :  .email }'
+$ lino pull source --limit 3 | jq '{ "manager": .customer_store_id_fkey.store_manager_staff_id_fkey.first_name , "customer_email" :  .email }'
 
 {
   "manager": "Mike",

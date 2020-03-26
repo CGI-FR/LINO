@@ -10,11 +10,11 @@ type MockExporter struct {
 }
 
 // Export provides a mock function with given fields: _a0
-func (_m *MockExporter) Export(_a0 ExtractionPlan) *Error {
+func (_m *MockExporter) Export(_a0 PullionPlan) *Error {
 	ret := _m.Called(_a0)
 
 	var r0 *Error
-	if rf, ok := ret.Get(0).(func(ExtractionPlan) *Error); ok {
+	if rf, ok := ret.Get(0).(func(PullionPlan) *Error); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {

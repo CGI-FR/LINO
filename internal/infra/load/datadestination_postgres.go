@@ -13,7 +13,7 @@ import (
 	"github.com/lib/pq"
 )
 
-// PostgresDataDestinationFactory exposes methods to create new Postgres extractors.
+// PostgresDataDestinationFactory exposes methods to create new Postgres pullers.
 type PostgresDataDestinationFactory struct {
 	logger load.Logger
 }

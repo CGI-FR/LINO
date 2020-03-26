@@ -39,7 +39,7 @@ func Inject(dbas dataconnector.Storage, rs relation.Storage, ts table.Storage, i
 	rowIterator = ri
 }
 
-// NewCommand implements the cli extract command
+// NewCommand implements the cli pull command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "load {<truncate>|<insert>} [Data Connector Name]",

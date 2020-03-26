@@ -1,6 +1,6 @@
 package load
 
-// RowLoader receives extracted rows one by one.
+// RowLoader receives pulled rows one by one.
 type RowLoader interface {
 	Export(Row) *Error
 }

@@ -28,9 +28,9 @@ func (s step) Cycles() CycleList              { return s.cycles }
 func (s step) PreviousStep() uint             { return s.previous }
 func (s step) String() string {
 	sb := &strings.Builder{}
-	fmt.Fprintf(sb, "step %v - extract rows from %v", s.Index(), s.Entry())
+	fmt.Fprintf(sb, "step %v - pull rows from %v", s.Index(), s.Entry())
 	if s.PreviousStep() != 0 {
-		fmt.Fprintf(sb, " following %v relationship for rows extracted at step %v", s.Following(), s.PreviousStep())
+		fmt.Fprintf(sb, " following %v relationship for rows pulled at step %v", s.Following(), s.PreviousStep())
 	}
 	for idx := uint(0); idx < s.Cycles().Len(); idx++ {
 		cycle := s.Cycles().Cycle(idx)
@@ -43,23 +43,23 @@ func (s step) String() string {
 	return sb.String()
 }
 
-type extractionPlan struct {
+type pullionPlan struct {
 	len       uint
 	slice     []Step
 	relations IngressRelationList
 	tables    TableList
 }
 
-// NewExtractionPlan initialize a new ExtractionPlan object
-func NewExtractionPlan(steps []Step, relations IngressRelationList, tables TableList) ExtractionPlan {
-	return extractionPlan{uint(len(steps)), steps, relations, tables}
+// NewPullionPlan initialize a new PullionPlan object
+func NewPullionPlan(steps []Step, relations IngressRelationList, tables TableList) PullionPlan {
+	return pullionPlan{uint(len(steps)), steps, relations, tables}
 }
 
-func (l extractionPlan) Len() uint                      { return l.len }
-func (l extractionPlan) Step(idx uint) Step             { return l.slice[idx] }
-func (l extractionPlan) Relations() IngressRelationList { return l.relations }
-func (l extractionPlan) Tables() TableList              { return l.tables }
-func (l extractionPlan) String() string {
+func (l pullionPlan) Len() uint                      { return l.len }
+func (l pullionPlan) Step(idx uint) Step             { return l.slice[idx] }
+func (l pullionPlan) Relations() IngressRelationList { return l.relations }
+func (l pullionPlan) Tables() TableList              { return l.tables }
+func (l pullionPlan) String() string {
 	switch l.len {
 	case 0:
 		return ""

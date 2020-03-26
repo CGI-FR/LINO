@@ -175,8 +175,20 @@ func (rw *PostgresRowWriter) createStatement(row push.Row) *push.Error {
 		i++
 	}
 
-	/* #nosec */
-	prepareStmt := "INSERT INTO " + rw.table.Name() + "(" + strings.Join(names, ",") + ") VALUES(" + strings.Join(valuesVar, ",") + ")"
+	var prepareStmt string
+	if rw.ds.mode == push.Delete {
+		/* #nosec */
+		prepareStmt = "DELETE FROM " + rw.table.Name() + " WHERE "
+		for i := 0; i < len(names); i++ {
+			prepareStmt += names[i] + "=" + valuesVar[i]
+			if i < len(names)-1 {
+				prepareStmt += " and "
+			}
+		}
+	} else {
+		/* #nosec */
+		prepareStmt = "INSERT INTO " + rw.table.Name() + "(" + strings.Join(names, ",") + ") VALUES(" + strings.Join(valuesVar, ",") + ")"
+	}
 	rw.ds.logger.Debug(prepareStmt)
 	// TODO: Create an update statement
 

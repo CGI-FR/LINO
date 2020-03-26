@@ -8,6 +8,8 @@ const (
 	Truncate Mode = iota
 	// Insert only new rows
 	Insert
+	// Delete only existing row
+	Delete
 	// Upsert insert and update on conflict
 	Upsert
 	// Update only existing row
@@ -19,12 +21,13 @@ const (
 var modes = [...]string{
 	"truncate",
 	"insert",
+	"delete",
 	//"upsert",
 	//"update",
 }
 
 // Modes list all modes string representation
-func Modes() [2]string {
+func Modes() [3]string {
 	return modes
 }
 

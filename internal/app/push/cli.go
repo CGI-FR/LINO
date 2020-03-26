@@ -97,6 +97,9 @@ func getDataDestination(dataconnectorName string) (push.DataDestination, *push.E
 	if e1 != nil {
 		return nil, &push.Error{Description: e1.Error()}
 	}
+	if alias == nil {
+		return nil, &push.Error{Description: fmt.Sprintf("'%s' dataconnector not found", dataconnectorName)}
+	}
 	if alias.ReadOnly {
 		return nil, &push.Error{Description: fmt.Sprintf("'%s' is a read only dataconnector", alias.Name)}
 	}

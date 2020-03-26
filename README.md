@@ -177,7 +177,7 @@ $ lino extract source --limit 100 | mongoimport --db myproject --collection cust
 and reload later to a database :
 
 ```bash
-$ mongoexport --db myproject --collection customer | lino load customer --jdbc jdbc:oracle:thin:scott/tiger@target:1721:xe
+$ mongoexport --db myproject --collection customer | lino push customer --jdbc jdbc:oracle:thin:scott/tiger@target:1721:xe
 ```
 
 ## jq

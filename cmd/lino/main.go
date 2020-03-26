@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"makeit.imfr.cgi.com/lino/internal/app/dataconnector"
 	"makeit.imfr.cgi.com/lino/internal/app/id"
-	"makeit.imfr.cgi.com/lino/internal/app/load"
 	"makeit.imfr.cgi.com/lino/internal/app/pull"
+	"makeit.imfr.cgi.com/lino/internal/app/push"
 	"makeit.imfr.cgi.com/lino/internal/app/relation"
 	"makeit.imfr.cgi.com/lino/internal/app/table"
 )
@@ -31,7 +31,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "lino [action]",
 	Short: "Command line tools for managing tests data",
-	Long:  `Lino is a simple ETL (Extract Transform Load) tools to manage tests datas. The lino command line tool pull test data from a relational database to create a smallest production-like database.`,
+	Long:  `Lino is a simple ETL (Extract Transform Push) tools to manage tests datas. The lino command line tool pull test data from a relational database to create a smallest production-like database.`,
 	Example: `  lino dataconnector add mydatabase postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
   lino db list
   lino table extract mydatabase
@@ -40,7 +40,7 @@ var rootCmd = &cobra.Command{
   lino id display-plan
   lino id show-graph
   lino pull mydatabase --limit 10 > customers.jsonl
-  lino load customer --input customer.json --jdbc jdbc:oracle:thin:scott/tiger@target:1721:xe`,
+  lino push customer --input customer.json --jdbc jdbc:oracle:thin:scott/tiger@target:1721:xe`,
 	Version: fmt.Sprintf("%v (commit=%v date=%v by=%v)", version, commit, buildDate, builtBy),
 }
 
@@ -68,7 +68,7 @@ func init() {
 	rootCmd.AddCommand(relation.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(id.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(pull.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
-	rootCmd.AddCommand(load.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
+	rootCmd.AddCommand(push.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 }
 
 func initConfig() {
@@ -94,12 +94,12 @@ func initConfig() {
 
 	id.SetLogger(logger)
 	pull.SetLogger(logger)
-	load.SetLogger(logger)
+	push.SetLogger(logger)
 
 	dataconnector.Inject(dataconnectorStorage(), dataPingerFactory())
 	relation.Inject(dataconnectorStorage(), relationStorage(), relationExtractorFactory())
 	table.Inject(dataconnectorStorage(), tableStorage(), tableExtractorFactory())
 	id.Inject(idStorage(), relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
 	pull.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), pullDataSourceFactory(), pullRowExporter(os.Stdout), traceListner(os.Stderr))
-	load.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), loadDataDestinationFactory(), loadRowIterator(os.Stdin))
+	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), pushDataDestinationFactory(), pushRowIterator(os.Stdin))
 }

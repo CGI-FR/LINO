@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
-if git status --porcelain | grep "^.M" > /dev/null
+if git status --porcelain | grep "^.M\|?" > /dev/null
 then
-    echo "🚽 Add or stash unstaged changes before commit"
+    echo "🚽 Add or stash unstaged and untracked changes before commit"
     exit 1
 else
     echo "👌 Nothing to stash"

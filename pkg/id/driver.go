@@ -147,8 +147,8 @@ func SetParentLookup(relation string, flag bool, storage Storage) *Error {
 	return nil
 }
 
-// GetExtractionPlan returns the calculated extraction plan.
-func GetExtractionPlan(storage Storage) (ExtractionPlan, *Error) {
+// GetPullerPlan returns the calculated puller plan.
+func GetPullerPlan(storage Storage) (PullerPlan, *Error) {
 	id, err := storage.Read()
 	if err != nil {
 		return nil, err
@@ -194,12 +194,12 @@ func GetExtractionPlan(storage Storage) (ExtractionPlan, *Error) {
 		logger.Warn(err.Error())
 	}
 
-	return NewExtractionPlan(steps, g.relations, g.tables), nil
+	return NewPullerPlan(steps, g.relations, g.tables), nil
 }
 
-// Export the extraction plan.
+// Export the puller plan.
 func Export(storage Storage, exporter Exporter) *Error {
-	ep, err := GetExtractionPlan(storage)
+	ep, err := GetPullerPlan(storage)
 	if err != nil {
 		return err
 	}

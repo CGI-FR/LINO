@@ -1,12 +1,12 @@
 package id
 
-// Table involved in an extraction plan.
+// Table involved in an puller plan.
 type Table interface {
 	Name() string
 	String() string
 }
 
-// TableList involved in an extraction plan.
+// TableList involved in an puller plan.
 type TableList interface {
 	Len() uint
 	Table(idx uint) Table
@@ -14,7 +14,7 @@ type TableList interface {
 	String() string
 }
 
-// Relation involved in an extraction plan.
+// Relation involved in an puller plan.
 type Relation interface {
 	Name() string
 	Parent() Table
@@ -22,7 +22,7 @@ type Relation interface {
 	String() string
 }
 
-// RelationList involved in an extraction plan.
+// RelationList involved in an puller plan.
 type RelationList interface {
 	Len() uint
 	Relation(idx uint) Relation
@@ -37,7 +37,7 @@ type IngressRelation interface {
 	LookUpParent() bool
 }
 
-// IngressRelationList involved in an extraction plan.
+// IngressRelationList involved in an puller plan.
 type IngressRelationList interface {
 	Len() uint
 	Relation(idx uint) IngressRelation
@@ -45,26 +45,26 @@ type IngressRelationList interface {
 	String() string
 }
 
-// IngressDescriptor from which the extraction plan will be computed.
+// IngressDescriptor from which the puller plan will be computed.
 type IngressDescriptor interface {
 	StartTable() Table
 	Relations() IngressRelationList
 	String() string
 }
 
-// A Cycle in the extraction plan.
+// A Cycle in the puller plan.
 type Cycle interface {
 	IngressRelationList
 }
 
-// A CycleList in the extraction plan.
+// A CycleList in the puller plan.
 type CycleList interface {
 	Len() uint
 	Cycle(idx uint) Cycle
 	String() string
 }
 
-// An Step gives required information to extract data.
+// An Step gives required information to pull data.
 type Step interface {
 	Index() uint
 	Entry() Table
@@ -76,8 +76,8 @@ type Step interface {
 	String() string
 }
 
-// ExtractionPlan is the computed plan that lists all steps required to extract data.
-type ExtractionPlan interface {
+// PullerPlan is the computed plan that lists all steps required to pull data.
+type PullerPlan interface {
 	Len() uint
 	Step(idx uint) Step
 	Relations() IngressRelationList

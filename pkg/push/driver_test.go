@@ -14,7 +14,7 @@ func init() {
 }
 
 func makeTable(name string) push.Table {
-	return push.NewTable(name, name+"_ID")
+	return push.NewTable(name, []string{})
 }
 
 func makeRel(from, to push.Table) push.Relation {
@@ -114,10 +114,10 @@ func TestInversseRelationPush(t *testing.T) {
 		"name": "John",
 		"A->B": map[string]interface{}{
 			"age": 42,
-			"C->B": []map[string]interface{}{
-				{"history": "1"},
-				{"history": "2"},
-				{"history": "3"},
+			"C->B": []interface{}{
+				map[string]interface{}{"history": "1"},
+				map[string]interface{}{"history": "2"},
+				map[string]interface{}{"history": "3"},
 			},
 		}}}
 

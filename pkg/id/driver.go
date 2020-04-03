@@ -147,8 +147,8 @@ func SetParentLookup(relation string, flag bool, storage Storage) *Error {
 	return nil
 }
 
-// GetPullionPlan returns the calculated pullion plan.
-func GetPullionPlan(storage Storage) (PullionPlan, *Error) {
+// GetPullerPlan returns the calculated puller plan.
+func GetPullerPlan(storage Storage) (PullerPlan, *Error) {
 	id, err := storage.Read()
 	if err != nil {
 		return nil, err
@@ -194,12 +194,12 @@ func GetPullionPlan(storage Storage) (PullionPlan, *Error) {
 		logger.Warn(err.Error())
 	}
 
-	return NewPullionPlan(steps, g.relations, g.tables), nil
+	return NewPullerPlan(steps, g.relations, g.tables), nil
 }
 
-// Export the pullion plan.
+// Export the puller plan.
 func Export(storage Storage, exporter Exporter) *Error {
-	ep, err := GetPullionPlan(storage)
+	ep, err := GetPullerPlan(storage)
 	if err != nil {
 		return err
 	}

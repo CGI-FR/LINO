@@ -169,12 +169,12 @@ func (c idToPushConverter) getTable(name string) push.Table {
 	table, ok := c.tmap[name]
 	if !ok {
 		logger.Error(fmt.Sprintf("missing table %v in tables.yaml", name))
-		return push.NewTable(name, "")
+		return push.NewTable(name, []string{""})
 	}
 
 	logger.Trace(fmt.Sprintf("building table %v", table))
 
-	return push.NewTable(table.Name, table.Keys[0]) // TODO : support multivalued primary keys
+	return push.NewTable(table.Name, table.Keys)
 }
 
 func (c idToPushConverter) getRelation(name string) push.Relation {

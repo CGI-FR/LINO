@@ -9,7 +9,7 @@ func SetLogger(l Logger) {
 	logger = l
 }
 
-// Pull data from source following the given pullion plan.
+// Pull data from source following the given puller plan.
 func Pull(plan Plan, source DataSource, exporter RowExporter, diagnostic TraceListener) *Error {
 	if err := source.Open(); err != nil {
 		return err
@@ -188,21 +188,26 @@ func findFromTable(rel Relation, relations RelationList, defaultTable Table) Tab
 	return defaultTable
 }
 
+func buildFilterRow(targetKey []string, localKey []string, data Row) Row {
+	row := Row{}
+	for i := 0; i < len(targetKey); i++ {
+		row[targetKey[i]] = data[localKey[i]]
+	}
+	return row
+}
+
 func relatedTo(from Table, follow Relation, data Row, exhaust bool) Filter {
 	logger.Trace(fmt.Sprintf("pull: build filter with row %v and relation %v to pull data from table %v", data, follow, from))
 	var row Row
 	switch from.Name() {
 	case follow.Parent().Name():
 		if exhaust {
-			logger.Trace(fmt.Sprintf("pull: build parent filter %v=data[%v]=%v", follow.ChildKey(), follow.ParentKey(), data[follow.ParentKey()]))
-			row = Row{follow.ChildKey(): data[follow.ParentKey()]}
+			row = buildFilterRow(follow.ChildKey(), follow.ParentKey(), data)
 		} else {
-			logger.Trace(fmt.Sprintf("pull: build parent filter %v=data[%v]=%v", follow.ParentKey(), follow.ChildKey(), data[follow.ChildKey()]))
-			row = Row{follow.ParentKey(): data[follow.ChildKey()]}
+			row = buildFilterRow(follow.ParentKey(), follow.ChildKey(), data)
 		}
 	case follow.Child().Name():
-		logger.Trace(fmt.Sprintf("pull: build child filter %v=data[%v]=%v", follow.ParentKey(), follow.ChildKey(), data[follow.ChildKey()]))
-		row = Row{follow.ParentKey(): data[follow.ChildKey()]}
+		row = buildFilterRow(follow.ParentKey(), follow.ChildKey(), data)
 	default:
 		logger.Error(fmt.Sprintf("pull: cannot build filter with row %v and relation %v to pull data from table %v", data, follow, from))
 		panic(nil)
@@ -210,12 +215,16 @@ func relatedTo(from Table, follow Relation, data Row, exhaust bool) Filter {
 
 	return NewFilter(0, row)
 }
-func removeDuplicate(pk string, a, b []Row) []Row {
+func removeDuplicate(pkList []string, a, b []Row) []Row {
 	result := []Row{}
 loop:
 	for _, row1 := range a {
 		for _, row2 := range b {
-			if row1[pk] == row2[pk] {
+			all := true
+			for _, pk := range pkList {
+				all = all && row1[pk] == row2[pk]
+			}
+			if all {
 				continue loop
 			}
 		}

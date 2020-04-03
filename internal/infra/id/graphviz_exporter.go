@@ -23,7 +23,7 @@ func NewGraphVizExporter() *GraphVizExporter {
 }
 
 // Export to a temporary svg file and open it.
-func (e *GraphVizExporter) Export(ep id.PullionPlan) *id.Error {
+func (e *GraphVizExporter) Export(ep id.PullerPlan) *id.Error {
 	dotexe, err := exec.LookPath("dot")
 	if err != nil {
 		return &id.Error{Description: err.Error()}

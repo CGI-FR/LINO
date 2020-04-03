@@ -24,7 +24,7 @@ var traceListener pull.TraceListener
 
 // local flags
 var limit uint
-var pk string
+var initialFilters map[string]string
 var diagnostic bool
 var logger pull.Logger
 
@@ -67,7 +67,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPullionPlan()
+			plan, e2 := getPullerPlan()
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(1)
@@ -89,7 +89,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		},
 	}
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")
-	cmd.Flags().StringVarP(&pk, "filter", "f", "", "filter on primary key of start table")
+	cmd.Flags().StringToStringVarP(&initialFilters, "filter", "f", map[string]string{}, "filter of start table")
 	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
@@ -119,8 +119,8 @@ func getDataSource(dataconnectorName string) (pull.DataSource, *pull.Error) {
 	return datasourceFactory.New(alias.URL), nil
 }
 
-func getPullionPlan() (pull.Plan, *pull.Error) {
-	ep, err1 := id.GetPullionPlan(idStorage)
+func getPullerPlan() (pull.Plan, *pull.Error) {
+	ep, err1 := id.GetPullerPlan(idStorage)
 	if err1 != nil {
 		return nil, &pull.Error{Description: err1.Error()}
 	}
@@ -142,16 +142,16 @@ func getPullionPlan() (pull.Plan, *pull.Error) {
 		return nil, &pull.Error{Description: err4.Error()}
 	}
 
-	if pk == "" {
-		filter = pull.NewFilter(limit, pull.Row{})
-	} else {
-		filter = pull.NewFilter(limit, pull.Row{stepList.Step(0).Entry().PrimaryKey(): pk})
+	row := pull.Row{}
+	for column, value := range initialFilters {
+		row[column] = value
 	}
+	filter = pull.NewFilter(limit, row)
 
 	return pull.NewPlan(filter, stepList), nil
 }
 
-func getStepList(ep id.PullionPlan, relations []relation.Relation, tables []table.Table) (pull.StepList, error) {
+func getStepList(ep id.PullerPlan, relations []relation.Relation, tables []table.Table) (pull.StepList, error) {
 	rmap := map[string]relation.Relation{}
 	for _, relation := range relations {
 		rmap[relation.Name] = relation
@@ -203,12 +203,12 @@ func (c epToStepListConverter) getTable(name string) pull.Table {
 	table, ok := c.tmap[name]
 	if !ok {
 		logger.Error(fmt.Sprintf("missing table %v in tables.yaml", name))
-		return pull.NewTable(name, "")
+		return pull.NewTable(name, []string{})
 	}
 
 	logger.Trace(fmt.Sprintf("building table %v", table))
 
-	return pull.NewTable(table.Name, table.Keys[0]) // TODO : support multivalued primary keys
+	return pull.NewTable(table.Name, table.Keys)
 }
 
 func (c epToStepListConverter) getRelation(name string) (pull.Relation, error) {
@@ -217,7 +217,7 @@ func (c epToStepListConverter) getRelation(name string) (pull.Relation, error) {
 	}
 
 	if name == "" {
-		return pull.NewRelation(name, nil, nil, "", ""), nil
+		return pull.NewRelation(name, nil, nil, []string{}, []string{}), nil
 	}
 
 	relation, ok := c.rmap[name]
@@ -233,8 +233,8 @@ func (c epToStepListConverter) getRelation(name string) (pull.Relation, error) {
 		relation.Name,
 		c.getTable(relation.Parent.Name),
 		c.getTable(relation.Child.Name),
-		relation.Parent.Keys[0], // TODO : support multivalued keys
-		relation.Child.Keys[0],  // TODO : support multivalued keys
+		relation.Parent.Keys,
+		relation.Child.Keys,
 	), nil
 }
 

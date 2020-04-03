@@ -11,9 +11,9 @@ type RelationReader interface {
 	Read() (RelationList, *Error)
 }
 
-// Exporter export the pullion plan.
+// Exporter export the puller plan.
 type Exporter interface {
-	Export(PullionPlan) *Error
+	Export(PullerPlan) *Error
 }
 
 // Logger for events.

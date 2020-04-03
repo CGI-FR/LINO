@@ -16,11 +16,11 @@ func init() {
 }
 
 func makeTable(name string) pull.Table {
-	return pull.NewTable(name, name+"_ID")
+	return pull.NewTable(name, []string{name + "_ID"})
 }
 
 func makeRel(from, to pull.Table) pull.Relation {
-	return pull.NewRelation(from.Name()+"->"+to.Name(), from, to, to.Name()+"_ID", to.Name()+"_ID")
+	return pull.NewRelation(from.Name()+"->"+to.Name(), from, to, []string{to.Name() + "_ID"}, []string{to.Name() + "_ID"})
 }
 
 /* func assertFollowedParent(t *testing.T, expected pull.Row, actual pull.Row, followed pull.Relation) []pull.Row {
@@ -38,7 +38,7 @@ func makeRel(from, to pull.Table) pull.Relation {
 } */
 
 func assertFollowedChild(t *testing.T, expected pull.Row, actual pull.Row, followed pull.Relation) []pull.Row {
-	fmt.Printf("assert %v is equal to %v after following %v\n", actual, expected, &followed)
+	fmt.Printf("assert %v is equal to %v after following %v\n", actual, expected, followed)
 	cleanActual := pull.Row{}
 	for key, value := range actual {
 		if key != followed.Name() && !strings.Contains(key, "->") {
@@ -72,19 +72,19 @@ func TestPull1(t *testing.T) {
 
 	source := map[string][]pull.Row{
 		A.Name(): {
-			{A.PrimaryKey(): 10, AB.ParentKey(): 20},
-			{A.PrimaryKey(): 11, AB.ParentKey(): 21},
-			{A.PrimaryKey(): 12, AB.ParentKey(): 22},
+			{A.PrimaryKey()[0]: 10, AB.ParentKey()[0]: 20},
+			{A.PrimaryKey()[0]: 11, AB.ParentKey()[0]: 21},
+			{A.PrimaryKey()[0]: 12, AB.ParentKey()[0]: 22},
 		},
 		B.Name(): {
-			{B.PrimaryKey(): 20, BC.ParentKey(): 30},
-			{B.PrimaryKey(): 21, BC.ParentKey(): 31},
-			{B.PrimaryKey(): 22, BC.ParentKey(): 32},
+			{B.PrimaryKey()[0]: 20, BC.ParentKey()[0]: 30},
+			{B.PrimaryKey()[0]: 21, BC.ParentKey()[0]: 31},
+			{B.PrimaryKey()[0]: 22, BC.ParentKey()[0]: 32},
 		},
 		C.Name(): {
-			{C.PrimaryKey(): 30},
-			{C.PrimaryKey(): 31},
-			{C.PrimaryKey(): 32},
+			{C.PrimaryKey()[0]: 30},
+			{C.PrimaryKey()[0]: 31},
+			{C.PrimaryKey()[0]: 32},
 		},
 	}
 	datasource := &MemoryDataSource{source}
@@ -125,19 +125,19 @@ func TestPull2(t *testing.T) {
 
 	source := map[string][]pull.Row{
 		A.Name(): {
-			{A.PrimaryKey(): 10, AB.ParentKey(): 20, AC.ParentKey(): 30},
-			{A.PrimaryKey(): 11, AB.ParentKey(): 21, AC.ParentKey(): 31},
-			{A.PrimaryKey(): 12, AB.ParentKey(): 22, AC.ParentKey(): 32},
+			{A.PrimaryKey()[0]: 10, AB.ParentKey()[0]: 20, AC.ParentKey()[0]: 30},
+			{A.PrimaryKey()[0]: 11, AB.ParentKey()[0]: 21, AC.ParentKey()[0]: 31},
+			{A.PrimaryKey()[0]: 12, AB.ParentKey()[0]: 22, AC.ParentKey()[0]: 32},
 		},
 		B.Name(): {
-			{B.PrimaryKey(): 20},
-			{B.PrimaryKey(): 21},
-			{B.PrimaryKey(): 22},
+			{B.PrimaryKey()[0]: 20},
+			{B.PrimaryKey()[0]: 21},
+			{B.PrimaryKey()[0]: 22},
 		},
 		C.Name(): {
-			{C.PrimaryKey(): 30},
-			{C.PrimaryKey(): 31},
-			{C.PrimaryKey(): 32},
+			{C.PrimaryKey()[0]: 30},
+			{C.PrimaryKey()[0]: 31},
+			{C.PrimaryKey()[0]: 32},
 		},
 	}
 	datasource := &MemoryDataSource{source}
@@ -186,24 +186,24 @@ func TestPull3(t *testing.T) {
 
 	source := map[string][]pull.Row{
 		A.Name(): {
-			{A.PrimaryKey(): 10, AB.ParentKey(): 20, AC.ParentKey(): 30},
-			{A.PrimaryKey(): 11, AB.ParentKey(): 21, AC.ParentKey(): 31},
-			{A.PrimaryKey(): 12, AB.ParentKey(): 22, AC.ParentKey(): 32},
+			{A.PrimaryKey()[0]: 10, AB.ParentKey()[0]: 20, AC.ParentKey()[0]: 30},
+			{A.PrimaryKey()[0]: 11, AB.ParentKey()[0]: 21, AC.ParentKey()[0]: 31},
+			{A.PrimaryKey()[0]: 12, AB.ParentKey()[0]: 22, AC.ParentKey()[0]: 32},
 		},
 		B.Name(): {
-			{B.PrimaryKey(): 20, BD.ParentKey(): 40},
-			{B.PrimaryKey(): 21, BD.ParentKey(): 41},
-			{B.PrimaryKey(): 22, BD.ParentKey(): 42},
+			{B.PrimaryKey()[0]: 20, BD.ParentKey()[0]: 40},
+			{B.PrimaryKey()[0]: 21, BD.ParentKey()[0]: 41},
+			{B.PrimaryKey()[0]: 22, BD.ParentKey()[0]: 42},
 		},
 		C.Name(): {
-			{C.PrimaryKey(): 30, CD.ParentKey(): 40},
-			{C.PrimaryKey(): 31, CD.ParentKey(): 41},
-			{C.PrimaryKey(): 32, CD.ParentKey(): 42},
+			{C.PrimaryKey()[0]: 30, CD.ParentKey()[0]: 40},
+			{C.PrimaryKey()[0]: 31, CD.ParentKey()[0]: 41},
+			{C.PrimaryKey()[0]: 32, CD.ParentKey()[0]: 42},
 		},
 		D.Name(): {
-			{D.PrimaryKey(): 40},
-			{D.PrimaryKey(): 41},
-			{D.PrimaryKey(): 42},
+			{D.PrimaryKey()[0]: 40},
+			{D.PrimaryKey()[0]: 41},
+			{D.PrimaryKey()[0]: 42},
 		},
 	}
 	datasource := &MemoryDataSource{source}
@@ -249,14 +249,14 @@ func TestPull4(t *testing.T) {
 
 	source := map[string][]pull.Row{
 		A.Name(): {
-			{A.PrimaryKey(): 10, AB.ParentKey(): 20},
-			{A.PrimaryKey(): 11, AB.ParentKey(): 21},
-			{A.PrimaryKey(): 12, AB.ParentKey(): 22},
+			{A.PrimaryKey()[0]: 10, AB.ParentKey()[0]: 20},
+			{A.PrimaryKey()[0]: 11, AB.ParentKey()[0]: 21},
+			{A.PrimaryKey()[0]: 12, AB.ParentKey()[0]: 22},
 		},
 		B.Name(): {
-			{B.PrimaryKey(): 20, BA.ParentKey(): 10},
-			{B.PrimaryKey(): 21, BA.ParentKey(): 11},
-			{B.PrimaryKey(): 22, BA.ParentKey(): 12},
+			{B.PrimaryKey()[0]: 20, BA.ParentKey()[0]: 10},
+			{B.PrimaryKey()[0]: 21, BA.ParentKey()[0]: 11},
+			{B.PrimaryKey()[0]: 22, BA.ParentKey()[0]: 12},
 		},
 	}
 	datasource := &MemoryDataSource{source}

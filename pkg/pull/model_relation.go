@@ -9,21 +9,21 @@ type relation struct {
 	name      string
 	parent    Table
 	child     Table
-	parentKey string
-	childKey  string
+	parentKey []string
+	childKey  []string
 }
 
 // NewRelation initialize a new Relation object
-func NewRelation(name string, parent Table, child Table, parentKey string, childKey string) Relation {
+func NewRelation(name string, parent Table, child Table, parentKey []string, childKey []string) Relation {
 	return relation{name: name, parent: parent, child: child, parentKey: parentKey, childKey: childKey}
 }
 
-func (r relation) Name() string      { return r.name }
-func (r relation) Parent() Table     { return r.parent }
-func (r relation) Child() Table      { return r.child }
-func (r relation) ParentKey() string { return r.parentKey }
-func (r relation) ChildKey() string  { return r.childKey }
-func (r relation) String() string    { return r.name }
+func (r relation) Name() string        { return r.name }
+func (r relation) Parent() Table       { return r.parent }
+func (r relation) Child() Table        { return r.child }
+func (r relation) ParentKey() []string { return r.parentKey }
+func (r relation) ChildKey() []string  { return r.childKey }
+func (r relation) String() string      { return r.name }
 func (r relation) OppositeOf(tablename string) Table {
 	if r.Child().Name() == tablename {
 		return r.Parent()

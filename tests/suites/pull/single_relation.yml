@@ -129,10 +129,20 @@ testcases:
     - script: lino id create public.customer
     - script: sed -i "s/true/false/g" ingress-descriptor.yaml
     - script: lino id set-parent-lookup store_manager_staff_id_fkey true
-    - script: lino pull source --limit 1 -f 1
+    - script: lino pull source --limit 1 -f customer_id=1
       assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldBeEmpty
           - result.systemoutjson.customer_id ShouldEqual 1
 
+- name: pull single table with complex filter
+  steps:
+    - script: lino id create public.customer
+    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+    - script: lino pull source --limit 1 -f customer_id=4 -f store_id=2
+      assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldBeEmpty
+          - result.systemoutjson.customer_id ShouldEqual 4
+          - result.systemoutjson.store_id ShouldEqual 2
 

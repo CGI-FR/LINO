@@ -25,11 +25,11 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode) *Er
 	}
 }
 
-// filterRelation split values and relations to follow
-func filterRelation(row Row, relations map[string]Relation) (Row, map[Relation]Row, map[Relation][]Row, *Error) {
+// FilterRelation split values and relations to follow
+func FilterRelation(row Row, relations map[string]Relation) (Row, map[string]Row, map[string][]Row, *Error) {
 	frow := Row{}
-	frel := map[Relation]Row{}
-	fInverseRel := map[Relation][]Row{}
+	frel := map[string]Row{}
+	fInverseRel := map[string][]Row{}
 
 	for name, val := range row {
 		if rel, ok := relations[name]; ok {
@@ -37,57 +37,25 @@ func filterRelation(row Row, relations map[string]Relation) (Row, map[Relation]R
 			case map[string]interface{}:
 				sr := Row{}
 				for k, v := range tv {
-					switch vv := v.(type) {
-					case nil: // nil is not interface {} !
-						sr[k] = vv
-					case interface{}:
-						sr[k] = vv
-					default:
-						logger.Trace(fmt.Sprintf("k = %s", k))
-						logger.Trace(fmt.Sprintf("t = %T", v))
-						logger.Trace(fmt.Sprintf("v = %s", v))
-					}
+					sr[k] = v
 				}
-				frel[rel] = sr
+
+				frel[rel.Name()] = sr
 			case []interface{}:
 				sa := []Row{}
 				for _, srValue := range tv {
-					sr := Row{}
-					if srMap, ok := srValue.(map[string]interface{}); !ok {
+					var srMap map[string]interface{}
+					if srMap, ok = srValue.(map[string]interface{}); !ok {
 						return frow, frel, fInverseRel, &Error{Description: fmt.Sprintf("%v is not a map", val)}
-					} else {
-						for k, v := range srMap {
-							if vv, ok := v.(Value); !ok {
-								logger.Trace(fmt.Sprintf("k = %s", k))
-								logger.Trace(fmt.Sprintf("t = %T", v))
-								logger.Trace(fmt.Sprintf("v = %s", v))
-							} else {
-								sr[k] = vv
-							}
-
-							sa = append(sa, sr)
-						}
 					}
-				}
-				fInverseRel[rel] = sa
-			case []map[string]interface{}:
-				sa := []Row{}
-				for _, srValue := range tv {
 					sr := Row{}
-
-					for k, v := range srValue {
-						if vv, ok := v.(Value); !ok {
-							logger.Trace(fmt.Sprintf("k = %s", k))
-							logger.Trace(fmt.Sprintf("t = %T", v))
-							logger.Trace(fmt.Sprintf("v = %s", v))
-						} else {
-							sr[k] = vv
-						}
-
-						sa = append(sa, sr)
+					for k, v := range srMap {
+						sr[k] = v
 					}
+					sa = append(sa, sr)
 				}
-				fInverseRel[rel] = sa
+				fInverseRel[rel.Name()] = sa
+
 			default:
 				logger.Error(fmt.Sprintf("key = %s", name))
 				logger.Error(fmt.Sprintf("type = %T", val))
@@ -104,7 +72,7 @@ func filterRelation(row Row, relations map[string]Relation) (Row, map[Relation]R
 
 // pushRow push a row in a specific table
 func pushRow(row Row, ds DataDestination, table Table, plan Plan) *Error {
-	frow, frel, fInverseRel, err1 := filterRelation(row, plan.RelationsFromTable(table))
+	frow, frel, fInverseRel, err1 := FilterRelation(row, plan.RelationsFromTable(table))
 
 	if err1 != nil {
 		return err1
@@ -121,15 +89,17 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan) *Error {
 		return err3
 	}
 
-	for rel, subRow := range frel {
+	for relName, subRow := range frel {
+		rel := plan.RelationsFromTable(table)[relName]
 		err4 := pushRow(subRow, ds, rel.OppositeOf(table), plan)
 		if err4 != nil {
 			return err4
 		}
 	}
 
-	for rel, subArray := range fInverseRel {
+	for relName, subArray := range fInverseRel {
 		for _, subRow := range subArray {
+			rel := plan.RelationsFromTable(table)[relName]
 			err5 := pushRow(subRow, ds, rel.OppositeOf(table), plan)
 			if err5 != nil {
 				return err5

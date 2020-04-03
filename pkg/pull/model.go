@@ -3,7 +3,7 @@ package pull
 // Table from which to pull data.
 type Table interface {
 	Name() string
-	PrimaryKey() string
+	PrimaryKey() []string
 }
 
 // Relation between two tables.
@@ -11,8 +11,8 @@ type Relation interface {
 	Name() string
 	Parent() Table
 	Child() Table
-	ParentKey() string
-	ChildKey() string
+	ParentKey() []string
+	ChildKey() []string
 	OppositeOf(tablename string) Table
 }
 
@@ -49,7 +49,7 @@ type StepList interface {
 	Step(uint) Step
 }
 
-// Plan of the pullion process.
+// Plan of the puller process.
 type Plan interface {
 	InitFilter() Filter
 	Steps() StepList

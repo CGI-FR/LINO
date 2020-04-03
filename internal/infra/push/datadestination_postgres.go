@@ -201,13 +201,30 @@ func (rw *PostgresRowWriter) createStatement(row push.Row) *push.Error {
 	return nil
 }
 
+func (rw *PostgresRowWriter) addToCache(row push.Row) {
+	rw.duplicateKeysCache[rw.computeRowSum(row)] = struct{}{}
+}
+
+func (rw *PostgresRowWriter) isInCache(row push.Row) bool {
+	_, ok := rw.duplicateKeysCache[rw.computeRowSum(row)]
+	return ok
+}
+
+func (rw *PostgresRowWriter) computeRowSum(row push.Row) string {
+	sum := ""
+	for _, pk := range rw.table.PrimaryKey() {
+		sum = fmt.Sprintf("%s|,-%v", sum, row[pk])
+	}
+	return sum
+}
+
 // Write
 func (rw *PostgresRowWriter) Write(row push.Row) *push.Error {
-	if _, ok := rw.duplicateKeysCache[row[rw.table.PrimaryKey()]]; ok {
-		rw.ds.logger.Trace(fmt.Sprintf("duplicate key in dataset %v (%s) for %s", row[rw.table.PrimaryKey()], rw.table.PrimaryKey(), rw.table.Name()))
+	if ok := rw.isInCache(row); ok {
+		rw.ds.logger.Trace(fmt.Sprintf("duplicate key in dataset %v (%s) for %s", row, rw.table.PrimaryKey(), rw.table.Name()))
 		return nil
 	}
-	rw.duplicateKeysCache[row[rw.table.PrimaryKey()]] = struct{}{}
+	rw.addToCache(row)
 
 	err1 := rw.createStatement(row)
 	if err1 != nil {
@@ -224,7 +241,7 @@ func (rw *PostgresRowWriter) Write(row push.Row) *push.Error {
 	if err2 != nil {
 		pqErr := err2.(*pq.Error)
 		if pqErr.Code == "23505" { //duplicate
-			rw.ds.logger.Trace(fmt.Sprintf("duplicate key %v (%s) for %s", row[rw.table.PrimaryKey()], rw.table.PrimaryKey(), rw.table.Name()))
+			rw.ds.logger.Trace(fmt.Sprintf("duplicate key %v (%s) for %s", row, rw.table.PrimaryKey(), rw.table.Name()))
 			// TODO update
 		} else {
 			return &push.Error{Description: err2.Error()}

@@ -3,7 +3,7 @@ package push
 // Table from which to push data.
 type Table interface {
 	Name() string
-	PrimaryKey() string
+	PrimaryKey() []string
 }
 
 // Plan describe how to push data

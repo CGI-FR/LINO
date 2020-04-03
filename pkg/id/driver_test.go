@@ -421,7 +421,7 @@ func TestGetSteps(t *testing.T) {
 		t.Run(fmt.Sprintf("test get step %d", i), func(t *testing.T) {
 			storage := &MemoryStorage{id: tt.id}
 
-			ep, err := id.GetPullionPlan(storage)
+			ep, err := id.GetPullerPlan(storage)
 
 			assert.Nil(t, err)
 

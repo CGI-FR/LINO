@@ -50,6 +50,5 @@ testcases:
     - script: lino id set-child-lookup staff_address_id_fkey  true
     - script: lino pull source --limit 1
       assertions:
-           # FIXME 29
-          - result.code ShouldEqual 2
-          #- result.systemerr ShouldBeEmpty
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldBeEmpty

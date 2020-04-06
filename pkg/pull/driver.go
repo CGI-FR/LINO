@@ -67,7 +67,7 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 			relatedToRows := allRows[fromTable.Name()]
 			logger.Trace(fmt.Sprintf("pull: row #%v, %v related row(s)", i, len(relatedToRows)))
 			for _, relatedToRow := range relatedToRows {
-				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow, false)
+				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow)
 				if relatedToRow[rel.Name()] == nil {
 					relatedToRow[rel.Name()] = []Row{}
 				}
@@ -111,9 +111,9 @@ func (e puller) exhaust(step Step, allRows map[string][]Row) *Error {
 			logger.Trace(fmt.Sprintf("pull: following relation %v has %v source row(s)", relation, len(fromRows)))
 			for i, fromRow := range fromRows {
 				logger.Trace(fmt.Sprintf("pull: following relation %v on row #%v (%v)", relation, i, fromRow))
-				nextFilter := relatedTo(fromTable, relation, fromRow, true)
-				logger.Trace(fmt.Sprintf("pull: following relation %v on row #%v with filter %v", relation, i, nextFilter))
 				toTable := relation.OppositeOf(fromTable.Name())
+				nextFilter := relatedTo(toTable, relation, fromRow)
+				logger.Trace(fmt.Sprintf("pull: following relation %v on row #%v with filter %v", relation, i, nextFilter))
 				directionParent := toTable.Name() == relation.Parent().Name()
 				rows, err := e.read(toTable, nextFilter)
 				if err != nil {
@@ -196,22 +196,21 @@ func buildFilterRow(targetKey []string, localKey []string, data Row) Row {
 	return row
 }
 
-func relatedTo(from Table, follow Relation, data Row, exhaust bool) Filter {
+func relatedTo(from Table, follow Relation, data Row) Filter {
 	logger.Trace(fmt.Sprintf("pull: build filter with row %v and relation %v to pull data from table %v", data, follow, from))
 	var row Row
-	switch from.Name() {
-	case follow.Parent().Name():
-		if exhaust {
-			row = buildFilterRow(follow.ChildKey(), follow.ParentKey(), data)
-		} else {
-			row = buildFilterRow(follow.ParentKey(), follow.ChildKey(), data)
-		}
-	case follow.Child().Name():
-		row = buildFilterRow(follow.ParentKey(), follow.ChildKey(), data)
-	default:
+	if from.Name() != follow.Parent().Name() && from.Name() != follow.Child().Name() {
 		logger.Error(fmt.Sprintf("pull: cannot build filter with row %v and relation %v to pull data from table %v", data, follow, from))
 		panic(nil)
 	}
+	var localKey []string
+	if follow.Child().Name() == from.Name() {
+		localKey = follow.ParentKey()
+	} else {
+		localKey = follow.ChildKey()
+	}
+
+	row = buildFilterRow(from.PrimaryKey(), localKey, data)
 
 	return NewFilter(0, row)
 }

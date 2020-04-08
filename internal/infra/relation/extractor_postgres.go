@@ -3,6 +3,8 @@ package relation
 import (
 
 	// import postgresql connector
+	"fmt"
+
 	_ "github.com/lib/pq"
 
 	"github.com/xo/dburl"
@@ -18,19 +20,21 @@ func NewPostgresExtractorFactory() *PostgresExtractorFactory {
 type PostgresExtractorFactory struct{}
 
 // New return a Postgres extractor
-func (e *PostgresExtractorFactory) New(url string) relation.Extractor {
-	return NewPostgresExtractor(url)
+func (e *PostgresExtractorFactory) New(url string, schema string) relation.Extractor {
+	return NewPostgresExtractor(url, schema)
 }
 
 // PostgresExtractor provides relation extraction logic from Postgres database.
 type PostgresExtractor struct {
-	url string
+	url    string
+	schema string
 }
 
 // NewPostgresExtractor creates a new postgres extractor.
-func NewPostgresExtractor(url string) *PostgresExtractor {
+func NewPostgresExtractor(url string, schema string) *PostgresExtractor {
 	return &PostgresExtractor{
-		url: url,
+		url:    url,
+		schema: schema,
 	}
 }
 
@@ -66,6 +70,10 @@ FROM
       AND ccu.table_schema = tc.table_schema
 WHERE tc.constraint_type = 'FOREIGN KEY'
             `
+
+	if e.schema != "" {
+		SQL += fmt.Sprintf("AND tc.table_schema = '%s'", e.schema)
+	}
 
 	rows, err := db.Query(SQL)
 	if err != nil {

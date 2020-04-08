@@ -1,6 +1,7 @@
 package table
 
 import (
+	"fmt"
 	"strings"
 
 	// import postgresql connector
@@ -19,19 +20,21 @@ func NewPostgresExtractorFactory() *PostgresExtractorFactory {
 type PostgresExtractorFactory struct{}
 
 // New return a Postgres extractor
-func (e *PostgresExtractorFactory) New(url string) table.Extractor {
-	return NewPostgresExtractor(url)
+func (e *PostgresExtractorFactory) New(url string, schema string) table.Extractor {
+	return NewPostgresExtractor(url, schema)
 }
 
 // PostgresExtractor provides table extraction logic from Postgres database.
 type PostgresExtractor struct {
-	url string
+	url    string
+	schema string
 }
 
 // NewPostgresExtractor creates a new postgres extractor.
-func NewPostgresExtractor(url string) *PostgresExtractor {
+func NewPostgresExtractor(url string, schema string) *PostgresExtractor {
 	return &PostgresExtractor{
-		url: url,
+		url:    url,
+		schema: schema,
 	}
 }
 
@@ -58,6 +61,13 @@ func (e *PostgresExtractor) Extract() ([]table.Table, *table.Error) {
 	AND kcu.constraint_schema = tco.constraint_schema
 	AND kcu.constraint_name = tco.constraint_name
 	WHERE tco.constraint_type = 'PRIMARY KEY'
+	`
+
+	if e.schema != "" {
+		SQL += fmt.Sprintf("AND kcu.table_schema = '%s'", e.schema)
+	}
+
+	SQL += `
 	GROUP BY tco.constraint_name,
 		kcu.table_schema,
 		kcu.table_name

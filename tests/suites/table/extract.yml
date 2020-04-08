@@ -1,0 +1,31 @@
+name: table
+testcases:
+- name: prepare test
+  steps:
+    # Clean working directory
+    - script: rm -f *
+    - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+
+- name: extract table
+  steps:
+    - script: lino table extract source
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldEqual "lino finds 15 table(s)"
+        - result.systemerr ShouldBeEmpty
+
+- name: extract table with schema
+  steps:
+    - script: lino table extract --schema public source
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldEqual "lino finds 15 table(s)"
+        - result.systemerr ShouldBeEmpty
+
+- name: extract tables with unknow schema
+  steps:
+    - script: lino table extract --schema unkown source
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldEqual "lino finds 0 table(s)"
+        - result.systemerr ShouldBeEmpty

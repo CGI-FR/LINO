@@ -1,6 +1,8 @@
 package relation
 
 import (
+	"fmt"
+
 	"github.com/xo/dburl"
 	"makeit.imfr.cgi.com/lino/pkg/relation"
 
@@ -17,19 +19,21 @@ func NewOracleExtractorFactory() *OracleExtractorFactory {
 type OracleExtractorFactory struct{}
 
 // New return a Oracle extractor
-func (e *OracleExtractorFactory) New(url string) relation.Extractor {
-	return NewOracleExtractor(url)
+func (e *OracleExtractorFactory) New(url string, schema string) relation.Extractor {
+	return NewOracleExtractor(url, schema)
 }
 
 // OracleExtractor provides relation extraction logic from Oracle database.
 type OracleExtractor struct {
-	url string
+	url    string
+	schema string
 }
 
 // NewOracleExtractor creates a new oracle extractor.
-func NewOracleExtractor(url string) *OracleExtractor {
+func NewOracleExtractor(url string, schema string) *OracleExtractor {
 	return &OracleExtractor{
-		url: url,
+		url:    url,
+		schema: schema,
 	}
 }
 
@@ -47,7 +51,7 @@ func (e *OracleExtractor) Extract() ([]relation.Relation, *relation.Error) {
 	}
 
 	SQL := `
-	SELECT 
+	SELECT
 	a.owner schema, a.constraint_name name,
 	c_pk.owner schema_source, c_pk.table_name parent_table, a_pk.COLUMN_NAME parent_key,
 	a_pk.owner schema_source, a.table_name child_table, a.COLUMN_NAME child_key
@@ -59,9 +63,17 @@ JOIN all_constraints c_pk ON c.r_owner = c_pk.owner
 JOIN all_cons_columns a_pk ON c_pk.CONSTRAINT_NAME = a_pk.CONSTRAINT_NAME
 						  AND a.POSITION = a_pk.POSITION
 WHERE
-a.owner =  user
+`
+
+	if e.schema == "" {
+		SQL += "a.owner = user"
+	} else {
+		SQL += fmt.Sprintf("a.owner = '%s'", e.schema)
+	}
+
+	SQL += `
 ORDER by 1, 2 asc
-            `
+`
 
 	rows, err := db.Query(SQL)
 	if err != nil {

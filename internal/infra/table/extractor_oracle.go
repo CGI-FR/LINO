@@ -1,6 +1,7 @@
 package table
 
 import (
+	"fmt"
 	"strings"
 
 	// import Oracle connector
@@ -19,19 +20,21 @@ func NewOracleExtractorFactory() *OracleExtractorFactory {
 type OracleExtractorFactory struct{}
 
 // New return a Oracle extractor
-func (e *OracleExtractorFactory) New(url string) table.Extractor {
-	return NewOracleExtractor(url)
+func (e *OracleExtractorFactory) New(url string, schema string) table.Extractor {
+	return NewOracleExtractor(url, schema)
 }
 
 // OracleExtractor provides table extraction logic from Oracle database.
 type OracleExtractor struct {
-	url string
+	url    string
+	schema string
 }
 
 // NewOracleExtractor creates a new oracle extractor.
-func NewOracleExtractor(url string) *OracleExtractor {
+func NewOracleExtractor(url string, schema string) *OracleExtractor {
 	return &OracleExtractor{
-		url: url,
+		url:    url,
+		schema: schema,
 	}
 }
 
@@ -53,13 +56,20 @@ SELECT
 	all_cons_columns.owner as schema_name,
 	all_cons_columns.table_name as table_name,
 	LISTAGG(all_cons_columns.column_name, ',') WITHIN GROUP (order by all_cons_columns.position) as columns
- FROM all_constraints, all_cons_columns 
- where 
+ FROM all_constraints, all_cons_columns
+ where
 	all_constraints.constraint_type = 'P'
 	and all_constraints.constraint_name = all_cons_columns.constraint_name
 	and all_constraints.owner = all_cons_columns.owner
-	and all_constraints.owner =  user
-	
+	`
+
+	if e.schema == "" {
+		SQL += "AND all_constraints.owner =  user"
+	} else {
+		SQL += fmt.Sprintf("AND all_constraints.owner = '%s'", e.schema)
+	}
+
+	SQL += `
  group by all_cons_columns.table_name, all_cons_columns.owner
 	`
 

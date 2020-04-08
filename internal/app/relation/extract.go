@@ -10,6 +10,8 @@ import (
 	"makeit.imfr.cgi.com/lino/pkg/relation"
 )
 
+var schema string
+
 // newExtractCommand implements the cli relation extract command
 func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	cmd := &cobra.Command{
@@ -42,7 +44,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 				os.Exit(1)
 			}
 
-			extractor := factory.New(alias.URL)
+			extractor := factory.New(alias.URL, schema)
 
 			e2 := relation.Extract(extractor, relationStorage)
 			if e2 != nil {
@@ -56,9 +58,10 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 				os.Exit(1)
 			}
 
-			fmt.Fprintf(out, "lino finds %v relations from constraints", len(relations))
+			fmt.Fprintf(out, "lino finds %v relations from constraints\n", len(relations))
 		},
 	}
+	cmd.Flags().StringVarP(&schema, "schema", "s", "", "specify the schema to use")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

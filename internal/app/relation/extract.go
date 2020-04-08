@@ -58,7 +58,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 				os.Exit(1)
 			}
 
-			fmt.Fprintf(out, "lino finds %v relations from constraints", len(relations))
+			fmt.Fprintf(out, "lino finds %v relations from constraints\n", len(relations))
 		},
 	}
 	cmd.Flags().StringVarP(&schema, "schema", "s", "", "specify the schema to use")

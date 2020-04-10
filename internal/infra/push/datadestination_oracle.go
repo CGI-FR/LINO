@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/xo/dburl"
@@ -221,8 +222,15 @@ func (rw *OracleRowWriter) Write(row push.Row) *push.Error {
 
 	values := []interface{}{}
 	for _, h := range rw.headers {
-		values = append(values, row[h])
+		// FIXME: Workaround to parse time from json
+		aTime, err := time.Parse("2006-01-02T15:04:05.999Z07:00", fmt.Sprintf("%v", row[h]))
+		if err != nil {
+			values = append(values, row[h])
+		} else {
+			values = append(values, aTime)
+		}
 	}
+
 	rw.ds.logger.Trace(fmt.Sprint(values))
 
 	_, err2 := rw.statement.Exec(values...)

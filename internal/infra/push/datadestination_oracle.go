@@ -171,7 +171,7 @@ func (rw *OracleRowWriter) createStatement(row push.Row) *push.Error {
 	i := 1
 	for k := range row {
 		names = append(names, k)
-		valuesVar = append(valuesVar, fmt.Sprintf("$%d", i))
+		valuesVar = append(valuesVar, fmt.Sprintf(":v%d", i))
 		i++
 	}
 

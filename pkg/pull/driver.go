@@ -198,22 +198,18 @@ func buildFilterRow(targetKey []string, localKey []string, data Row) Row {
 
 func relatedTo(from Table, follow Relation, data Row) Filter {
 	logger.Trace(fmt.Sprintf("pull: build filter with row %v and relation %v to pull data from table %v", data, follow, from))
-	var row Row
 	if from.Name() != follow.Parent().Name() && from.Name() != follow.Child().Name() {
 		logger.Error(fmt.Sprintf("pull: cannot build filter with row %v and relation %v to pull data from table %v", data, follow, from))
 		panic(nil)
 	}
-	var localKey []string
+
 	if follow.Child().Name() == from.Name() {
-		localKey = follow.ParentKey()
-	} else {
-		localKey = follow.ChildKey()
+		return NewFilter(0, buildFilterRow(follow.ChildKey(), follow.ParentKey(), data))
 	}
 
-	row = buildFilterRow(from.PrimaryKey(), localKey, data)
-
-	return NewFilter(0, row)
+	return NewFilter(0, buildFilterRow(follow.ParentKey(), follow.ChildKey(), data))
 }
+
 func removeDuplicate(pkList []string, a, b []Row) []Row {
 	result := []Row{}
 loop:

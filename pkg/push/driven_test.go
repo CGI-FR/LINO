@@ -24,9 +24,10 @@ func (ri *rowIterator) Close() *push.Error {
 }
 
 type memoryDataDestination struct {
-	tables map[string]*rowWriter
-	closed bool
-	opened bool
+	tables    map[string]*rowWriter
+	closed    bool
+	committed bool
+	opened    bool
 }
 
 func (mdd *memoryDataDestination) RowWriter(table push.Table) (push.RowWriter, *push.Error) {
@@ -35,6 +36,11 @@ func (mdd *memoryDataDestination) RowWriter(table push.Table) (push.RowWriter, *
 
 func (mdd *memoryDataDestination) Open(pla push.Plan, mode push.Mode) *push.Error {
 	mdd.opened = true
+	return nil
+}
+
+func (mdd *memoryDataDestination) Commit() *push.Error {
+	mdd.committed = true
 	return nil
 }
 

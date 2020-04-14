@@ -5,13 +5,14 @@ import "fmt"
 var logger Logger = Nologger{}
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode) *Error {
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint) *Error {
 	err1 := destination.Open(plan, mode)
 	if err1 != nil {
 		return err1
 	}
 	defer destination.Close()
 
+	i := uint(0)
 	for {
 		row, stop := ri.NextRow()
 		if stop != nil {
@@ -21,6 +22,14 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode) *Er
 		err2 := pushRow(*row, destination, plan.FirstTable(), plan)
 		if err2 != nil {
 			return err2
+		}
+		i++
+		if i%commitSize == 0 {
+			logger.Info("Intermediate commit")
+			err3 := destination.Commit()
+			if err2 != nil {
+				return err3
+			}
 		}
 	}
 }

@@ -59,6 +59,22 @@ func (ds *PostgresDataDestination) Close() *push.Error {
 	return nil
 }
 
+// Commit postgres connections
+func (ds *PostgresDataDestination) Commit() *push.Error {
+	for _, rw := range ds.rowWriter {
+		err := rw.commit()
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
+	}
+
+	err := ds.db.Close()
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+	return nil
+}
+
 // Open postgres Connections
 func (ds *PostgresDataDestination) Open(plan push.Plan, mode push.Mode) *push.Error {
 	ds.mode = mode
@@ -119,6 +135,7 @@ type PostgresRowWriter struct {
 	ds                 *PostgresDataDestination
 	duplicateKeysCache map[push.Value]struct{}
 	statement          *sql.Stmt
+	tx                 *sql.Tx
 	headers            []string
 }
 
@@ -145,13 +162,41 @@ func (rw *PostgresRowWriter) open() *push.Error {
 		return &push.Error{Description: err2.Error()}
 	}
 	rw.duplicateKeysCache = map[push.Value]struct{}{}
+
+	err3 := rw.begin()
+	if err3 != nil {
+		return &push.Error{Description: err3.Error()}
+	}
 	return nil
+}
+
+func (rw *PostgresRowWriter) begin() *push.Error {
+	tx, err := rw.ds.db.Begin()
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+	rw.tx = tx
+	return nil
+}
+
+func (rw *PostgresRowWriter) commit() *push.Error {
+	err := rw.tx.Commit()
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+	return rw.begin()
 }
 
 // close table writer
 func (rw *PostgresRowWriter) close() *push.Error {
 	if rw.statement != nil {
 		err := rw.statement.Close()
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
+	}
+	if rw.tx != nil {
+		err := rw.tx.Commit()
 		if err != nil {
 			return &push.Error{Description: err.Error()}
 		}

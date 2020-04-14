@@ -13,6 +13,7 @@ type DataDestinationFactory interface {
 // DataDestination to write in the push process.
 type DataDestination interface {
 	Open(plan Plan, mode Mode) *Error
+	Commit() *Error
 	RowWriter(table Table) (RowWriter, *Error)
 	Close() *Error
 }

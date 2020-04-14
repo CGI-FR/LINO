@@ -60,6 +60,18 @@ func (ds *OracleDataDestination) Close() *push.Error {
 	return nil
 }
 
+// Commit Oracle connections
+func (ds *OracleDataDestination) Commit() *push.Error {
+	for _, rw := range ds.rowWriter {
+		err := rw.commit()
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
+	}
+
+	return nil
+}
+
 // Open Oracle Connections
 func (ds *OracleDataDestination) Open(plan push.Plan, mode push.Mode) *push.Error {
 	ds.mode = mode
@@ -120,6 +132,7 @@ type OracleRowWriter struct {
 	ds                 *OracleDataDestination
 	duplicateKeysCache map[push.Value]struct{}
 	statement          *sql.Stmt
+	tx                 *sql.Tx
 	headers            []string
 }
 
@@ -146,13 +159,51 @@ func (rw *OracleRowWriter) open() *push.Error {
 		return &push.Error{Description: err2.Error()}
 	}
 	rw.duplicateKeysCache = map[push.Value]struct{}{}
+
+	err3 := rw.begin()
+	if err3 != nil {
+		return &push.Error{Description: err3.Error()}
+	}
 	return nil
+}
+
+func (rw *OracleRowWriter) begin() *push.Error {
+	tx, err := rw.ds.db.Begin()
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+	rw.tx = tx
+	return nil
+}
+
+func (rw *OracleRowWriter) commit() *push.Error {
+	if rw.statement != nil {
+		err := rw.statement.Close()
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
+		rw.statement = nil
+	}
+	if rw.tx != nil {
+		err := rw.tx.Commit()
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
+		rw.tx = nil
+	}
+	return rw.begin()
 }
 
 // close table writer
 func (rw *OracleRowWriter) close() *push.Error {
 	if rw.statement != nil {
 		err := rw.statement.Close()
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
+	}
+	if rw.tx != nil {
+		err := rw.tx.Commit()
 		if err != nil {
 			return &push.Error{Description: err.Error()}
 		}
@@ -176,12 +227,24 @@ func (rw *OracleRowWriter) createStatement(row push.Row) *push.Error {
 		i++
 	}
 
-	/* #nosec */
-	prepareStmt := "INSERT INTO " + rw.table.Name() + "(" + strings.Join(names, ",") + ") VALUES(" + strings.Join(valuesVar, ",") + ")"
+	var prepareStmt string
+	if rw.ds.mode == push.Delete {
+		/* #nosec */
+		prepareStmt = "DELETE FROM " + rw.table.Name() + " WHERE "
+		for i := 0; i < len(names); i++ {
+			prepareStmt += names[i] + "=" + valuesVar[i]
+			if i < len(names)-1 {
+				prepareStmt += " and "
+			}
+		}
+	} else {
+		/* #nosec */
+		prepareStmt = "INSERT INTO " + rw.table.Name() + "(" + strings.Join(names, ",") + ") VALUES(" + strings.Join(valuesVar, ",") + ")"
+	}
 	rw.ds.logger.Debug(prepareStmt)
 	// TODO: Create an update statement
 
-	stmt, err := rw.ds.db.Prepare(prepareStmt)
+	stmt, err := rw.tx.Prepare(prepareStmt)
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}

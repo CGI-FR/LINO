@@ -65,3 +65,28 @@ testcases:
         - result.code ShouldEqual 1
         - result.systemout ShouldBeEmpty
         - result.systemerr ShouldContainSubstring "'source' is a read only dataconnector"
+
+
+- name: push 500 lines
+  steps:
+    - script: yes '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | head -n 500 | lino push dest
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldBeEmpty
+        - result.systemerr ShouldBeEmpty
+
+- name: push 10000 lines
+  steps:
+    - script: yes '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | head -n 10000 | lino push dest
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldBeEmpty
+        - result.systemerr ShouldBeEmpty
+
+- name: push 100000 lines
+  steps:
+    - script: yes '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | head -n 10000 | lino push --commitSize 100 dest
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldBeEmpty
+        - result.systemerr ShouldBeEmpty

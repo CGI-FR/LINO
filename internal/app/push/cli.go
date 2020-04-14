@@ -39,6 +39,8 @@ func Inject(dbas dataconnector.Storage, rs relation.Storage, ts table.Storage, i
 	rowIterator = ri
 }
 
+var commitSize uint
+
 // NewCommand implements the cli pull command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	cmd := &cobra.Command{
@@ -79,13 +81,14 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 			logger.Debug(fmt.Sprintf("call Push with mode %s", mode))
-			e3 := push.Push(rowIterator, datadestination, plan, mode)
+			e3 := push.Push(rowIterator, datadestination, plan, mode, commitSize)
 			if e3 != nil {
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
 			}
 		},
 	}
+	cmd.Flags().UintVarP(&commitSize, "commitSize", "c", 500, "Commit size")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

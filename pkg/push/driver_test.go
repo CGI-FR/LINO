@@ -36,9 +36,9 @@ func TestSimplePush(t *testing.T) {
 		B.Name(): &rowWriter{},
 		C.Name(): &rowWriter{},
 	}
-	dest := memoryDataDestination{tables, false, false}
+	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert)
+	err := push.Push(&ri, &dest, plan, push.Insert, 2)
 
 	assert.Nil(t, err)
 	assert.Equal(t, true, dest.closed)
@@ -74,9 +74,9 @@ func TestRelationPush(t *testing.T) {
 		B.Name(): &rowWriter{},
 		C.Name(): &rowWriter{},
 	}
-	dest := memoryDataDestination{tables, false, false}
+	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert)
+	err := push.Push(&ri, &dest, plan, push.Insert, 2)
 
 	// no error
 	assert.Nil(t, err)
@@ -126,9 +126,9 @@ func TestInversseRelationPush(t *testing.T) {
 		B.Name(): &rowWriter{},
 		C.Name(): &rowWriter{},
 	}
-	dest := memoryDataDestination{tables, false, false}
+	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert)
+	err := push.Push(&ri, &dest, plan, push.Insert, 5)
 
 	// no error
 	assert.Nil(t, err)

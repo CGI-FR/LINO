@@ -7,7 +7,9 @@ services:
         - ./:/workspace
         - ~/.ssh:/home/vscode/.ssh:ro
         - ~/.ssh:/root/.ssh:ro
+        - ~/.git:/root/.git:ro
         - /var/run/docker.sock:/var/run/docker.sock
+        - testdata:/workspace/tests/workspace
       environment:
         - TZ=Europe/Paris
       cap_add:
@@ -31,6 +33,14 @@ services:
      expose:
         - 5432
 
+   lino:
+    build: .
+    command: http
+    expose:
+      - 8000
+    volumes:
+      - testdata:/home/lino/
+
    admin:
     image: dpage/pgadmin4
     restart: always
@@ -39,3 +49,7 @@ services:
         PGADMIN_DEFAULT_PASSWORD: SuperSecret
     ports:
         - 8080:80
+
+
+volumes:
+  testdata:

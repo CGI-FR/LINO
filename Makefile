@@ -87,7 +87,7 @@ release-%: mkdir
 	GO111MODULE=on CGO_ENABLED=0 go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: release
-release: clean info lint $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
+release: clean info $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
 
 .PHONY: docker
 docker: info ## Build docker image locally
@@ -115,7 +115,7 @@ docker-clean: ## Clean docker container
 	docker-compose rm -f source
 	docker-compose rm -f dest
 	docker-compose up -d source dest
-	sleep 15
+	docker-compose up -d --build lino
 
 .PHONY: venom-test
 venom-test: build docker-clean ## Exec tests with venom

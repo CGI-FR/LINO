@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 
 	infra "makeit.imfr.cgi.com/lino/internal/infra/pull"
@@ -13,8 +14,10 @@ func pullDataSourceFactory() map[string]domain.DataSourceFactory {
 	}
 }
 
-func pullRowExporter(file *os.File) domain.RowExporter {
-	return infra.NewJSONRowExporter(file)
+func pullRowExporterFactory() func(file io.Writer) domain.RowExporter {
+	return func(file io.Writer) domain.RowExporter {
+		return infra.NewJSONRowExporter(file)
+	}
 }
 
 func traceListner(file *os.File) domain.TraceListener {

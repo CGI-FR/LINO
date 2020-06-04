@@ -52,7 +52,7 @@ func (s *DOTStorage) Store(idef id.IngressDescriptor) *id.Error {
 		}
 	}
 
-	err = ioutil.WriteFile("ingress-descriptor.dot", []byte(graph.String()), 0640)
+	err = ioutil.WriteFile("ingress-descriptor.dot", []byte(graph.String()), 0600)
 	if err != nil {
 		return &id.Error{Description: err.Error()}
 	}

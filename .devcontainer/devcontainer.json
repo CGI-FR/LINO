@@ -1,5 +1,5 @@
 {
-    "name": "project-dev",
+    "name": "lino",
     "dockerComposeFile": [
         "../docker-compose.yml"
     ],
@@ -9,11 +9,11 @@
         "source",
         "dest"
     ],
+    "remoteUser": "root",
     "shutdownAction": "stopCompose",
     "postCreateCommand": "make init",
     "workspaceFolder": "/workspace",
     "remoteEnv": {
-        "COMPOSE_PROJECT_NAME": "linocli",
         "PATH": "${containerEnv:PATH}:/workspace/bin/",
     },
     // "overrideCommand": "",

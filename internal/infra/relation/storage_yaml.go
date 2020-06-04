@@ -120,7 +120,7 @@ func writeFile(list *YAMLStructure) *relation.Error {
 		return &relation.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("relations.yaml", out, 0640)
+	err = ioutil.WriteFile("relations.yaml", out, 0600)
 	if err != nil {
 		return &relation.Error{Description: err.Error()}
 	}

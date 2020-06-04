@@ -99,7 +99,7 @@ func writeFile(structure *YAMLStructure) *id.Error {
 		return &id.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("ingress-descriptor.yaml", out, 0640)
+	err = ioutil.WriteFile("ingress-descriptor.yaml", out, 0600)
 	if err != nil {
 		return &id.Error{Description: err.Error()}
 	}

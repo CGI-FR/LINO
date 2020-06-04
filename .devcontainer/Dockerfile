@@ -2,7 +2,8 @@ FROM qmcgaw/godevcontainer:debian
 
 USER root
 
-RUN chown -R vscode:vscode /go
+ADD cgi_ca_root.crt /usr/local/share/ca-certificates/cgi_ca_root.crt
+RUN chmod 644 /usr/local/share/ca-certificates/cgi_ca_root.crt && update-ca-certificates
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends make wget less && \
@@ -18,4 +19,3 @@ RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master
 ADD https://github.com/ovh/venom/releases/download/v0.27.0/venom.linux-amd64 /bin/venom
 RUN chmod +x /bin/venom
 
-USER vscode

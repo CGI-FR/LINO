@@ -109,7 +109,7 @@ func writeFile(list *YAMLStructure) *dataconnector.Error {
 		return &dataconnector.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("dataconnector.yaml", out, 0640)
+	err = ioutil.WriteFile("dataconnector.yaml", out, 0600)
 	if err != nil {
 		return &dataconnector.Error{Description: err.Error()}
 	}

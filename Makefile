@@ -115,7 +115,7 @@ docker-clean: ## Clean docker container
 	docker-compose rm -f source
 	docker-compose rm -f dest
 	docker-compose up -d source dest
-	sleep 5
+	sleep 15
 
 .PHONY: venom-test
 venom-test: build docker-clean ## Exec tests with venom

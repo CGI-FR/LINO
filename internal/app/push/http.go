@@ -13,6 +13,14 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	Handler(w, r, push.Delete)
 }
 
+func InsertHandler(w http.ResponseWriter, r *http.Request) {
+	Handler(w, r, push.Insert)
+}
+
+func TruncatHandler(w http.ResponseWriter, r *http.Request) {
+	Handler(w, r, push.Truncate)
+}
+
 func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 	pathParams := mux.Vars(r)
 	query := r.URL.Query()

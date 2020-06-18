@@ -1,4 +1,4 @@
-name: push delete mode
+name: http push
 testcases:
 - name: prepare test
   steps:
@@ -12,6 +12,8 @@ testcases:
     - script: sed -i "s/true/false/g" ingress-descriptor.yaml
     - script: lino id set-child-lookup staff_store_id_fkey true
     - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}' > dataset.jsonl
+    - script: echo '{"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' > store_1.jsonl
+    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}' > store_2.jsonl
     - script: lino push dest < dataset.jsonl
 
 - name: push delete existing data
@@ -28,3 +30,61 @@ testcases:
       - result.systemout ShouldBeEmpty
       - result.systemerr ShouldBeEmpty
 
+- name: push insert with conflict
+  steps:
+       # restore data
+    - script: cat store_1.jsonl store_2.jsonl | lino push truncate dest
+      assertions:
+        - result.systemout ShouldBeEmpty
+        - result.systemerr ShouldBeEmpty
+    - type: http
+      method: PUT
+      url: http://lino:8000/api/v1/data/dest
+      bodyFile: store_1_bis.jsonl
+      assertions:
+        - result.statuscode ShouldEqual 200
+        - result.bodyjson.error ShouldEqual ""
+    - script: lino pull dest --limit 1 -f store_id=1
+      assertions:
+        # push has no effect in insert mode
+        - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}
+    - script: lino pull dest --limit 1 -f store_id=2
+      assertions:
+        - result.systemout ShouldEqual {"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}
+
+- name: push insert without conflict
+  steps:
+    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":3,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike3","last_name":"Hillyer3","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"aVZCT1J3MEtXZ289","staff_id":3,"store_id":3,"username":"Mike"}],"store_id":3}' > store_3.jsonl
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldBeEmpty
+        - result.systemerr ShouldBeEmpty
+    - type: http
+      method: PUT
+      url: http://lino:8000/api/v1/data/dest
+      bodyFile: store_3.jsonl
+      assertions:
+        - result.statuscode ShouldEqual 200
+        - result.bodyjson.error ShouldEqual ""
+    - script: lino pull dest --limit 1 -f store_id=2
+      assertions:
+        - result.systemout ShouldEqual {"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}
+
+
+- name: push truncate child
+  steps:
+    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' > store_1_truncate.jsonl
+    - type: http
+      method: POST
+      url: http://lino:8000/api/v1/data/dest
+      bodyFile: store_1_truncate.jsonl
+      assertions:
+        - result.statuscode ShouldEqual 200
+        - result.bodyjson.error ShouldEqual ""
+    - script: lino pull dest --limit 1 -f store_id=1
+      assertions:
+        # FIXME : blob objects are not decoded from base 64 encoding
+        - result.systemout ShouldEqual {"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}
+    - script: lino pull dest --limit 1 -f store_id=2
+      assertions:
+        - result.systemout ShouldBeEmpty

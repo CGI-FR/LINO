@@ -35,6 +35,14 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Methods(http.MethodDelete).
 				HandlerFunc(push.DeleteHandler)
 
+			api.Path("/data/{dataDestination}").
+				Methods(http.MethodPut).
+				HandlerFunc(push.InsertHandler)
+
+			api.Path("/data/{dataDestination}").
+				Methods(http.MethodPost).
+				HandlerFunc(push.TruncatHandler)
+
 			http.Handle("/", r)
 			bind := fmt.Sprintf(":%d", port)
 			e1 := http.ListenAndServe(bind, nil)

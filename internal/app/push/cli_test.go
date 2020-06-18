@@ -1,6 +1,7 @@
 package push
 
 import (
+	"io"
 	"reflect"
 	"testing"
 
@@ -22,7 +23,7 @@ func Test_getDataDestination(t *testing.T) {
 		&table.MockStorage{},
 		&id.MockStorage{},
 		map[string]push.DataDestinationFactory{},
-		&push.MockRowIterator{},
+		func(io.ReadCloser) push.RowIterator { return &push.MockRowIterator{} },
 	)
 
 	type args struct {

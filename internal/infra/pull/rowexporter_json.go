@@ -3,18 +3,18 @@ package pull
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"io"
 
 	"makeit.imfr.cgi.com/lino/pkg/pull"
 )
 
 // JSONRowExporter export rows to JSON format.
 type JSONRowExporter struct {
-	file *os.File
+	file io.Writer
 }
 
 // NewJSONRowExporter creates a new JSONRowExporter.
-func NewJSONRowExporter(file *os.File) *JSONRowExporter {
+func NewJSONRowExporter(file io.Writer) *JSONRowExporter {
 	return &JSONRowExporter{file}
 }
 

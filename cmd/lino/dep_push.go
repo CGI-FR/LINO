@@ -1,7 +1,7 @@
 package main
 
 import (
-	"os"
+	"io"
 
 	infra "makeit.imfr.cgi.com/lino/internal/infra/push"
 	domain "makeit.imfr.cgi.com/lino/pkg/push"
@@ -13,6 +13,6 @@ func pushDataDestinationFactory() map[string]domain.DataDestinationFactory {
 	}
 }
 
-func pushRowIterator(file *os.File) domain.RowIterator {
-	return infra.NewJSONRowIterator(file)
+func pushRowIteratorFactory() func(io.ReadCloser) domain.RowIterator {
+	return infra.NewJSONRowIterator
 }

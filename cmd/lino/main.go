@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"makeit.imfr.cgi.com/lino/internal/app/dataconnector"
+	"makeit.imfr.cgi.com/lino/internal/app/http"
 	"makeit.imfr.cgi.com/lino/internal/app/id"
 	"makeit.imfr.cgi.com/lino/internal/app/pull"
 	"makeit.imfr.cgi.com/lino/internal/app/push"
@@ -69,6 +70,7 @@ func init() {
 	rootCmd.AddCommand(id.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(pull.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(push.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
+	rootCmd.AddCommand(http.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 }
 
 func initConfig() {
@@ -100,6 +102,6 @@ func initConfig() {
 	relation.Inject(dataconnectorStorage(), relationStorage(), relationExtractorFactory())
 	table.Inject(dataconnectorStorage(), tableStorage(), tableExtractorFactory())
 	id.Inject(idStorage(), relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
-	pull.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), pullDataSourceFactory(), pullRowExporter(os.Stdout), traceListner(os.Stderr))
-	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), pushDataDestinationFactory(), pushRowIterator(os.Stdin))
+	pull.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), pullDataSourceFactory(), pullRowExporterFactory(), traceListner(os.Stderr))
+	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), pushDataDestinationFactory(), pushRowIteratorFactory())
 }

@@ -2,6 +2,7 @@ package pull
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -19,20 +20,16 @@ var relStorage relation.Storage
 var tabStorage table.Storage
 var idStorage id.Storage
 var dataSourceFactories map[string]pull.DataSourceFactory
-var pullExporter pull.RowExporter
+var pullExporterFactory func(io.Writer) pull.RowExporter
 var traceListener pull.TraceListener
-
-// local flags
-var limit uint
-var initialFilters map[string]string
-var diagnostic bool
-var logger pull.Logger
 
 // SetLogger if needed, default no logger
 func SetLogger(l pull.Logger) {
 	logger = l
 	pull.SetLogger(l)
 }
+
+var logger pull.Logger
 
 // Inject dependencies
 func Inject(
@@ -41,19 +38,24 @@ func Inject(
 	ts table.Storage,
 	ids id.Storage,
 	dsfmap map[string]pull.DataSourceFactory,
-	rowExporter pull.RowExporter,
+	exporterFactory func(io.Writer) pull.RowExporter,
 	tl pull.TraceListener) {
 	dataconnectorStorage = dbas
 	relStorage = rs
 	tabStorage = ts
 	idStorage = ids
 	dataSourceFactories = dsfmap
-	pullExporter = rowExporter
+	pullExporterFactory = exporterFactory
 	traceListener = tl
 }
 
 // NewCommand implements the cli pull command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
+	// local flags
+	var limit uint
+	var initialFilters map[string]string
+	var diagnostic bool
+
 	cmd := &cobra.Command{
 		Use:     "pull [DB Alias Name]",
 		Short:   "Pull data from a database",
@@ -67,7 +69,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPullerPlan()
+			plan, e2 := getPullerPlan(initialFilters, limit)
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(1)
@@ -81,7 +83,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				tracer = traceListener
 			}
 
-			e3 := pull.Pull(plan, datasource, pullExporter, tracer)
+			e3 := pull.Pull(plan, datasource, pullExporterFactory(os.Stdout), tracer)
 			if e3 != nil {
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
@@ -119,7 +121,7 @@ func getDataSource(dataconnectorName string) (pull.DataSource, *pull.Error) {
 	return datasourceFactory.New(alias.URL), nil
 }
 
-func getPullerPlan() (pull.Plan, *pull.Error) {
+func getPullerPlan(initialFilters map[string]string, limit uint) (pull.Plan, *pull.Error) {
 	ep, err1 := id.GetPullerPlan(idStorage)
 	if err1 != nil {
 		return nil, &pull.Error{Description: err1.Error()}

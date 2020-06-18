@@ -2,7 +2,8 @@ FROM qmcgaw/godevcontainer:debian
 
 USER root
 
-RUN chown -R vscode:vscode /go
+ADD cgi_ca_root.crt /usr/local/share/ca-certificates/cgi_ca_root.crt
+RUN chmod 644 /usr/local/share/ca-certificates/cgi_ca_root.crt && update-ca-certificates
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends make wget less && \

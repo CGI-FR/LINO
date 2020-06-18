@@ -5,9 +5,10 @@ RUN apk update \
     ca-certificates \
     && update-ca-certificates 2>/dev/null || true
 
+ADD .devcontainer/cgi_ca_root.crt /usr/local/share/ca-certificates/cgi_ca_root.crt
+RUN chmod 644 /usr/local/share/ca-certificates/cgi_ca_root.crt && update-ca-certificates
+
 ENV GOFLAGS="-mod=readonly"
-ENV HTTPS_PROXY="http://10.83.124.3:3128/"
-ENV HTTP_PROXY="http://10.83.124.3:3128/"
 
 RUN mkdir /home/lino
 
@@ -28,13 +29,6 @@ RUN make release
 
 FROM gcr.io/distroless/base
 
-COPY --from=builder /workspace/bin/* /
-COPY --from=builder /home/lino /home/lino
-
-WORKDIR /home/lino
-
-ENTRYPOINT [ "/lino" ]
-
 # Build arguments
 ARG IMAGE_NAME
 ARG IMAGE_TAG
@@ -54,3 +48,11 @@ LABEL org.opencontainers.image.licenses="UNLICENSED"
 LABEL org.opencontainers.image.ref.name="${IMAGE_NAME}:${IMAGE_TAG}"
 LABEL org.opencontainers.image.title="${IMAGE_NAME}"
 LABEL org.opencontainers.image.description="Lino is a simple ETL (Extract Transform Load) tools to manage tests datas."
+
+COPY --from=builder /home/lino /home/lino
+COPY --from=builder /workspace/bin/* /
+
+WORKDIR /home/lino
+
+ENTRYPOINT [ "/lino" ]
+

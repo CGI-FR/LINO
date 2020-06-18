@@ -99,7 +99,7 @@ func writeFile(list *YAMLStructure) *table.Error {
 		return &table.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("tables.yaml", out, 0640)
+	err = ioutil.WriteFile("tables.yaml", out, 0600)
 	if err != nil {
 		return &table.Error{Description: err.Error()}
 	}

@@ -7,4 +7,4 @@
 !internal/
 !pkg/
 !Makefile
-!tests/
+!.devcontainer/

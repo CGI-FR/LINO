@@ -2,6 +2,7 @@ package push
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -19,7 +20,7 @@ var relStorage relation.Storage
 var tabStorage table.Storage
 var idStorage id.Storage
 var datadestinationFactories map[string]push.DataDestinationFactory
-var rowIterator push.RowIterator
+var rowIteratorFactory func(io.ReadCloser) push.RowIterator
 
 var logger push.Logger = push.Nologger{}
 
@@ -30,19 +31,18 @@ func SetLogger(l push.Logger) {
 }
 
 // Inject dependencies
-func Inject(dbas dataconnector.Storage, rs relation.Storage, ts table.Storage, ids id.Storage, dsfmap map[string]push.DataDestinationFactory, ri push.RowIterator) {
+func Inject(dbas dataconnector.Storage, rs relation.Storage, ts table.Storage, ids id.Storage, dsfmap map[string]push.DataDestinationFactory, rif func(io.ReadCloser) push.RowIterator) {
 	dataconnectorStorage = dbas
 	relStorage = rs
 	tabStorage = ts
 	idStorage = ids
 	datadestinationFactories = dsfmap
-	rowIterator = ri
+	rowIteratorFactory = rif
 }
-
-var commitSize uint
 
 // NewCommand implements the cli pull command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
+	var commitSize uint
 	cmd := &cobra.Command{
 		Use:     "push {<truncate>|<insert>} [Data Connector Name]",
 		Short:   "Push data to a database with a pushing mode (insert by default)",
@@ -81,7 +81,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 			logger.Debug(fmt.Sprintf("call Push with mode %s", mode))
-			e3 := push.Push(rowIterator, datadestination, plan, mode, commitSize)
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize)
 			if e3 != nil {
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)

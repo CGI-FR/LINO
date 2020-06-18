@@ -3,19 +3,19 @@ package push
 import (
 	"bufio"
 	"encoding/json"
-	"os"
+	"io"
 
 	"makeit.imfr.cgi.com/lino/pkg/push"
 )
 
 // JSONRowIterator export rows to JSON format.
 type JSONRowIterator struct {
-	file     *os.File
+	file     io.ReadCloser
 	fscanner *bufio.Scanner
 }
 
 // NewJSONRowIterator creates a new JSONRowIterator.
-func NewJSONRowIterator(file *os.File) push.RowIterator {
+func NewJSONRowIterator(file io.ReadCloser) push.RowIterator {
 	return &JSONRowIterator{file, bufio.NewScanner(file)}
 }
 

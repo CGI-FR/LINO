@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"makeit.imfr.cgi.com/lino/internal/app/pull"
+	"makeit.imfr.cgi.com/lino/internal/app/push"
 )
 
 // NewCommand implements the cli pull command
@@ -29,6 +30,10 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			api.Path("/data/{dataSource}").
 				Methods(http.MethodGet).
 				HandlerFunc(pull.Handler)
+
+			api.Path("/data/{dataDestination}").
+				Methods(http.MethodDelete).
+				HandlerFunc(push.DeleteHandler)
 
 			http.Handle("/", r)
 			bind := fmt.Sprintf(":%d", port)

@@ -32,11 +32,13 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				HandlerFunc(pull.Handler)
 
 			api.Path("/data/{dataDestination}").
-				Methods(http.MethodDelete).
+				Methods(http.MethodPatch).
+				Queries("mode", "delete").
 				HandlerFunc(push.DeleteHandler)
 
 			api.Path("/data/{dataDestination}").
-				Methods(http.MethodPut).
+				Methods(http.MethodPatch).
+				Queries("mode", "insert").
 				HandlerFunc(push.InsertHandler)
 
 			api.Path("/data/{dataDestination}").

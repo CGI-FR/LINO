@@ -19,8 +19,8 @@ testcases:
 - name: push delete existing data
   steps:
   - type: http
-    method: DELETE
-    url: http://lino:8000/api/v1/data/dest
+    method: PATCH
+    url: http://lino:8000/api/v1/data/dest?mode=delete
     bodyFile: dataset.jsonl
     assertions:
       - result.statuscode ShouldEqual 200
@@ -38,8 +38,8 @@ testcases:
         - result.systemout ShouldBeEmpty
         - result.systemerr ShouldBeEmpty
     - type: http
-      method: PUT
-      url: http://lino:8000/api/v1/data/dest
+      method: PATCH
+      url: http://lino:8000/api/v1/data/dest?mode=insert
       bodyFile: store_1_bis.jsonl
       assertions:
         - result.statuscode ShouldEqual 200
@@ -60,8 +60,8 @@ testcases:
         - result.systemout ShouldBeEmpty
         - result.systemerr ShouldBeEmpty
     - type: http
-      method: PUT
-      url: http://lino:8000/api/v1/data/dest
+      method: PATCH
+      url: http://lino:8000/api/v1/data/dest?mode=insert
       bodyFile: store_3.jsonl
       assertions:
         - result.statuscode ShouldEqual 200

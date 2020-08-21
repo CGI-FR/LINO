@@ -23,6 +23,25 @@ type RowReader interface {
 	Value() (Row, *Error)
 }
 
+// OneOneEmptyRowReader return one empty row
+type OneEmptyRowReader struct {
+	done bool
+}
+
+func NewOneEmptyRowReader() *OneEmptyRowReader {
+	return &OneEmptyRowReader{false}
+}
+
+// Next is always false except for the first one
+func (r *OneEmptyRowReader) Next() bool {
+	result := !r.done
+	r.done = true
+	return result
+}
+
+// Value is always an empty row
+func (r OneEmptyRowReader) Value() (Row, *Error) { return Row{}, nil }
+
 // Logger for events.
 type Logger interface {
 	Trace(msg string)

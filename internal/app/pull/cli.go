@@ -21,6 +21,8 @@ var tabStorage table.Storage
 var idStorage id.Storage
 var dataSourceFactories map[string]pull.DataSourceFactory
 var pullExporterFactory func(io.Writer) pull.RowExporter
+var rowReaderFactory func(io.ReadCloser) pull.RowReader
+
 var traceListener pull.TraceListener
 
 // SetLogger if needed, default no logger
@@ -39,6 +41,7 @@ func Inject(
 	ids id.Storage,
 	dsfmap map[string]pull.DataSourceFactory,
 	exporterFactory func(io.Writer) pull.RowExporter,
+	rrf func(io.ReadCloser) pull.RowReader,
 	tl pull.TraceListener) {
 	dataconnectorStorage = dbas
 	relStorage = rs
@@ -46,6 +49,7 @@ func Inject(
 	idStorage = ids
 	dataSourceFactories = dsfmap
 	pullExporterFactory = exporterFactory
+	rowReaderFactory = rrf
 	traceListener = tl
 }
 
@@ -53,8 +57,10 @@ func Inject(
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	// local flags
 	var limit uint
+	var filefilter string
 	var initialFilters map[string]string
 	var diagnostic bool
+	var filters pull.RowReader
 
 	cmd := &cobra.Command{
 		Use:     "pull [DB Alias Name]",
@@ -83,7 +89,20 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				tracer = traceListener
 			}
 
-			e3 := pull.Pull(plan, datasource, pullExporterFactory(os.Stdout), tracer)
+			switch filefilter {
+			case "":
+				filters = pull.NewOneEmptyRowReader()
+			case "-":
+				filters = rowReaderFactory(in)
+			default:
+				filterReader, e3 := os.Open(filefilter)
+				if e3 != nil {
+					fmt.Fprintln(err, e3.Error())
+					os.Exit(1)
+				}
+				filters = rowReaderFactory(filterReader)
+			}
+			e3 := pull.Pull(plan, filters, datasource, pullExporterFactory(out), tracer)
 			if e3 != nil {
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
@@ -93,6 +112,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")
 	cmd.Flags().StringToStringVarP(&initialFilters, "filter", "f", map[string]string{}, "filter of start table")
 	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
+	cmd.Flags().StringVarP(&filefilter, "filter-from-file", "F", "", "Use file to filter start table")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

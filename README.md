@@ -149,16 +149,30 @@ tables:
     keys:
 ```
 
-## Extract
+## Pull
 
-The `extract` sub-command create à **json** object for each line (jsonline format http://jsonlines.org/) of the first table.
+The `pull` sub-command create à **json** object for each line (jsonline format http://jsonlines.org/) of the first table.
 
 ```
-$ lino extract source
+$ lino pull source
 {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_address_id_fkey":{"address":"1913 Hanoi Way","address2":"","address_city_id_fkey":{"city":"Sasebo","city_country_id_fkey":{"country":"Japan","country_id":50,"last_update":"2006-02-15T09:44:00Z"},"city_id":463,"country_id":50,"last_update":"2006-02-15T09:45:25Z"},"address_id":5,"city_id":463,"district":"Nagasaki","last_update":"2006-02-15T09:45:30Z","phone":"28303384290","postal_code":"35200"},"customer_id":1,"customer_store_id_fkey":{"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"store_address_id_fkey":{"address":"47 MySakila Drive","address2":null,"address_city_id_fkey":{"city":"Lethbridge","city_country_id_fkey":{"country":"Canada","country_id":20,"last_update":"2006-02-15T09:44:00Z"},"city_id":300,"country_id":20,"last_update":"2006-02-15T09:45:25Z"},"address_id":1,"city_id":300,"district":"Alberta","last_update":"2006-02-15T09:45:30Z","phone":"","postal_code":""},"store_id":1,"store_manager_staff_id_fkey":{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_address_id_fkey":{"address":"23 Workhaven Lane","address2":null,"address_city_id_fkey":{"city":"Lethbridge","city_country_id_fkey":{"country":"Canada","country_id":20,"last_update":"2006-02-15T09:44:00Z"},"city_id":300,"country_id":20,"last_update":"2006-02-15T09:45:25Z"},"address_id":3,"city_id":300,"district":"Alberta","last_update":"2006-02-15T09:45:30Z","phone":"14033335568","postal_code":""},"staff_id":1,"store_id":1,"username":"Mike"}},"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
 ```
 
-## Load
+### --filter-from-file argument
+
+To sample à database from a given `id` list or ohter criteria `LINO` can read filters from a JSON Line file with the argument `--filter-from-file`.
+
+Each line is a filter and `lino` apply it to the start table to extract data.
+
+#### --filter
+
+`--filter` argument overide filter's criteria from file.
+
+#### --limit
+
+`--limit` is applied for each line in filters file. With a filters's file of `N` lines and a limit of `L` lino could extract a maximum of `N` x `L` lines.
+
+## Push
 
 TODO
 
@@ -179,6 +193,9 @@ and reload later to a database :
 ```bash
 $ mongoexport --db myproject --collection customer | lino push customer --jdbc jdbc:oracle:thin:scott/tiger@target:1721:xe
 ```
+## Miller `mlr`
+
+TODO
 
 ## jq
 

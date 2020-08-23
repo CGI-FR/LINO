@@ -67,6 +67,14 @@ type Filter interface {
 // Row of data.
 type Row map[string]Value
 
+// Update Row with an other Row to generate a new one
+func (r Row) Update(other Row) Row {
+	for k, v := range other {
+		r[k] = v
+	}
+	return r
+}
+
 // Error is the error type returned by the domain
 type Error struct {
 	Description string

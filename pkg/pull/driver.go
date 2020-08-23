@@ -10,7 +10,7 @@ func SetLogger(l Logger) {
 }
 
 // Pull data from source following the given puller plan.
-func Pull(plan Plan, source DataSource, exporter RowExporter, diagnostic TraceListener) *Error {
+func Pull(plan Plan, filters RowReader, source DataSource, exporter RowExporter, diagnostic TraceListener) *Error {
 	if err := source.Open(); err != nil {
 		return err
 	}
@@ -18,7 +18,7 @@ func Pull(plan Plan, source DataSource, exporter RowExporter, diagnostic TraceLi
 	defer source.Close()
 
 	e := puller{source}
-	if err := e.pull(plan, exporter.Export, diagnostic); err != nil {
+	if err := e.pull(plan, filters, exporter.Export, diagnostic); err != nil {
 		return err
 	}
 
@@ -29,10 +29,16 @@ type puller struct {
 	datasource DataSource
 }
 
-func (e puller) pull(plan Plan, export func(Row) *Error, diagnostic TraceListener) *Error {
-	filter := plan.InitFilter()
-	if err := e.pullStep(plan.Steps().Step(0), filter, export, diagnostic); err != nil {
-		return err
+func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diagnostic TraceListener) *Error {
+	for filters.Next() {
+		fileFilter, err := filters.Value()
+		if err != nil {
+			return err
+		}
+		initFilter := filter{plan.InitFilter().Limit(), fileFilter.Update(plan.InitFilter().Values())}
+		if err := e.pullStep(plan.Steps().Step(0), initFilter, export, diagnostic); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -18,14 +18,16 @@ type SQLDataDestination struct {
 	db        *sqlx.DB
 	rowWriter map[string]*SQLRowWriter
 	mode      push.Mode
+	dialect   SQLDialect
 }
 
-// NewSQLDataDestination creates a new postgres datadestination.
-func NewSQLDataDestination(url string, logger push.Logger) *SQLDataDestination {
+// NewSQLDataDestination creates a new SQL datadestination.
+func NewSQLDataDestination(url string, dialect SQLDialect, logger push.Logger) *SQLDataDestination {
 	return &SQLDataDestination{
 		url:       url,
 		logger:    logger,
 		rowWriter: map[string]*SQLRowWriter{},
+		dialect:   dialect,
 	}
 }
 
@@ -42,7 +44,7 @@ func (dd *SQLDataDestination) Close() *push.Error {
 	return nil
 }
 
-// Commit postgres connections
+// Commit SQL for connection
 func (dd *SQLDataDestination) Commit() *push.Error {
 	for _, rw := range dd.rowWriter {
 		err := rw.commit()
@@ -58,7 +60,7 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 	return nil
 }
 
-// Open postgres Connections
+// Open SQL Connection
 func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode) *push.Error {
 	dd.mode = mode
 
@@ -95,7 +97,7 @@ func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode) *push.Error {
 	return nil
 }
 
-// RowWriter return postgres table writer
+// RowWriter return SQL table writer
 func (dd *SQLDataDestination) RowWriter(table push.Table) (push.RowWriter, *push.Error) {
 	rw, ok := dd.rowWriter[table.Name()]
 	if ok {
@@ -112,7 +114,7 @@ func (dd *SQLDataDestination) RowWriter(table push.Table) (push.RowWriter, *push
 	return rw, nil
 }
 
-// SQLRowWriter write data to a PostgreSQL table.
+// SQLRowWriter write data to a SQL table.
 type SQLRowWriter struct {
 	table              push.Table
 	dd                 *SQLDataDestination
@@ -122,7 +124,7 @@ type SQLRowWriter struct {
 	headers            []string
 }
 
-// NewSQLRowWriter creates a new postgres row writer.
+// NewSQLRowWriter creates a new SQL row writer.
 func NewSQLRowWriter(table push.Table, dd *SQLDataDestination) *SQLRowWriter {
 	return &SQLRowWriter{
 		table: table,
@@ -199,7 +201,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	i := 1
 	for k := range row {
 		names = append(names, k)
-		valuesVar = append(valuesVar, fmt.Sprintf("$%d", i))
+		valuesVar = append(valuesVar, rw.dd.dialect.Placeholder(i))
 		i++
 	}
 
@@ -280,7 +282,7 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 }
 
 func (rw *SQLRowWriter) truncate() *push.Error {
-	stm := "TRUNCATE TABLE " + rw.table.Name() + " CASCADE"
+	stm := rw.dd.dialect.TruncateStatement(rw.table.Name())
 	rw.dd.logger.Debug(stm)
 	_, err := rw.dd.db.Exec(stm)
 	if err != nil {
@@ -290,7 +292,7 @@ func (rw *SQLRowWriter) truncate() *push.Error {
 }
 
 func (rw *SQLRowWriter) disableConstraints() *push.Error {
-	stm := "ALTER TABLE " + rw.table.Name() + " DISABLE TRIGGER ALL"
+	stm := rw.dd.dialect.DisableConstraintsStatement(rw.table.Name())
 	rw.dd.logger.Debug(stm)
 	_, err := rw.dd.db.Exec(stm)
 	if err != nil {
@@ -300,11 +302,19 @@ func (rw *SQLRowWriter) disableConstraints() *push.Error {
 }
 
 func (rw *SQLRowWriter) enableConstraints() *push.Error {
-	stm := "ALTER TABLE " + rw.table.Name() + " ENABLE TRIGGER ALL"
+	stm := rw.dd.dialect.EnableConstraintsStatement(rw.table.Name())
 	rw.dd.logger.Debug(stm)
 	_, err := rw.dd.db.Exec(stm)
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}
 	return nil
+}
+
+// SQLDialect is an interface to inject SQL variations
+type SQLDialect interface {
+	Placeholder(int) string
+	DisableConstraintsStatement(tableName string) string
+	EnableConstraintsStatement(tableName string) string
+	TruncateStatement(tableName string) string
 }

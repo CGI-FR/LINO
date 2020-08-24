@@ -3,6 +3,7 @@ package push
 import (
 	"fmt"
 
+	"github.com/lib/pq"
 	"makeit.imfr.cgi.com/lino/pkg/push"
 	// import postgresql connector
 )
@@ -43,4 +44,15 @@ func (d PostgresDialect) DisableConstraintsStatement(tableName string) string {
 // TruncateStatement generate statement to truncat table content
 func (d PostgresDialect) TruncateStatement(tableName string) string {
 	return fmt.Sprintf("TRUNCATE TABLE %s CASCADE", tableName)
+}
+
+// IsDuplicateError check if error is a duplicate error
+func (d PostgresDialect) IsDuplicateError(err error) bool {
+	pqErr, ok := err.(*pq.Error)
+	return ok && pqErr.Code == "23505"
+}
+
+// ConvertValue before load
+func (d PostgresDialect) ConvertValue(from push.Value) push.Value {
+	return from
 }

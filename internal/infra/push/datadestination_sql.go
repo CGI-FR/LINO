@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"github.com/xo/dburl"
 	"makeit.imfr.cgi.com/lino/pkg/push"
 )
@@ -263,16 +262,14 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 
 	values := []interface{}{}
 	for _, h := range rw.headers {
-		values = append(values, row[h])
+		values = append(values, rw.dd.dialect.ConvertValue(row[h]))
 	}
 	rw.dd.logger.Trace(fmt.Sprint(values))
 
 	_, err2 := rw.statement.Exec(values...)
 	if err2 != nil {
-		pqErr := err2.(*pq.Error)
-		if pqErr.Code == "23505" { //duplicate
+		if rw.dd.dialect.IsDuplicateError(err2) {
 			rw.dd.logger.Trace(fmt.Sprintf("duplicate key %v (%s) for %s", row, rw.table.PrimaryKey(), rw.table.Name()))
-			// TODO update
 		} else {
 			return &push.Error{Description: err2.Error()}
 		}
@@ -317,4 +314,6 @@ type SQLDialect interface {
 	DisableConstraintsStatement(tableName string) string
 	EnableConstraintsStatement(tableName string) string
 	TruncateStatement(tableName string) string
+	IsDuplicateError(error) bool
+	ConvertValue(push.Value) push.Value
 }

@@ -12,7 +12,7 @@ import (
 	"makeit.imfr.cgi.com/lino/internal/app/push"
 )
 
-// NewCommand implements the cli pull command
+// NewCommand implements the cli http command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	var port uint
 
@@ -32,14 +32,16 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				HandlerFunc(pull.Handler)
 
 			api.Path("/data/{dataDestination}").
-				Methods(http.MethodPatch).
 				Queries("mode", "delete").
 				HandlerFunc(push.DeleteHandler)
 
 			api.Path("/data/{dataDestination}").
-				Methods(http.MethodPatch).
 				Queries("mode", "insert").
 				HandlerFunc(push.InsertHandler)
+
+			api.Path("/data/{dataDestination}").
+				Queries("mode", "truncate").
+				HandlerFunc(push.TruncatHandler)
 
 			api.Path("/data/{dataDestination}").
 				Methods(http.MethodPost).

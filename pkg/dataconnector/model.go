@@ -5,6 +5,7 @@ type DataConnector struct {
 	Name     string
 	URL      string
 	ReadOnly bool
+	Schema   string
 }
 
 // Error is the error type returned by the domain

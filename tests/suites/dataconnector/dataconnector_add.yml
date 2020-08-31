@@ -28,10 +28,19 @@ testcases:
     script: ls | wc
     assertions:
       - result.systemout ShouldContainSubstring "1"
-  - type: readfile
-    path: dataconnector.yaml
+  - script: |- 
+      cat  > expected.yml <<EOF
+      version: v1
+      dataconnectors:
+        - name: source
+          url: postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+          readonly: false
+          schema: ""
+      EOF
+  - script: diff expected.yml dataconnector.yaml
     assertions:
-        - result.md5sum.dataconnector.yaml ShouldEqual a43e74d9ac309c0fa62627584ffcfa0f
+      - result.code ShouldEqual 0
+      - result.systemout ShouldBeEmpty
 - name: add dataconnector read only
   steps:
       # Clean working directory
@@ -46,7 +55,41 @@ testcases:
     script: ls | wc
     assertions:
       - result.systemout ShouldContainSubstring "1"
-  - type: readfile
-    path: dataconnector.yaml
+  - script: |- 
+      cat  > expected.yml <<EOF
+      version: v1
+      dataconnectors:
+        - name: source
+          url: postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+          readonly: true
+          schema: ""
+      EOF
+  - script: diff expected.yml dataconnector.yaml
     assertions:
-      - result.md5sum.dataconnector.yaml ShouldEqual 7b7581a0b17be6db4a34e765f3f03ed9
+      - result.code ShouldEqual 0
+      - result.systemout ShouldBeEmpty
+
+
+- name: add dataconnector with default schema
+  steps:
+      # Clean working directory
+  - type: exec
+    script: rm -f *
+  - type: exec
+    script: lino dataconnector add --schema public source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable 
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldContainSubstring success
+  - script: |- 
+      cat  > expected.yml <<EOF
+      version: v1
+      dataconnectors:
+        - name: source
+          url: postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+          readonly: false
+          schema: public
+      EOF
+  - script: diff expected.yml dataconnector.yaml
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldBeEmpty

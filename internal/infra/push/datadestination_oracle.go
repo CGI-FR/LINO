@@ -2,12 +2,13 @@ package push
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"makeit.imfr.cgi.com/lino/pkg/push"
 
 	// import Oracle connector
-	"github.com/godror/godror"
+
 	_ "github.com/godror/godror"
 )
 
@@ -71,16 +72,13 @@ func (d OracleDialect) DisableConstraintsStatement(tableName string) string {
 
 // TruncateStatement generate statement to truncat table content
 func (d OracleDialect) TruncateStatement(tableName string) string {
-	return fmt.Sprintf("TRUNCATE TABLE %s CASCADE", tableName)
+	return fmt.Sprintf("TRUNCATE TABLE %s", tableName)
 }
 
 // IsDuplicateError check if error is a duplicate error
 func (d OracleDialect) IsDuplicateError(err error) bool {
 	// ORA-00001
-	if oarErr, ok := err.(*godror.OraErr); ok {
-		return oarErr.Code() == 1
-	}
-	return false
+	return strings.Contains(err.Error(), "ORA-00001")
 }
 
 // ConvertValue before load

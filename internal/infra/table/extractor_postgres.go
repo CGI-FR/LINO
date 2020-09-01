@@ -93,8 +93,10 @@ func (e *PostgresExtractor) Extract() ([]table.Table, *table.Error) {
 		if err != nil {
 			return nil, &table.Error{Description: err.Error()}
 		}
+
 		table := table.Table{
-			Name: tableSchema + "." + tableName,
+
+			Name: tableName,
 			Keys: strings.Split(keyColumns, ", "),
 		}
 		tables = append(tables, table)

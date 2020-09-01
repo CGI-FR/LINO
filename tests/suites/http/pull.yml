@@ -9,7 +9,7 @@ testcases:
     - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
     - script: lino relation extract source
     - script: lino table extract source
-    - script: lino id create public.store
+    - script: lino id create store
     - script: sed -i "s/true/false/g" ingress-descriptor.yaml
     - script: lino id set-child-lookup staff_store_id_fkey true
 

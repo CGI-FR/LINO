@@ -10,8 +10,6 @@ import (
 	"makeit.imfr.cgi.com/lino/pkg/table"
 )
 
-var schema string
-
 // newExtractCommand implements the cli relation extract command
 func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	cmd := &cobra.Command{
@@ -44,7 +42,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 				os.Exit(1)
 			}
 
-			extractor := factory.New(alias.URL, schema)
+			extractor := factory.New(alias.URL, alias.Schema)
 
 			e2 := table.Extract(extractor, tableStorage)
 			if e2 != nil {
@@ -61,7 +59,6 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 			fmt.Fprintf(out, "lino finds %v table(s)\n", len(tables))
 		},
 	}
-	cmd.Flags().StringVarP(&schema, "schema", "s", "", "specify the shema to use")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

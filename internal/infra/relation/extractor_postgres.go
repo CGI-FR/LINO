@@ -97,14 +97,15 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
 		if err != nil {
 			return nil, &relation.Error{Description: err.Error()}
 		}
+
 		relation := relation.Relation{
 			Name: relationName,
 			Parent: relation.Table{
-				Name: targetSchema + "." + targetTable,
+				Name: targetTable,
 				Keys: []string{targetColumn},
 			},
 			Child: relation.Table{
-				Name: sourceSchema + "." + sourceTable,
+				Name: sourceTable,
 				Keys: []string{sourceColumn},
 			},
 		}

@@ -35,7 +35,6 @@ testcases:
         - name: source
           url: postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
           readonly: false
-          schema: ""
       EOF
   - script: diff expected.yml dataconnector.yaml
     assertions:
@@ -62,7 +61,6 @@ testcases:
         - name: source
           url: postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
           readonly: true
-          schema: ""
       EOF
   - script: diff expected.yml dataconnector.yaml
     assertions:

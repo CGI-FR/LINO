@@ -7,7 +7,7 @@ testcases:
     - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
     - script: lino relation extract source
     - script: lino table extract source
-    - script: lino id create public.store
+    - script: lino id create store
 
 - name: pull child
   steps:
@@ -83,7 +83,7 @@ testcases:
 
 - name: pull round trip
   steps:
-    - script: lino id create public.customer
+    - script: lino id create customer
     - script: sed -i "s/true/false/g" ingress-descriptor.yaml
     - script: lino id set-child-lookup customer_store_id_fkey true
     - script: lino id set-parent-lookup customer_store_id_fkey true
@@ -98,7 +98,7 @@ testcases:
 
 - name: pull round trip
   steps:
-    - script: lino id create public.customer
+    - script: lino id create customer
     - script: sed -i "s/true/false/g" ingress-descriptor.yaml
     - script: lino id set-child-lookup customer_store_id_fkey true
     - script: lino id set-parent-lookup customer_store_id_fkey true
@@ -113,7 +113,7 @@ testcases:
 
 - name: pull multi relations
   steps:
-    - script: lino id create public.store
+    - script: lino id create store
     - script: sed -i "s/true/false/g" ingress-descriptor.yaml
     - script: lino id set-parent-lookup store_manager_staff_id_fkey true
     - script: lino pull source --limit 1
@@ -126,7 +126,7 @@ testcases:
 
 - name: pull single table with no connected relations
   steps:
-    - script: lino id create public.customer
+    - script: lino id create customer
     - script: sed -i "s/true/false/g" ingress-descriptor.yaml
     - script: lino id set-parent-lookup store_manager_staff_id_fkey true
     - script: lino pull source --limit 1 -f customer_id=1
@@ -137,7 +137,7 @@ testcases:
 
 - name: pull single table with complex filter
   steps:
-    - script: lino id create public.customer
+    - script: lino id create customer
     - script: sed -i "s/true/false/g" ingress-descriptor.yaml
     - script: lino pull source --limit 1 -f customer_id=4 -f store_id=2
       assertions:

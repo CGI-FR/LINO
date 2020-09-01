@@ -23,7 +23,7 @@ type YAMLDataConnector struct {
 	Name     string `yaml:"name"`
 	URL      string `yaml:"url"`
 	ReadOnly bool   `yaml:"readonly"`
-	Schema   string `yaml:"schema"`
+	Schema   string `yaml:"schema,omitempty"`
 }
 
 // NewYAMLStorage create a new YAML storage

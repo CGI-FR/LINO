@@ -10,6 +10,8 @@ import (
 
 // newAddCommand implements the cli dataconnector add command
 func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
+	var schema string
+
 	cmd := &cobra.Command{
 		Use:     "add [Name] [URL]",
 		Short:   "Add database aliases",
@@ -24,6 +26,7 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 				Name:     name,
 				URL:      url,
 				ReadOnly: readonly,
+				Schema:   schema,
 			}
 
 			e := dataconnector.Add(storage, &alias)
@@ -37,6 +40,7 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 		},
 	}
 	cmd.Flags().BoolVarP(&readonly, "read-only", "r", false, "Write protection flag that prevents modification")
+	cmd.Flags().StringVarP(&schema, "schema", "s", "", "Default schema to use with that dataconnector")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

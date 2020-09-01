@@ -20,9 +20,10 @@ func NewPostgresDataSourceFactory(l pull.Logger) *PostgresDataSourceFactory {
 }
 
 // New return a Postgres puller
-func (e *PostgresDataSourceFactory) New(url string) pull.DataSource {
+func (e *PostgresDataSourceFactory) New(url string, schema string) pull.DataSource {
 	return &SQLDataSource{
 		url:     url,
+		schema:  schema,
 		dialect: PostgresDialect{},
 		logger:  e.logger,
 	}

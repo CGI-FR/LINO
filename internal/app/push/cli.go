@@ -117,7 +117,7 @@ func getDataDestination(dataconnectorName string) (push.DataDestination, *push.E
 		return nil, &push.Error{Description: "no datadestination found for database type"}
 	}
 
-	return datadestinationFactory.New(alias.URL), nil
+	return datadestinationFactory.New(alias.URL, alias.Schema), nil
 }
 
 func getPlan() (push.Plan, *push.Error) {

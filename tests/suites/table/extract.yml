@@ -1,30 +1,143 @@
 name: table
 testcases:
-- name: prepare test
-  steps:
-    # Clean working directory
-    - script: rm -f *
-    - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
 
 - name: extract table
   steps:
+    - script: rm -f *
+    - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
     - script: lino table extract source
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldEqual "lino finds 15 table(s)"
         - result.systemerr ShouldBeEmpty
+    - script: |- 
+        cat  > expected.yml <<EOF
+        version: v1
+        tables:
+          - name: actor
+            keys:
+              - actor_id
+          - name: address
+            keys:
+              - address_id
+          - name: category
+            keys:
+              - category_id
+          - name: city
+            keys:
+              - city_id
+          - name: country
+            keys:
+              - country_id
+          - name: customer
+            keys:
+              - customer_id
+          - name: film
+            keys:
+              - film_id
+          - name: film_actor
+            keys:
+              - actor_id
+              - film_id
+          - name: film_category
+            keys:
+              - film_id
+              - category_id
+          - name: inventory
+            keys:
+              - inventory_id
+          - name: language
+            keys:
+              - language_id
+          - name: payment
+            keys:
+              - payment_id
+          - name: rental
+            keys:
+              - rental_id
+          - name: staff
+            keys:
+              - staff_id
+          - name: store
+            keys:
+              - store_id
+        EOF
+    - script: diff expected.yml tables.yaml
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldBeEmpty
 
 - name: extract table with schema
   steps:
-    - script: lino table extract --schema public source
+    - script: rm -f *
+    - script: lino dataconnector add --schema public source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable 
+    - script: lino table extract source
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldEqual "lino finds 15 table(s)"
         - result.systemerr ShouldBeEmpty
+    - script: |- 
+        cat  > expected.yml <<EOF
+        version: v1
+        tables:
+          - name: actor
+            keys:
+              - actor_id
+          - name: address
+            keys:
+              - address_id
+          - name: category
+            keys:
+              - category_id
+          - name: city
+            keys:
+              - city_id
+          - name: country
+            keys:
+              - country_id
+          - name: customer
+            keys:
+              - customer_id
+          - name: film
+            keys:
+              - film_id
+          - name: film_actor
+            keys:
+              - actor_id
+              - film_id
+          - name: film_category
+            keys:
+              - film_id
+              - category_id
+          - name: inventory
+            keys:
+              - inventory_id
+          - name: language
+            keys:
+              - language_id
+          - name: payment
+            keys:
+              - payment_id
+          - name: rental
+            keys:
+              - rental_id
+          - name: staff
+            keys:
+              - staff_id
+          - name: store
+            keys:
+              - store_id
+        EOF
+    - script: diff expected.yml tables.yaml
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldBeEmpty
 
 - name: extract tables with unknow schema
   steps:
-    - script: lino table extract --schema unkown source
+    - script: rm -f *
+    - script: lino dataconnector add  --schema unkown source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+    - script: lino table extract source
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldEqual "lino finds 0 table(s)"

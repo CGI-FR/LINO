@@ -7,7 +7,7 @@ type RowExporter interface {
 
 // DataSourceFactory exposes methods to create new datasources.
 type DataSourceFactory interface {
-	New(url string) DataSource
+	New(url string, schema string) DataSource
 }
 
 // DataSource to read in the pull process.

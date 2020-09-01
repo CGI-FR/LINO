@@ -16,6 +16,7 @@ import (
 // DataSource to read in the pull process.
 type SQLDataSource struct {
 	url     string
+	schema  string
 	logger  pull.Logger
 	dbx     *sqlx.DB
 	db      *sql.DB
@@ -46,11 +47,22 @@ func (ds *SQLDataSource) Open() *pull.Error {
 	return nil
 }
 
+// build table name with or without schema from dataconnector
+func (ds *SQLDataSource) tableName(source pull.Table) string {
+	if ds.schema == "" {
+		return source.Name()
+	}
+	if strings.Contains(source.Name(), ".") {
+		return source.Name()
+	}
+	return ds.schema + "." + source.Name()
+}
+
 // RowReader iterate over rows in table with filter
 func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, *pull.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("SELECT * FROM "))
-	sql.Write([]byte(source.Name()))
+	sql.Write([]byte(ds.tableName(source)))
 	sql.Write([]byte(" "))
 	if len(filter.Values()) > 0 {
 		sql.Write([]byte("WHERE "))

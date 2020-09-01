@@ -19,8 +19,8 @@ func NewPostgresDataDestinationFactory(l push.Logger) *PostgresDataDestinationFa
 }
 
 // New return a Postgres pusher
-func (e *PostgresDataDestinationFactory) New(url string) push.DataDestination {
-	return NewSQLDataDestination(url, PostgresDialect{}, e.logger)
+func (e *PostgresDataDestinationFactory) New(url string, schema string) push.DataDestination {
+	return NewSQLDataDestination(url, schema, PostgresDialect{}, e.logger)
 }
 
 // PostgresDialect inject postgres variations

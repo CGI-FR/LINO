@@ -13,11 +13,11 @@ testcases:
     - script: lino id set-child-lookup staff_store_id_fkey true
     - script: echo '{"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' > store1.jsonl
     - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}' > store2.jsonl
-    - script: cat store1.jsonl store2.jsonl | lino push truncate dest
+    - script: cat store1.jsonl store2.jsonl | lino push -d truncate dest
 
 - name: push insert with conflict
   steps:
-    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | lino push dest
+    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | lino push -d dest
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldBeEmpty
@@ -32,7 +32,7 @@ testcases:
 
 - name: push insert without conflict
   steps:
-    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":3,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike3","last_name":"Hillyer3","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"aVZCT1J3MEtXZ289","staff_id":3,"store_id":3,"username":"Mike"}],"store_id":3}' | lino push dest
+    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":3,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike3","last_name":"Hillyer3","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"aVZCT1J3MEtXZ289","staff_id":3,"store_id":3,"username":"Mike"}],"store_id":3}' | lino push -d dest
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldBeEmpty
@@ -48,7 +48,7 @@ testcases:
 
 - name: push truncate child
   steps:
-    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | lino push truncate dest
+    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | lino push -d truncate dest
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldBeEmpty
@@ -63,7 +63,7 @@ testcases:
 
 - name: push read only
   steps:
-    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | lino push truncate source
+    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | lino push -d truncate source
       assertions:
         - result.code ShouldEqual 1
         - result.systemout ShouldBeEmpty
@@ -72,7 +72,7 @@ testcases:
 
 - name: push 500 lines
   steps:
-    - script: yes '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | head -n 500 | lino push dest
+    - script: yes '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | head -n 500 | lino push -d dest
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldBeEmpty
@@ -80,7 +80,7 @@ testcases:
 
 - name: push 10000 lines
   steps:
-    - script: yes '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | head -n 10000 | lino push dest
+    - script: yes '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | head -n 10000 | lino push -d dest
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldBeEmpty
@@ -88,7 +88,7 @@ testcases:
 
 - name: push 100000 lines
   steps:
-    - script: yes '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | head -n 10000 | lino push --commitSize 100 dest
+    - script: yes '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | head -n 10000 | lino push -d --commitSize 100 dest
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldBeEmpty
@@ -98,9 +98,9 @@ testcases:
 - name: push insert with conflict first
   steps:
     - script: echo '{"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' > source.jsonl
-    - script: cat source.jsonl | lino push truncate dest
+    - script: cat source.jsonl | lino push -d truncate dest
     - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}' >> source.jsonl
-    - script: cat source.jsonl | lino push truncate dest
+    - script: cat source.jsonl | lino push -d truncate dest
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldBeEmpty

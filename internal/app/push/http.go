@@ -26,9 +26,10 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 	query := r.URL.Query()
 
 	var (
-		dcDestination string
-		ok            bool
-		commitSize    = uint(100)
+		dcDestination      string
+		ok                 bool
+		commitSize         = uint(100)
+		disableConstraints bool
 	)
 
 	if dcDestination, ok = pathParams["dataDestination"]; !ok {
@@ -81,9 +82,24 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 		commitSize = uint(commitsize64)
 	}
 
+	if query.Get("disable-constraints") != "" {
+		var edisableConstraints error
+		disableConstraints, edisableConstraints = strconv.ParseBool(query.Get("disable-constraints"))
+		if edisableConstraints != nil {
+			logger.Error("can't parse disable-constraints\n")
+			w.WriteHeader(http.StatusBadRequest)
+			_, ew := w.Write([]byte("{\"error\" : \"param disable-constraints must be a boolean\"}\n"))
+			if ew != nil {
+				logger.Error("Write failed\n")
+				return
+			}
+			return
+		}
+	}
+
 	logger.Debug(fmt.Sprintf("call Push with mode %s", mode))
 
-	e3 := push.Push(rowIteratorFactory(r.Body), datadestination, plan, mode, commitSize)
+	e3 := push.Push(rowIteratorFactory(r.Body), datadestination, plan, mode, commitSize, disableConstraints)
 	if e3 != nil {
 		logger.Error(e3.Error())
 		w.WriteHeader(http.StatusNotFound)

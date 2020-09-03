@@ -34,7 +34,7 @@ func (mdd *memoryDataDestination) RowWriter(table push.Table) (push.RowWriter, *
 	return mdd.tables[table.Name()], nil
 }
 
-func (mdd *memoryDataDestination) Open(pla push.Plan, mode push.Mode) *push.Error {
+func (mdd *memoryDataDestination) Open(pla push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
 	mdd.opened = true
 	return nil
 }

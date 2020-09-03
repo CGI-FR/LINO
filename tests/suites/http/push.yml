@@ -20,7 +20,7 @@ testcases:
   steps:
   - type: http
     method: PATCH
-    url: http://lino:8000/api/v1/data/dest?mode=delete
+    url: http://lino:8000/api/v1/data/dest?mode=delete&disable-constraints=true
     bodyFile: dataset.jsonl
     assertions:
       - result.statuscode ShouldEqual 200
@@ -33,7 +33,7 @@ testcases:
 - name: push insert with conflict
   steps:
        # restore data
-    - script: cat store_1.jsonl store_2.jsonl | lino push truncate dest
+    - script: cat store_1.jsonl store_2.jsonl | lino push truncate -d dest
       assertions:
         - result.systemout ShouldBeEmpty
         - result.systemerr ShouldBeEmpty
@@ -61,7 +61,7 @@ testcases:
         - result.systemerr ShouldBeEmpty
     - type: http
       method: PATCH
-      url: http://lino:8000/api/v1/data/dest?mode=insert
+      url: http://lino:8000/api/v1/data/dest?mode=insert&disable-constraints=1
       bodyFile: store_3.jsonl
       assertions:
         - result.statuscode ShouldEqual 200
@@ -79,7 +79,7 @@ testcases:
         - result.systemerr ShouldBeEmpty
     - type: http
       method: POST
-      url: http://lino:8000/api/v1/data/dest?mode=insert
+      url: http://lino:8000/api/v1/data/dest?mode=insert&disable-constraints=True
       bodyFile: store_3.jsonl
       assertions:
         - result.statuscode ShouldEqual 200
@@ -93,7 +93,7 @@ testcases:
     - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' > store_1_truncate.jsonl
     - type: http
       method: POST
-      url: http://lino:8000/api/v1/data/dest?mode=truncate
+      url: http://lino:8000/api/v1/data/dest?mode=truncate&disable-constraints=true
       bodyFile: store_1_truncate.jsonl
       assertions:
         - result.statuscode ShouldEqual 200
@@ -111,7 +111,7 @@ testcases:
     - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Lino","last_name":"Truncate","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' > store_1_truncate.jsonl
     - type: http
       method: POST
-      url: http://lino:8000/api/v1/data/dest
+      url: http://lino:8000/api/v1/data/dest?disable-constraints=true
       bodyFile: store_1_truncate.jsonl
       assertions:
         - result.statuscode ShouldEqual 200

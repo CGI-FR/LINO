@@ -42,9 +42,13 @@ func Inject(dbas dataconnector.Storage, rs relation.Storage, ts table.Storage, i
 
 // NewCommand implements the cli pull command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
-	var commitSize uint
+	var (
+		commitSize         uint
+		disableConstraints bool
+	)
+
 	cmd := &cobra.Command{
-		Use:     "push {<truncate>|<insert>} [Data Connector Name]",
+		Use:     "push {<truncate>|<insert>|<delete>} [Data Connector Name]",
 		Short:   "Push data to a database with a pushing mode (insert by default)",
 		Long:    "",
 		Example: fmt.Sprintf("  %[1]s push truncate dstdatabase\n  %[1]s push dstdatabase", fullName),
@@ -81,7 +85,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 			logger.Debug(fmt.Sprintf("call Push with mode %s", mode))
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize)
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints)
 			if e3 != nil {
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
@@ -89,6 +93,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		},
 	}
 	cmd.Flags().UintVarP(&commitSize, "commitSize", "c", 500, "Commit size")
+	cmd.Flags().BoolVarP(&disableConstraints, "disable-constraints", "d", false, "Disable constraint during push")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

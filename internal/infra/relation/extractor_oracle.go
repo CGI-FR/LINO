@@ -3,7 +3,6 @@ package relation
 import (
 	"fmt"
 
-	"github.com/xo/dburl"
 	"makeit.imfr.cgi.com/lino/pkg/relation"
 
 	// import Oracle connector
@@ -20,41 +19,19 @@ type OracleExtractorFactory struct{}
 
 // New return a Oracle extractor
 func (e *OracleExtractorFactory) New(url string, schema string) relation.Extractor {
-	return NewOracleExtractor(url, schema)
+	return NewSQLExtractor(url, schema, OracleDialect{})
 }
 
-// OracleExtractor provides relation extraction logic from Oracle database.
-type OracleExtractor struct {
-	url    string
-	schema string
-}
+type OracleDialect struct{}
 
-// NewOracleExtractor creates a new oracle extractor.
-func NewOracleExtractor(url string, schema string) *OracleExtractor {
-	return &OracleExtractor{
-		url:    url,
-		schema: schema,
-	}
-}
-
-// Extract relations from the database.
-func (e *OracleExtractor) Extract() ([]relation.Relation, *relation.Error) {
-	db, err := dburl.Open(e.url)
-	if err != nil {
-		return nil, &relation.Error{Description: err.Error()}
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		return nil, &relation.Error{Description: err.Error()}
-	}
-
+func (d OracleDialect) SQL(schema string) string {
 	SQL := `
 	SELECT
-	a.owner schema, a.constraint_name name,
-	c_pk.owner schema_source, c_pk.table_name parent_table, a_pk.COLUMN_NAME parent_key,
-	a_pk.owner schema_source, a.table_name child_table, a.COLUMN_NAME child_key
+	a.constraint_name name,
+	c_pk.table_name parent_table,
+	a_pk.COLUMN_NAME parent_key,
+	a.table_name child_table,
+	a.COLUMN_NAME child_key
 FROM all_cons_columns a
 JOIN all_constraints c ON a.owner = c.owner
 					  AND a.constraint_name = c.constraint_name
@@ -65,56 +42,14 @@ JOIN all_cons_columns a_pk ON c_pk.CONSTRAINT_NAME = a_pk.CONSTRAINT_NAME
 WHERE
 `
 
-	if e.schema == "" {
+	if schema == "" {
 		SQL += "a.owner = user"
 	} else {
-		SQL += fmt.Sprintf("a.owner = '%s'", e.schema)
+		SQL += fmt.Sprintf("a.owner = '%s'", schema)
 	}
 
 	SQL += `
 ORDER by 1, 2 asc
 `
-
-	rows, err := db.Query(SQL)
-	if err != nil {
-		return nil, &relation.Error{Description: err.Error()}
-	}
-
-	relations := []relation.Relation{}
-
-	var (
-		relationSchema string
-		relationName   string
-		sourceSchema   string
-		sourceTable    string
-		sourceColumn   string
-		targetSchema   string
-		targetTable    string
-		targetColumn   string
-	)
-
-	for rows.Next() {
-		err := rows.Scan(&relationSchema, &relationName, &sourceSchema, &sourceTable, &sourceColumn, &targetSchema, &targetTable, &targetColumn)
-		if err != nil {
-			return nil, &relation.Error{Description: err.Error()}
-		}
-		relation := relation.Relation{
-			Name: relationName,
-			Parent: relation.Table{
-				Name: targetSchema + "." + targetTable,
-				Keys: []string{targetColumn},
-			},
-			Child: relation.Table{
-				Name: sourceSchema + "." + sourceTable,
-				Keys: []string{sourceColumn},
-			},
-		}
-		relations = append(relations, relation)
-	}
-	err = rows.Err()
-	if err != nil {
-		return nil, &relation.Error{Description: err.Error()}
-	}
-
-	return relations, nil
+	return SQL
 }

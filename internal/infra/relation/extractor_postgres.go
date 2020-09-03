@@ -7,7 +7,6 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/xo/dburl"
 	"makeit.imfr.cgi.com/lino/pkg/relation"
 )
 
@@ -21,43 +20,17 @@ type PostgresExtractorFactory struct{}
 
 // New return a Postgres extractor
 func (e *PostgresExtractorFactory) New(url string, schema string) relation.Extractor {
-	return NewPostgresExtractor(url, schema)
+	return NewSQLExtractor(url, schema, PostgresDialect{})
 }
 
-// PostgresExtractor provides relation extraction logic from Postgres database.
-type PostgresExtractor struct {
-	url    string
-	schema string
-}
+type PostgresDialect struct{}
 
-// NewPostgresExtractor creates a new postgres extractor.
-func NewPostgresExtractor(url string, schema string) *PostgresExtractor {
-	return &PostgresExtractor{
-		url:    url,
-		schema: schema,
-	}
-}
-
-// Extract relations from the database.
-func (e *PostgresExtractor) Extract() ([]relation.Relation, *relation.Error) {
-	db, err := dburl.Open(e.url)
-	if err != nil {
-		return nil, &relation.Error{Description: err.Error()}
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		return nil, &relation.Error{Description: err.Error()}
-	}
-
+func (d PostgresDialect) SQL(schema string) string {
 	SQL := `
 SELECT
     tc.constraint_name,
-    tc.table_schema,
     tc.table_name,
     kcu.column_name,
-    ccu.table_schema AS foreign_table_schema,
     ccu.table_name AS foreign_table_name,
     ccu.column_name AS foreign_column_name
 FROM
@@ -71,50 +44,8 @@ FROM
 WHERE tc.constraint_type = 'FOREIGN KEY'
             `
 
-	if e.schema != "" {
-		SQL += fmt.Sprintf("AND tc.table_schema = '%s'", e.schema)
+	if schema != "" {
+		SQL += fmt.Sprintf("AND tc.table_schema = '%s'", schema)
 	}
-
-	rows, err := db.Query(SQL)
-	if err != nil {
-		return nil, &relation.Error{Description: err.Error()}
-	}
-
-	relations := []relation.Relation{}
-
-	var (
-		relationName string
-		sourceSchema string
-		sourceTable  string
-		sourceColumn string
-		targetSchema string
-		targetTable  string
-		targetColumn string
-	)
-
-	for rows.Next() {
-		err := rows.Scan(&relationName, &sourceSchema, &sourceTable, &sourceColumn, &targetSchema, &targetTable, &targetColumn)
-		if err != nil {
-			return nil, &relation.Error{Description: err.Error()}
-		}
-
-		relation := relation.Relation{
-			Name: relationName,
-			Parent: relation.Table{
-				Name: targetTable,
-				Keys: []string{targetColumn},
-			},
-			Child: relation.Table{
-				Name: sourceTable,
-				Keys: []string{sourceColumn},
-			},
-		}
-		relations = append(relations, relation)
-	}
-	err = rows.Err()
-	if err != nil {
-		return nil, &relation.Error{Description: err.Error()}
-	}
-
-	return relations, nil
+	return SQL
 }

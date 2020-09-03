@@ -37,5 +37,5 @@ func (od OracleDialect) Placeholder(position int) string {
 }
 
 func (od OracleDialect) Limit(limit uint) string {
-	return fmt.Sprintf("AND rownum <= %v", limit)
+	return fmt.Sprintf(" AND rownum <= %d", limit)
 }

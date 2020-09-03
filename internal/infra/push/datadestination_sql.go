@@ -13,6 +13,7 @@ import (
 // SQLDataDestination read data from a SQL database.
 type SQLDataDestination struct {
 	url       string
+	schema    string
 	logger    push.Logger
 	db        *sqlx.DB
 	rowWriter map[string]*SQLRowWriter
@@ -21,9 +22,10 @@ type SQLDataDestination struct {
 }
 
 // NewSQLDataDestination creates a new SQL datadestination.
-func NewSQLDataDestination(url string, dialect SQLDialect, logger push.Logger) *SQLDataDestination {
+func NewSQLDataDestination(url string, schema string, dialect SQLDialect, logger push.Logger) *SQLDataDestination {
 	return &SQLDataDestination{
 		url:       url,
+		schema:    schema,
 		logger:    logger,
 		rowWriter: map[string]*SQLRowWriter{},
 		dialect:   dialect,
@@ -189,6 +191,17 @@ func (rw *SQLRowWriter) close() *push.Error {
 	return rw.enableConstraints()
 }
 
+// build table name with or without schema from dataconnector
+func (rw *SQLRowWriter) tableName() string {
+	if rw.dd.schema == "" {
+		return rw.table.Name()
+	}
+	if strings.Contains(rw.table.Name(), ".") {
+		return rw.table.Name()
+	}
+	return rw.dd.schema + "." + rw.table.Name()
+}
+
 func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	if rw.statement != nil {
 		return nil
@@ -207,7 +220,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	var prepareStmt string
 	if rw.dd.mode == push.Delete {
 		/* #nosec */
-		prepareStmt = "DELETE FROM " + rw.table.Name() + " WHERE "
+		prepareStmt = "DELETE FROM " + rw.tableName() + " WHERE "
 		for i := 0; i < len(names); i++ {
 			prepareStmt += names[i] + "=" + valuesVar[i]
 			if i < len(names)-1 {
@@ -216,7 +229,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 		}
 	} else {
 		/* #nosec */
-		prepareStmt = "INSERT INTO " + rw.table.Name() + "(" + strings.Join(names, ",") + ") VALUES(" + strings.Join(valuesVar, ",") + ")"
+		prepareStmt = "INSERT INTO " + rw.tableName() + "(" + strings.Join(names, ",") + ") VALUES(" + strings.Join(valuesVar, ",") + ")"
 	}
 	rw.dd.logger.Debug(prepareStmt)
 	// TODO: Create an update statement
@@ -279,7 +292,7 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 }
 
 func (rw *SQLRowWriter) truncate() *push.Error {
-	stm := rw.dd.dialect.TruncateStatement(rw.table.Name())
+	stm := rw.dd.dialect.TruncateStatement(rw.tableName())
 	rw.dd.logger.Debug(stm)
 	_, err := rw.dd.db.Exec(stm)
 	if err != nil {
@@ -289,7 +302,7 @@ func (rw *SQLRowWriter) truncate() *push.Error {
 }
 
 func (rw *SQLRowWriter) disableConstraints() *push.Error {
-	stm := rw.dd.dialect.DisableConstraintsStatement(rw.table.Name())
+	stm := rw.dd.dialect.DisableConstraintsStatement(rw.tableName())
 	rw.dd.logger.Debug(stm)
 	_, err := rw.dd.db.Exec(stm)
 	if err != nil {
@@ -299,7 +312,7 @@ func (rw *SQLRowWriter) disableConstraints() *push.Error {
 }
 
 func (rw *SQLRowWriter) enableConstraints() *push.Error {
-	stm := rw.dd.dialect.EnableConstraintsStatement(rw.table.Name())
+	stm := rw.dd.dialect.EnableConstraintsStatement(rw.tableName())
 	rw.dd.logger.Debug(stm)
 	_, err := rw.dd.db.Exec(stm)
 	if err != nil {

@@ -1,13 +1,11 @@
 name: data connector
 testcases:
-- name: prepare test
+
+- name: extract relations
   steps:
     # Clean working directory
     - script: rm -f *
     - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-
-- name: extract relations
-  steps:
     - script: lino relation extract source
       assertions:
         - result.code ShouldEqual 0
@@ -16,7 +14,10 @@ testcases:
 
 - name: extract relations with schema
   steps:
-    - script: lino relation extract --schema public source
+    # Clean working directory
+    - script: rm -f *
+    - script: lino dataconnector add --schema public source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+    - script: lino relation extract source
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldEqual "lino finds 40 relations from constraints"
@@ -24,7 +25,10 @@ testcases:
 
 - name: extract relations with unknow schema
   steps:
-    - script: lino relation extract --schema unkown source
+    # Clean working directory
+    - script: rm -f *
+    - script: lino dataconnector add source --schema unkown postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+    - script: lino relation extract  source
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldEqual "lino finds 0 relations from constraints"

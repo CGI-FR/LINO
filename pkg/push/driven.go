@@ -7,7 +7,7 @@ type RowPusher interface {
 
 // DataDestinationFactory exposes methods to create new datadestinations.
 type DataDestinationFactory interface {
-	New(url string) DataDestination
+	New(url string, schema string) DataDestination
 }
 
 // DataDestination to write in the push process.

@@ -27,7 +27,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Short:   "Manage database aliases",
 		Long:    "",
 		Example: fmt.Sprintf("  %[1]s dataconnector add mydatabase postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable", fullName),
-		Aliases: []string{"db"},
+		Aliases: []string{"dc"},
 	}
 	cmd.AddCommand(newAddCommand(fullName, err, out, in))
 	cmd.AddCommand(newListCommand(fullName, err, out, in))

@@ -138,7 +138,7 @@ func getDataSource(dataconnectorName string) (pull.DataSource, *pull.Error) {
 		return nil, &pull.Error{Description: "no datasource found for database type"}
 	}
 
-	return datasourceFactory.New(alias.URL), nil
+	return datasourceFactory.New(alias.URL, alias.Schema), nil
 }
 
 func getPullerPlan(initialFilters map[string]string, limit uint) (pull.Plan, *pull.Error) {

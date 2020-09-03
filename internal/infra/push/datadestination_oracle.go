@@ -23,8 +23,8 @@ func NewOracleDataDestinationFactory(l push.Logger) *OracleDataDestinationFactor
 }
 
 // New return a Oracle pusher
-func (e *OracleDataDestinationFactory) New(url string) push.DataDestination {
-	return NewSQLDataDestination(url, OracleDialect{}, e.logger)
+func (e *OracleDataDestinationFactory) New(url string, schema string) push.DataDestination {
+	return NewSQLDataDestination(url, schema, OracleDialect{}, e.logger)
 }
 
 // OracleDialect inject oracle variations
@@ -37,11 +37,15 @@ func (d OracleDialect) Placeholder(position int) string {
 
 // EnableConstraintsStatement generate statments to activate constraintes
 func (d OracleDialect) EnableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf(`BEGIN
+	tableComposants := strings.Split(tableName, ".")
+	switch len(tableComposants) {
+	case 1:
+		return fmt.Sprintf(`BEGIN
 	FOR c IN
 	(SELECT c.owner, c.table_name, c.constraint_name
 	 FROM user_constraints c, user_tables t
 	 WHERE c.table_name = t.table_name
+	 AND c.owner = sys_context( 'userenv', 'current_schema' )
 	 AND c.table_name = '%s'
 	 AND c.status = 'DISABLED'
 	 ORDER BY c.constraint_type)
@@ -50,24 +54,66 @@ func (d OracleDialect) EnableConstraintsStatement(tableName string) string {
 	END LOOP;
   END;
   `, tableName)
+
+	case 2:
+		return fmt.Sprintf(`BEGIN
+		FOR c IN
+		(SELECT c.owner, c.table_name, c.constraint_name
+		 FROM user_constraints c, user_tables t
+		 WHERE c.table_name = t.table_name
+		 AND c.owner = '%s'
+		 AND c.table_name = '%s'
+		 AND c.status = 'DISABLED'
+		 ORDER BY c.constraint_type)
+		LOOP
+		  dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" enable constraint ' || c.constraint_name);
+		END LOOP;
+	  END;
+	  `, tableComposants[0], tableComposants[0])
+	default:
+		return ""
+	}
 }
 
 // DisableConstraintsStatement generate statments to deactivate constraintes
 func (d OracleDialect) DisableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf(`BEGIN
+	tableComposants := strings.Split(tableName, ".")
+	switch len(tableComposants) {
+	case 1:
+		return fmt.Sprintf(`BEGIN
 	FOR c IN
-	(SELECT c.owner, c.table_name, c.constraint_name
-	 FROM user_constraints c, user_tables t
-	 WHERE c.table_name = t.table_name
-	 AND c.table_name = '%s'
-	 AND c.status = 'ENABLED'
-	 AND NOT (t.iot_type IS NOT NULL AND c.constraint_type = 'P')
-	 ORDER BY c.constraint_type DESC)
+		(SELECT c.owner, c.table_name, c.constraint_name
+		FROM user_constraints c, user_tables t
+		WHERE c.table_name = t.table_name
+		AND c.owner = sys_context( 'userenv', 'current_schema' )
+		AND c.table_name = '%s'
+		AND c.status = 'ENABLED'
+		AND NOT (t.iot_type IS NOT NULL AND c.constraint_type = 'P')
+		ORDER BY c.constraint_type DESC)
 	LOOP
-	  dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" disable constraint ' || c.constraint_name);
+		dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" disable constraint ' || c.constraint_name);
 	END LOOP;
   END;
   `, tableName)
+	case 2:
+		return fmt.Sprintf(`BEGIN
+	FOR c IN
+		(SELECT c.owner, c.table_name, c.constraint_name
+		FROM user_constraints c, user_tables t
+		WHERE c.table_name = t.table_name
+		AND c.owner = '%s'
+		AND c.table_name = '%s'
+		AND c.status = 'ENABLED'
+		AND NOT (t.iot_type IS NOT NULL AND c.constraint_type = 'P')
+		ORDER BY c.constraint_type DESC)
+	LOOP
+		dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" disable constraint ' || c.constraint_name);
+	END LOOP;
+	END;
+	`, tableComposants[0], tableComposants[1])
+	default:
+		return ""
+	}
 }
 
 // TruncateStatement generate statement to truncat table content

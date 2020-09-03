@@ -12,13 +12,14 @@ import (
 
 // SQLDataDestination read data from a SQL database.
 type SQLDataDestination struct {
-	url       string
-	schema    string
-	logger    push.Logger
-	db        *sqlx.DB
-	rowWriter map[string]*SQLRowWriter
-	mode      push.Mode
-	dialect   SQLDialect
+	url                string
+	schema             string
+	logger             push.Logger
+	db                 *sqlx.DB
+	rowWriter          map[string]*SQLRowWriter
+	mode               push.Mode
+	disableConstraints bool
+	dialect            SQLDialect
 }
 
 // NewSQLDataDestination creates a new SQL datadestination.
@@ -62,8 +63,9 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 }
 
 // Open SQL Connection
-func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode) *push.Error {
+func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
 	dd.mode = mode
+	dd.disableConstraints = disableConstraints
 
 	dd.logger.Info(fmt.Sprintf("connecting to %s...", dd.url))
 	db, err := dburl.Open(dd.url)
@@ -143,9 +145,11 @@ func (rw *SQLRowWriter) open() *push.Error {
 		}
 	}
 
-	err2 := rw.disableConstraints()
-	if err2 != nil {
-		return &push.Error{Description: err2.Error()}
+	if rw.dd.disableConstraints {
+		err2 := rw.disableConstraints()
+		if err2 != nil {
+			return &push.Error{Description: err2.Error()}
+		}
 	}
 	rw.duplicateKeysCache = map[push.Value]struct{}{}
 
@@ -187,8 +191,10 @@ func (rw *SQLRowWriter) close() *push.Error {
 			return &push.Error{Description: err.Error()}
 		}
 	}
-
-	return rw.enableConstraints()
+	if rw.dd.disableConstraints {
+		return rw.enableConstraints()
+	}
+	return nil
 }
 
 // build table name with or without schema from dataconnector

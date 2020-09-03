@@ -5,8 +5,8 @@ import "fmt"
 var logger Logger = Nologger{}
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint) *Error {
-	err1 := destination.Open(plan, mode)
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool) *Error {
+	err1 := destination.Open(plan, mode, disableConstraints)
 	if err1 != nil {
 		return err1
 	}

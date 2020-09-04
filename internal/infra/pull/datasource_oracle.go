@@ -4,9 +4,6 @@ import (
 	"fmt"
 
 	"makeit.imfr.cgi.com/lino/pkg/pull"
-
-	// import oracle connector
-	_ "github.com/lib/pq"
 )
 
 // OracleDataSourceFactory exposes methods to create new Oracle pullers.
@@ -24,7 +21,7 @@ func (e *OracleDataSourceFactory) New(url string, schema string) pull.DataSource
 	return &SQLDataSource{
 		url:     url,
 		schema:  schema,
-		dialect: PostgresDialect{},
+		dialect: OracleDialect{},
 		logger:  e.logger,
 	}
 }

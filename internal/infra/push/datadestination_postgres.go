@@ -5,7 +5,6 @@ import (
 
 	"github.com/lib/pq"
 	"makeit.imfr.cgi.com/lino/pkg/push"
-	// import postgresql connector
 )
 
 // PostgresDataDestinationFactory exposes methods to create new Postgres pullers.

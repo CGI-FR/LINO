@@ -65,6 +65,9 @@ func FilterRelation(row Row, relations map[string]Relation) (Row, map[string]Row
 				}
 				fInverseRel[rel.Name()] = sa
 
+			case nil:
+				logger.Debug(fmt.Sprintf("null relation for key %s", name))
+
 			default:
 				logger.Error(fmt.Sprintf("key = %s", name))
 				logger.Error(fmt.Sprintf("type = %T", val))

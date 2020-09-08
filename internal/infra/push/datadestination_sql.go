@@ -55,10 +55,6 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 		}
 	}
 
-	err := dd.db.Close()
-	if err != nil {
-		return &push.Error{Description: err.Error()}
-	}
 	return nil
 }
 
@@ -170,9 +166,19 @@ func (rw *SQLRowWriter) begin() *push.Error {
 }
 
 func (rw *SQLRowWriter) commit() *push.Error {
-	err := rw.tx.Commit()
-	if err != nil {
-		return &push.Error{Description: err.Error()}
+	if rw.statement != nil {
+		err := rw.statement.Close()
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
+		rw.statement = nil
+	}
+	if rw.tx != nil {
+		err := rw.tx.Commit()
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
+		rw.tx = nil
 	}
 	return rw.begin()
 }
@@ -240,7 +246,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	rw.dd.logger.Debug(prepareStmt)
 	// TODO: Create an update statement
 
-	stmt, err := rw.dd.db.Prepare(prepareStmt)
+	stmt, err := rw.tx.Prepare(prepareStmt)
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}

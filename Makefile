@@ -86,6 +86,8 @@ run: $(patsubst cmd/%,run-%,$(wildcard cmd/*)) ## Build and execute a binary
 .PHONY: release-%
 release-%: mkdir
 	GO111MODULE=on go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
+	cp ${BUILD_DIR}/$* ${BUILD_DIR}/$*-x86-${VERSION}
+	gzip ${BUILD_DIR}/$*-x86-${VERSION}
 
 .PHONY: release
 release: clean info $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production

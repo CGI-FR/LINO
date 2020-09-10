@@ -1,10 +1,5 @@
 package push
 
-// RowPusher receives pulled rows one by one.
-type RowPusher interface {
-	Export(Row) *Error
-}
-
 // DataDestinationFactory exposes methods to create new datadestinations.
 type DataDestinationFactory interface {
 	New(url string, schema string) DataDestination
@@ -21,6 +16,12 @@ type DataDestination interface {
 // RowWriter write row to destination table
 type RowWriter interface {
 	Write(row Row) *Error
+}
+
+type NoErrorCaptureRowWriter struct{}
+
+func (necrw NoErrorCaptureRowWriter) Write(row Row) *Error {
+	return &Error{"No error capture configured"}
 }
 
 // RowIterator iter over a collection of rows

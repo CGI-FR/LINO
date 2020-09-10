@@ -24,6 +24,7 @@ func Test_getDataDestination(t *testing.T) {
 		&id.MockStorage{},
 		map[string]push.DataDestinationFactory{},
 		func(io.ReadCloser) push.RowIterator { return &push.MockRowIterator{} },
+		func(io.Writer) push.RowWriter { return &push.MockRowWriter{} },
 	)
 
 	type args struct {
@@ -35,12 +36,7 @@ func Test_getDataDestination(t *testing.T) {
 		want  push.DataDestination
 		want1 *push.Error
 	}{
-		struct {
-			name  string
-			args  args
-			want  push.DataDestination
-			want1 *push.Error
-		}{
+		{
 			name:  "readonly protect",
 			args:  args{dataconnectorName: "connector-ro"},
 			want:  nil,

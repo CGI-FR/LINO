@@ -17,3 +17,7 @@ func pushDataDestinationFactory() map[string]domain.DataDestinationFactory {
 func pushRowIteratorFactory() func(io.ReadCloser) domain.RowIterator {
 	return infra.NewJSONRowIterator
 }
+
+func pushRowExporterFactory() func(io.Writer) domain.RowWriter {
+	return infra.NewJSONRowWriter
+}

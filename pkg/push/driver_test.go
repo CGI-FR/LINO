@@ -38,7 +38,7 @@ func TestSimplePush(t *testing.T) {
 	}
 	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, true)
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{})
 
 	assert.Nil(t, err)
 	assert.Equal(t, true, dest.closed)
@@ -76,7 +76,7 @@ func TestRelationPush(t *testing.T) {
 	}
 	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, true)
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{})
 
 	// no error
 	assert.Nil(t, err)
@@ -125,7 +125,7 @@ func TestRelationPushWithEmptyRelation(t *testing.T) {
 	}
 	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, true)
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{})
 
 	// no error
 	assert.Nil(t, err)
@@ -175,7 +175,7 @@ func TestInversseRelationPush(t *testing.T) {
 	}
 	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 5, true)
+	err := push.Push(&ri, &dest, plan, push.Insert, 5, true, push.NoErrorCaptureRowWriter{})
 
 	// no error
 	assert.Nil(t, err)

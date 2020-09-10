@@ -47,7 +47,7 @@ func (e *GraphVizExporter) Export(ep id.PullerPlan) *id.Error {
 	}
 	for i := uint(0); i < ep.Len(); i++ {
 		if ep.Step(i).Tables().Len() > 1 {
-			compName := strconv.Quote("cluster" + string(i))
+			compName := strconv.Quote("cluster" + fmt.Sprint(i))
 			err = graphViz.AddSubGraph(graphName, compName, nil)
 			if err != nil {
 				return &id.Error{Description: err.Error()}

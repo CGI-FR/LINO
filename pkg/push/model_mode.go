@@ -22,8 +22,8 @@ var modes = [...]string{
 	"truncate",
 	"insert",
 	"delete",
-	//"upsert",
-	//"update",
+	// "upsert",
+	// "update",
 }
 
 // Modes list all modes string representation

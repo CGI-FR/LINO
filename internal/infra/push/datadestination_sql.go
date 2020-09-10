@@ -103,7 +103,7 @@ func (dd *SQLDataDestination) RowWriter(table push.Table) (push.RowWriter, *push
 		return rw, nil
 	}
 
-	rw = NewSQLRowWriter(table, dd) //TODO
+	rw = NewSQLRowWriter(table, dd)
 	err := rw.open()
 	if err != nil {
 		return nil, err
@@ -255,31 +255,8 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	return nil
 }
 
-func (rw *SQLRowWriter) addToCache(row push.Row) {
-	rw.duplicateKeysCache[rw.computeRowSum(row)] = struct{}{}
-}
-
-func (rw *SQLRowWriter) isInCache(row push.Row) bool {
-	_, ok := rw.duplicateKeysCache[rw.computeRowSum(row)]
-	return ok
-}
-
-func (rw *SQLRowWriter) computeRowSum(row push.Row) string {
-	sum := ""
-	for _, pk := range rw.table.PrimaryKey() {
-		sum = fmt.Sprintf("%s|,-%v", sum, row[pk])
-	}
-	return sum
-}
-
 // Write
 func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
-	if ok := rw.isInCache(row); ok {
-		rw.dd.logger.Trace(fmt.Sprintf("duplicate key in dataset %v (%s) for %s", row, rw.table.PrimaryKey(), rw.table.Name()))
-		return nil
-	}
-	rw.addToCache(row)
-
 	err1 := rw.createStatement(row)
 	if err1 != nil {
 		return err1

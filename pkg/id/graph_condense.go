@@ -75,7 +75,7 @@ func (c *condenser) strongconnect(v Table) {
 		for {
 			w := c.stack.pop()
 			c.vonstack[w.Name()] = false
-			//add w to current strongly connected component
+			// add w to current strongly connected component
 			tables = append(tables, w)
 			if w.Name() == v.Name() {
 				break

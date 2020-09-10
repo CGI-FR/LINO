@@ -30,9 +30,9 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 		i++
 		if i%commitSize == 0 {
 			logger.Info("Intermediate commit")
-			err3 := destination.Commit()
-			if err2 != nil {
-				return err3
+			errCommit := destination.Commit()
+			if errCommit != nil {
+				return errCommit
 			}
 		}
 	}

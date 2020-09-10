@@ -5,7 +5,7 @@ import "fmt"
 var logger Logger = Nologger{}
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool) *Error {
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter) *Error {
 	err1 := destination.Open(plan, mode, disableConstraints)
 	if err1 != nil {
 		return err1
@@ -21,7 +21,11 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 		}
 		err2 := pushRow(*row, destination, plan.FirstTable(), plan)
 		if err2 != nil {
-			return err2
+			err4 := catchError.Write(*row)
+			if err4 != nil {
+				return &Error{Description: fmt.Sprintf("%s (%s)", err2.Error(), err4.Error())}
+			}
+			logger.Info(fmt.Sprintf("Error catched : %s", err2.Error()))
 		}
 		i++
 		if i%commitSize == 0 {

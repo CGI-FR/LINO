@@ -103,5 +103,5 @@ func initConfig() {
 	table.Inject(dataconnectorStorage(), tableStorage(), tableExtractorFactory())
 	id.Inject(idStorage(), relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
 	pull.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), pullDataSourceFactory(), pullRowExporterFactory(), pullRowReaderFactory(), traceListner(os.Stderr))
-	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), pushDataDestinationFactory(), pushRowIteratorFactory())
+	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorage(), pushDataDestinationFactory(), pushRowIteratorFactory(), pushRowExporterFactory())
 }

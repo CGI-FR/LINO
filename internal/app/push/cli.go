@@ -21,6 +21,7 @@ var tabStorage table.Storage
 var idStorage id.Storage
 var datadestinationFactories map[string]push.DataDestinationFactory
 var rowIteratorFactory func(io.ReadCloser) push.RowIterator
+var rowExporterFactory func(io.Writer) push.RowWriter
 
 var logger push.Logger = push.Nologger{}
 
@@ -31,13 +32,22 @@ func SetLogger(l push.Logger) {
 }
 
 // Inject dependencies
-func Inject(dbas dataconnector.Storage, rs relation.Storage, ts table.Storage, ids id.Storage, dsfmap map[string]push.DataDestinationFactory, rif func(io.ReadCloser) push.RowIterator) {
+func Inject(
+	dbas dataconnector.Storage,
+	rs relation.Storage,
+	ts table.Storage,
+	ids id.Storage,
+	dsfmap map[string]push.DataDestinationFactory,
+	rif func(io.ReadCloser) push.RowIterator,
+	ref func(io.Writer) push.RowWriter,
+) {
 	dataconnectorStorage = dbas
 	relStorage = rs
 	tabStorage = ts
 	idStorage = ids
 	datadestinationFactories = dsfmap
 	rowIteratorFactory = rif
+	rowExporterFactory = ref
 }
 
 // NewCommand implements the cli pull command
@@ -45,6 +55,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var (
 		commitSize         uint
 		disableConstraints bool
+		catchErrors        string
+		rowExporter        push.RowWriter
 	)
 
 	cmd := &cobra.Command{
@@ -82,10 +94,22 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			plan, e2 := getPlan()
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
-				os.Exit(1)
+				os.Exit(2)
 			}
 			logger.Debug(fmt.Sprintf("call Push with mode %s", mode))
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints)
+
+			if catchErrors != "" {
+				errorFile, e4 := os.Create(catchErrors)
+				if e4 != nil {
+					fmt.Fprintln(err, e4.Error())
+					os.Exit(4)
+				}
+				defer errorFile.Close()
+				rowExporter = rowExporterFactory(errorFile)
+			} else {
+				rowExporter = push.NoErrorCaptureRowWriter{}
+			}
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter)
 			if e3 != nil {
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
@@ -94,6 +118,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	}
 	cmd.Flags().UintVarP(&commitSize, "commitSize", "c", 500, "Commit size")
 	cmd.Flags().BoolVarP(&disableConstraints, "disable-constraints", "d", false, "Disable constraint during push")
+	cmd.Flags().StringVarP(&catchErrors, "catch-errors", "e", "", "Catch errors and write line in file")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

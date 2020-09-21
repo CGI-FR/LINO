@@ -2,7 +2,12 @@ version: '3.3'
 
 services:
    vscode:
-      build: .devcontainer
+      build:
+        context: .devcontainer
+        args:
+          http_proxy: ${http_proxy}
+          https_proxy: ${https_proxy}
+          no_proxy: ${no_proxy}
       volumes:
         - ./:/workspace
         - ~/.ssh:/home/vscode/.ssh:ro
@@ -34,7 +39,12 @@ services:
         - 5432
 
    lino:
-    build: .
+    build:
+      context: .
+      args:
+        http_proxy: ${http_proxy}
+        https_proxy: ${https_proxy}
+        no_proxy: ${no_proxy}
     command: http
     expose:
       - 8000

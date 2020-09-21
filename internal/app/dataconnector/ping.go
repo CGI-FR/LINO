@@ -40,7 +40,7 @@ func newPingCommand(fullName string, err *os.File, out *os.File, in *os.File) *c
 			pinger := dataPingerFactory.New(dc.URL)
 			e = pinger.Ping()
 			if e != nil {
-				fmt.Fprintln(out, "ping failled")
+				fmt.Fprintln(out, "ping failed")
 				fmt.Fprintln(err, e.Description)
 				os.Exit(1)
 			}

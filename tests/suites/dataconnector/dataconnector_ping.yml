@@ -9,7 +9,7 @@ testcases:
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring "ping success"
-- name: ping failled
+- name: ping failed
   steps:
       # Clean working directory
   - script: rm -f *
@@ -17,4 +17,4 @@ testcases:
   - script: lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 1
-      - result.systemout ShouldContainSubstring "ping failled"
+      - result.systemout ShouldContainSubstring "ping failed"

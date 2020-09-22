@@ -1,4 +1,5 @@
 /bin/
+.env
 
 dataconnector.yaml
 tables.yaml

@@ -2,6 +2,7 @@ package push
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/lib/pq"
 	"makeit.imfr.cgi.com/lino/pkg/push"
@@ -43,6 +44,10 @@ func (d PostgresDialect) DisableConstraintsStatement(tableName string) string {
 // TruncateStatement generate statement to truncat table content
 func (d PostgresDialect) TruncateStatement(tableName string) string {
 	return fmt.Sprintf("TRUNCATE TABLE %s CASCADE", tableName)
+}
+
+func (d PostgresDialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
+	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s) ON CONFLICT (%s) DO NOTHING;", tableName, strings.Join(columns, ","), strings.Join(values, ","), strings.Join(primaryKeys, ","))
 }
 
 // IsDuplicateError check if error is a duplicate error

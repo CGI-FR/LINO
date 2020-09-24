@@ -241,7 +241,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 		}
 	} else {
 		/* #nosec */
-		prepareStmt = "INSERT INTO " + rw.tableName() + "(" + strings.Join(names, ",") + ") VALUES(" + strings.Join(valuesVar, ",") + ")"
+		prepareStmt = rw.dd.dialect.InsertStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey())
 	}
 	rw.dd.logger.Debug(prepareStmt)
 	// TODO: Create an update statement
@@ -316,6 +316,7 @@ type SQLDialect interface {
 	DisableConstraintsStatement(tableName string) string
 	EnableConstraintsStatement(tableName string) string
 	TruncateStatement(tableName string) string
+	InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string
 	IsDuplicateError(error) bool
 	ConvertValue(push.Value) push.Value
 }

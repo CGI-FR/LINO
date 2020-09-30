@@ -2,6 +2,7 @@ package dataconnector
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,9 +25,9 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 		Args:    cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-			url := args[1]
+			urlin := args[1]
 
-			u, e2 := dburl.Parse(url)
+			u, e2 := dburl.Parse(urlin)
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(3)
@@ -36,9 +37,17 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 				fmt.Fprintln(err, "warn: password should not be included in URI, use --password-from-env")
 			}
 
+			if passwordFromEnv != "" {
+				u.User = url.User(u.User.Username())
+			}
+
+			if userFromEnv != "" || user != "" {
+				u.User = nil
+			}
+
 			alias := dataconnector.DataConnector{
 				Name:     name,
-				URL:      url,
+				URL:      u.URL.String(),
 				ReadOnly: readonly,
 				Schema:   schema,
 				User: dataconnector.ValueHolder{

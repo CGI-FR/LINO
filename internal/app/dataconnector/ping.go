@@ -2,6 +2,7 @@ package dataconnector
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,7 +25,8 @@ func newPingCommand(fullName string, err *os.File, out *os.File, in *os.File) *c
 				os.Exit(2)
 			}
 			if dc == nil {
-				fmt.Fprintf(err, "no dataconnector for '%s'\n", args[0])
+				fmt.Fprintf(err, "no dataconnector for '%s'", args[0])
+				fmt.Fprintln(err)
 				os.Exit(5)
 			}
 			u, e2 := dburl.Parse(dc.URL)
@@ -32,12 +34,36 @@ func newPingCommand(fullName string, err *os.File, out *os.File, in *os.File) *c
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(3)
 			}
+			// get user from env
+			if dc.User.ValueFromEnv != "" {
+				userFromEnv := os.Getenv(dc.User.ValueFromEnv)
+				if userFromEnv == "" {
+					fmt.Fprintf(err, "warn: missing environment variable %s", dc.User.ValueFromEnv)
+					fmt.Fprintln(err)
+				} else {
+					u.User = url.User(userFromEnv)
+					logger.Debug(fmt.Sprintf("ping user = %s", u.User))
+				}
+			} else if dc.User.Value != "" {
+				// set user from dc
+				u.User = url.User(dc.User.Value)
+			}
+			// get password from env
+			if dc.Password.ValueFromEnv != "" {
+				passwordFromEnv := os.Getenv(dc.Password.ValueFromEnv)
+				if passwordFromEnv == "" {
+					fmt.Fprintf(err, "warn: missing environment variable %s", dc.Password.ValueFromEnv)
+					fmt.Fprintln(err)
+				} else {
+					u.User = url.UserPassword(u.User.Username(), passwordFromEnv)
+				}
+			}
 			dataPingerFactory, ok := dataPingerFactory[u.Unaliased]
 			if !ok {
 				fmt.Fprintln(err, "no datadestination found for database type")
 				os.Exit(4)
 			}
-			pinger := dataPingerFactory.New(dc.URL)
+			pinger := dataPingerFactory.New(u.URL.String())
 			e = pinger.Ping()
 			if e != nil {
 				fmt.Fprintln(out, "ping failed")

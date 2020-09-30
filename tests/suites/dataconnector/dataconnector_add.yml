@@ -23,7 +23,7 @@ testcases:
     script: lino dataconnector add source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
     assertions:
       - result.code ShouldEqual 0
-      - 'result.systemout ShouldContainSubstring warn: password should not be included in URI'
+      - 'result.systemerr ShouldContainSubstring warn: password should not be included in URI'
       - result.systemout ShouldContainSubstring success
   - type: exec
     script: ls | wc
@@ -193,7 +193,7 @@ testcases:
     script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
     assertions:
       - result.code ShouldEqual 0
-      - 'result.systemout ShouldContainSubstring warn: password should not be included in URI'
+      - 'result.systemerr ShouldContainSubstring warn: password should not be included in URI'
       - result.systemout ShouldContainSubstring success
   - type: exec
     script: ls | wc

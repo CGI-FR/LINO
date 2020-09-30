@@ -114,7 +114,7 @@ testcases:
         - name: source
           url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
           password:
-            valueFromEnv: PASSWORD
+              valueFromEnv: PASSWORD
           readonly: false
       EOF
   - script: diff expected.yml dataconnector.yaml
@@ -143,9 +143,9 @@ testcases:
         - name: source
           url: postgresql://localhost:5432/postgres?sslmode=disable
           user:
-            valueFromEnv: USER
+              valueFromEnv: USER
           password:
-            valueFromEnv: PASSWORD
+              valueFromEnv: PASSWORD
           readonly: false
       EOF
   - script: diff expected.yml dataconnector.yaml
@@ -174,9 +174,9 @@ testcases:
         - name: source
           url: postgresql://localhost:5432/postgres?sslmode=disable
           user:
-            value: postgres
+              value: postgres
           password:
-            valueFromEnv: PASSWORD
+              valueFromEnv: PASSWORD
           readonly: false
       EOF
   - script: diff expected.yml dataconnector.yaml
@@ -206,9 +206,9 @@ testcases:
         - name: source
           url: postgresql://localhost:5432/postgres?sslmode=disable
           user:
-            value: postgres
+              value: postgres
           password:
-            valueFromEnv: PASSWORD
+              valueFromEnv: PASSWORD
           readonly: false
       EOF
   - script: diff expected.yml dataconnector.yaml

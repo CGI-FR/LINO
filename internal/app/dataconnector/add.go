@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/xo/dburl"
 	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
 
@@ -24,6 +25,16 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
 			url := args[1]
+
+			u, e2 := dburl.Parse(url)
+			if e2 != nil {
+				fmt.Fprintln(err, e2.Error())
+				os.Exit(3)
+			}
+
+			if _, isset := u.User.Password(); isset {
+				fmt.Fprintln(err, "warn: password should not be included in URI, use --password-from-env")
+			}
 
 			alias := dataconnector.DataConnector{
 				Name:     name,

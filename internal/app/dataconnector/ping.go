@@ -29,7 +29,7 @@ func newPingCommand(fullName string, err *os.File, out *os.File, in *os.File) *c
 			}
 			u, e2 := dburl.Parse(dc.URL)
 			if e2 != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e2.Error())
 				os.Exit(3)
 			}
 			dataPingerFactory, ok := dataPingerFactory[u.Unaliased]

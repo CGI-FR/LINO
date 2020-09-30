@@ -23,6 +23,7 @@ testcases:
     script: lino dataconnector add source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
     assertions:
       - result.code ShouldEqual 0
+      - 'result.systemout ShouldContainSubstring warn: password should not be included in URI'
       - result.systemout ShouldContainSubstring success
   - type: exec
     script: ls | wc
@@ -86,6 +87,129 @@ testcases:
           url: postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
           readonly: false
           schema: public
+      EOF
+  - script: diff expected.yml dataconnector.yaml
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldBeEmpty
+
+- name: add dataconnector with password-from-env
+  steps:
+      # Clean working directory
+  - type: exec
+    script: rm -f *
+  - type: exec
+    script: lino dataconnector add --password-from-env=PASSWORD source postgresql://postgres@localhost:5432/postgres?sslmode=disable
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldContainSubstring success
+  - type: exec
+    script: ls | wc
+    assertions:
+      - result.systemout ShouldContainSubstring "1"
+  - script: |- 
+      cat  > expected.yml <<EOF
+      version: v1
+      dataconnectors:
+        - name: source
+          url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
+          password:
+            valueFromEnv: PASSWORD
+          readonly: false
+      EOF
+  - script: diff expected.yml dataconnector.yaml
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldBeEmpty
+
+- name: add dataconnector with password-from-env and user-from-env
+  steps:
+      # Clean working directory
+  - type: exec
+    script: rm -f *
+  - type: exec
+    script: lino dataconnector add --user-from-env=USER --password-from-env=PASSWORD source postgresql://localhost:5432/postgres?sslmode=disable
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldContainSubstring success
+  - type: exec
+    script: ls | wc
+    assertions:
+      - result.systemout ShouldContainSubstring "1"
+  - script: |- 
+      cat  > expected.yml <<EOF
+      version: v1
+      dataconnectors:
+        - name: source
+          url: postgresql://localhost:5432/postgres?sslmode=disable
+          user:
+            valueFromEnv: USER
+          password:
+            valueFromEnv: PASSWORD
+          readonly: false
+      EOF
+  - script: diff expected.yml dataconnector.yaml
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldBeEmpty
+
+- name: add dataconnector with password-from-env and user
+  steps:
+      # Clean working directory
+  - type: exec
+    script: rm -f *
+  - type: exec
+    script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://localhost:5432/postgres?sslmode=disable
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldContainSubstring success
+  - type: exec
+    script: ls | wc
+    assertions:
+      - result.systemout ShouldContainSubstring "1"
+  - script: |- 
+      cat  > expected.yml <<EOF
+      version: v1
+      dataconnectors:
+        - name: source
+          url: postgresql://localhost:5432/postgres?sslmode=disable
+          user:
+            value: postgres
+          password:
+            valueFromEnv: PASSWORD
+          readonly: false
+      EOF
+  - script: diff expected.yml dataconnector.yaml
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldBeEmpty
+
+- name: add dataconnector with duplicate user password
+  steps:
+      # Clean working directory
+  - type: exec
+    script: rm -f *
+  - type: exec
+    script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+    assertions:
+      - result.code ShouldEqual 0
+      - 'result.systemout ShouldContainSubstring warn: password should not be included in URI'
+      - result.systemout ShouldContainSubstring success
+  - type: exec
+    script: ls | wc
+    assertions:
+      - result.systemout ShouldContainSubstring "1"
+  - script: |- 
+      cat  > expected.yml <<EOF
+      version: v1
+      dataconnectors:
+        - name: source
+          url: postgresql://localhost:5432/postgres?sslmode=disable
+          user:
+            value: postgres
+          password:
+            valueFromEnv: PASSWORD
+          readonly: false
       EOF
   - script: diff expected.yml dataconnector.yaml
     assertions:

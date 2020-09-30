@@ -20,6 +20,7 @@ func newPingCommand(fullName string, err *os.File, out *os.File, in *os.File) *c
 		Run: func(cmd *cobra.Command, args []string) {
 			dc, e := dataconnector.Get(storage, args[0])
 			if e != nil {
+				logger.Error(fmt.Sprintf(e.Description))
 				fmt.Fprintln(err, e.Description)
 				os.Exit(2)
 			}

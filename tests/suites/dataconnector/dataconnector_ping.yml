@@ -22,8 +22,8 @@ testcases:
 - name: ping success password from env
   steps:
   - script: rm -f *
-  - script: PASSWORD=sakila lino dataconnector add --password-from-env=PASSWORD source postgresql://postgres@source:5432/postgres?sslmode=disable
-  - script: lino dataconnector ping source
+  - script: lino dataconnector add --password-from-env=PASSWORD source 'postgresql://postgres@source:5432/postgres?sslmode=disable'
+  - script: PASSWORD=sakila lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring "ping success"
@@ -33,14 +33,14 @@ testcases:
   - script: lino dataconnector add --password-from-env=PASSWORD source postgresql://postgres@source:5432/postgres?sslmode=disable
   - script: lino dataconnector ping source
     assertions:
-      - result.code ShouldEqual 0
+      - result.code ShouldEqual 1
       - result.systemout ShouldContainSubstring "ping failed"
 
 - name: ping success password and user from env
   steps:
   - script: rm -f *
-  - script: USER=postgres PASSWORD=sakila lino dataconnector add --user-from-env=USER --password-from-env=PASSWORD source postgresql://source:5432/postgres?sslmode=disable
-  - script: lino dataconnector ping source
+  - script: lino dataconnector add --user-from-env=USER --password-from-env=PASSWORD source postgresql://source:5432/postgres?sslmode=disable
+  - script: USER=postgres PASSWORD=sakila lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring "ping success"
@@ -50,14 +50,14 @@ testcases:
   - script: lino dataconnector add --user-from-env=USER --password-from-env=PASSWORD source postgresql://source:5432/postgres?sslmode=disable
   - script: lino dataconnector ping source
     assertions:
-      - result.code ShouldEqual 0
+      - result.code ShouldEqual 1
       - result.systemout ShouldContainSubstring "ping failed"
 
 - name: ping success password from env and user flag
   steps:
   - script: rm -f *
-  - script: PASSWORD=sakila lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://source:5432/postgres?sslmode=disable
-  - script: lino dataconnector ping source
+  - script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://source:5432/postgres?sslmode=disable
+  - script: PASSWORD=sakila lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring "ping success"
@@ -67,5 +67,5 @@ testcases:
   - script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://source:5432/postgres?sslmode=disable
   - script: lino dataconnector ping source
     assertions:
-      - result.code ShouldEqual 0
+      - result.code ShouldEqual 1
       - result.systemout ShouldContainSubstring "ping failed"

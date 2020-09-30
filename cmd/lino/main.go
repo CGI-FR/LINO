@@ -42,7 +42,7 @@ var rootCmd = &cobra.Command{
   lino id show-graph
   lino pull mydatabase --limit 10 > customers.jsonl
   lino push customer --input customer.json --jdbc jdbc:oracle:thin:scott/tiger@target:1721:xe`,
-	Version: fmt.Sprintf("%v (commit=%v date=%v by=%v)", version, commit, buildDate, builtBy),
+	Version: fmt.Sprintf("%v (commit=%v date=%v by=%v)\n© CGI 2020 Tous droits réservés", version, commit, buildDate, builtBy),
 }
 
 func main() {

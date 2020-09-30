@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/xo/dburl"
+	"makeit.imfr.cgi.com/lino/internal/app/urlbuilder"
 	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 	"makeit.imfr.cgi.com/lino/pkg/table"
 )
@@ -30,11 +30,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 				os.Exit(1)
 			}
 
-			u, e := dburl.Parse(alias.URL)
-			if e != nil {
-				fmt.Fprintln(err, e)
-				os.Exit(1)
-			}
+			u := urlbuilder.BuildURL(alias, err)
 
 			factory, ok := tableExtractorFactories[u.Unaliased]
 			if !ok {
@@ -42,7 +38,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 				os.Exit(1)
 			}
 
-			extractor := factory.New(alias.URL, alias.Schema)
+			extractor := factory.New(u.URL.String(), alias.Schema)
 
 			e2 := table.Extract(extractor, tableStorage)
 			if e2 != nil {

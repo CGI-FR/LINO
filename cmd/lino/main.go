@@ -94,6 +94,7 @@ func initConfig() {
 		logger = NewLogger(nil, nil, nil, nil, nil)
 	}
 
+	dataconnector.SetLogger(logger)
 	id.SetLogger(logger)
 	pull.SetLogger(logger)
 	push.SetLogger(logger)

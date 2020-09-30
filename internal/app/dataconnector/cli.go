@@ -14,6 +14,14 @@ var dataPingerFactory map[string]dataconnector.DataPingerFactory
 // local flags
 var readonly bool
 
+var logger dataconnector.Logger = dataconnector.Nologger{}
+
+// SetLogger if needed, default no logger
+func SetLogger(l dataconnector.Logger) {
+	logger = l
+	dataconnector.SetLogger(l)
+}
+
 // Inject dependencies
 func Inject(dbas dataconnector.Storage, dpf map[string]dataconnector.DataPingerFactory) {
 	storage = dbas

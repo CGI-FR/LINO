@@ -50,6 +50,33 @@ func (d PostgresDialect) InsertStatement(tableName string, columns []string, val
 	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s) ON CONFLICT (%s) DO NOTHING;", tableName, strings.Join(columns, ","), strings.Join(values, ","), strings.Join(primaryKeys, ","))
 }
 
+func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) string {
+	sql := &strings.Builder{}
+	sql.Write([]byte("UPDATE "))
+	sql.Write([]byte(tableName))
+	sql.Write([]byte(" SET "))
+	for index, column := range columns {
+		sql.Write([]byte(column))
+		fmt.Fprint(sql, "=")
+		fmt.Fprint(sql, uValues[index])
+		if index+1 < len(columns) {
+			sql.Write([]byte(", "))
+		}
+	}
+	if len(primaryKeys) > 0 {
+		sql.Write([]byte(" WHERE "))
+	}
+	for index, pk := range primaryKeys {
+		sql.Write([]byte(pk))
+		fmt.Fprint(sql, "=")
+		fmt.Fprint(sql, pValues[index])
+		if index+1 < len(primaryKeys) {
+			sql.Write([]byte(" AND "))
+		}
+	}
+	return sql.String()
+}
+
 // IsDuplicateError check if error is a duplicate error
 func (d PostgresDialect) IsDuplicateError(err error) bool {
 	pqErr, ok := err.(*pq.Error)

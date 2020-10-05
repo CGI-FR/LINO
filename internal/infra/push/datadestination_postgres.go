@@ -50,7 +50,7 @@ func (d PostgresDialect) InsertStatement(tableName string, columns []string, val
 	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s) ON CONFLICT (%s) DO NOTHING;", tableName, strings.Join(columns, ","), strings.Join(values, ","), strings.Join(primaryKeys, ","))
 }
 
-func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) string {
+func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("UPDATE "))
 	sql.Write([]byte(tableName))
@@ -65,6 +65,8 @@ func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uVa
 	}
 	if len(primaryKeys) > 0 {
 		sql.Write([]byte(" WHERE "))
+	} else {
+		return "", &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
 	}
 	for index, pk := range primaryKeys {
 		sql.Write([]byte(pk))
@@ -74,7 +76,7 @@ func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uVa
 			sql.Write([]byte(" AND "))
 		}
 	}
-	return sql.String()
+	return sql.String(), nil
 }
 
 // IsDuplicateError check if error is a duplicate error

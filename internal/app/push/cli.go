@@ -60,7 +60,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	)
 
 	cmd := &cobra.Command{
-		Use:     "push {<truncate>|<insert>|<delete>} [Data Connector Name]",
+		Use:     "push {<truncate>|<insert>|<update>|<delete>} [Data Connector Name]",
 		Short:   "Push data to a database with a pushing mode (insert by default)",
 		Long:    "",
 		Example: fmt.Sprintf("  %[1]s push truncate dstdatabase\n  %[1]s push dstdatabase", fullName),

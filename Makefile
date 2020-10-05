@@ -121,7 +121,7 @@ docker-clean: ## Clean docker container
 
 .PHONY: venom-test
 venom-test: build docker-clean ## Exec tests with venom
-	mkdir -p ${TEST_WS_DIR} && cd ${TEST_WS_DIR} && venom run ../suites/*/*yml
+	mkdir -p ${TEST_WS_DIR} && cp .env ${TEST_WS_DIR}/ && cd ${TEST_WS_DIR} && venom run ../suites/*/*yml
 
 .PHONY: alias
 alias: ## Provides a lino alias to run docker image

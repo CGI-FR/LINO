@@ -221,16 +221,25 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 
 	names := []string{}
 	valuesVar := []string{}
+	pkVar := []string{}
 
 	i := 1
 	for k := range row {
 		names = append(names, k)
 		valuesVar = append(valuesVar, rw.dd.dialect.Placeholder(i))
+		for _, pk := range rw.table.PrimaryKey() {
+			if pk == k {
+				pkVar = append(pkVar, rw.dd.dialect.Placeholder(i))
+			}
+		}
 		i++
 	}
 
 	var prepareStmt string
-	if rw.dd.mode == push.Delete {
+	var pusherr *push.Error
+	rw.dd.logger.Debug(fmt.Sprintf("received mode %s", rw.dd.mode))
+	switch {
+	case rw.dd.mode == push.Delete:
 		/* #nosec */
 		prepareStmt = "DELETE FROM " + rw.tableName() + " WHERE "
 		for i := 0; i < len(names); i++ {
@@ -239,12 +248,16 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 				prepareStmt += " and "
 			}
 		}
-	} else {
+	case rw.dd.mode == push.Update:
+		prepareStmt, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey(), pkVar)
+		if pusherr != nil {
+			return pusherr
+		}
+	default: //Insert:
 		/* #nosec */
 		prepareStmt = rw.dd.dialect.InsertStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey())
 	}
 	rw.dd.logger.Debug(prepareStmt)
-	// TODO: Create an update statement
 
 	stmt, err := rw.tx.Prepare(prepareStmt)
 	if err != nil {
@@ -317,6 +330,7 @@ type SQLDialect interface {
 	EnableConstraintsStatement(tableName string) string
 	TruncateStatement(tableName string) string
 	InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string
+	UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error)
 	IsDuplicateError(error) bool
 	ConvertValue(push.Value) push.Value
 }

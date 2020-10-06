@@ -221,6 +221,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 
 	names := []string{}
 	valuesVar := []string{}
+	pkNames := []string{}
 	pkVar := []string{}
 
 	i := 1
@@ -229,6 +230,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 		valuesVar = append(valuesVar, rw.dd.dialect.Placeholder(i))
 		for _, pk := range rw.table.PrimaryKey() {
 			if pk == k {
+				pkNames = append(pkNames, k)
 				pkVar = append(pkVar, rw.dd.dialect.Placeholder(i))
 			}
 		}
@@ -242,9 +244,9 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	case rw.dd.mode == push.Delete:
 		/* #nosec */
 		prepareStmt = "DELETE FROM " + rw.tableName() + " WHERE "
-		for i := 0; i < len(names); i++ {
-			prepareStmt += names[i] + "=" + valuesVar[i]
-			if i < len(names)-1 {
+		for i := 0; i < len(pkNames); i++ {
+			prepareStmt += pkNames[i] + "=" + pkVar[i]
+			if i < len(pkNames)-1 {
 				prepareStmt += " and "
 			}
 		}

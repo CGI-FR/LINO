@@ -51,10 +51,10 @@ func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 		store := defaultCredentialsStore()
 		creds, err := client.Get(store, u.String())
 		if err != nil {
-			fmt.Fprintln(out, err.Error())
-			os.Exit(3)
+			// failed to use credential store backend => ask for credentials
+		} else {
+			u.User = url.UserPassword(creds.Username, creds.Secret)
 		}
-		u.User = url.UserPassword(creds.Username, creds.Secret)
 	}
 	return u
 }

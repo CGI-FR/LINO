@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/docker/docker-credential-helpers/client"
 	"github.com/xo/dburl"
 	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
@@ -42,6 +43,18 @@ func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 		} else {
 			u.User = url.UserPassword(u.User.Username(), passwordFromEnv)
 		}
+	}
+	// if credentials still missing, check default store
+	username := u.User.Username()
+	_, passwordIsSet := u.User.Password()
+	if username == "" || !passwordIsSet {
+		store := defaultCredentialsStore()
+		creds, err := client.Get(store, u.String())
+		if err != nil {
+			fmt.Fprintln(out, err.Error())
+			os.Exit(3)
+		}
+		u.User = url.UserPassword(creds.Username, creds.Secret)
 	}
 	return u
 }

@@ -245,19 +245,22 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 		/* #nosec */
 		prepareStmt = "DELETE FROM " + rw.tableName() + " WHERE "
 		for i := 0; i < len(pkNames); i++ {
-			prepareStmt += pkNames[i] + "=" + pkVar[i]
+			prepareStmt += pkNames[i] + "=" + rw.dd.dialect.Placeholder(i+1)
 			if i < len(pkNames)-1 {
 				prepareStmt += " and "
 			}
 		}
+		rw.headers = pkNames
 	case rw.dd.mode == push.Update:
 		prepareStmt, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey(), pkVar)
 		if pusherr != nil {
 			return pusherr
 		}
+		rw.headers = names
 	default: //Insert:
 		/* #nosec */
 		prepareStmt = rw.dd.dialect.InsertStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey())
+		rw.headers = names
 	}
 	rw.dd.logger.Debug(prepareStmt)
 
@@ -266,7 +269,6 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 		return &push.Error{Description: err.Error()}
 	}
 	rw.statement = stmt
-	rw.headers = names
 	return nil
 }
 

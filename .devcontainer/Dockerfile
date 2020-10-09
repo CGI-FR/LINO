@@ -8,7 +8,7 @@ RUN chmod 644 /usr/local/share/ca-certificates/cgi_ca_root.crt && update-ca-cert
 RUN echo "Acquire::http::Proxy \"${http_proxy:-false}\";" > /etc/apt/apt.conf.d/proxy.conf && \
     echo "Acquire::https::Proxy \"${https_proxy:-false}\";" >> /etc/apt/apt.conf.d/proxy.conf && \
     apt-get update && \
-    apt-get install -y --no-install-recommends make wget less jq miller && \
+    apt-get install -y --no-install-recommends make wget less jq miller expect && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     rm -r /var/cache/* /var/lib/apt/lists/*

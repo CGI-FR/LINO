@@ -53,7 +53,6 @@ func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 		creds, err := client.Get(store, u.String())
 		if err != nil {
 			// failed to use credential store backend
-			fmt.Fprintf(out, "warn: no credential helper installed")
 		} else {
 			u.User = url.UserPassword(creds.Username, creds.Secret)
 		}

@@ -37,17 +37,18 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 				os.Exit(3)
 			}
 
+			password, isset := u.User.Password()
+			if isset {
+				fmt.Fprintln(err, "warn: password should not be included in URI, use --password-from-env or --password")
+				u.User = url.User(u.User.Username())
+			}
+
 			username := u.User.Username()
 			if flagUserValue != "" {
 				username = flagUserValue
 				u.User = url.User(username)
 			}
 
-			password, isset := u.User.Password()
-			if isset {
-				fmt.Fprintln(err, "warn: password should not be included in URI, use --password-from-env or --password")
-				u.User = url.User(u.User.Username())
-			}
 			if flagAskPassword {
 				switch {
 				case username != "":

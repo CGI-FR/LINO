@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/docker/docker-credential-helpers/client"
+	"github.com/docker/docker-credential-helpers/credentials"
 	"github.com/xo/dburl"
 	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
@@ -51,10 +52,22 @@ func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 		store := defaultCredentialsStore()
 		creds, err := client.Get(store, u.String())
 		if err != nil {
-			// failed to use credential store backend => ask for credentials
+			// failed to use credential store backend
+			fmt.Fprintf(out, "warn: no credential helper installed")
 		} else {
 			u.User = url.UserPassword(creds.Username, creds.Secret)
 		}
 	}
 	return u
+}
+
+func StorePassword(u *dburl.URL, password string) error {
+	store := defaultCredentialsStore()
+	err := client.Store(store, &credentials.Credentials{ServerURL: u.URL.String(), Username: u.URL.User.Username(), Secret: password})
+	if err != nil {
+		// failed to use credential store backend
+		return err
+	} else {
+		return nil
+	}
 }

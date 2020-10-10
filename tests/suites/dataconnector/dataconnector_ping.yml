@@ -5,7 +5,7 @@ testcases:
       # Clean working directory
   - script: rm -f *
   # Enable mock credential helper as docker-credential-pass
-  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+  # - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
   - script: PATH=$PATH:$PWD
   - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
   - script: lino dataconnector ping source
@@ -17,7 +17,7 @@ testcases:
       # Clean working directory
   - script: rm -f *
   # Enable mock credential helper as docker-credential-pass
-  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+  # - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
   - script: lino dataconnector add source postgresql://postgres:sakila@source:4432/postgres?sslmode=disable
   - script: lino dataconnector ping source
     assertions:
@@ -28,7 +28,7 @@ testcases:
   steps:
   - script: rm -f *
   # Enable mock credential helper as docker-credential-pass
-  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+  # - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
   - script: lino dataconnector add --password-from-env=PASSWORD source 'postgresql://postgres@source:5432/postgres?sslmode=disable'
   - script: PASSWORD=sakila lino dataconnector ping source
     assertions:

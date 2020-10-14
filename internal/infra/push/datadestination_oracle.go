@@ -122,7 +122,7 @@ func (d OracleDialect) TruncateStatement(tableName string) string {
 }
 
 func (d OracleDialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
-	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s);", tableName, strings.Join(columns, ","), strings.Join(values, ","))
+	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(columns, ","), strings.Join(values, ","))
 }
 
 func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {

@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/xo/dburl"
 
+	"makeit.imfr.cgi.com/lino/internal/app/urlbuilder"
 	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 	"makeit.imfr.cgi.com/lino/pkg/id"
 	"makeit.imfr.cgi.com/lino/pkg/pull"
@@ -128,17 +128,14 @@ func getDataSource(dataconnectorName string) (pull.DataSource, *pull.Error) {
 		return nil, &pull.Error{Description: fmt.Sprintf("Data Connector %s not found", dataconnectorName)}
 	}
 
-	u, e2 := dburl.Parse(alias.URL)
-	if e2 != nil {
-		return nil, &pull.Error{Description: e2.Error()}
-	}
+	u := urlbuilder.BuildURL(alias, nil)
 
 	datasourceFactory, ok := dataSourceFactories[u.Unaliased]
 	if !ok {
 		return nil, &pull.Error{Description: "no datasource found for database type"}
 	}
 
-	return datasourceFactory.New(alias.URL, alias.Schema), nil
+	return datasourceFactory.New(u.URL.String(), alias.Schema), nil
 }
 
 func getPullerPlan(initialFilters map[string]string, limit uint) (pull.Plan, *pull.Error) {

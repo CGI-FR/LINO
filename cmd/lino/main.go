@@ -33,16 +33,17 @@ var rootCmd = &cobra.Command{
 	Use:   "lino [action]",
 	Short: "Command line tools for managing tests data",
 	Long:  `Lino is a simple ETL (Extract Transform Push) tools to manage tests datas. The lino command line tool pull test data from a relational database to create a smallest production-like database.`,
-	Example: `  lino dataconnector add mydatabase postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
-  lino db list
-  lino table extract mydatabase
-  lino relation extract mydatabase
-  lino id create [Table Name]
+	Example: `  lino dataconnector add source --read-only --password-from-env SRC_PASSWORD postgresql://postgres@localhost:5432/postgres?sslmode=disable
+  lino dc add target --password-from-env TGT_PASSWORD postgresql://postgres@localhost:5433/postgres?sslmode=disable
+  lino dc list
+  lino table extract source
+  lino relation extract source
+  lino id create customer
   lino id display-plan
   lino id show-graph
-  lino pull mydatabase --limit 10 > customers.jsonl
-  lino push customer --input customer.json --jdbc jdbc:oracle:thin:scott/tiger@target:1721:xe`,
-	Version: fmt.Sprintf("%v (commit=%v date=%v by=%v)", version, commit, buildDate, builtBy),
+  lino pull source --limit 10 > customers.jsonl
+  lino push target < customers.jsonl`,
+	Version: fmt.Sprintf("%v (commit=%v date=%v by=%v)\n© CGI Inc. 2020 All rights reserved", version, commit, buildDate, builtBy),
 }
 
 func main() {
@@ -94,6 +95,7 @@ func initConfig() {
 		logger = NewLogger(nil, nil, nil, nil, nil)
 	}
 
+	dataconnector.SetLogger(logger)
 	id.SetLogger(logger)
 	pull.SetLogger(logger)
 	push.SetLogger(logger)

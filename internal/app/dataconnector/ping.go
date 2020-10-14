@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/xo/dburl"
+	"makeit.imfr.cgi.com/lino/internal/app/urlbuilder"
 	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
 
@@ -20,27 +20,25 @@ func newPingCommand(fullName string, err *os.File, out *os.File, in *os.File) *c
 		Run: func(cmd *cobra.Command, args []string) {
 			dc, e := dataconnector.Get(storage, args[0])
 			if e != nil {
+				logger.Error(fmt.Sprintf(e.Description))
 				fmt.Fprintln(err, e.Description)
 				os.Exit(2)
 			}
 			if dc == nil {
-				fmt.Fprintf(err, "no dataconnector for '%s'\n", args[0])
+				fmt.Fprintf(err, "no dataconnector for '%s'", args[0])
+				fmt.Fprintln(err)
 				os.Exit(5)
 			}
-			u, e2 := dburl.Parse(dc.URL)
-			if e2 != nil {
-				fmt.Fprintln(err, e.Description)
-				os.Exit(3)
-			}
+			u := urlbuilder.BuildURL(dc, err)
 			dataPingerFactory, ok := dataPingerFactory[u.Unaliased]
 			if !ok {
 				fmt.Fprintln(err, "no datadestination found for database type")
 				os.Exit(4)
 			}
-			pinger := dataPingerFactory.New(dc.URL)
+			pinger := dataPingerFactory.New(u.URL.String())
 			e = pinger.Ping()
 			if e != nil {
-				fmt.Fprintln(out, "ping failled")
+				fmt.Fprintln(out, "ping failed")
 				fmt.Fprintln(err, e.Description)
 				os.Exit(1)
 			}

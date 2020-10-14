@@ -10,8 +10,7 @@ const (
 	Insert
 	// Delete only existing row
 	Delete
-	// Upsert insert and update on conflict
-	Upsert
+	// TODO Upsert insert and update on conflict
 	// Update only existing row
 	Update
 	end
@@ -23,11 +22,11 @@ var modes = [...]string{
 	"insert",
 	"delete",
 	// "upsert",
-	// "update",
+	"update",
 }
 
 // Modes list all modes string representation
-func Modes() [3]string {
+func Modes() [4]string {
 	return modes
 }
 

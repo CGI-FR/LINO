@@ -28,7 +28,7 @@ DOCKER_IMAGE_TEST = lino-test
 .PHONY: help
 .DEFAULT_GOAL := help
 help:
-	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
+	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: info
 info: ## Prints build informations
@@ -127,7 +127,7 @@ docker-clean: ## Clean docker container
 
 .PHONY: venom-test
 venom-test: build docker-clean ## Exec tests with venom
-	mkdir -p ${TEST_WS_DIR} && cd ${TEST_WS_DIR} && venom run ../suites/*/*yml
+	mkdir -p ${TEST_WS_DIR} && cp .env ${TEST_WS_DIR}/ && cd ${TEST_WS_DIR} && venom run ../suites/*/*yml
 
 .PHONY: alias
 alias: ## Provides a lino alias to run docker image

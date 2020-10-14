@@ -6,6 +6,13 @@ type DataConnector struct {
 	URL      string
 	ReadOnly bool
 	Schema   string
+	User     ValueHolder
+	Password ValueHolder
+}
+
+type ValueHolder struct {
+	Value        string
+	ValueFromEnv string
 }
 
 // Error is the error type returned by the domain

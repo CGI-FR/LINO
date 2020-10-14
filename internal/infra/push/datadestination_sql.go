@@ -221,37 +221,54 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 
 	names := []string{}
 	valuesVar := []string{}
+	pkNames := []string{}
+	pkVar := []string{}
 
 	i := 1
 	for k := range row {
 		names = append(names, k)
 		valuesVar = append(valuesVar, rw.dd.dialect.Placeholder(i))
+		for _, pk := range rw.table.PrimaryKey() {
+			if pk == k {
+				pkNames = append(pkNames, k)
+				pkVar = append(pkVar, rw.dd.dialect.Placeholder(i))
+			}
+		}
 		i++
 	}
 
 	var prepareStmt string
-	if rw.dd.mode == push.Delete {
+	var pusherr *push.Error
+	rw.dd.logger.Debug(fmt.Sprintf("received mode %s", rw.dd.mode))
+	switch {
+	case rw.dd.mode == push.Delete:
 		/* #nosec */
 		prepareStmt = "DELETE FROM " + rw.tableName() + " WHERE "
-		for i := 0; i < len(names); i++ {
-			prepareStmt += names[i] + "=" + valuesVar[i]
-			if i < len(names)-1 {
+		for i := 0; i < len(pkNames); i++ {
+			prepareStmt += pkNames[i] + "=" + rw.dd.dialect.Placeholder(i+1)
+			if i < len(pkNames)-1 {
 				prepareStmt += " and "
 			}
 		}
-	} else {
+		rw.headers = pkNames
+	case rw.dd.mode == push.Update:
+		prepareStmt, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey(), pkVar)
+		if pusherr != nil {
+			return pusherr
+		}
+		rw.headers = names
+	default: //Insert:
 		/* #nosec */
-		prepareStmt = "INSERT INTO " + rw.tableName() + "(" + strings.Join(names, ",") + ") VALUES(" + strings.Join(valuesVar, ",") + ")"
+		prepareStmt = rw.dd.dialect.InsertStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey())
+		rw.headers = names
 	}
 	rw.dd.logger.Debug(prepareStmt)
-	// TODO: Create an update statement
 
 	stmt, err := rw.tx.Prepare(prepareStmt)
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}
 	rw.statement = stmt
-	rw.headers = names
 	return nil
 }
 
@@ -316,6 +333,8 @@ type SQLDialect interface {
 	DisableConstraintsStatement(tableName string) string
 	EnableConstraintsStatement(tableName string) string
 	TruncateStatement(tableName string) string
+	InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string
+	UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error)
 	IsDuplicateError(error) bool
 	ConvertValue(push.Value) push.Value
 }

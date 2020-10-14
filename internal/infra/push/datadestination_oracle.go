@@ -121,6 +121,39 @@ func (d OracleDialect) TruncateStatement(tableName string) string {
 	return fmt.Sprintf("TRUNCATE TABLE %s", tableName)
 }
 
+func (d OracleDialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
+	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s);", tableName, strings.Join(columns, ","), strings.Join(values, ","))
+}
+
+func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {
+	sql := &strings.Builder{}
+	sql.Write([]byte("UPDATE "))
+	sql.Write([]byte(tableName))
+	sql.Write([]byte(" SET "))
+	for index, column := range columns {
+		sql.Write([]byte(column))
+		fmt.Fprint(sql, "=")
+		fmt.Fprint(sql, uValues[index])
+		if index+1 < len(columns) {
+			sql.Write([]byte(", "))
+		}
+	}
+	if len(primaryKeys) > 0 {
+		sql.Write([]byte(" WHERE "))
+	} else {
+		return "", &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
+	}
+	for index, pk := range primaryKeys {
+		sql.Write([]byte(pk))
+		fmt.Fprint(sql, "=")
+		fmt.Fprint(sql, pValues[index])
+		if index+1 < len(primaryKeys) {
+			sql.Write([]byte(" AND "))
+		}
+	}
+	return sql.String(), nil
+}
+
 // IsDuplicateError check if error is a duplicate error
 func (d OracleDialect) IsDuplicateError(err error) bool {
 	// ORA-00001

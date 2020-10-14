@@ -20,10 +20,17 @@ type YAMLStructure struct {
 
 // YAMLDataConnector defines how to store a dataconnector in YAML format
 type YAMLDataConnector struct {
-	Name     string `yaml:"name"`
-	URL      string `yaml:"url"`
-	ReadOnly bool   `yaml:"readonly"`
-	Schema   string `yaml:"schema,omitempty"`
+	Name     string           `yaml:"name"`
+	URL      string           `yaml:"url"`
+	ReadOnly bool             `yaml:"readonly"`
+	Schema   string           `yaml:"schema,omitempty"`
+	User     *YAMLValueHolder `yaml:"user,omitempty"`
+	Password *YAMLValueHolder `yaml:"password,omitempty"`
+}
+
+type YAMLValueHolder struct {
+	Value        *string `yaml:"value,omitempty"`
+	ValueFromEnv *string `yaml:"valueFromEnv,omitempty"`
 }
 
 // NewYAMLStorage create a new YAML storage
@@ -50,6 +57,19 @@ func (s YAMLStorage) List() ([]dataconnector.DataConnector, *dataconnector.Error
 			ReadOnly: ym.ReadOnly,
 			Schema:   ym.Schema,
 		}
+		if ym.User != nil {
+			if ym.User.Value != nil {
+				m.User.Value = *ym.User.Value
+			}
+			if ym.User.ValueFromEnv != nil {
+				m.User.ValueFromEnv = *ym.User.ValueFromEnv
+			}
+		}
+		if ym.Password != nil {
+			if ym.Password.ValueFromEnv != nil {
+				m.Password.ValueFromEnv = *ym.Password.ValueFromEnv
+			}
+		}
 		result = append(result, m)
 	}
 
@@ -68,6 +88,25 @@ func (s YAMLStorage) Store(m *dataconnector.DataConnector) *dataconnector.Error 
 		URL:      m.URL,
 		ReadOnly: m.ReadOnly,
 		Schema:   m.Schema,
+		User:     nil,
+		Password: nil,
+	}
+
+	if m.User.ValueFromEnv != "" || m.User.Value != "" {
+		yml.User = &YAMLValueHolder{}
+		if m.User.ValueFromEnv != "" {
+			yml.User.ValueFromEnv = &m.User.ValueFromEnv
+		}
+		if m.User.Value != "" {
+			yml.User.Value = &m.User.Value
+		}
+	}
+
+	if m.Password.ValueFromEnv != "" {
+		yml.Password = &YAMLValueHolder{}
+		if m.Password.ValueFromEnv != "" {
+			yml.Password.ValueFromEnv = &m.Password.ValueFromEnv
+		}
 	}
 
 	list.DataConnectors = append(list.DataConnectors, yml)

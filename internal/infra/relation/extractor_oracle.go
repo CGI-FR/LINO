@@ -28,10 +28,10 @@ func (d OracleDialect) SQL(schema string) string {
 	SQL := `
 	SELECT
 	a.constraint_name name,
-	c_pk.table_name parent_table,
-	a_pk.COLUMN_NAME parent_key,
 	a.table_name child_table,
-	a.COLUMN_NAME child_key
+	a.COLUMN_NAME child_key,
+	c_pk.table_name parent_table,
+	a_pk.COLUMN_NAME parent_key
 FROM all_cons_columns a
 JOIN all_constraints c ON a.owner = c.owner
 					  AND a.constraint_name = c.constraint_name

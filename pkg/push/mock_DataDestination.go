@@ -25,13 +25,29 @@ func (_m *MockDataDestination) Close() *Error {
 	return r0
 }
 
-// Open provides a mock function with given fields: plan, mode
-func (_m *MockDataDestination) Open(plan Plan, mode Mode) *Error {
-	ret := _m.Called(plan, mode)
+// Commit provides a mock function with given fields:
+func (_m *MockDataDestination) Commit() *Error {
+	ret := _m.Called()
 
 	var r0 *Error
-	if rf, ok := ret.Get(0).(func(Plan, Mode) *Error); ok {
-		r0 = rf(plan, mode)
+	if rf, ok := ret.Get(0).(func() *Error); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*Error)
+		}
+	}
+
+	return r0
+}
+
+// Open provides a mock function with given fields: plan, mode, disableConstraints
+func (_m *MockDataDestination) Open(plan Plan, mode Mode, disableConstraints bool) *Error {
+	ret := _m.Called(plan, mode, disableConstraints)
+
+	var r0 *Error
+	if rf, ok := ret.Get(0).(func(Plan, Mode, bool) *Error); ok {
+		r0 = rf(plan, mode, disableConstraints)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*Error)

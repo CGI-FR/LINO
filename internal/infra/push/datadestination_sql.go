@@ -16,6 +16,7 @@ type SQLDataDestination struct {
 	schema             string
 	logger             push.Logger
 	db                 *sqlx.DB
+	tx                 *sql.Tx
 	rowWriter          map[string]*SQLRowWriter
 	mode               push.Mode
 	disableConstraints bool
@@ -36,12 +37,28 @@ func NewSQLDataDestination(url string, schema string, dialect SQLDialect, logger
 // Close SQL connections
 func (dd *SQLDataDestination) Close() *push.Error {
 	for _, rw := range dd.rowWriter {
-		rw.close()
+		err := rw.commit()
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
 	}
 
-	err := dd.db.Close()
+	err := dd.tx.Commit()
+
 	if err != nil {
 		return &push.Error{Description: err.Error()}
+	}
+
+	for _, rw := range dd.rowWriter {
+		err := rw.close()
+		if err != nil {
+			return err
+		}
+	}
+
+	err2 := dd.db.Close()
+	if err2 != nil {
+		return &push.Error{Description: err2.Error()}
 	}
 	return nil
 }
@@ -54,6 +71,27 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 			return &push.Error{Description: err.Error()}
 		}
 	}
+
+	err := dd.tx.Commit()
+
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+
+	for _, rw := range dd.rowWriter {
+		err := rw.commit()
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
+	}
+
+	tx, err := dd.db.Begin()
+
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+
+	dd.tx = tx
 
 	return nil
 }
@@ -82,6 +120,12 @@ func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode, disableConstr
 	}
 
 	dd.db = dbx
+
+	tx, err := dd.db.Begin()
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+	dd.tx = tx
 
 	for _, table := range plan.Tables() {
 		rw := NewSQLRowWriter(table, dd)
@@ -119,7 +163,6 @@ type SQLRowWriter struct {
 	dd                 *SQLDataDestination
 	duplicateKeysCache map[push.Value]struct{}
 	statement          *sql.Stmt
-	tx                 *sql.Tx
 	headers            []string
 }
 
@@ -149,19 +192,6 @@ func (rw *SQLRowWriter) open() *push.Error {
 	}
 	rw.duplicateKeysCache = map[push.Value]struct{}{}
 
-	err3 := rw.begin()
-	if err3 != nil {
-		return &push.Error{Description: err3.Error()}
-	}
-	return nil
-}
-
-func (rw *SQLRowWriter) begin() *push.Error {
-	tx, err := rw.dd.db.Begin()
-	if err != nil {
-		return &push.Error{Description: err.Error()}
-	}
-	rw.tx = tx
 	return nil
 }
 
@@ -173,14 +203,7 @@ func (rw *SQLRowWriter) commit() *push.Error {
 		}
 		rw.statement = nil
 	}
-	if rw.tx != nil {
-		err := rw.tx.Commit()
-		if err != nil {
-			return &push.Error{Description: err.Error()}
-		}
-		rw.tx = nil
-	}
-	return rw.begin()
+	return nil
 }
 
 // close table writer
@@ -191,12 +214,7 @@ func (rw *SQLRowWriter) close() *push.Error {
 			return &push.Error{Description: err.Error()}
 		}
 	}
-	if rw.tx != nil {
-		err := rw.tx.Commit()
-		if err != nil {
-			return &push.Error{Description: err.Error()}
-		}
-	}
+
 	if rw.dd.disableConstraints {
 		return rw.enableConstraints()
 	}
@@ -264,7 +282,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	}
 	rw.dd.logger.Debug(prepareStmt)
 
-	stmt, err := rw.tx.Prepare(prepareStmt)
+	stmt, err := rw.dd.tx.Prepare(prepareStmt)
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}

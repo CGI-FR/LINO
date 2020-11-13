@@ -11,14 +11,12 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 		return err1
 	}
 	defer destination.Close()
+	defer ri.Close()
 
 	i := uint(0)
-	for {
-		row, stop := ri.NextRow()
-		if stop != nil {
-			logger.Info("End of stream")
-			return nil
-		}
+	for ri.Next() {
+		row := ri.Value()
+
 		err2 := pushRow(*row, destination, plan.FirstTable(), plan)
 		if err2 != nil {
 			err4 := catchError.Write(*row)
@@ -36,6 +34,13 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			}
 		}
 	}
+
+	if ri.Error() != nil {
+		return ri.Error()
+	}
+
+	logger.Info("End of stream")
+	return nil
 }
 
 // FilterRelation split values and relations to follow

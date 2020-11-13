@@ -26,7 +26,9 @@ func (necrw NoErrorCaptureRowWriter) Write(row Row) *Error {
 
 // RowIterator iter over a collection of rows
 type RowIterator interface {
-	NextRow() (*Row, *StopIteratorError)
+	Next() bool
+	Value() *Row
+	Error() *Error
 	Close() *Error
 }
 

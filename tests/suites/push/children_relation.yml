@@ -1,0 +1,34 @@
+name: push children relation
+testcases:
+- name: prepare test
+  steps:
+    # Clean working directory
+    - script: rm -f *
+    - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+    - script: lino relation extract source
+    - script: lino table extract source
+    - script: lino id create store
+    - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
+    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+    - script: lino id set-child-lookup inventory_store_id_fkey true
+    - script: lino pull source -f store_id=1 > store1.json
+
+
+
+- name: push insert without conflict
+  steps:
+    - script: cat store1.json | lino push -d dest
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldBeEmpty
+        - result.systemerr ShouldBeEmpty
+    - script: lino pull dest --limit 1 -f store_id=1 > store1_dest.json
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldBeEmpty
+        - result.systemerr ShouldBeEmpty
+    - script: diff store1.json store1_dest.json
+      assertions:
+        - result.code ShouldEqual 0
+        - result.systemout ShouldBeEmpty
+        - result.systemerr ShouldBeEmpty

@@ -9,13 +9,13 @@ type MockDataDestinationFactory struct {
 	mock.Mock
 }
 
-// New provides a mock function with given fields: url
-func (_m *MockDataDestinationFactory) New(url string) DataDestination {
-	ret := _m.Called(url)
+// New provides a mock function with given fields: url, schema
+func (_m *MockDataDestinationFactory) New(url string, schema string) DataDestination {
+	ret := _m.Called(url, schema)
 
 	var r0 DataDestination
-	if rf, ok := ret.Get(0).(func(string) DataDestination); ok {
-		r0 = rf(url)
+	if rf, ok := ret.Get(0).(func(string, string) DataDestination); ok {
+		r0 = rf(url, schema)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(DataDestination)

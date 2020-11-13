@@ -25,8 +25,38 @@ func (_m *MockRowIterator) Close() *Error {
 	return r0
 }
 
-// NextRow provides a mock function with given fields:
-func (_m *MockRowIterator) NextRow() (*Row, *StopIteratorError) {
+// Error provides a mock function with given fields:
+func (_m *MockRowIterator) Error() *Error {
+	ret := _m.Called()
+
+	var r0 *Error
+	if rf, ok := ret.Get(0).(func() *Error); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*Error)
+		}
+	}
+
+	return r0
+}
+
+// Next provides a mock function with given fields:
+func (_m *MockRowIterator) Next() bool {
+	ret := _m.Called()
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func() bool); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// Value provides a mock function with given fields:
+func (_m *MockRowIterator) Value() *Row {
 	ret := _m.Called()
 
 	var r0 *Row
@@ -38,14 +68,5 @@ func (_m *MockRowIterator) NextRow() (*Row, *StopIteratorError) {
 		}
 	}
 
-	var r1 *StopIteratorError
-	if rf, ok := ret.Get(1).(func() *StopIteratorError); ok {
-		r1 = rf()
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*StopIteratorError)
-		}
-	}
-
-	return r0, r1
+	return r0
 }

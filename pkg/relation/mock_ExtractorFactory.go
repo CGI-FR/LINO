@@ -9,13 +9,13 @@ type MockExtractorFactory struct {
 	mock.Mock
 }
 
-// New provides a mock function with given fields: url
-func (_m *MockExtractorFactory) New(url string) Extractor {
-	ret := _m.Called(url)
+// New provides a mock function with given fields: url, schema
+func (_m *MockExtractorFactory) New(url string, schema string) Extractor {
+	ret := _m.Called(url, schema)
 
 	var r0 Extractor
-	if rf, ok := ret.Get(0).(func(string) Extractor); ok {
-		r0 = rf(url)
+	if rf, ok := ret.Get(0).(func(string, string) Extractor); ok {
+		r0 = rf(url, schema)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(Extractor)

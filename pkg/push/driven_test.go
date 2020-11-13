@@ -11,12 +11,21 @@ type rowIterator struct {
 	row   push.Row
 }
 
-func (ri *rowIterator) NextRow() (*push.Row, *push.StopIteratorError) {
+func (ri *rowIterator) Error() *push.Error {
+	return nil
+}
+
+func (ri *rowIterator) Value() *push.Row {
+	return &ri.row
+}
+
+func (ri *rowIterator) Next() bool {
 	if ri.limit == 0 {
-		return nil, &push.StopIteratorError{}
+		return false
 	}
 	ri.limit--
-	return &ri.row, nil
+
+	return true
 }
 
 func (ri *rowIterator) Close() *push.Error {

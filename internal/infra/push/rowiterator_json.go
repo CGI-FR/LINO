@@ -12,11 +12,16 @@ import (
 type JSONRowIterator struct {
 	file     io.ReadCloser
 	fscanner *bufio.Scanner
+	error    *push.Error
+	value    *push.Row
 }
 
 // NewJSONRowIterator creates a new JSONRowIterator.
 func NewJSONRowIterator(file io.ReadCloser) push.RowIterator {
-	return &JSONRowIterator{file, bufio.NewScanner(file)}
+	scanner := bufio.NewScanner(file)
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 1024*1024)
+	return &JSONRowIterator{file, scanner, nil, nil}
 }
 
 // Close file format.
@@ -28,17 +33,39 @@ func (re *JSONRowIterator) Close() *push.Error {
 	return nil
 }
 
-// NextRow convert next line to Row
-func (re *JSONRowIterator) NextRow() (*push.Row, *push.StopIteratorError) {
+// Value return current row
+func (re *JSONRowIterator) Value() *push.Row {
+	if re.value != nil {
+		return re.value
+	}
+	panic("Value is not valid after iterator finished")
+}
+
+// Error return error catch by next
+func (re *JSONRowIterator) Error() *push.Error {
+	return re.error
+}
+
+// Next try to convert next line to Row
+func (re *JSONRowIterator) Next() bool {
 	if !re.fscanner.Scan() {
-		return nil, &push.StopIteratorError{}
+		if re.fscanner.Err() != nil {
+			re.error = &push.Error{Description: re.fscanner.Err().Error()}
+		}
+		return false
 	}
 	line := re.fscanner.Bytes()
 
 	var row push.Row
+
 	err2 := json.Unmarshal(line, &row)
+
 	if err2 != nil {
-		return nil, &push.StopIteratorError{}
+		re.error = &push.Error{Description: err2.Error()}
+		return false
 	}
-	return &row, nil
+
+	re.value = &row
+
+	return true
 }

@@ -12,12 +12,8 @@ type MemoryDataIterator struct {
 	current pull.Row
 }
 
-func (di *MemoryDataIterator) HasNext() bool {
-	return len(di.rows) > 0
-}
-
 func (di *MemoryDataIterator) Next() bool {
-	if di.HasNext() {
+	if len(di.rows) > 0 {
 		di.current = di.rows[0]
 		di.rows = di.rows[1:]
 		return true
@@ -26,8 +22,12 @@ func (di *MemoryDataIterator) Next() bool {
 	return false
 }
 
-func (di *MemoryDataIterator) Value() (pull.Row, *pull.Error) {
-	return di.current, nil
+func (di *MemoryDataIterator) Value() pull.Row {
+	return di.current
+}
+
+func (di *MemoryDataIterator) Error() *pull.Error {
+	return nil
 }
 
 // MemoryDataSource mocks DataSource.

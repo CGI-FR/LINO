@@ -31,16 +31,15 @@ type puller struct {
 
 func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diagnostic TraceListener) *Error {
 	for filters.Next() {
-		fileFilter, err := filters.Value()
-		if err != nil {
-			return err
-		}
+		fileFilter := filters.Value()
+
 		initFilter := filter{plan.InitFilter().Limit(), fileFilter.Update(plan.InitFilter().Values())}
 		if err := e.pullStep(plan.Steps().Step(0), initFilter, export, diagnostic); err != nil {
 			return err
 		}
 	}
-	return nil
+
+	return filters.Error()
 }
 
 func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diagnostic TraceListener) *Error {
@@ -166,11 +165,11 @@ func (e puller) read(t Table, f Filter) ([]Row, *Error) {
 	}
 	result := []Row{}
 	for iter.Next() {
-		row, err := iter.Value()
-		if err != nil {
-			return nil, err
-		}
+		row := iter.Value()
 		result = append(result, row)
+	}
+	if iter.Error() != nil {
+		return nil, iter.Error()
 	}
 	return result, err
 }

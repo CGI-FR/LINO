@@ -20,7 +20,8 @@ type DataSource interface {
 // RowReader over DataSource.
 type RowReader interface {
 	Next() bool
-	Value() (Row, *Error)
+	Value() Row
+	Error() *Error
 }
 
 // OneOneEmptyRowReader return one empty row
@@ -40,7 +41,10 @@ func (r *OneEmptyRowReader) Next() bool {
 }
 
 // Value is always an empty row
-func (r OneEmptyRowReader) Value() (Row, *Error) { return Row{}, nil }
+func (r OneEmptyRowReader) Value() Row { return Row{} }
+
+// Error return always nil
+func (r OneEmptyRowReader) Error() *Error { return nil }
 
 // Logger for events.
 type Logger interface {

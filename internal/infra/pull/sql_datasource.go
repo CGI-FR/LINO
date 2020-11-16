@@ -95,7 +95,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 		return nil, &pull.Error{Description: err.Error()}
 	}
 
-	return &SQLDataIterator{rows}, nil
+	return &SQLDataIterator{rows, nil, nil}, nil
 }
 
 // Close a connection to the SQL DB
@@ -109,7 +109,9 @@ func (ds *SQLDataSource) Close() *pull.Error {
 
 // SQLDataIterator read data from a SQL database.
 type SQLDataIterator struct {
-	rows *sqlx.Rows
+	rows  *sqlx.Rows
+	value pull.Row
+	err   *pull.Error
 }
 
 // Next reads the next rows if it exists.
@@ -117,27 +119,40 @@ func (di *SQLDataIterator) Next() bool {
 	if di.rows == nil {
 		return false
 	}
-	return di.rows.Next()
+	if di.rows.Next() {
+		columns, err := di.rows.Columns()
+		if err != nil {
+			di.err = &pull.Error{Description: err.Error()}
+			return false
+		}
+
+		values, err := di.rows.SliceScan()
+		if err != nil {
+			di.err = &pull.Error{Description: err.Error()}
+			return false
+		}
+
+		row := pull.Row{}
+		for i, column := range columns {
+			row[column] = values[i]
+		}
+		di.value = row
+		return true
+	}
+	if di.rows.Err() != nil {
+		di.err = &pull.Error{Description: di.rows.Err().Error()}
+	}
+	return false
 }
 
 // Value returns the last read row.
-func (di *SQLDataIterator) Value() (pull.Row, *pull.Error) {
-	columns, err := di.rows.Columns()
-	if err != nil {
-		return nil, &pull.Error{Description: err.Error()}
-	}
+func (di *SQLDataIterator) Value() pull.Row {
+	return di.value
+}
 
-	values, err := di.rows.SliceScan()
-	if err != nil {
-		return nil, &pull.Error{Description: err.Error()}
-	}
-
-	row := pull.Row{}
-	for i, column := range columns {
-		row[column] = values[i]
-	}
-
-	return row, nil
+// Error returns the iterator error
+func (di *SQLDataIterator) Error() *pull.Error {
+	return di.err
 }
 
 // SQLDialect to inject SQL variations

@@ -70,7 +70,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	datasource, err = getDataSource(datasourceName)
+	datasource, err = getDataSource(datasourceName, w)
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusNotFound)

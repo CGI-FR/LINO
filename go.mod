@@ -4,8 +4,9 @@ go 1.13
 
 require (
 	github.com/awalterschulze/gographviz v0.0.0-20190522210029-fa59802746ab
+	github.com/go-kit/kit v0.10.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
-	github.com/godror/godror v0.13.2
+	github.com/godror/godror v0.20.8
 	github.com/gorilla/mux v1.7.4
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.3.0

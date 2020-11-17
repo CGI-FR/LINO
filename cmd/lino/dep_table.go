@@ -11,7 +11,8 @@ func tableStorage() domain.Storage {
 
 func tableExtractorFactory() map[string]domain.ExtractorFactory {
 	return map[string]domain.ExtractorFactory{
-		"postgres": infra.NewPostgresExtractorFactory(),
-		"godror":   infra.NewOracleExtractorFactory(),
+		"postgres":   infra.NewPostgresExtractorFactory(),
+		"godror":     infra.NewOracleExtractorFactory(),
+		"godror-raw": infra.NewOracleExtractorFactory(),
 	}
 }

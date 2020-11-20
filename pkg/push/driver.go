@@ -17,7 +17,7 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 	for ri.Next() {
 		row := ri.Value()
 
-		err2 := pushRow(*row, destination, plan.FirstTable(), plan)
+		err2 := pushRow(*row, destination, plan.FirstTable(), plan, mode)
 		if err2 != nil {
 			err4 := catchError.Write(*row)
 			if err4 != nil {
@@ -92,7 +92,7 @@ func FilterRelation(row Row, relations map[string]Relation) (Row, map[string]Row
 }
 
 // pushRow push a row in a specific table
-func pushRow(row Row, ds DataDestination, table Table, plan Plan) *Error {
+func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode) *Error {
 	frow, frel, fInverseRel, err1 := FilterRelation(row, plan.RelationsFromTable(table))
 
 	if err1 != nil {
@@ -104,26 +104,58 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan) *Error {
 		return err2
 	}
 
-	err3 := rw.Write(frow)
-
-	if err3 != nil {
-		return err3
-	}
-
-	for relName, subRow := range frel {
-		rel := plan.RelationsFromTable(table)[relName]
-		err4 := pushRow(subRow, ds, rel.OppositeOf(table), plan)
-		if err4 != nil {
-			return err4
+	if mode == Delete {
+		// remove children first
+		for relName, subArray := range fInverseRel {
+			for _, subRow := range subArray {
+				rel := plan.RelationsFromTable(table)[relName]
+				err5 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode)
+				if err5 != nil {
+					return err5
+				}
+			}
 		}
-	}
 
-	for relName, subArray := range fInverseRel {
-		for _, subRow := range subArray {
+		// Current table
+		err3 := rw.Write(frow)
+
+		if err3 != nil {
+			return err3
+		}
+
+		// and parents
+		for relName, subRow := range frel {
 			rel := plan.RelationsFromTable(table)[relName]
-			err5 := pushRow(subRow, ds, rel.OppositeOf(table), plan)
-			if err5 != nil {
-				return err5
+			err4 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode)
+			if err4 != nil {
+				return err4
+			}
+		}
+	} else {
+		// insert parent first
+		for relName, subRow := range frel {
+			rel := plan.RelationsFromTable(table)[relName]
+			err4 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode)
+			if err4 != nil {
+				return err4
+			}
+		}
+
+		// current
+		err3 := rw.Write(frow)
+
+		if err3 != nil {
+			return err3
+		}
+
+		// and children
+		for relName, subArray := range fInverseRel {
+			for _, subRow := range subArray {
+				rel := plan.RelationsFromTable(table)[relName]
+				err5 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode)
+				if err5 != nil {
+					return err5
+				}
 			}
 		}
 	}

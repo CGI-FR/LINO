@@ -48,6 +48,7 @@ func (dd *SQLDataDestination) Close() *push.Error {
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}
+	dd.logger.Debug("transaction committed")
 
 	for _, rw := range dd.rowWriter {
 		err := rw.close()
@@ -60,6 +61,7 @@ func (dd *SQLDataDestination) Close() *push.Error {
 	if err2 != nil {
 		return &push.Error{Description: err2.Error()}
 	}
+
 	return nil
 }
 
@@ -77,6 +79,7 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}
+	dd.logger.Debug("transaction committed")
 
 	for _, rw := range dd.rowWriter {
 		err := rw.commit()
@@ -202,6 +205,7 @@ func (rw *SQLRowWriter) commit() *push.Error {
 			return &push.Error{Description: err.Error()}
 		}
 		rw.statement = nil
+		rw.dd.logger.Debug(fmt.Sprintf("close statement %s", rw.dd.mode))
 	}
 	return nil
 }

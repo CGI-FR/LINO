@@ -82,7 +82,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	plan, e2 := getPullerPlan(filter, limit)
+	plan, e2 := getPullerPlan(filter, limit, idStorageFactory(query.Get("table")))
 	if e2 != nil {
 		logger.Error(e2.Error())
 		w.WriteHeader(http.StatusInternalServerError)

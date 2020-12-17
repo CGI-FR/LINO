@@ -18,7 +18,7 @@ import (
 var dataconnectorStorage dataconnector.Storage
 var relStorage relation.Storage
 var tabStorage table.Storage
-var idStorage id.Storage
+var idStorageFactory func(string) id.Storage
 var datadestinationFactories map[string]push.DataDestinationFactory
 var rowIteratorFactory func(io.ReadCloser) push.RowIterator
 var rowExporterFactory func(io.Writer) push.RowWriter
@@ -36,7 +36,7 @@ func Inject(
 	dbas dataconnector.Storage,
 	rs relation.Storage,
 	ts table.Storage,
-	ids id.Storage,
+	idsf func(string) id.Storage,
 	dsfmap map[string]push.DataDestinationFactory,
 	rif func(io.ReadCloser) push.RowIterator,
 	ref func(io.Writer) push.RowWriter,
@@ -44,7 +44,7 @@ func Inject(
 	dataconnectorStorage = dbas
 	relStorage = rs
 	tabStorage = ts
-	idStorage = ids
+	idStorageFactory = idsf
 	datadestinationFactories = dsfmap
 	rowIteratorFactory = rif
 	rowExporterFactory = ref
@@ -56,6 +56,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		commitSize         uint
 		disableConstraints bool
 		catchErrors        string
+		table              string
 		rowExporter        push.RowWriter
 	)
 
@@ -91,7 +92,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPlan()
+			plan, e2 := getPlan(idStorageFactory(table))
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(2)
@@ -119,6 +120,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().UintVarP(&commitSize, "commitSize", "c", 500, "Commit size")
 	cmd.Flags().BoolVarP(&disableConstraints, "disable-constraints", "d", false, "Disable constraint during push")
 	cmd.Flags().StringVarP(&catchErrors, "catch-errors", "e", "", "Catch errors and write line in file")
+	cmd.Flags().StringVarP(&table, "table", "t", "", "Table to writes json")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
@@ -147,7 +149,7 @@ func getDataDestination(dataconnectorName string) (push.DataDestination, *push.E
 	return datadestinationFactory.New(alias.URL, alias.Schema), nil
 }
 
-func getPlan() (push.Plan, *push.Error) {
+func getPlan(idStorage id.Storage) (push.Plan, *push.Error) {
 	id, err1 := idStorage.Read()
 	if err1 != nil {
 		return nil, &push.Error{Description: err1.Error()}

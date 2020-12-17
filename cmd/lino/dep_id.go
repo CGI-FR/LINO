@@ -11,6 +11,15 @@ func idStorage() domain.Storage {
 	return infra.NewMultiStorage(infra.NewYAMLStorage(), infra.NewDOTStorage())
 }
 
+func idStorageFactory() func(string) domain.Storage {
+	return func(table string) domain.Storage {
+		if table == "" {
+			return idStorage()
+		}
+		return infra.NewTableStorage(domain.NewTable(table))
+	}
+}
+
 func idExporter() domain.Exporter {
 	return infra.NewGraphVizExporter()
 }

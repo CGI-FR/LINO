@@ -67,3 +67,12 @@ testcases:
       assertions:
         - result.statuscode ShouldEqual 400
         - result.bodyjson.error  ShouldEqual "param filter must be a string map (key1:value1,key2:value2)"
+
+- name: pull table content
+  steps:
+    - type: http
+      method: GET
+      url: http://lino:8000/api/v1/data/source?table=customer&limit=1
+      assertions:
+        - result.statuscode ShouldEqual 200
+        - result.body ShouldContainSubstring '{"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}'

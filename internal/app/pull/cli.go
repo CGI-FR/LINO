@@ -18,7 +18,7 @@ import (
 var dataconnectorStorage dataconnector.Storage
 var relStorage relation.Storage
 var tabStorage table.Storage
-var idStorage id.Storage
+var idStorageFactory func(string) id.Storage
 var dataSourceFactories map[string]pull.DataSourceFactory
 var pullExporterFactory func(io.Writer) pull.RowExporter
 var rowReaderFactory func(io.ReadCloser) pull.RowReader
@@ -38,7 +38,7 @@ func Inject(
 	dbas dataconnector.Storage,
 	rs relation.Storage,
 	ts table.Storage,
-	ids id.Storage,
+	idsf func(string) id.Storage,
 	dsfmap map[string]pull.DataSourceFactory,
 	exporterFactory func(io.Writer) pull.RowExporter,
 	rrf func(io.ReadCloser) pull.RowReader,
@@ -46,7 +46,7 @@ func Inject(
 	dataconnectorStorage = dbas
 	relStorage = rs
 	tabStorage = ts
-	idStorage = ids
+	idStorageFactory = idsf
 	dataSourceFactories = dsfmap
 	pullExporterFactory = exporterFactory
 	rowReaderFactory = rrf
@@ -58,6 +58,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	// local flags
 	var limit uint
 	var filefilter string
+	var table string
 	var initialFilters map[string]string
 	var diagnostic bool
 	var filters pull.RowReader
@@ -75,7 +76,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPullerPlan(initialFilters, limit)
+			plan, e2 := getPullerPlan(initialFilters, limit, idStorageFactory(table))
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(1)
@@ -113,6 +114,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringToStringVarP(&initialFilters, "filter", "f", map[string]string{}, "filter of start table")
 	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
 	cmd.Flags().StringVarP(&filefilter, "filter-from-file", "F", "", "Use file to filter start table")
+	cmd.Flags().StringVarP(&table, "table", "t", "", "pull content of table without relations instead of ingress descriptor definition")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
@@ -138,7 +140,7 @@ func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, *p
 	return datasourceFactory.New(u.URL.String(), alias.Schema), nil
 }
 
-func getPullerPlan(initialFilters map[string]string, limit uint) (pull.Plan, *pull.Error) {
+func getPullerPlan(initialFilters map[string]string, limit uint, idStorage id.Storage) (pull.Plan, *pull.Error) {
 	ep, err1 := id.GetPullerPlan(idStorage)
 	if err1 != nil {
 		return nil, &pull.Error{Description: err1.Error()}
@@ -221,7 +223,7 @@ func (c epToStepListConverter) getTable(name string) pull.Table {
 
 	table, ok := c.tmap[name]
 	if !ok {
-		logger.Error(fmt.Sprintf("missing table %v in tables.yaml", name))
+		logger.Warn(fmt.Sprintf("missing table %v in tables.yaml", name))
 		return pull.NewTable(name, []string{})
 	}
 

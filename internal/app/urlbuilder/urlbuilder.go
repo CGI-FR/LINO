@@ -9,6 +9,7 @@ import (
 	"github.com/docker/docker-credential-helpers/client"
 	"github.com/docker/docker-credential-helpers/credentials"
 	"github.com/xo/dburl"
+	"makeit.imfr.cgi.com/lino/internal/app/localstorage"
 	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
 
@@ -52,8 +53,10 @@ func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 		store := defaultCredentialsStore()
 		creds, err := client.Get(store, u.String())
 		if err != nil {
-			// failed to use credential store backend
-		} else {
+			// failed to use credential store backend, fallback to local storage
+			creds, err = localstorage.Read(u.String())
+		}
+		if err == nil {
 			u.User = url.UserPassword(creds.Username, creds.Secret)
 		}
 	}
@@ -62,11 +65,15 @@ func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 
 func StorePassword(u *dburl.URL, password string) error {
 	store := defaultCredentialsStore()
-	err := client.Store(store, &credentials.Credentials{ServerURL: u.URL.String(), Username: u.URL.User.Username(), Secret: password})
+	creds := &credentials.Credentials{ServerURL: u.URL.String(), Username: u.URL.User.Username(), Secret: password}
+	err := client.Store(store, creds)
 	if err != nil {
 		// failed to use credential store backend
-		return err
-	} else {
-		return nil
+		if credentials.IsCredentialsMissingServerURL(err) || credentials.IsCredentialsMissingUsername(err) || credentials.IsErrCredentialsNotFound(err) {
+			return err
+		}
+		// fall back to local storage
+		return localstorage.Store(creds)
 	}
+	return nil
 }

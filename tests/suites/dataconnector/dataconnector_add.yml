@@ -20,10 +20,10 @@ testcases:
   - type: exec
     script: rm -f *
   # Enable mock credential helper as docker-credential-pass
-  # - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
-  # - script: PATH=$PATH:$PWD
+  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+  - script: export PATH=$PATH:$PWD
   - type: exec
-    script: lino dataconnector add source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+    script: lino dataconnector add source 'postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable'
     assertions:
       - result.code ShouldEqual 0
       - 'result.systemerr ShouldContainSubstring warn: password should not be included in URI'
@@ -46,7 +46,7 @@ testcases:
   - type: exec
     script: rm -f *
   # Enable mock credential helper as docker-credential-pass
-  # - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
   - type: exec
     script: lino dataconnector add --read-only source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
     assertions:
@@ -72,7 +72,7 @@ testcases:
   - type: exec
     script: rm -f *
   # Enable mock credential helper as docker-credential-pass
-  # - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
   - type: exec
     script: lino dataconnector add --schema public source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
     assertions:
@@ -175,7 +175,7 @@ testcases:
   - type: exec
     script: rm -f *
   # Enable mock credential helper as docker-credential-pass
-  # - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
   - type: exec
     script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
     assertions:

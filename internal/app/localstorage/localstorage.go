@@ -49,7 +49,7 @@ func Read(serverURL string) (*credentials.Credentials, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &credentials.Credentials{serverURL, username, secret}, nil
+	return &credentials.Credentials{ServerURL: serverURL, Username: username, Secret: secret}, nil
 }
 
 // Add adds new credentials to the storage.

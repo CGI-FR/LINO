@@ -63,7 +63,7 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 			}
 
 			if password != "" {
-				e3 := urlbuilder.StorePassword(u, password)
+				e3 := urlbuilder.StorePassword(u, password, err)
 				if e3 != nil {
 					fmt.Fprintln(err, e3.Error())
 					os.Exit(3)

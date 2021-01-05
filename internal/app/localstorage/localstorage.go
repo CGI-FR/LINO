@@ -34,6 +34,10 @@ type YAMLCredentials struct {
 // Store credentials in a local file.
 type YAMLStorage struct{}
 
+func GetFileLocation() string {
+	return path.Join("~", FilePath, FileName)
+}
+
 func Store(creds *credentials.Credentials) error {
 	h := YAMLStorage{}
 	return h.Add(creds)

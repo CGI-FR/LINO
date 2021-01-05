@@ -63,7 +63,7 @@ func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 	return u
 }
 
-func StorePassword(u *dburl.URL, password string) error {
+func StorePassword(u *dburl.URL, password string, out io.Writer) error {
 	store := defaultCredentialsStore()
 	creds := &credentials.Credentials{ServerURL: u.URL.String(), Username: u.URL.User.Username(), Secret: password}
 	err := client.Store(store, creds)
@@ -73,6 +73,7 @@ func StorePassword(u *dburl.URL, password string) error {
 			return err
 		}
 		// fall back to local storage
+		fmt.Fprintf(out, "warn: password will be stored unencrypted in %s, configure a credential helper to remove this warning. See https://github.com/docker/docker-credential-helpers", localstorage.GetFileLocation())
 		return localstorage.Store(creds)
 	}
 	return nil

@@ -74,6 +74,7 @@ func StorePassword(u *dburl.URL, password string, out io.Writer) error {
 		}
 		// fall back to local storage
 		fmt.Fprintf(out, "warn: password will be stored unencrypted in %s, configure a credential helper to remove this warning. See https://github.com/docker/docker-credential-helpers", localstorage.GetFileLocation())
+		fmt.Fprintln(out)
 		return localstorage.Store(creds)
 	}
 	return nil

@@ -200,8 +200,8 @@ func (c idToPushConverter) getTable(name string) push.Table {
 
 	table, ok := c.tmap[name]
 	if !ok {
-		logger.Error(fmt.Sprintf("missing table %v in tables.yaml", name))
-		return push.NewTable(name, []string{""})
+		logger.Warn(fmt.Sprintf("missing table %v in tables.yaml", name))
+		return push.NewTable(name, []string{})
 	}
 
 	logger.Trace(fmt.Sprintf("building table %v", table))

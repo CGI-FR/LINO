@@ -47,7 +47,10 @@ func (d PostgresDialect) TruncateStatement(tableName string) string {
 }
 
 func (d PostgresDialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
-	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s) ON CONFLICT (%s) DO NOTHING;", tableName, strings.Join(columns, ","), strings.Join(values, ","), strings.Join(primaryKeys, ","))
+	if len(primaryKeys) > 0 {
+		return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s) ON CONFLICT (%s) DO NOTHING", tableName, strings.Join(columns, ","), strings.Join(values, ","), strings.Join(primaryKeys, ","))
+	}
+	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(columns, ","), strings.Join(values, ","))
 }
 
 func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {

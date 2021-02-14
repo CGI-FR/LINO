@@ -11,9 +11,6 @@ import (
 var storage dataconnector.Storage
 var dataPingerFactory map[string]dataconnector.DataPingerFactory
 
-// local flags
-var readonly bool
-
 var logger dataconnector.Logger = dataconnector.Nologger{}
 
 // SetLogger if needed, default no logger

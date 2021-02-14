@@ -19,22 +19,21 @@ testcases:
       # Clean working directory
   - type: exec
     script: rm -f *
+  # Enable mock credential helper as docker-credential-pass
+  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+  - script: export PATH=$PATH:$PWD
   - type: exec
-    script: lino dataconnector add source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+    script: lino dataconnector add source 'postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable'
     assertions:
       - result.code ShouldEqual 0
       - 'result.systemerr ShouldContainSubstring warn: password should not be included in URI'
       - result.systemout ShouldContainSubstring success
-  - type: exec
-    script: ls | wc
-    assertions:
-      - result.systemout ShouldContainSubstring "1"
   - script: |- 
       cat  > expected.yml <<EOF
       version: v1
       dataconnectors:
         - name: source
-          url: postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+          url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
           readonly: false
       EOF
   - script: diff expected.yml dataconnector.yaml
@@ -46,21 +45,19 @@ testcases:
       # Clean working directory
   - type: exec
     script: rm -f *
+  # Enable mock credential helper as docker-credential-pass
+  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
   - type: exec
     script: lino dataconnector add --read-only source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring success
-  - type: exec
-    script: ls | wc
-    assertions:
-      - result.systemout ShouldContainSubstring "1"
   - script: |- 
       cat  > expected.yml <<EOF
       version: v1
       dataconnectors:
         - name: source
-          url: postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+          url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
           readonly: true
       EOF
   - script: diff expected.yml dataconnector.yaml
@@ -74,8 +71,10 @@ testcases:
       # Clean working directory
   - type: exec
     script: rm -f *
+  # Enable mock credential helper as docker-credential-pass
+  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
   - type: exec
-    script: lino dataconnector add --schema public source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable 
+    script: lino dataconnector add --schema public source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring success
@@ -84,7 +83,7 @@ testcases:
       version: v1
       dataconnectors:
         - name: source
-          url: postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+          url: postgresql://postgres@source:5432/postgres?sslmode=disable
           readonly: false
           schema: public
       EOF
@@ -103,10 +102,6 @@ testcases:
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring success
-  - type: exec
-    script: ls | wc
-    assertions:
-      - result.systemout ShouldContainSubstring "1"
   - script: |- 
       cat  > expected.yml <<EOF
       version: v1
@@ -132,10 +127,6 @@ testcases:
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring success
-  - type: exec
-    script: ls | wc
-    assertions:
-      - result.systemout ShouldContainSubstring "1"
   - script: |- 
       cat  > expected.yml <<EOF
       version: v1
@@ -163,19 +154,13 @@ testcases:
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring success
-  - type: exec
-    script: ls | wc
-    assertions:
-      - result.systemout ShouldContainSubstring "1"
   - script: |- 
       cat  > expected.yml <<EOF
       version: v1
       dataconnectors:
         - name: source
-          url: postgresql://localhost:5432/postgres?sslmode=disable
+          url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
           readonly: false
-          user:
-              value: postgres
           password:
               valueFromEnv: PASSWORD
       EOF
@@ -189,25 +174,21 @@ testcases:
       # Clean working directory
   - type: exec
     script: rm -f *
+  # Enable mock credential helper as docker-credential-pass
+  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
   - type: exec
     script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
     assertions:
       - result.code ShouldEqual 0
       - 'result.systemerr ShouldContainSubstring warn: password should not be included in URI'
       - result.systemout ShouldContainSubstring success
-  - type: exec
-    script: ls | wc
-    assertions:
-      - result.systemout ShouldContainSubstring "1"
   - script: |- 
       cat  > expected.yml <<EOF
       version: v1
       dataconnectors:
         - name: source
-          url: postgresql://localhost:5432/postgres?sslmode=disable
+          url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
           readonly: false
-          user:
-              value: postgres
           password:
               valueFromEnv: PASSWORD
       EOF

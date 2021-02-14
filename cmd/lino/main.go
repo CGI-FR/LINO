@@ -33,8 +33,8 @@ var rootCmd = &cobra.Command{
 	Use:   "lino [action]",
 	Short: "Command line tools for managing tests data",
 	Long:  `Lino is a simple ETL (Extract Transform Push) tools to manage tests datas. The lino command line tool pull test data from a relational database to create a smallest production-like database.`,
-	Example: `  lino dataconnector add source --read-only --password-from-env SRC_PASSWORD postgresql://postgres@localhost:5432/postgres?sslmode=disable
-  lino dc add target --password-from-env TGT_PASSWORD postgresql://postgres@localhost:5433/postgres?sslmode=disable
+	Example: `  lino dataconnector add source --read-only postgresql://postgres@localhost:5432/postgres?sslmode=disable
+  lino dc add target postgresql://postgres@localhost:5433/postgres?sslmode=disable
   lino dc list
   lino table extract source
   lino relation extract source

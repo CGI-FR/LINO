@@ -146,7 +146,7 @@ func getDataDestination(dataconnectorName string) (push.DataDestination, *push.E
 		return nil, &push.Error{Description: "no datadestination found for database type " + u.Unaliased}
 	}
 
-	return datadestinationFactory.New(alias.URL, alias.Schema), nil
+	return datadestinationFactory.New(u.URL.String(), alias.Schema), nil
 }
 
 func getPlan(idStorage id.Storage) (push.Plan, *push.Error) {
@@ -200,8 +200,8 @@ func (c idToPushConverter) getTable(name string) push.Table {
 
 	table, ok := c.tmap[name]
 	if !ok {
-		logger.Error(fmt.Sprintf("missing table %v in tables.yaml", name))
-		return push.NewTable(name, []string{""})
+		logger.Warn(fmt.Sprintf("missing table %v in tables.yaml", name))
+		return push.NewTable(name, []string{})
 	}
 
 	logger.Trace(fmt.Sprintf("building table %v", table))

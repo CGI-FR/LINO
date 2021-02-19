@@ -43,15 +43,18 @@ func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diag
 }
 
 func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diagnostic TraceListener) *Error {
-	rows, err := e.read(step.Entry(), filter)
-	diagnostic = diagnostic.TraceStep(step, filter)
+	rowIterator, err := e.datasource.RowReader(step.Entry(), filter)
 	if err != nil {
 		return err
 	}
+	diagnostic = diagnostic.TraceStep(step, filter)
 
-	logger.Info(fmt.Sprintf("pull: from %v with filter %v returned %v row(s)", step.Entry(), filter, len(rows)))
+	logger.Info(fmt.Sprintf("pull: from %v with filter %v", step.Entry(), filter))
 
-	for i, row := range rows {
+	i := 0
+	for rowIterator.Next() {
+		row := rowIterator.Value()
+		i++
 		logger.Trace(fmt.Sprintf("pull: process row number %v", i))
 
 		allRows := map[string][]Row{}
@@ -98,6 +101,9 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 		}
 	}
 
+	if rowIterator.Error() != nil {
+		return rowIterator.Error()
+	}
 	return nil
 }
 

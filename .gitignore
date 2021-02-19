@@ -1,6 +1,7 @@
 /bin/
 .env
 
+credentials.yaml
 dataconnector.yaml
 tables.yaml
 relations.yaml

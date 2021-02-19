@@ -2,18 +2,21 @@ name: data connector ping
 testcases:
 - name: ping success
   steps:
-      # Clean working directory
+  # Clean working directory
   - script: rm -f *
-  - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+  # Enable mock credential helper as docker-credential-pass
+  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+  - script: export PATH=$PATH:$PWD
+  - script: lino dataconnector add source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
   - script: lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring "ping success"
 - name: ping failed
   steps:
-      # Clean working directory
-  - script: rm -f *
-  - script: lino dataconnector add source postgresql://postgres:sakila@source:4432/postgres?sslmode=disable
+  # Clean working directory
+  - script: rm -f credentials.yaml dataconnector.yaml
+  - script: lino dataconnector add source 'postgresql://postgres:sakila@source:4432/postgres?sslmode=disable'
   - script: lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 1
@@ -21,7 +24,8 @@ testcases:
 
 - name: ping success password from env
   steps:
-  - script: rm -f *
+  # Clean working directory
+  - script: rm -f credentials.yaml dataconnector.yaml
   - script: lino dataconnector add --password-from-env=PASSWORD source 'postgresql://postgres@source:5432/postgres?sslmode=disable'
   - script: PASSWORD=sakila lino dataconnector ping source
     assertions:
@@ -29,8 +33,8 @@ testcases:
       - result.systemout ShouldContainSubstring "ping success"
 - name: ping failed password from env
   steps:
-  - script: rm -f * && unset PASSWORD
-  - script: lino dataconnector add --password-from-env=PASSWORD source postgresql://postgres@source:5432/postgres?sslmode=disable
+  - script: rm -f credentials.yaml dataconnector.yaml && unset PASSWORD
+  - script: lino dataconnector add --password-from-env=PASSWORD source 'postgresql://postgres@source:5432/postgres?sslmode=disable'
   - script: lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 1
@@ -38,16 +42,16 @@ testcases:
 
 - name: ping success password and user from env
   steps:
-  - script: rm -f *
-  - script: lino dataconnector add --user-from-env=USER --password-from-env=PASSWORD source postgresql://source:5432/postgres?sslmode=disable
+  - script: rm -f credentials.yaml dataconnector.yaml
+  - script: lino dataconnector add --user-from-env=USER --password-from-env=PASSWORD source 'postgresql://source:5432/postgres?sslmode=disable'
   - script: USER=postgres PASSWORD=sakila lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring "ping success"
 - name: ping failed password and user from env
   steps:
-  - script: rm -f * && unset PASSWORD
-  - script: lino dataconnector add --user-from-env=USER --password-from-env=PASSWORD source postgresql://source:5432/postgres?sslmode=disable
+  - script: rm -f credentials.yaml dataconnector.yaml && unset PASSWORD
+  - script: lino dataconnector add --user-from-env=USER --password-from-env=PASSWORD source 'postgresql://source:5432/postgres?sslmode=disable'
   - script: lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 1
@@ -55,16 +59,16 @@ testcases:
 
 - name: ping success password from env and user flag
   steps:
-  - script: rm -f *
-  - script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://source:5432/postgres?sslmode=disable
+  - script: rm -f credentials.yaml dataconnector.yaml
+  - script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source 'postgresql://source:5432/postgres?sslmode=disable'
   - script: PASSWORD=sakila lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 0
       - result.systemout ShouldContainSubstring "ping success"
 - name: ping failed password from env and user flag
   steps:
-  - script: rm -f * && unset PASSWORD
-  - script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://source:5432/postgres?sslmode=disable
+  - script: rm -f credentials.yaml dataconnector.yaml && unset PASSWORD
+  - script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source 'postgresql://source:5432/postgres?sslmode=disable'
   - script: lino dataconnector ping source
     assertions:
       - result.code ShouldEqual 1

@@ -1,3 +1,4 @@
+project_name: lino
 env:
   - GO111MODULE=on
 before:

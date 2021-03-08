@@ -162,3 +162,8 @@ license: mkdir docker ## Scan dependencies and licenses
 	tar xvf ${BUILD_DIR}/lino.tar -C ${BUILD_DIR}/lino-license
 	golicense ${BUILD_DIR}/lino-license/lino
 	#depth ./cmd/lino
+
+.PHONY: publish
+publish:  ## Publish binaries
+	BUILD_DATE=${BUILD_DATE} VERSION=${VERSION} \
+		goreleaser release --rm-dist

@@ -1,3 +1,20 @@
+// Copyright (C) 2021 CGI France
+//
+// This file is part of LINO.
+//
+// LINO is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// LINO is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with LINO.  If not, see <http://www.gnu.org/licenses/>.
+
 package main
 
 import (
@@ -32,7 +49,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "lino [action]",
 	Short: "Command line tools for managing tests data",
-	Long:  `Lino is a simple ETL (Extract Transform Push) tools to manage tests datas. The lino command line tool pull test data from a relational database to create a smallest production-like database.`,
+	Long:  `Lino is a simple ETL (Extract Transform Load) tools to manage tests datas. The lino command line tool pull test data from a relational database to create a smallest production-like database.`,
 	Example: `  lino dataconnector add source --read-only postgresql://postgres@localhost:5432/postgres?sslmode=disable
   lino dc add target postgresql://postgres@localhost:5433/postgres?sslmode=disable
   lino dc list
@@ -43,7 +60,11 @@ var rootCmd = &cobra.Command{
   lino id show-graph
   lino pull source --limit 10 > customers.jsonl
   lino push target < customers.jsonl`,
-	Version: fmt.Sprintf("%v (commit=%v date=%v by=%v)\n© CGI Inc. 2020 All rights reserved", version, commit, buildDate, builtBy),
+	Version: fmt.Sprintf(`%v (commit=%v date=%v by=%v)
+Copyright (C) 2021 CGI France
+License GPLv3: GNU GPL version 3 <https://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.`, version, commit, buildDate, builtBy),
 }
 
 func main() {

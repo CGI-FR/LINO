@@ -1,14 +1,11 @@
 # LINO : Large Input, Narrow Output
 
- LINO is a simple ETL (Extract Transform Load) tools to manage tests datas.
- The `lino` command line tool
-pull test data from a relational database to create a smallest
-production-like database.
+LINO is a simple ETL (Extract Transform Load) tools to manage tests datas.
+The `lino` command line tool pull test data from a relational database to create a smallest production-like database.
 
 ## Usage
 
 `lino` command line work in relative project's directory, like `git` or `docker`
-
 
 ## Create a new LINO project
 
@@ -35,12 +32,11 @@ dataconnectors:
     url: postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
 ```
 
-
 ## Create relationships
 
 LINO create a consistent sample database. To perform extraction that respect foreign keys constraints LINO have to extract relationships between tables.
 
-Use the `relationships` sub-command or its short name `rs` to extract relationship from foreign key constraints.
+Use the `relation` sub-command or its short name `rel` to extract relations from foreign key constraints.
 
 
 ```
@@ -48,7 +44,7 @@ $ lino relation extract source
 lino finds 40 relations from constraints
 ```
 
-The content of `relationships.yml` generated is
+The content of `relations.yml` generated is
 
 ```yaml
 version: v1
@@ -68,15 +64,15 @@ relations:
 .
 ```
 
-At least user can edit the `relationships.yml` manually to add personal relationship.
+At least user can edit the `relations.yml` manually to add relations that are not part of the database model.
 
 ## Ingress descriptor
 
-Ingress descriptor object describe how `lino` has to go through the relationships to extract data test.
+Ingress descriptor object describe how `lino` has to go through the relations to extract data test.
 
 ### Create Ingress descriptor
 
-To create ingress descriptor use the `ingress-descriptor` sub-command (or its shortcut `id`) with the start table of the extraction.
+To create ingress descriptor use the `id` sub-command with the start table of the extraction.
 
 ```bash
 $ lino id create public.customer
@@ -127,7 +123,7 @@ $ lino id customer show-graph
 
 ## Table
 
-The `lino table` action extract informations about tables.
+The `table` action extract informations about tables.
 
 ```
 $ lino table extract source
@@ -151,7 +147,7 @@ tables:
 
 ## Pull
 
-The `pull` sub-command create à **json** object for each line (jsonline format http://jsonlines.org/) of the first table.
+The `pull` sub-command create a **json** object for each line (jsonline format http://jsonlines.org/) of the first table.
 
 ```
 $ lino pull source
@@ -160,7 +156,7 @@ $ lino pull source
 
 ### --filter-from-file argument
 
-To sample à database from a given `id` list or ohter criteria `LINO` can read filters from a JSON Line file with the argument `--filter-from-file`.
+To sample a database from a given `id` list or ohter criteria `LINO` can read filters from a JSON Line file with the argument `--filter-from-file`.
 
 Each line is a filter and `lino` apply it to the start table to extract data.
 
@@ -174,7 +170,7 @@ Each line is a filter and `lino` apply it to the start table to extract data.
 
 ## Push
 
-TODO
+The `push` sub-command import a **json** line stream (jsonline format http://jsonlines.org/) in each table, following the ingress descriptor defined in current directory.
 
 ### Interaction with other tools
 
@@ -185,7 +181,7 @@ TODO
 Data set could be store in mongoDB easily with the `mongoimport` tool:
 
 ```
-$ lino extract source --limit 100 | mongoimport --db myproject --collection customer
+$ lino pull source --limit 100 | mongoimport --db myproject --collection customer
 ```
 
 and reload later to a database :
@@ -195,7 +191,7 @@ $ mongoexport --db myproject --collection customer | lino push customer --jdbc j
 ```
 ## Miller `mlr`
 
-TODO
+`mlr` tool can be used to format json lines into another tabular format (csv, markdown table, ...).
 
 ## jq
 
@@ -235,27 +231,4 @@ $ lino pull source --limit 3 | jq '{ "manager": .customer_store_id_fkey.store_ma
 
 ## Installation
 
-Download the last binary release in your path
-
-### Contribute
-
-### requirement
-
-- golang
-- git
-- docker
-- venom
-- make
-
-### Git Hook
-
-Each commit have to validate the following steps:
-
-- Lint
-- Unit tests
-- Integration tests
-
-### devcontainer
-
-Devcontainer's docker image contains all tools and configuration necessary to contribute for lino project.
-You've to install MS VScode with the plugin remote container.
+Download the last binary release in your path.

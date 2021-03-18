@@ -39,7 +39,6 @@ DOCKER_IMAGE = lino
 DOCKER_TAG ?= $(shell echo -n ${VERSION} | sed -e 's/[^A-Za-z0-9_\\.-]/_/g')
 
 DOCKER_IMAGE_VENOM= lino-venom
-DOCKER_IMAGE_ORACLE= sakila-oracle
 DOCKER_IMAGE_TEST = lino-test
 
 .PHONY: help
@@ -123,11 +122,6 @@ endif
 .PHONY: docker-venom
 docker-venom: info ## Build docker venom image locally
 	docker build -t ${DOCKER_IMAGE_VENOM}:${DOCKER_TAG} --build-arg IMAGE_NAME=${DOCKER_IMAGE_VENOM} --build-arg IMAGE_TAG=${DOCKER_TAG} --build-arg IMAGE_REVISION=${COMMIT_HASH} --build-arg IMAGE_DATE=${BUILD_DATE} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} tests/venom
-
-.PHONY: docker-oracle
-docker-oracle: info ## Build docker oracle image locally
-	docker build -t ${DOCKER_IMAGE_ORACLE}:${DOCKER_TAG} --build-arg IMAGE_NAME=${DOCKER_IMAGE_ORACLE} --build-arg IMAGE_TAG=${DOCKER_TAG} --build-arg IMAGE_REVISION=${COMMIT_HASH} --build-arg IMAGE_DATE=${BUILD_DATE} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} tests/oracle
-
 
 .PHONY: mockery
 mockery:  ## generate mock for all interfaces in pakage

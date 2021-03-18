@@ -78,7 +78,11 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	sql := &strings.Builder{}
 	sql.Write([]byte("SELECT * FROM "))
 	sql.Write([]byte(ds.tableName(source)))
-	sql.Write([]byte(" WHERE "))
+	sql.Write([]byte(" "))
+
+	if len(filter.Values()) > 0 {
+		sql.Write([]byte("WHERE "))
+	}
 
 	values := []interface{}{}
 	for key, value := range filter.Values() {
@@ -89,10 +93,6 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 		if len(values) < len(filter.Values()) {
 			sql.Write([]byte(" AND "))
 		}
-	}
-
-	if len(filter.Values()) == 0 {
-		sql.Write([]byte("1=1 "))
 	}
 
 	if filter.Limit() > 0 {

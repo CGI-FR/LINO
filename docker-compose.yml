@@ -53,14 +53,7 @@ services:
      environment:
        POSTGRES_PASSWORD: sakila
      expose:
-     - 5432
-
-   oracle_source:
-     image: store/oracle/database-enterprise:12.2.0.1
-     restart: always
-     expose:
-      - 1521
-
+        - 5432
 
    lino:
     build:

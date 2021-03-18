@@ -16,11 +16,6 @@
 # along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
 
 FROM golang:1.13 AS builder
-RUN apk update \
-    && apk upgrade \
-    && apk add --no-cache \
-    ca-certificates \
-    && update-ca-certificates 2>/dev/null || true
 
 ADD .devcontainer/cgi_ca_root.crt /usr/local/share/ca-certificates/cgi_ca_root.crt
 RUN chmod 644 /usr/local/share/ca-certificates/cgi_ca_root.crt && update-ca-certificates

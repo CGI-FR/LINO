@@ -25,7 +25,7 @@ RUN chmod 644 /usr/local/share/ca-certificates/cgi_ca_root.crt && update-ca-cert
 RUN echo "Acquire::http::Proxy \"${http_proxy:-false}\";" > /etc/apt/apt.conf.d/proxy.conf && \
     echo "Acquire::https::Proxy \"${https_proxy:-false}\";" >> /etc/apt/apt.conf.d/proxy.conf && \
     apt-get update && \
-    apt-get install -y --no-install-recommends make wget less jq miller expect libaio1 wget unzip gcc-mingw-w64 g++-mingw-w64 gcc-multilib gcc-mingw-w64 && \
+    apt-get install -y --no-install-recommends make less jq miller expect libaio1 wget unzip gcc-mingw-w64 g++-mingw-w64 gcc-multilib gcc-mingw-w64 && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     rm -r /var/cache/* /var/lib/apt/lists/*
@@ -33,6 +33,14 @@ RUN echo "Acquire::http::Proxy \"${http_proxy:-false}\";" > /etc/apt/apt.conf.d/
 ENV http_proxy ${http_proxy:-}
 ENV https_proxy ${https_proxy:-}
 ENV no_proxy ${no_proxy:-}
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN wget -O /tmp/instantclient-basic-linux-x64.zip https://download.oracle.com/otn_software/linux/instantclient/193000/instantclient-basic-linux.x64-19.3.0.0.0dbru.zip && \
+    mkdir -p /usr/lib/oracle && \
+    unzip /tmp/instantclient-basic-linux-x64.zip -d /usr/lib/oracle && \
+    ldconfig -v /usr/lib/oracle/instantclient_19_3 && \
+    ldd /usr/lib/oracle/instantclient_19_3/libclntsh.so
 
 RUN go get -v github.com/ramya-rao-a/go-outline &&\
     rm -rf /go/pkg/* /go/src/* /root/.cache/go-build
@@ -44,13 +52,6 @@ RUN wget -O- -nv https://install.goreleaser.com/github.com/goreleaser/goreleaser
 ADD https://github.com/ovh/venom/releases/download/v0.27.0/venom.linux-amd64 /bin/venom
 RUN chmod +x /bin/venom
 
-ENV DEBIAN_FRONTEND noninteractive
 
-RUN wget -O /tmp/instantclient-basic-linux-x64.zip https://download.oracle.com/otn_software/linux/instantclient/193000/instantclient-basic-linux.x64-19.3.0.0.0dbru.zip
-
-RUN mkdir -p /usr/lib/oracle && unzip /tmp/instantclient-basic-linux-x64.zip -d /usr/lib/oracle
-
-RUN ldconfig -v /usr/lib/oracle/instantclient_19_3
-RUN ldd /usr/lib/oracle/instantclient_19_3/libclntsh.so
 
 USER vscode

@@ -76,6 +76,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var limit uint
 	var filefilter string
 	var table string
+	var where string
 	var initialFilters map[string]string
 	var diagnostic bool
 	var filters pull.RowReader
@@ -93,7 +94,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPullerPlan(initialFilters, limit, idStorageFactory(table))
+			plan, e2 := getPullerPlan(initialFilters, limit, where, idStorageFactory(table))
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(1)
@@ -132,6 +133,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
 	cmd.Flags().StringVarP(&filefilter, "filter-from-file", "F", "", "Use file to filter start table")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "pull content of table without relations instead of ingress descriptor definition")
+	cmd.Flags().StringVarP(&where, "where", "w", "", "Advanced SQL where clause to filter")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
@@ -157,7 +159,7 @@ func getDataSource(dataconnectorName string) (pull.DataSource, *pull.Error) {
 	return datasourceFactory.New(u.URL.String(), alias.Schema), nil
 }
 
-func getPullerPlan(initialFilters map[string]string, limit uint, idStorage id.Storage) (pull.Plan, *pull.Error) {
+func getPullerPlan(initialFilters map[string]string, limit uint, where string, idStorage id.Storage) (pull.Plan, *pull.Error) {
 	ep, err1 := id.GetPullerPlan(idStorage)
 	if err1 != nil {
 		return nil, &pull.Error{Description: err1.Error()}
@@ -184,7 +186,7 @@ func getPullerPlan(initialFilters map[string]string, limit uint, idStorage id.St
 	for column, value := range initialFilters {
 		row[column] = value
 	}
-	filter = pull.NewFilter(limit, row)
+	filter = pull.NewFilter(limit, row, where)
 
 	return pull.NewPlan(filter, stepList), nil
 }

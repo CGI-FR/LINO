@@ -25,15 +25,18 @@ import (
 type filter struct {
 	limit  uint
 	values Row
+	where  string
 }
 
 // NewFilter initialize a new Filter object
-func NewFilter(limit uint, values Row) Filter {
-	return filter{limit: limit, values: values}
+func NewFilter(limit uint, values Row, where string) Filter {
+	return filter{limit: limit, values: values, where: where}
 }
 
-func (f filter) Limit() uint { return f.limit }
-func (f filter) Values() Row { return f.values }
+func (f filter) Limit() uint   { return f.limit }
+func (f filter) Values() Row   { return f.values }
+func (f filter) Where() string { return f.where }
+
 func (f filter) String() string {
 	builder := &strings.Builder{}
 	cnt := len(f.Values())

@@ -168,6 +168,10 @@ Each line is a filter and `lino` apply it to the start table to extract data.
 
 `--limit` is applied for each line in filters file. With a filters's file of `N` lines and a limit of `L` lino could extract a maximum of `N` x `L` lines.
 
+#### --where
+
+`--where` argument is a raw SQL clause criteria applied to the start table. It's combined with `--filter` or `--filter-from-file` with the `and` operator.
+
 ## Push
 
 The `push` sub-command import a **json** line stream (jsonline format http://jsonlines.org/) in each table, following the ingress descriptor defined in current directory.

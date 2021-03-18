@@ -81,7 +81,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	sql.Write([]byte("SELECT * FROM "))
 	sql.Write([]byte(ds.tableName(source)))
 	sql.Write([]byte(" "))
-	if len(filter.Values()) > 0 {
+	if len(filter.Values()) > 0 || filter.Where() != "" {
 		sql.Write([]byte("WHERE "))
 	}
 	values := []interface{}{}
@@ -90,9 +90,13 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 		values = append(values, value)
 		fmt.Fprint(sql, "=")
 		fmt.Fprint(sql, ds.dialect.Placeholder(len(values)))
-		if len(values) < len(filter.Values()) {
+		if len(values) < len(filter.Values()) || filter.Where() != "" {
 			sql.Write([]byte(" AND "))
 		}
+	}
+
+	if filter.Where() != "" {
+		fmt.Fprint(sql, filter.Where())
 	}
 
 	if filter.Limit() > 0 {

@@ -16,7 +16,7 @@ Types of changes
 
 ## [Unreleased]
 
-Nothing in the backlog !
+- `Added` raw SQL `WHERE` clause
 
 ## [1.0.0]
 

@@ -34,6 +34,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		ok             bool
 		filter         map[string]string
 		limit          uint
+		where          string
 	)
 
 	pathParams := mux.Vars(r)
@@ -74,6 +75,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		limit = uint(limit64)
 	}
 
+	if query.Get("where") != "" {
+		where = query.Get("where")
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
 	if datasourceName, ok = pathParams["dataSource"]; !ok {
@@ -99,7 +104,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	plan, e2 := getPullerPlan(filter, limit, idStorageFactory(query.Get("table")))
+	plan, e2 := getPullerPlan(filter, limit, where, idStorageFactory(query.Get("table")))
 	if e2 != nil {
 		logger.Error(e2.Error())
 		w.WriteHeader(http.StatusInternalServerError)

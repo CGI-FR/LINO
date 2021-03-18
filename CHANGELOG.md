@@ -16,7 +16,7 @@ Types of changes
 
 ## [Unreleased]
 
-Nothing in the backlog !
+- `Added` Oracle database support
 
 ## [1.0.0]
 

@@ -174,3 +174,9 @@ publish:  ## Publish binaries
 	BUILD_DATE=${BUILD_DATE} VERSION=${VERSION} \
 		goreleaser release --rm-dist
 	GO111MODULE=on go mod tidy
+
+.PHONY: snapshot
+snapshot:  ## build snapshot
+	BUILD_DATE=${BUILD_DATE} VERSION=${VERSION} \
+		goreleaser release --snapshot --rm-dist
+	GO111MODULE=on go mod tidy

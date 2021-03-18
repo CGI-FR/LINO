@@ -25,7 +25,7 @@ RUN chmod 644 /usr/local/share/ca-certificates/cgi_ca_root.crt && update-ca-cert
 RUN echo "Acquire::http::Proxy \"${http_proxy:-false}\";" > /etc/apt/apt.conf.d/proxy.conf && \
     echo "Acquire::https::Proxy \"${https_proxy:-false}\";" >> /etc/apt/apt.conf.d/proxy.conf && \
     apt-get update && \
-    apt-get install -y --no-install-recommends make wget less jq miller expect && \
+    apt-get install -y --no-install-recommends make wget less jq miller expect libaio1 wget unzip gcc-mingw-w64 g++-mingw-w64 gcc-multilib gcc-mingw-w64 && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     rm -r /var/cache/* /var/lib/apt/lists/*
@@ -45,8 +45,6 @@ ADD https://github.com/ovh/venom/releases/download/v0.27.0/venom.linux-amd64 /bi
 RUN chmod +x /bin/venom
 
 ENV DEBIAN_FRONTEND noninteractive
-
-RUN apt-get update && apt-get install -y libaio1 wget unzip
 
 RUN wget -O /tmp/instantclient-basic-linux-x64.zip https://download.oracle.com/otn_software/linux/instantclient/193000/instantclient-basic-linux.x64-19.3.0.0.0dbru.zip
 

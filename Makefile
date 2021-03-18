@@ -1,3 +1,20 @@
+# Copyright (C) 2021 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
 # A Self-Documenting Makefile: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 
 SHELL := /bin/bash # Use bash syntax
@@ -151,3 +168,9 @@ license: mkdir docker ## Scan dependencies and licenses
 	tar xvf ${BUILD_DIR}/lino.tar -C ${BUILD_DIR}/lino-license
 	golicense ${BUILD_DIR}/lino-license/lino
 	#depth ./cmd/lino
+
+.PHONY: publish
+publish:  ## Publish binaries
+	BUILD_DATE=${BUILD_DATE} VERSION=${VERSION} \
+		goreleaser release --rm-dist
+	GO111MODULE=on go mod tidy

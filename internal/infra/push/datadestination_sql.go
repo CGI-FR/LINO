@@ -121,7 +121,6 @@ func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode, disableConstr
 	dd.mode = mode
 	dd.disableConstraints = disableConstraints
 
-	dd.logger.Info(fmt.Sprintf("connecting to %s...", dd.url))
 	db, err := dburl.Open(dd.url)
 	if err != nil {
 		return &push.Error{Description: err.Error()}

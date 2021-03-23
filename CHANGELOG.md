@@ -16,7 +16,7 @@ Types of changes
 
 ## [Unreleased]
 
-Nothing in the backlog !
+- `Security` remove connection string from log
 
 ## [1.0.0]
 

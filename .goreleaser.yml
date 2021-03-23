@@ -1,6 +1,7 @@
 project_name: lino
 env:
   - GO111MODULE=on
+  - CGO_ENABLED=1
 before:
   hooks:
     - go mod download
@@ -22,7 +23,6 @@ builds:
     goarch:
       - "386"
     env:
-      - CGO_ENABLED=1
       - CXX_FOR_TARGET=i686-w64-mingw32-g++
       - CC_FOR_TARGET=i686-w64-mingw32-gcc
       - CC=i686-w64-mingw32-gcc-win32
@@ -37,13 +37,10 @@ builds:
     goarch:
       - "amd64"
     env:
-      - CGO_ENABLED=1
       - CXX_FOR_TARGET=x86_64-w64-mingw32-g++
       - CC_FOR_TARGET=x86_64-w64-mingw32-gcc
       - CC=x86_64-w64-mingw32-gcc-win32
     binary: lino
-    flags:
-      - -tags=windows
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
       - -X main.tag={{.Env.VERSION}} -X main.buildDate={{.Env.BUILD_DATE}}

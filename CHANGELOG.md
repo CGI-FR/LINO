@@ -17,6 +17,7 @@ Types of changes
 ## [Unreleased]
 
 - `Added` raw SQL `WHERE` clause
+- `Security` remove connection string from log
 
 ## [1.0.0]
 

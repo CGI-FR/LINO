@@ -16,7 +16,7 @@ Types of changes
 
 ## [Unreleased]
 
-- `Added` raw SQL `WHERE` clause
+- `Added` --where flag to use a raw sql where clause to filter rows of start table
 - `Security` remove connection string from log
 
 ## [1.0.0]

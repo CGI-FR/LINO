@@ -170,7 +170,7 @@ Each line is a filter and `lino` apply it to the start table to extract data.
 
 #### --where
 
-`--where` argument is a raw SQL clause criteria applied to the start table. It's combined with `--filter` or `--filter-from-file` with the `and` operator.
+`--where` argument is a raw SQL clause criteria (without `where` keyword) applied to the **start table only**. It's combined with `--filter` or `--filter-from-file` with the `and` operator.
 
 ## Push
 

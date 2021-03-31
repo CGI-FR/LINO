@@ -30,7 +30,11 @@ type filter struct {
 
 // NewFilter initialize a new Filter object
 func NewFilter(limit uint, values Row, where string) Filter {
-	return filter{limit: limit, values: values, where: where}
+	return filter{
+		limit:  limit,
+		values: values,
+		where:  strings.TrimSpace(where),
+	}
 }
 
 func (f filter) Limit() uint   { return f.limit }

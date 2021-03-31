@@ -23,7 +23,7 @@ $ lino dataconnector add source postgresql://postgres:sakila@localhost:5432/post
 successfully added dataconnector {source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable}
 ```
 
-### Conection string
+### Connection string
 
 Lino use a connection string following an URL Schema.
 

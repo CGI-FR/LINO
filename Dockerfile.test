@@ -23,6 +23,7 @@ FROM lino-venom:${IMAGE_TAG} AS venom
 FROM golang:1.13 AS builder
 
 ENV GOFLAGS="-mod=readonly"
+ENV GOPROXY=direct
 
 RUN mkdir /home/lino
 

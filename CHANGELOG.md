@@ -17,6 +17,7 @@ Types of changes
 ## [Unreleased]
 
 - `Added` --where flag to use a raw sql where clause to filter rows of start table
+- `Added` Oracle database support
 - `Security` remove connection string from log
 
 ## [1.0.0]

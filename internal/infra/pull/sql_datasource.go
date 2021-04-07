@@ -24,9 +24,7 @@ import (
 
 	"makeit.imfr.cgi.com/lino/pkg/pull"
 
-	// import oracle connector
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 	"github.com/xo/dburl"
 )
 
@@ -81,9 +79,11 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	sql.Write([]byte("SELECT * FROM "))
 	sql.Write([]byte(ds.tableName(source)))
 	sql.Write([]byte(" "))
-	if len(filter.Values()) > 0 || filter.Where() != "" {
+
+  if len(filter.Values()) > 0 || filter.Where() != "" {
 		sql.Write([]byte("WHERE "))
 	}
+
 	values := []interface{}{}
 	for key, value := range filter.Values() {
 		sql.Write([]byte(key))

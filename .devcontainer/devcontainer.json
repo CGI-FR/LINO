@@ -30,7 +30,8 @@
     "postCreateCommand": "make init",
     "workspaceFolder": "/workspace",
     "remoteEnv": {
-        "PATH": "${containerEnv:PATH}:/workspace/bin/"
+        "PATH": "${containerEnv:PATH}:/workspace/bin/",
+        "CGO_ENABLED": "1",
     },
     // "overrideCommand": "",
     "extensions": [

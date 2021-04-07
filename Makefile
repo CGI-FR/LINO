@@ -83,7 +83,7 @@ endif
 
 .PHONY: build-%
 build-%: mkdir
-	GO111MODULE=on CGO_ENABLED=0 go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
+	GO111MODULE=on go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: build
 build: $(patsubst cmd/%,build-%,$(wildcard cmd/*)) ## Build all binaries
@@ -101,7 +101,7 @@ run: $(patsubst cmd/%,run-%,$(wildcard cmd/*)) ## Build and execute a binary
 
 .PHONY: release-%
 release-%: mkdir
-	GO111MODULE=on CGO_ENABLED=0 go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
+	GO111MODULE=on go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 	cp ${BUILD_DIR}/$* ${BUILD_DIR}/$*-x86-${VERSION}
 	gzip ${BUILD_DIR}/$*-x86-${VERSION}
 
@@ -167,4 +167,10 @@ license: mkdir docker ## Scan dependencies and licenses
 publish:  ## Publish binaries
 	BUILD_DATE=${BUILD_DATE} VERSION=${VERSION} \
 		goreleaser release --rm-dist
+	GO111MODULE=on go mod tidy
+
+.PHONY: snapshot
+snapshot:  ## build snapshot
+	BUILD_DATE=${BUILD_DATE} VERSION=${VERSION} \
+		goreleaser release --snapshot --rm-dist
 	GO111MODULE=on go mod tidy

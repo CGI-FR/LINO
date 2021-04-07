@@ -79,6 +79,7 @@ type Value interface{}
 type Filter interface {
 	Limit() uint
 	Values() Row
+	Where() string
 }
 
 // Row of data.

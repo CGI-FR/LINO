@@ -14,7 +14,7 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
-## [Unreleased]
+## [1.1.0]
 
 - `Added` --where flag to use a raw sql where clause to filter rows of start table
 - `Added` Oracle database support

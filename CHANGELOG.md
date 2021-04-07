@@ -16,6 +16,7 @@ Types of changes
 
 ## [Unreleased]
 
+- `Added` Oracle database support
 - `Security` remove connection string from log
 
 ## [1.0.0]

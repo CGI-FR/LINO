@@ -23,6 +23,22 @@ $ lino dataconnector add source postgresql://postgres:sakila@localhost:5432/post
 successfully added dataconnector {source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable}
 ```
 
+### Connection string
+
+Lino use a connection string following an URL Schema.
+
+```
+<databaseVendor>://[<user>[:<password>]]@<host>/<database>
+```
+
+Currently supported vendors are :
+
+* postgresql
+* oracle
+* oracle-raw (for full TNS support `oracle-raw://user:pwd@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost.example.com)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orclpdb1)))`)
+
+### dataconnector.yml
+
 The content of `dataconnector.yml` generated is
 
 ```yaml

@@ -87,7 +87,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Example: fmt.Sprintf("  %[1]s pull mydatabase --limit 1", fullName),
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			datasource, e1 := getDataSource(args[0])
+			datasource, e1 := getDataSource(args[0], out)
 			if e1 != nil {
 				fmt.Fprintln(err, e1.Error())
 				os.Exit(1)
@@ -138,7 +138,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	return cmd
 }
 
-func getDataSource(dataconnectorName string) (pull.DataSource, *pull.Error) {
+func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, *pull.Error) {
 	alias, e1 := dataconnector.Get(dataconnectorStorage, dataconnectorName)
 	if e1 != nil {
 		return nil, &pull.Error{Description: e1.Error()}
@@ -147,7 +147,7 @@ func getDataSource(dataconnectorName string) (pull.DataSource, *pull.Error) {
 		return nil, &pull.Error{Description: fmt.Sprintf("Data Connector %s not found", dataconnectorName)}
 	}
 
-	u := urlbuilder.BuildURL(alias, nil)
+	u := urlbuilder.BuildURL(alias, out)
 
 	datasourceFactory, ok := dataSourceFactories[u.Unaliased]
 	if !ok {

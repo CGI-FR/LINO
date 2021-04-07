@@ -45,6 +45,7 @@ func NewSQLExtractor(url string, schema string, dialect Dialect) *SQLExtractor {
 // Extract relations from the database.
 func (e *SQLExtractor) Extract() ([]relation.Relation, *relation.Error) {
 	db, err := dburl.Open(e.url)
+
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}
 	}

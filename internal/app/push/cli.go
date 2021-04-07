@@ -160,7 +160,7 @@ func getDataDestination(dataconnectorName string) (push.DataDestination, *push.E
 
 	datadestinationFactory, ok := datadestinationFactories[u.Unaliased]
 	if !ok {
-		return nil, &push.Error{Description: "no datadestination found for database type"}
+		return nil, &push.Error{Description: "no datadestination found for database type " + u.Unaliased}
 	}
 
 	return datadestinationFactory.New(u.URL.String(), alias.Schema), nil

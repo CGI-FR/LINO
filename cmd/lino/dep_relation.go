@@ -28,6 +28,8 @@ func relationStorage() domain.Storage {
 
 func relationExtractorFactory() map[string]domain.ExtractorFactory {
 	return map[string]domain.ExtractorFactory{
-		"postgres": infra.NewPostgresExtractorFactory(),
+		"postgres":   infra.NewPostgresExtractorFactory(),
+		"godror":     infra.NewOracleExtractorFactory(),
+		"godror-raw": infra.NewOracleExtractorFactory(),
 	}
 }

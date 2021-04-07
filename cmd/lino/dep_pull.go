@@ -27,7 +27,9 @@ import (
 
 func pullDataSourceFactory() map[string]domain.DataSourceFactory {
 	return map[string]domain.DataSourceFactory{
-		"postgres": infra.NewPostgresDataSourceFactory(logger),
+		"postgres":   infra.NewPostgresDataSourceFactory(logger),
+		"godror":     infra.NewOracleDataSourceFactory(logger),
+		"godror-raw": infra.NewOracleDataSourceFactory(logger),
 	}
 }
 

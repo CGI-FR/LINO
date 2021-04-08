@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [1.1.1]
+
+- `Fixed` Missing where keyword for Oracle SQL Query
+
 ## [1.1.0]
 
 - `Added` --where flag to use a raw sql where clause to filter rows of start table

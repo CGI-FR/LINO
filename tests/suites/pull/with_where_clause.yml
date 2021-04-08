@@ -93,4 +93,4 @@ testcases:
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
-        - result.systemerr ShouldContainSubstring 'SELECT * FROM customer  LIMIT 1'
+        - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE  1=1  LIMIT 1'

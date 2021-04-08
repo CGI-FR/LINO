@@ -78,11 +78,9 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	sql := &strings.Builder{}
 	sql.Write([]byte("SELECT * FROM "))
 	sql.Write([]byte(ds.tableName(source)))
-	sql.Write([]byte(" "))
+	sql.Write([]byte(" WHERE "))
 
-  if len(filter.Values()) > 0 || filter.Where() != "" {
-		sql.Write([]byte("WHERE "))
-	}
+	whereContentFlag := false
 
 	values := []interface{}{}
 	for key, value := range filter.Values() {
@@ -90,13 +88,22 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 		values = append(values, value)
 		fmt.Fprint(sql, "=")
 		fmt.Fprint(sql, ds.dialect.Placeholder(len(values)))
-		if len(values) < len(filter.Values()) || filter.Where() != "" {
+		if len(values) < len(filter.Values()) {
 			sql.Write([]byte(" AND "))
 		}
+		whereContentFlag = true
 	}
 
 	if filter.Where() != "" {
+		if whereContentFlag {
+			sql.Write([]byte(" AND "))
+		}
 		fmt.Fprint(sql, filter.Where())
+		whereContentFlag = true
+	}
+
+	if !whereContentFlag {
+		sql.Write([]byte(" 1=1 "))
 	}
 
 	if filter.Limit() > 0 {

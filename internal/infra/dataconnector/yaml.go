@@ -23,7 +23,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
+	"github.com/cgi-fr/lino/pkg/dataconnector"
 )
 
 // Version of the YAML strcuture

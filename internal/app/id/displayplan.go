@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cgi-fr/lino/pkg/id"
 	"github.com/spf13/cobra"
-	"makeit.imfr.cgi.com/lino/pkg/id"
 )
 
 // newDisplayPlanCommand implements the cli id display-plan command

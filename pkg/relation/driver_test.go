@@ -20,8 +20,8 @@ package relation_test
 import (
 	"testing"
 
+	"github.com/cgi-fr/lino/pkg/relation"
 	"github.com/stretchr/testify/assert"
-	"makeit.imfr.cgi.com/lino/pkg/relation"
 )
 
 // MemoryStorage provides storage of relations in memory

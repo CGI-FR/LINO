@@ -3,7 +3,7 @@ package relation
 import (
 	"fmt"
 
-	"makeit.imfr.cgi.com/lino/pkg/relation"
+	"github.com/cgi-fr/lino/pkg/relation"
 
 	// import Oracle connector
 	_ "github.com/godror/godror"

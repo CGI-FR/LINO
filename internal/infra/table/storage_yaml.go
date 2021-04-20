@@ -20,8 +20,8 @@ package table
 import (
 	"io/ioutil"
 
+	"github.com/cgi-fr/lino/pkg/table"
 	"gopkg.in/yaml.v3"
-	"makeit.imfr.cgi.com/lino/pkg/table"
 )
 
 // Version of the YAML strcuture.

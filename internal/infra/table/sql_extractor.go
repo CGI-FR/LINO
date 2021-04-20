@@ -20,8 +20,8 @@ package table
 import (
 	"strings"
 
+	"github.com/cgi-fr/lino/pkg/table"
 	"github.com/xo/dburl"
-	"makeit.imfr.cgi.com/lino/pkg/table"
 )
 
 // SQLExtractor provides table extraction logic from SQL database.

@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cgi-fr/lino/internal/app/urlbuilder"
+	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/spf13/cobra"
-	"makeit.imfr.cgi.com/lino/internal/app/urlbuilder"
-	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
 
 // newListCommand implements the cli dataconnector list command

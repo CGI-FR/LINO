@@ -25,8 +25,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	"makeit.imfr.cgi.com/lino/internal/app/pull"
-	"makeit.imfr.cgi.com/lino/internal/app/push"
+	"github.com/cgi-fr/lino/internal/app/pull"
+	"github.com/cgi-fr/lino/internal/app/push"
 )
 
 // NewCommand implements the cli http command

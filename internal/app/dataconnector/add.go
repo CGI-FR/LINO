@@ -22,11 +22,11 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/cgi-fr/lino/internal/app/urlbuilder"
+	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/spf13/cobra"
 	"github.com/xo/dburl"
 	"golang.org/x/crypto/ssh/terminal"
-	"makeit.imfr.cgi.com/lino/internal/app/urlbuilder"
-	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
 
 // newAddCommand implements the cli dataconnector add command

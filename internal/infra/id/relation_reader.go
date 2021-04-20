@@ -18,8 +18,8 @@
 package id
 
 import (
-	"makeit.imfr.cgi.com/lino/pkg/id"
-	"makeit.imfr.cgi.com/lino/pkg/relation"
+	"github.com/cgi-fr/lino/pkg/id"
+	"github.com/cgi-fr/lino/pkg/relation"
 )
 
 // RelationReader is an adapter to read relations from the relation domain.

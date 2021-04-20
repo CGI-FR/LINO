@@ -28,7 +28,7 @@ import (
 
 	"github.com/awalterschulze/gographviz"
 
-	"makeit.imfr.cgi.com/lino/pkg/id"
+	"github.com/cgi-fr/lino/pkg/id"
 )
 
 // GraphVizExporter export to SVG graph representation and open browser.

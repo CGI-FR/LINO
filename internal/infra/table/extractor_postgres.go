@@ -23,7 +23,7 @@ import (
 	// import postgresql connector
 	_ "github.com/lib/pq"
 
-	"makeit.imfr.cgi.com/lino/pkg/table"
+	"github.com/cgi-fr/lino/pkg/table"
 )
 
 // NewPostgresExtractorFactory creates a new postgres extractor factory.

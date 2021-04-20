@@ -18,8 +18,8 @@
 package main
 
 import (
-	infra "makeit.imfr.cgi.com/lino/internal/infra/dataconnector"
-	domain "makeit.imfr.cgi.com/lino/pkg/dataconnector"
+	infra "github.com/cgi-fr/lino/internal/infra/dataconnector"
+	domain "github.com/cgi-fr/lino/pkg/dataconnector"
 )
 
 func dataconnectorStorage() domain.Storage {

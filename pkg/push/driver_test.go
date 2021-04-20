@@ -20,8 +20,8 @@ package push_test
 import (
 	"testing"
 
+	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/stretchr/testify/assert"
-	"makeit.imfr.cgi.com/lino/pkg/push"
 )
 
 var logger = Logger{}

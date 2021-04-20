@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"makeit.imfr.cgi.com/lino/pkg/push"
+	"github.com/cgi-fr/lino/pkg/push"
 )
 
 // JSONRowIterator export rows to JSON format.

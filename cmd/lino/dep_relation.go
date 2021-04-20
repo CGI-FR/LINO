@@ -18,8 +18,8 @@
 package main
 
 import (
-	infra "makeit.imfr.cgi.com/lino/internal/infra/relation"
-	domain "makeit.imfr.cgi.com/lino/pkg/relation"
+	infra "github.com/cgi-fr/lino/internal/infra/relation"
+	domain "github.com/cgi-fr/lino/pkg/relation"
 )
 
 func relationStorage() domain.Storage {

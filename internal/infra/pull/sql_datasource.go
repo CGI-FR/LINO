@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"strings"
 
-	"makeit.imfr.cgi.com/lino/pkg/pull"
+	"github.com/cgi-fr/lino/pkg/pull"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/xo/dburl"

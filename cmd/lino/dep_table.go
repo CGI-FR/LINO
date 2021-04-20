@@ -18,8 +18,8 @@
 package main
 
 import (
-	infra "makeit.imfr.cgi.com/lino/internal/infra/table"
-	domain "makeit.imfr.cgi.com/lino/pkg/table"
+	infra "github.com/cgi-fr/lino/internal/infra/table"
+	domain "github.com/cgi-fr/lino/pkg/table"
 )
 
 func tableStorage() domain.Storage {

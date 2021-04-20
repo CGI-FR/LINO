@@ -20,7 +20,7 @@ package push_test
 import (
 	"fmt"
 
-	"makeit.imfr.cgi.com/lino/pkg/push"
+	"github.com/cgi-fr/lino/pkg/push"
 )
 
 type rowIterator struct {

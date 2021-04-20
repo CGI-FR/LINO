@@ -20,8 +20,8 @@ package main
 import (
 	"os"
 
-	infra "makeit.imfr.cgi.com/lino/internal/infra/id"
-	domain "makeit.imfr.cgi.com/lino/pkg/id"
+	infra "github.com/cgi-fr/lino/internal/infra/id"
+	domain "github.com/cgi-fr/lino/pkg/id"
 )
 
 func idStorage() domain.Storage {

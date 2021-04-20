@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/stretchr/testify/assert"
-	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
 
 // MemoryStorage provides storage of DataConnector in memory

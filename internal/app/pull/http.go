@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cgi-fr/lino/pkg/pull"
 	"github.com/gorilla/mux"
-	"makeit.imfr.cgi.com/lino/pkg/pull"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {

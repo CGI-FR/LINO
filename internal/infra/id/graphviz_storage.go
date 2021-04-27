@@ -22,7 +22,7 @@ import (
 	"strconv"
 
 	"github.com/awalterschulze/gographviz"
-	"makeit.imfr.cgi.com/lino/pkg/id"
+	"github.com/cgi-fr/lino/pkg/id"
 )
 
 // DOTStorage provides storage in a graphviz DOT format

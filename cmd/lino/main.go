@@ -21,14 +21,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cgi-fr/lino/internal/app/dataconnector"
+	"github.com/cgi-fr/lino/internal/app/http"
+	"github.com/cgi-fr/lino/internal/app/id"
+	"github.com/cgi-fr/lino/internal/app/pull"
+	"github.com/cgi-fr/lino/internal/app/push"
+	"github.com/cgi-fr/lino/internal/app/relation"
+	"github.com/cgi-fr/lino/internal/app/table"
 	"github.com/spf13/cobra"
-	"makeit.imfr.cgi.com/lino/internal/app/dataconnector"
-	"makeit.imfr.cgi.com/lino/internal/app/http"
-	"makeit.imfr.cgi.com/lino/internal/app/id"
-	"makeit.imfr.cgi.com/lino/internal/app/pull"
-	"makeit.imfr.cgi.com/lino/internal/app/push"
-	"makeit.imfr.cgi.com/lino/internal/app/relation"
-	"makeit.imfr.cgi.com/lino/internal/app/table"
 )
 
 // Provisioned by ldflags

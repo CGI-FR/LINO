@@ -21,8 +21,8 @@ import (
 	"io"
 	"os"
 
-	infra "makeit.imfr.cgi.com/lino/internal/infra/pull"
-	domain "makeit.imfr.cgi.com/lino/pkg/pull"
+	infra "github.com/cgi-fr/lino/internal/infra/pull"
+	domain "github.com/cgi-fr/lino/pkg/pull"
 )
 
 func pullDataSourceFactory() map[string]domain.DataSourceFactory {

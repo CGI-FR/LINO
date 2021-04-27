@@ -6,7 +6,7 @@ import (
 	// import Oracle connector
 	_ "github.com/godror/godror"
 
-	"makeit.imfr.cgi.com/lino/pkg/table"
+	"github.com/cgi-fr/lino/pkg/table"
 )
 
 // NewOracleExtractorFactory creates a new oracle extractor factory.

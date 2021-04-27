@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"makeit.imfr.cgi.com/lino/pkg/pull"
+	"github.com/cgi-fr/lino/pkg/pull"
 )
 
 func TestJSONRowReader_Next(t *testing.T) {

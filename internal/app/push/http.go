@@ -22,8 +22,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/gorilla/mux"
-	"makeit.imfr.cgi.com/lino/pkg/push"
 )
 
 func DeleteHandler(w http.ResponseWriter, r *http.Request) {

@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/spf13/cobra"
-	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
 
 var storage dataconnector.Storage

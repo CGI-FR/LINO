@@ -20,8 +20,8 @@ package id
 import (
 	"io/ioutil"
 
+	"github.com/cgi-fr/lino/pkg/id"
 	"gopkg.in/yaml.v3"
-	"makeit.imfr.cgi.com/lino/pkg/id"
 )
 
 // YAMLStructure of the file.

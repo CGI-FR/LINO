@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"makeit.imfr.cgi.com/lino/pkg/push"
+	"github.com/cgi-fr/lino/pkg/push"
 
 	// import Oracle connector
 

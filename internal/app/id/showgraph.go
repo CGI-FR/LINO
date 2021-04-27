@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cgi-fr/lino/pkg/id"
 	"github.com/spf13/cobra"
-	"makeit.imfr.cgi.com/lino/pkg/id"
 )
 
 // newShowGraphCommand implements the cli id show-graph command

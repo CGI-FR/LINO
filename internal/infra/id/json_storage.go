@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"makeit.imfr.cgi.com/lino/pkg/id"
+	"github.com/cgi-fr/lino/pkg/id"
 )
 
 // JSONStructure of the file.

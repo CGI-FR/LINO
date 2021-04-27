@@ -24,7 +24,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"makeit.imfr.cgi.com/lino/pkg/relation"
+	"github.com/cgi-fr/lino/pkg/relation"
 )
 
 // NewPostgresExtractorFactory creates a new postgres extractor factory.

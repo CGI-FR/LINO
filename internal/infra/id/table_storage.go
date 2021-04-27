@@ -17,7 +17,7 @@
 
 package id
 
-import "makeit.imfr.cgi.com/lino/pkg/id"
+import "github.com/cgi-fr/lino/pkg/id"
 
 // TableStorage provides simple storage for one table Ingress Descriptor
 type TableStorage struct {

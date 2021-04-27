@@ -24,11 +24,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cgi-fr/lino/internal/app/localstorage"
+	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/docker/docker-credential-helpers/client"
 	"github.com/docker/docker-credential-helpers/credentials"
 	"github.com/xo/dburl"
-	"makeit.imfr.cgi.com/lino/internal/app/localstorage"
-	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
 
 // GenOracleRaw generates a Go Driver for Oracle (godror) DSN from the passed URL.

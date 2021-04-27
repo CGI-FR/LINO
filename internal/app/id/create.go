@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"os"
 
+	infra "github.com/cgi-fr/lino/internal/infra/id"
+	"github.com/cgi-fr/lino/pkg/id"
 	"github.com/spf13/cobra"
-	infra "makeit.imfr.cgi.com/lino/internal/infra/id"
-	"makeit.imfr.cgi.com/lino/pkg/id"
 )
 
 // newCreateCommand implements the cli id create command

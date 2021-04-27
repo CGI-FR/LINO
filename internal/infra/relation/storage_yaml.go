@@ -20,8 +20,8 @@ package relation
 import (
 	"io/ioutil"
 
+	"github.com/cgi-fr/lino/pkg/relation"
 	"gopkg.in/yaml.v3"
-	"makeit.imfr.cgi.com/lino/pkg/relation"
 )
 
 // Version of the YAML strcuture.

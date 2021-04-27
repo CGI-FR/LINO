@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"makeit.imfr.cgi.com/lino/pkg/pull"
+	"github.com/cgi-fr/lino/pkg/pull"
 )
 
 // JSONRowJSONRowReader read row from JSONLine file

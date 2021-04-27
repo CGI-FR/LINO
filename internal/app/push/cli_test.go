@@ -22,11 +22,11 @@ import (
 	"reflect"
 	"testing"
 
-	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
-	"makeit.imfr.cgi.com/lino/pkg/id"
-	"makeit.imfr.cgi.com/lino/pkg/push"
-	"makeit.imfr.cgi.com/lino/pkg/relation"
-	"makeit.imfr.cgi.com/lino/pkg/table"
+	"github.com/cgi-fr/lino/pkg/dataconnector"
+	"github.com/cgi-fr/lino/pkg/id"
+	"github.com/cgi-fr/lino/pkg/push"
+	"github.com/cgi-fr/lino/pkg/relation"
+	"github.com/cgi-fr/lino/pkg/table"
 )
 
 func Test_getDataDestination(t *testing.T) {

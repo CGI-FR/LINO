@@ -18,8 +18,8 @@
 package relation
 
 import (
+	"github.com/cgi-fr/lino/pkg/relation"
 	"github.com/xo/dburl"
-	"makeit.imfr.cgi.com/lino/pkg/relation"
 )
 
 // SQLExtractor provides relation extraction logic from SQL database.

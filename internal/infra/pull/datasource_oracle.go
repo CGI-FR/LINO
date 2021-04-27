@@ -3,7 +3,7 @@ package pull
 import (
 	"fmt"
 
-	"makeit.imfr.cgi.com/lino/pkg/pull"
+	"github.com/cgi-fr/lino/pkg/pull"
 )
 
 // OracleDataSourceFactory exposes methods to create new Oracle pullers.

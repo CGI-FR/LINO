@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cgi-fr/lino/pkg/id"
 	"github.com/stretchr/testify/assert"
-	"makeit.imfr.cgi.com/lino/pkg/id"
 )
 
 // MemoryStorage allows to store ingress descriptor objects in memory.

@@ -20,7 +20,7 @@ package dataconnector
 import (
 	"fmt"
 
-	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
+	"github.com/cgi-fr/lino/pkg/dataconnector"
 )
 
 // NewMemoryStorage allocates a new in-memory storage

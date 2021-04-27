@@ -18,9 +18,9 @@
 package dataconnector
 
 import (
+	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/jmoiron/sqlx"
 	"github.com/xo/dburl"
-	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
 )
 
 type SQLDataPingerFactory struct {

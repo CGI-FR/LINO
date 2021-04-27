@@ -20,8 +20,8 @@ package main
 import (
 	"io"
 
-	infra "makeit.imfr.cgi.com/lino/internal/infra/push"
-	domain "makeit.imfr.cgi.com/lino/pkg/push"
+	infra "github.com/cgi-fr/lino/internal/infra/push"
+	domain "github.com/cgi-fr/lino/pkg/push"
 )
 
 func pushDataDestinationFactory() map[string]domain.DataDestinationFactory {

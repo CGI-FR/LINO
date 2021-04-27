@@ -17,7 +17,7 @@
 
 package id
 
-import "makeit.imfr.cgi.com/lino/pkg/id"
+import "github.com/cgi-fr/lino/pkg/id"
 
 // MultiStorage provides storage in multiple backend storages
 type MultiStorage struct {

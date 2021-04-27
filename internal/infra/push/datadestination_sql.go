@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/jmoiron/sqlx"
 	"github.com/xo/dburl"
-	"makeit.imfr.cgi.com/lino/pkg/push"
 )
 
 // SQLDataDestination read data from a SQL database.

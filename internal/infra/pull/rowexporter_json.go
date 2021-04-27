@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"io"
 
-	"makeit.imfr.cgi.com/lino/pkg/pull"
+	"github.com/cgi-fr/lino/pkg/pull"
 )
 
 // JSONRowExporter export rows to JSON format.

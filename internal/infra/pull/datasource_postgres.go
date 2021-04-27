@@ -20,7 +20,7 @@ package pull
 import (
 	"fmt"
 
-	"makeit.imfr.cgi.com/lino/pkg/pull"
+	"github.com/cgi-fr/lino/pkg/pull"
 
 	// import postgresql connector
 	_ "github.com/lib/pq"

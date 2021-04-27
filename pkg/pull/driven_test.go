@@ -20,7 +20,7 @@ package pull_test
 import (
 	"fmt"
 
-	"makeit.imfr.cgi.com/lino/pkg/pull"
+	"github.com/cgi-fr/lino/pkg/pull"
 )
 
 // MemoryDataIterator

@@ -24,12 +24,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"makeit.imfr.cgi.com/lino/internal/app/urlbuilder"
-	"makeit.imfr.cgi.com/lino/pkg/dataconnector"
-	"makeit.imfr.cgi.com/lino/pkg/id"
-	"makeit.imfr.cgi.com/lino/pkg/pull"
-	"makeit.imfr.cgi.com/lino/pkg/relation"
-	"makeit.imfr.cgi.com/lino/pkg/table"
+	"github.com/cgi-fr/lino/internal/app/urlbuilder"
+	"github.com/cgi-fr/lino/pkg/dataconnector"
+	"github.com/cgi-fr/lino/pkg/id"
+	"github.com/cgi-fr/lino/pkg/pull"
+	"github.com/cgi-fr/lino/pkg/relation"
+	"github.com/cgi-fr/lino/pkg/table"
 )
 
 var dataconnectorStorage dataconnector.Storage

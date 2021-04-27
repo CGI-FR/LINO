@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/lib/pq"
-	"makeit.imfr.cgi.com/lino/pkg/push"
 )
 
 // PostgresDataDestinationFactory exposes methods to create new Postgres pullers.

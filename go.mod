@@ -1,4 +1,4 @@
-module makeit.imfr.cgi.com/lino
+module github.com/cgi-fr/lino
 
 go 1.13
 

@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cgi-fr/lino/pkg/pull"
 	"github.com/stretchr/testify/assert"
-	"makeit.imfr.cgi.com/lino/pkg/pull"
 )
 
 var logger = Logger{}

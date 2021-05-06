@@ -27,5 +27,4 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: make lint
-        run: docker-compose exec -w /workspace vscode make lint
-
+        run: docker-compose up -d

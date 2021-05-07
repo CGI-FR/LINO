@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
+ARG DOCKER_COMPOSE_VERSION=1.29.1
+
+FROM docker/compose:debian-${DOCKER_COMPOSE_VERSION} AS docker-compose
+
 FROM qmcgaw/godevcontainer:debian
 
 USER root
@@ -52,6 +56,9 @@ RUN wget -O- -nv https://install.goreleaser.com/github.com/goreleaser/goreleaser
 ADD https://github.com/ovh/venom/releases/download/v0.27.0/venom.linux-amd64 /bin/venom
 RUN chmod +x /bin/venom
 
+# Add docker-compose
+COPY --from=docker-compose /usr/local/bin/docker-compose /usr/local/bin/docker-compose
 
+RUN useradd -ms /bin/bash vscode
 
 USER vscode

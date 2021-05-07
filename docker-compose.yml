@@ -35,6 +35,8 @@ services:
       environment:
         - TZ=Europe/Paris
         - CGO_ENABLED=1
+        - PATH=/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/bin/
+
       cap_add:
         - SYS_PTRACE
       security_opt:
@@ -65,6 +67,8 @@ services:
         no_proxy: ${no_proxy}
     environment:
       - PASSWORD=sakila
+      - CGO_ENABLED=1
+      
     command: http
     expose:
       - 8000

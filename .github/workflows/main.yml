@@ -38,6 +38,9 @@ jobs:
       - name: Lint
         run: docker-compose exec -u root -T -w /workspace vscode make lint
         
+      - name: Init .env
+        run: docker-compose exec -u root -T -w /workspace vscode touch .env
+
       - name: Units Tests
         run: docker-compose exec -u root -T -w /workspace vscode make test
         

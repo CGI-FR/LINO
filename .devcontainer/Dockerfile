@@ -59,6 +59,4 @@ RUN chmod +x /bin/venom
 # Add docker-compose
 COPY --from=docker-compose /usr/local/bin/docker-compose /usr/local/bin/docker-compose
 
-RUN useradd -ms /bin/bash vscode
-
 USER vscode

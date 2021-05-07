@@ -33,13 +33,13 @@ jobs:
         run: docker-compose up -d
         
       - name: Download dependances (tidy)
-        run: docker-compose exec -T -w /workspace vscode make tidy        
+        run: docker-compose exec -u root -T -w /workspace vscode make tidy        
 
       - name: Lint
-        run: docker-compose exec -T -w /workspace vscode make lint
+        run: docker-compose exec -u root -T -w /workspace vscode make lint
         
       - name: Units Tests
-        run: docker-compose exec -T -w /workspace vscode make test
+        run: docker-compose exec -u root -T -w /workspace vscode make test
         
       - name: Integrations Tests
-        run: docker-compose exec -T -w /workspace vscode make venom-test
+        run: docker-compose exec -u root -T -w /workspace vscode make venom-test

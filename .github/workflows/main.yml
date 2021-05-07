@@ -30,7 +30,7 @@ jobs:
         run: docker-compose build
       
       - name: Start services 
-        run: docker-compose up -d
+        run: docker-compose up -d vscode
         
       - name: Download dependances (tidy)
         run: docker-compose exec -u root -T -w /workspace vscode make tidy        

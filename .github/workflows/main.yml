@@ -2,7 +2,7 @@
 
 name: CI
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
@@ -25,24 +25,24 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      
+
       - name: Build
         run: docker-compose build
-      
-      - name: Start services 
-        run: docker-compose up -d
-        
+
+      - name: Start services
+        run: docker-compose up -d vscode source dest lino
+
       - name: Download dependances (tidy)
-        run: docker-compose exec -u root -T -w /workspace vscode make tidy        
+        run: docker-compose exec -u root -T -w /workspace vscode make tidy
 
       - name: Lint
         run: docker-compose exec -u root -T -w /workspace vscode make lint
-        
+
       - name: Init .env
         run: docker-compose exec -u root -T -w /workspace vscode touch .env
 
       - name: Units Tests
         run: docker-compose exec -u root -T -w /workspace vscode make test
-        
+
       - name: Integrations Tests
         run: docker-compose exec -u root -T -w /workspace vscode make venom-test

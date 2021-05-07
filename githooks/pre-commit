@@ -18,11 +18,11 @@
 # along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
 
 set -e
-if git status --porcelain | grep "^.M\|?" > /dev/null
-then
-    echo "🚽 Add or stash unstaged and untracked changes before commit"
-    exit 1
-else
-    echo "👌 Nothing to stash"
-fi
-make lint test venom-test
+# if git status --porcelain | grep "^.M\|?" > /dev/null
+# then
+#     echo "🚽 Add or stash unstaged and untracked changes before commit"
+#     exit 1
+# else
+#     echo "👌 Nothing to stash"
+# fi
+# make lint test venom-test

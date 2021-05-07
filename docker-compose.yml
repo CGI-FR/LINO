@@ -34,6 +34,8 @@ services:
         - testdata:/workspace/tests/workspace
       environment:
         - TZ=Europe/Paris
+        - CGO_ENABLED=1
+        - PATH=/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/bin/
       cap_add:
         - SYS_PTRACE
       security_opt:
@@ -65,7 +67,6 @@ services:
     environment:
       - PASSWORD=sakila
       - CGO_ENABLED=1
-      - PATH=/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/bin/
       
     command: http
     expose:

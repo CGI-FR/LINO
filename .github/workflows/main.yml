@@ -25,6 +25,18 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      - name: make lint
+      
+      - name: Build
+        run: docker-compose build
+      
+      - name: Start services 
         run: docker-compose up -d
+
+      - name: Lint
+        run: docker-compose exec -w /workspace vscode make lint
+        
+      - name: Units Tests
+        run: docker-compose exec -w /workspace vscode make test
+        
+      - name: Integrations Tests
+        run: docker-compose exec -w /workspace vscode make venom-test

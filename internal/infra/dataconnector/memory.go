@@ -18,8 +18,6 @@
 package dataconnector
 
 import (
-	"fmt"
-
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 )
 

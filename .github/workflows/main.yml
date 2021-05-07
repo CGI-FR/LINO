@@ -31,6 +31,9 @@ jobs:
       
       - name: Start services 
         run: docker-compose up -d
+        
+      - name: Download dependances (tidy)
+        run: docker-compose exec -T -w /workspace vscode make tidy        
 
       - name: Lint
         run: docker-compose exec -T -w /workspace vscode make lint

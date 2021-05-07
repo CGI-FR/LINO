@@ -33,10 +33,10 @@ jobs:
         run: docker-compose up -d
 
       - name: Lint
-        run: docker-compose exec -w /workspace vscode make lint
+        run: docker-compose exec -T -w /workspace vscode make lint
         
       - name: Units Tests
-        run: docker-compose exec -w /workspace vscode make test
+        run: docker-compose exec -T -w /workspace vscode make test
         
       - name: Integrations Tests
-        run: docker-compose exec -w /workspace vscode make venom-test
+        run: docker-compose exec -T -w /workspace vscode make venom-test

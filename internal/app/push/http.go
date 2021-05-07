@@ -19,6 +19,7 @@ package push
 
 import (
 	"fmt"
+	"html"
 	"net/http"
 	"strconv"
 
@@ -64,7 +65,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusNotFound)
-		_, ew := w.Write([]byte("{\"error\": \"" + err.Description + "\"}"))
+		_, ew := w.Write([]byte("{\"error\": \"" + html.EscapeString(err.Description) + "\"}"))
 		if ew != nil {
 			logger.Error("Write failed\n")
 			return

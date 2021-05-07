@@ -18,8 +18,6 @@
 package dataconnector
 
 import (
-	"fmt"
-
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 )
 
@@ -42,7 +40,6 @@ func (s *MemoryStorage) List() ([]dataconnector.DataConnector, *dataconnector.Er
 
 // Store a dataconnector in memory
 func (s *MemoryStorage) Store(m *dataconnector.DataConnector) *dataconnector.Error {
-	fmt.Println("Appending", m)
 	s.repo = append(s.repo, *m)
 	return nil
 }

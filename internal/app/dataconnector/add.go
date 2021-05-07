@@ -108,7 +108,7 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 				os.Exit(1)
 			}
 
-			fmt.Fprintf(out, "successfully added dataconnector %v", alias)
+			fmt.Fprintf(out, "successfully added dataconnector")
 			fmt.Fprintln(out)
 		},
 	}

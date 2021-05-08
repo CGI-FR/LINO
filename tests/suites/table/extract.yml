@@ -21,134 +21,234 @@ testcases:
 - name: extract table
   steps:
     - script: rm -f *
-    - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+    - script: lino dataconnector add source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
     - script: lino table extract source
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldEqual "lino finds 15 table(s)"
         - result.systemerr ShouldBeEmpty
-    - script: |- 
-        cat  > expected.yml <<EOF
-        version: v1
-        tables:
-          - name: actor
-            keys:
-              - actor_id
-          - name: address
-            keys:
-              - address_id
-          - name: category
-            keys:
-              - category_id
-          - name: city
-            keys:
-              - city_id
-          - name: country
-            keys:
-              - country_id
-          - name: customer
-            keys:
-              - customer_id
-          - name: film
-            keys:
-              - film_id
-          - name: film_actor
-            keys:
-              - actor_id
-              - film_id
-          - name: film_category
-            keys:
-              - film_id
-              - category_id
-          - name: inventory
-            keys:
-              - inventory_id
-          - name: language
-            keys:
-              - language_id
-          - name: payment
-            keys:
-              - payment_id
-          - name: rental
-            keys:
-              - rental_id
-          - name: staff
-            keys:
-              - staff_id
-          - name: store
-            keys:
-              - store_id
+    # this next command is to canonize the result because keys are in a random order in the yaml file
+    - script: yaml2json <tables.yaml | jq -c "." | jq "." > tables.json
+    - script: |-
+        cat  > expected.json <<EOF
+        {
+          "tables": [
+            {
+              "keys": [
+                "actor_id"
+              ],
+              "name": "actor"
+            },
+            {
+              "keys": [
+                "address_id"
+              ],
+              "name": "address"
+            },
+            {
+              "keys": [
+                "category_id"
+              ],
+              "name": "category"
+            },
+            {
+              "keys": [
+                "city_id"
+              ],
+              "name": "city"
+            },
+            {
+              "keys": [
+                "country_id"
+              ],
+              "name": "country"
+            },
+            {
+              "keys": [
+                "customer_id"
+              ],
+              "name": "customer"
+            },
+            {
+              "keys": [
+                "film_id"
+              ],
+              "name": "film"
+            },
+            {
+              "keys": [
+                "actor_id",
+                "film_id"
+              ],
+              "name": "film_actor"
+            },
+            {
+              "keys": [
+                "category_id",
+                "film_id"
+              ],
+              "name": "film_category"
+            },
+            {
+              "keys": [
+                "inventory_id"
+              ],
+              "name": "inventory"
+            },
+            {
+              "keys": [
+                "language_id"
+              ],
+              "name": "language"
+            },
+            {
+              "keys": [
+                "payment_id"
+              ],
+              "name": "payment"
+            },
+            {
+              "keys": [
+                "rental_id"
+              ],
+              "name": "rental"
+            },
+            {
+              "keys": [
+                "staff_id"
+              ],
+              "name": "staff"
+            },
+            {
+              "keys": [
+                "store_id"
+              ],
+              "name": "store"
+            }
+          ],
+          "version": "v1"
+        }
         EOF
-    - script: diff expected.yml tables.yaml
+    - script: diff expected.json tables.json
       assertions:
-        - result.code ShouldEqual 0
         - result.systemout ShouldBeEmpty
+        - result.code ShouldEqual 0
 
 - name: extract table with schema
   steps:
     - script: rm -f *
-    - script: lino dataconnector add --schema public source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable 
+    - script: lino dataconnector add --schema public source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
     - script: lino table extract source
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldEqual "lino finds 15 table(s)"
         - result.systemerr ShouldBeEmpty
-    - script: |- 
-        cat  > expected.yml <<EOF
-        version: v1
-        tables:
-          - name: actor
-            keys:
-              - actor_id
-          - name: address
-            keys:
-              - address_id
-          - name: category
-            keys:
-              - category_id
-          - name: city
-            keys:
-              - city_id
-          - name: country
-            keys:
-              - country_id
-          - name: customer
-            keys:
-              - customer_id
-          - name: film
-            keys:
-              - film_id
-          - name: film_actor
-            keys:
-              - actor_id
-              - film_id
-          - name: film_category
-            keys:
-              - film_id
-              - category_id
-          - name: inventory
-            keys:
-              - inventory_id
-          - name: language
-            keys:
-              - language_id
-          - name: payment
-            keys:
-              - payment_id
-          - name: rental
-            keys:
-              - rental_id
-          - name: staff
-            keys:
-              - staff_id
-          - name: store
-            keys:
-              - store_id
+    # this next command is to canonize the result because keys are in a random order in the yaml file
+    - script: yaml2json <tables.yaml | jq -c "." | jq "." > tables.json
+    - script: |-
+        cat  > expected.json <<EOF
+        {
+          "tables": [
+            {
+              "keys": [
+                "actor_id"
+              ],
+              "name": "actor"
+            },
+            {
+              "keys": [
+                "address_id"
+              ],
+              "name": "address"
+            },
+            {
+              "keys": [
+                "category_id"
+              ],
+              "name": "category"
+            },
+            {
+              "keys": [
+                "city_id"
+              ],
+              "name": "city"
+            },
+            {
+              "keys": [
+                "country_id"
+              ],
+              "name": "country"
+            },
+            {
+              "keys": [
+                "customer_id"
+              ],
+              "name": "customer"
+            },
+            {
+              "keys": [
+                "film_id"
+              ],
+              "name": "film"
+            },
+            {
+              "keys": [
+                "actor_id",
+                "film_id"
+              ],
+              "name": "film_actor"
+            },
+            {
+              "keys": [
+                "category_id",
+                "film_id"
+              ],
+              "name": "film_category"
+            },
+            {
+              "keys": [
+                "inventory_id"
+              ],
+              "name": "inventory"
+            },
+            {
+              "keys": [
+                "language_id"
+              ],
+              "name": "language"
+            },
+            {
+              "keys": [
+                "payment_id"
+              ],
+              "name": "payment"
+            },
+            {
+              "keys": [
+                "rental_id"
+              ],
+              "name": "rental"
+            },
+            {
+              "keys": [
+                "staff_id"
+              ],
+              "name": "staff"
+            },
+            {
+              "keys": [
+                "store_id"
+              ],
+              "name": "store"
+            }
+          ],
+          "version": "v1"
+        }
         EOF
-    - script: diff expected.yml tables.yaml
+    - script: diff expected.json tables.json
       assertions:
-        - result.code ShouldEqual 0
         - result.systemout ShouldBeEmpty
+        - result.code ShouldEqual 0
 
 - name: extract tables with unknow schema
   steps:

@@ -56,6 +56,9 @@ RUN wget -O- -nv https://install.goreleaser.com/github.com/goreleaser/goreleaser
 ADD https://github.com/ovh/venom/releases/download/v0.27.0/venom.linux-amd64 /bin/venom
 RUN chmod +x /bin/venom
 
+ADD https://github.com/bronze1man/yaml2json/releases/download/v1.3/yaml2json_linux_amd64 /bin/yaml2json
+RUN chmod +x /bin/yaml2json
+
 # Add docker-compose
 COPY --from=docker-compose /usr/local/bin/docker-compose /usr/local/bin/docker-compose
 

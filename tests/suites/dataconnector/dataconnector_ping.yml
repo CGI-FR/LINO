@@ -22,7 +22,7 @@ testcases:
   # Clean working directory
   - script: rm -f *
   # Enable mock credential helper as docker-credential-pass
-  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+  - script: cp /usr/local/bin/docker-credential-mock /workspace/bin/docker-credential-secretservice
   - script: export PATH=$PATH:$PWD
   - script: lino dataconnector add source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
   - script: lino dataconnector ping source

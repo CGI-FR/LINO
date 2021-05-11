@@ -8,7 +8,6 @@ import (
 	"github.com/cgi-fr/lino/pkg/push"
 
 	// import Oracle connector
-
 	_ "github.com/godror/godror"
 )
 
@@ -130,7 +129,7 @@ func (d OracleDialect) InsertStatement(tableName string, columns []string, value
 	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(protectedColumns, ","), strings.Join(values, ","))
 }
 
-// UpdateStatement 
+// UpdateStatement
 func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("UPDATE "))

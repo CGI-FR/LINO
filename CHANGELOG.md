@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [UNRELEASE]
+
+- `Fixed` protect columns names in insert statement
+
 ## [1.1.1]
 
 - `Fixed` Missing where keyword for Oracle SQL Query

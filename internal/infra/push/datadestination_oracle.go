@@ -127,7 +127,7 @@ func (d OracleDialect) InsertStatement(tableName string, columns []string, value
 	for _, c := range columns {
 		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c))
 	}
-	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(columns, ","), strings.Join(values, ","))
+	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(protectedColumns, ","), strings.Join(values, ","))
 }
 
 // UpdateStatement 

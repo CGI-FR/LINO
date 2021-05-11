@@ -121,10 +121,16 @@ func (d OracleDialect) TruncateStatement(tableName string) string {
 	return fmt.Sprintf("TRUNCATE TABLE %s", tableName)
 }
 
+// InsertStatement generate insert statement
 func (d OracleDialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
+	protectedColumns := []string{}
+	for _, c := range columns {
+		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c))
+	}
 	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(columns, ","), strings.Join(values, ","))
 }
 
+// UpdateStatement 
 func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("UPDATE "))

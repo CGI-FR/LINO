@@ -81,7 +81,7 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 		table := table.Table{
 
 			Name: tableName,
-			Keys: strings.Split(keyColumns, ", "),
+			Keys: strings.Split(keyColumns, ","),
 		}
 		tables = append(tables, table)
 	}

@@ -45,7 +45,7 @@ type PostgresDialect struct {
 func (d PostgresDialect) SQL(schema string) string {
 	SQL := `SELECT kcu.table_schema,
 	kcu.table_name,
-	string_agg(kcu.column_name,', ') AS key_columns
+	string_agg(kcu.column_name,',') AS key_columns
 FROM information_schema.table_constraints tco
 JOIN information_schema.key_column_usage kcu
 ON kcu.constraint_name = tco.constraint_name

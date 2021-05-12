@@ -16,6 +16,7 @@ Types of changes
 
 ## [UNRELEASE]
 
+- `Fixed` extract composite primary keys for oracle
 - `Fixed` protect columns names in insert statement
 
 ## [1.1.1]

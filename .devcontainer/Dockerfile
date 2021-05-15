@@ -15,11 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-ARG DOCKER_COMPOSE_VERSION=1.29.1
-
-FROM docker/compose:debian-${DOCKER_COMPOSE_VERSION} AS docker-compose
-
-FROM qmcgaw/godevcontainer:debian
+FROM adrienaury/go-devcontainer:v0.3.1-debian
 
 USER root
 
@@ -46,18 +42,8 @@ RUN wget -O /tmp/instantclient-basic-linux-x64.zip https://download.oracle.com/o
     ldconfig -v /usr/lib/oracle/instantclient_19_3 && \
     ldd /usr/lib/oracle/instantclient_19_3/libclntsh.so
 
-RUN go get -v github.com/ramya-rao-a/go-outline &&\
-    rm -rf /go/pkg/* /go/src/* /root/.cache/go-build
-
-RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /bin -d ${GOLANGCI_LINT_VERSION}
 RUN wget -O- -nv https://github.com/adrienaury/docker-credential-mock/releases/download/0.1.0/docker-credential-mock_0.1.0_linux_amd64.tar.gz | tar -xz -C /usr/local/bin/ docker-credential-mock
-RUN wget -O- -nv https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
-
-ADD https://github.com/ovh/venom/releases/download/v0.27.0/venom.linux-amd64 /bin/venom
-RUN chmod +x /bin/venom
-
 ADD https://github.com/bronze1man/yaml2json/releases/download/v1.3/yaml2json_linux_amd64 /bin/yaml2json
 RUN chmod +x /bin/yaml2json
 
-# Add docker-compose
-COPY --from=docker-compose /usr/local/bin/docker-compose /usr/local/bin/docker-compose
+USER vscode

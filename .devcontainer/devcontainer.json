@@ -25,7 +25,7 @@
         "source",
         "dest"
     ],
-    "remoteUser": "root",
+    "remoteUser": "vscode",
     "shutdownAction": "stopCompose",
     "postCreateCommand": "make init",
     "workspaceFolder": "/workspace",

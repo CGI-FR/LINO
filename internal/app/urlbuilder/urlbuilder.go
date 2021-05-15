@@ -64,7 +64,7 @@ func init() {
 		Generator: GenOracleRaw,
 		Opaque:    false,
 		Aliases:   []string{"oracle-raw"},
-		Proto:     dburl.ProtoAny,
+		Transport: dburl.TransportAny,
 	}
 	dburl.Register(oracleScheme)
 }

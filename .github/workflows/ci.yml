@@ -6,9 +6,9 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -25,24 +25,22 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-
       - name: Build
         run: docker-compose build
 
       - name: Start services
-        run: docker-compose up -d vscode source dest lino
+        run: docker-compose up -d vscode
 
-      - name: Download dependances (tidy)
-        run: docker-compose exec -u root -T -w /workspace vscode make tidy
+      - name: Init env
+        run: docker-compose exec -T -u root -w /workspace vscode make init
 
-      - name: Lint
-        run: docker-compose exec -u root -T -w /workspace vscode make lint
-
-      - name: Init .env
-        run: docker-compose exec -u root -T -w /workspace vscode touch .env
-
-      - name: Units Tests
-        run: docker-compose exec -u root -T -w /workspace vscode make test
-
-      - name: Integrations Tests
-        run: docker-compose exec -u root -T -w /workspace vscode make venom-test
+      - uses: FranzDiebold/github-env-vars-action@v2
+      - name: Run CI # up to test-int (info → refresh → lint → test → release → test-int)
+        run: |
+          docker-compose exec \
+            -T \
+            -u root \
+            -w /workspace \
+            -e PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/home/vscode/go/bin:/workspace/bin \
+            vscode \
+            neon -props "{tag: ${CI_ACTION_REF_NAME}, MODULE: github.com/${CI_REPOSITORY,,}, BY: ${CI_ACTOR}}" test-int

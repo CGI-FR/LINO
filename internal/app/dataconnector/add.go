@@ -26,7 +26,7 @@ import (
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/spf13/cobra"
 	"github.com/xo/dburl"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 // newAddCommand implements the cli dataconnector add command
@@ -125,9 +125,9 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 }
 
 func askPassword() string {
-	if terminal.IsTerminal(int(os.Stdin.Fd())) {
+	if term.IsTerminal(int(os.Stdin.Fd())) {
 		os.Stdout.Write([]byte("enter password: "))
-		bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 		os.Stdout.Write([]byte("\n"))
 		if err != nil {
 			os.Exit(1)

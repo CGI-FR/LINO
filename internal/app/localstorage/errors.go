@@ -34,6 +34,7 @@ type constError string
 func (err constError) Error() string {
 	return string(err)
 }
+
 func (err constError) Is(target error) bool {
 	ts := target.Error()
 	es := string(err)

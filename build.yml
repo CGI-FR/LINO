@@ -30,7 +30,7 @@ properties:
   PROJECT: "" # Leave empty to default to the git repository name (e.g. "<reponame>")
   LDFLAGS: "" # Add custom standard ldflags, will be applied everywhere everytime
   BUILD_DIR: "bin" # Subfolder where the build will output, should be ignored by .gitignore
-  TEST_WS_DIR: "test/workspace" # Workspace for integration tests
+  TEST_WS_DIR: "tests/workspace" # Workspace for integration tests
 
   # Build parameters (use the -props flag or change these default values)
   tag: "" # Default to the current branch or tag, can be overriden
@@ -196,8 +196,8 @@ targets:
     doc: "Refresh go modules (add missing and remove unused modules)"
     depends: "info"
     steps:
-      - $: "rm -f go.mod go.sum"
-      - $: "go mod init ={mod}"
+      # - $: "rm -f go.mod go.sum"
+      # - $: "go mod init ={mod}"
       - $: "go mod tidy"
 
   # run "neon -props '{buildpaths: ["path/to/main/package1","path/to/main/package2"]}' compile" to compile specific targets
@@ -246,17 +246,26 @@ targets:
       - ldflags = ldflags + " -s -w" # Omit the DWARF symbol table. Omit the symbol table and debug information.
       - call: compile
 
+  docker-clean:
+    doc: "Clean docker container"
+    steps:
+      - $: sudo docker-compose stop source
+      - $: sudo docker-compose stop dest
+      - $: sudo docker-compose rm -f source
+      - $: sudo docker-compose rm -f dest
+      - $: sudo docker-compose up -d source dest
+      - $: sudo docker-compose up -d --build lino
+
   test-int:
     doc: "Run all integration tests"
-    depends: ["info", "refresh", "lint", "test", "release"]
+    depends: ["info", "refresh", "lint", "test", "release", "docker-clean"]
     steps:
-      # - mkdir: =TEST_WS_DIR
-      # - chdir: =TEST_WS_DIR
-      - try:
-          - $: venom run tests/suites/*/*.yml
-        finally:
-          # this is a temporary fix waiting for venom project to fix issue https://github.com/ovh/venom/issues/400
-          - $: git clean -f tests/suites/
+      - delete: ={TEST_WS_DIR}/**
+      - mkdir: =TEST_WS_DIR
+      - copy: "**/*.yml"
+        dir: "tests/suites"
+        todir: =TEST_WS_DIR
+      - $: venom run --var "COMPOSE_PROJECT_NAME=lino" ={TEST_WS_DIR}/*/*.yml
 
   # run "neon -props '{buildpaths: ["path/to/main/package1","path/to/main/package2"]}' publish" to publish specific targets
   # example : neon -props '{buildpaths: ["cmd/cli"]}' publish

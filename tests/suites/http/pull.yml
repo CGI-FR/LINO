@@ -33,6 +33,7 @@ testcases:
     - script: lino id create store
     - script: sed -i "s/true/false/g" ingress-descriptor.yaml
     - script: lino id set-child-lookup staff_store_id_fkey true
+    - script: cp * /workspace/tests/workspace
 
 - name: pull bad source
   steps:

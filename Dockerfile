@@ -15,10 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
 
-FROM golang:1.13 AS builder
+FROM adrienaury/go-devcontainer-ci:v0.3.1-debian AS builder
+
+USER root
 
 ADD .devcontainer/cgi_ca_root.crt /usr/local/share/ca-certificates/cgi_ca_root.crt
 RUN chmod 644 /usr/local/share/ca-certificates/cgi_ca_root.crt && update-ca-certificates
+
+RUN echo "Acquire::http::Proxy \"${http_proxy:-false}\";" > /etc/apt/apt.conf.d/proxy.conf && \
+    echo "Acquire::https::Proxy \"${https_proxy:-false}\";" >> /etc/apt/apt.conf.d/proxy.conf && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends make less jq expect libaio1 wget unzip gcc-mingw-w64 g++-mingw-w64 gcc-multilib gcc-mingw-w64 && \
+    apt-get autoremove -y && \
+    apt-get clean -y && \
+    rm -r /var/cache/* /var/lib/apt/lists/*
 
 ENV GOFLAGS="-mod=readonly"
 
@@ -37,7 +47,7 @@ COPY . /workspace
 ARG VERSION
 ARG BUILD_BY
 
-RUN make release
+RUN export CGO_ENABLED=1; touch ~/.dockerhub.yml ~/.github.yml && neon -props '{BY: "$BUILD_BY"}' release
 
 FROM gcr.io/distroless/base
 
@@ -67,4 +77,3 @@ COPY --from=builder /workspace/bin/* /
 WORKDIR /home/lino
 
 ENTRYPOINT [ "/lino" ]
-

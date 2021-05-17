@@ -251,13 +251,13 @@ targets:
     doc: "Clean docker container"
     steps:
       - $: |
-        export COMPOSE_PROJECT_NAME=lino
-        sudo docker-compose stop source
-        sudo docker-compose stop dest
-        sudo docker-compose rm -f source
-        sudo docker-compose rm -f dest
-        sudo docker-compose up -d source dest
-        sudo docker-compose up -d --build lino
+          export COMPOSE_PROJECT_NAME=lino
+          sudo docker-compose stop source
+          sudo docker-compose stop dest
+          sudo docker-compose rm -f source
+          sudo docker-compose rm -f dest
+          sudo docker-compose up -d source dest
+          sudo docker-compose up -d --build lino
 
   test-int:
     doc: "Run all integration tests"

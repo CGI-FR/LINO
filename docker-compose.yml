@@ -15,49 +15,48 @@
 # You should have received a copy of the GNU General Public License
 # along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
 
-version: '3.3'
+version: "3.7"
 
 services:
-   vscode:
-      build:
-        context: .devcontainer
-        args:
-          http_proxy: ${http_proxy}
-          https_proxy: ${https_proxy}
-          no_proxy: ${no_proxy}
-      volumes:
-        - ./:/workspace
-        - ~/.ssh:/root/.ssh:ro
-        - ~/.git:/root/.git:ro
-        - /var/run/docker.sock:/var/run/docker.sock
-        - testdata:/workspace/tests/workspace
-      environment:
-        - TZ=Europe/Paris
-        - CGO_ENABLED=1
-        - PATH=/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/bin/
+  vscode:
+    build:
+      context: .devcontainer
+      args:
+        http_proxy: ${http_proxy}
+        https_proxy: ${https_proxy} 
+        no_proxy: ${no_proxy}
+    volumes:
+      - ./:/workspace
+      - ~/.ssh:/home/vscode/.ssh:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - testdata:/workspace/tests/workspace
+    environment:
+      - TZ=Europe/Paris
+      - CGO_ENABLED=1
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    entrypoint: tail -f /dev/null
+    user: root:root
 
-      cap_add:
-        - SYS_PTRACE
-      security_opt:
-        - seccomp:unconfined
-      entrypoint: zsh -c "while sleep 1000; do :; done"
-   source:
-     image: frantiseks/postgres-sakila
-     restart: always
-     environment:
-       POSTGRES_PASSWORD: sakila
-     expose:
+  source:
+    image: frantiseks/postgres-sakila
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: sakila
+    expose:
+    - 5432
+
+  dest:
+    image: frantiseks/postgres-sakila
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: sakila
+    expose:
       - 5432
 
-   dest:
-     image: frantiseks/postgres-sakila
-     restart: always
-     environment:
-       POSTGRES_PASSWORD: sakila
-     expose:
-        - 5432
-
-   lino:
+  lino:
     build:
       context: .
       args:
@@ -66,15 +65,14 @@ services:
         no_proxy: ${no_proxy}
     environment:
       - PASSWORD=sakila
-      - CGO_ENABLED=1
-      
+      - CGO_ENABLED=1    
     command: http
     expose:
       - 8000
     volumes:
       - testdata:/home/lino/
 
-   admin:
+  admin:
     image: dpage/pgadmin4
     restart: always
     environment:
@@ -82,7 +80,6 @@ services:
         PGADMIN_DEFAULT_PASSWORD: SuperSecret
     ports:
         - 8080:80
-
 
 volumes:
   testdata:

@@ -22,7 +22,7 @@ testcases:
     # Clean working directory
     - script: rm -f *
     # Reset source database
-    - script: docker-compose stop source && docker-compose rm -f source && docker-compose up -d source
+    - script: sudo docker-compose -p lino stop source && sudo docker-compose -p lino rm -f source && sudo docker-compose -p lino up -d source
       assertions:
         - result.code ShouldEqual 0
     # Set up data connector

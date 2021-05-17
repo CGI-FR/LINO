@@ -15,11 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-ARG DOCKER_COMPOSE_VERSION=1.29.1
-
-FROM docker/compose:debian-${DOCKER_COMPOSE_VERSION} AS docker-compose
-
-FROM qmcgaw/godevcontainer:debian
+FROM adrienaury/go-devcontainer:v0.3.1-debian
 
 USER root
 
@@ -29,7 +25,7 @@ RUN chmod 644 /usr/local/share/ca-certificates/cgi_ca_root.crt && update-ca-cert
 RUN echo "Acquire::http::Proxy \"${http_proxy:-false}\";" > /etc/apt/apt.conf.d/proxy.conf && \
     echo "Acquire::https::Proxy \"${https_proxy:-false}\";" >> /etc/apt/apt.conf.d/proxy.conf && \
     apt-get update && \
-    apt-get install -y --no-install-recommends make less jq miller expect libaio1 wget unzip gcc-mingw-w64 g++-mingw-w64 gcc-multilib gcc-mingw-w64 && \
+    apt-get install -y --no-install-recommends make less jq expect libaio1 wget unzip gcc-mingw-w64 g++-mingw-w64 gcc-multilib gcc-mingw-w64 && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     rm -r /var/cache/* /var/lib/apt/lists/*
@@ -46,18 +42,20 @@ RUN wget -O /tmp/instantclient-basic-linux-x64.zip https://download.oracle.com/o
     ldconfig -v /usr/lib/oracle/instantclient_19_3 && \
     ldd /usr/lib/oracle/instantclient_19_3/libclntsh.so
 
-RUN go get -v github.com/ramya-rao-a/go-outline &&\
-    rm -rf /go/pkg/* /go/src/* /root/.cache/go-build
+ARG VERSION_DCM=0.1.0
+RUN wget -O- -nv https://github.com/adrienaury/docker-credential-mock/releases/download/${VERSION_DCM}/docker-credential-mock_${VERSION_DCM}_linux_amd64.tar.gz | tar -xz -C /usr/local/bin/ docker-credential-mock \
+ && chmod +x /usr/local/bin/docker-credential-mock
 
-RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /bin -d ${GOLANGCI_LINT_VERSION}
-RUN wget -O- -nv https://github.com/adrienaury/docker-credential-mock/releases/download/0.1.0/docker-credential-mock_0.1.0_linux_amd64.tar.gz | tar -xz -C /usr/local/bin/ docker-credential-mock
-RUN wget -O- -nv https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
+ARG VERSION_YAML2JSON=1.3
+ADD https://github.com/bronze1man/yaml2json/releases/download/v${VERSION_YAML2JSON}/yaml2json_linux_amd64 /usr/bin/yaml2json
+RUN chmod +x /usr/bin/yaml2json
 
-ADD https://github.com/ovh/venom/releases/download/v0.27.0/venom.linux-amd64 /bin/venom
-RUN chmod +x /bin/venom
+ARG VERSION_JD=1.4.0
+ADD https://github.com/josephburnett/jd/releases/download/v${VERSION_JD}/jd-amd64-linux /usr/bin/jd
+RUN chmod +x /usr/bin/jd
 
-ADD https://github.com/bronze1man/yaml2json/releases/download/v1.3/yaml2json_linux_amd64 /bin/yaml2json
-RUN chmod +x /bin/yaml2json
+ARG VERSION_MILLER=5.10.2
+ADD https://github.com/johnkerl/miller/releases/download/v${VERSION_MILLER}/mlr.linux.x86_64 /usr/bin/mlr
+RUN chmod +x /usr/bin/mlr
 
-# Add docker-compose
-COPY --from=docker-compose /usr/local/bin/docker-compose /usr/local/bin/docker-compose
+USER vscode

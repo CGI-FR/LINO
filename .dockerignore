@@ -1,10 +1,3 @@
 *
 
-!.git/
-!*.go
-!cmd/
-!go.*
-!internal/
-!pkg/
-!Makefile
-!.devcontainer/
+!bin/lino

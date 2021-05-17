@@ -25,28 +25,20 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # - name: Build
-      #   run: docker-compose build
-
       - name: Start services
         run: | 
           docker-compose up -d vscode
-          docker-compose exec -T -w /workspace -u root vscode chown vscode:vscode tests/workspace
+          docker-compose exec -T -w /workspace -u root vscode chown $(id -u):$(id -g) tests/workspace
 
       - name: Init env
         run: | 
-          docker-compose exec -T -w /workspace -u root vscode usermod -u ${UID} vscode
-          # docker-compose exec -T -w /workspace -u root vscode groupmod -g ${GID} vscode
-          env
+          docker-compose exec -T -w /workspace -u root vscode usermod -u $(id -u) vscode
+          docker-compose exec -T -w /workspace -u root vscode groupmod -g $(id -g) vscode
           docker-compose exec -T -w /workspace -u vscode vscode touch /home/vscode/.dockerhub.yml /home/vscode/.github.yml
 
       - uses: FranzDiebold/github-env-vars-action@v2
       - name: Run CI # up to test-int (info → refresh → lint → test → release → test-int)
         run: |
-          docker-compose exec -T -w /workspace -u vscode vscode id
-          docker-compose exec -T -w /workspace -u vscode vscode ls -al
-          docker-compose exec -T -w /workspace -u vscode vscode ls -al tests
-          docker-compose exec -T -w /workspace -u vscode vscode ls -al tests/workspace
           docker-compose exec \
             -T \
             -w /workspace \

@@ -129,7 +129,7 @@ testcases:
           "version": "v1"
         }
         EOF
-    - script: diff expected.json tables.json
+    - script: jd -set expected.json tables.json
       assertions:
         - result.systemout ShouldBeEmpty
         - result.code ShouldEqual 0
@@ -245,7 +245,7 @@ testcases:
           "version": "v1"
         }
         EOF
-    - script: diff expected.json tables.json
+    - script: jd -set expected.json tables.json
       assertions:
         - result.systemout ShouldBeEmpty
         - result.code ShouldEqual 0

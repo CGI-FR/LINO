@@ -34,7 +34,7 @@ jobs:
       - name: Init env
         run: | 
           docker-compose exec -T -w /workspace -u root vscode usermod -u ${UID} vscode
-          docker-compose exec -T -w /workspace -u root vscode groupmod -u ${GID} vscode
+          docker-compose exec -T -w /workspace -u root vscode groupmod -g ${GID} vscode
           docker-compose exec -T -w /workspace -u vscode vscode touch /home/vscode/.dockerhub.yml /home/vscode/.github.yml
 
       - uses: FranzDiebold/github-env-vars-action@v2

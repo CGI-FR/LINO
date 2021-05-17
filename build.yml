@@ -251,13 +251,12 @@ targets:
     doc: "Clean docker container"
     steps:
       - $: |
-          export COMPOSE_PROJECT_NAME=lino
-          sudo docker-compose stop source
-          sudo docker-compose stop dest
-          sudo docker-compose rm -f source
-          sudo docker-compose rm -f dest
-          sudo docker-compose up -d source dest
-          sudo docker-compose up -d --build lino
+          sudo docker-compose -p lino stop source
+          sudo docker-compose -p lino stop dest
+          sudo docker-compose -p lino rm -f source
+          sudo docker-compose -p lino rm -f dest
+          sudo docker-compose -p lino up -d source dest
+          sudo docker-compose -p lino up -d --build lino
 
   test-int:
     doc: "Run all integration tests"
@@ -266,7 +265,6 @@ targets:
       - delete: ={TEST_WS_DIR}/**
       - mkdir: =TEST_WS_DIR
       - copy: "**/*.yml"
-        # exclude: ["dataconnector/credential-helper.yml", "http/pull.yml", "push/update.yml"]
         dir: "tests/suites"
         todir: =TEST_WS_DIR
       - $: export COMPOSE_PROJECT_NAME=lino; venom run --stop-on-failure ={TEST_WS_DIR}/*/*.yml

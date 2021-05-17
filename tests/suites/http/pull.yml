@@ -21,13 +21,13 @@ testcases:
   steps:
     # Clean working directory
     - script: rm -f *
-    # - script: sudo docker-compose stop source dest && sudo docker-compose rm -f source dest && sudo docker-compose up -d source dest && sudo docker-compose up -d --build lino
+    - script: sudo docker-compose stop source dest && sudo docker-compose rm -f source dest && sudo docker-compose up -d source dest && sudo docker-compose up -d --build lino
     # .devcontainer and lino http share same test workdir
     # edit yaml here is the same as in lino-http's container
     - script: lino dataconnector add --password-from-env PASSWORD source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    # - script: count=0; while ! lino dc ping source; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
-    #   assertions:
-    #     - result.code ShouldEqual 0
+    - script: count=0; while ! lino dc ping source; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
+      assertions:
+        - result.code ShouldEqual 0
     - script: lino relation extract source
     - script: lino table extract source
     - script: lino id create store

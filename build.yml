@@ -264,7 +264,7 @@ targets:
       - delete: ={TEST_WS_DIR}/**
       - mkdir: =TEST_WS_DIR
       - copy: "**/*.yml"
-        exclude: "dataconnector/credential-helper.yml"
+        # exclude: ["dataconnector/credential-helper.yml", "http/pull.yml"]
         dir: "tests/suites"
         todir: =TEST_WS_DIR
       - $: export COMPOSE_PROJECT_NAME=lino; venom run --stop-on-failure ={TEST_WS_DIR}/*/*.yml

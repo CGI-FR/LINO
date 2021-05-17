@@ -55,7 +55,7 @@ ADD https://github.com/josephburnett/jd/releases/download/v${VERSION_JD}/jd-amd6
 RUN chmod +x /usr/bin/jd
 
 ARG VERSION_MILLER=5.10.2
-ADD https://github.com/johnkerl/miller/releases/download/v${VERSION_MILLER}/mlr.linux.x86_64
+ADD https://github.com/johnkerl/miller/releases/download/v${VERSION_MILLER}/mlr.linux.x86_64 /usr/bin/mlr
 RUN chmod +x /usr/bin/mlr
 
 USER vscode

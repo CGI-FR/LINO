@@ -277,20 +277,19 @@ targets:
     doc: "Publish tagged binaries to Github"
     depends: ["info", "refresh", "lint", "test", "release", "test-int"]
     steps:
-      - if: len(buildpaths) == 0
-        then:
-          - buildpaths = appendpath("cmd", find("cmd", "*"))
-      - ldflags = ldflags + " -s -w" # Omit the DWARF symbol table. Omit the symbol table and debug information.
-      - ldflags = ldflags + " -X main.version=" + tag + " -X main.commit=" + commit + " -X main.buildDate=" + date + " -X main.builtBy=" + by
-      - $: (export LDFLAGS="={ldflags}"; export BUILDPATHS="={buildpaths}"; cat .goreleaser.template.yml | gomplate)
-        1>: ={BUILD_DIR}/.goreleaser.yml
-        1x: true
-      - $: git reset --hard
       - if: snapshot
         then:
-          - $: goreleaser release -f ={BUILD_DIR}/.goreleaser.yml --rm-dist --snapshot
+          - $: |
+              export GITHUB_TOKEN=={GITHUB_TOKEN}
+              export BUILD_DATE=={date}
+              export VERSION=={tag}
+              goreleaser release --rm-dist --snapshot
         else:
-          - $: (export GITHUB_TOKEN=={GITHUB_TOKEN}; goreleaser release -f ={BUILD_DIR}/.goreleaser.yml --rm-dist)
+          - $: |
+              export GITHUB_TOKEN=={GITHUB_TOKEN}
+              export BUILD_DATE=={date}
+              export VERSION=={tag}
+              goreleaser release --rm-dist
       - $: go mod tidy
 
   # run "neon -props '{dockerfiles: {"path/to/Dockerfile1": "path/to/root/build/context"}}' docker" to build specific Dockerfiles

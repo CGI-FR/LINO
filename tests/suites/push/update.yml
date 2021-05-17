@@ -22,9 +22,9 @@ testcases:
     # Clean working directory
     - script: rm -f *
     # Reset source database
-    - script: sudo docker-compose stop source && sudo docker-compose rm -f source && sudo docker-compose up -d source
-      assertions:
-        - result.code ShouldEqual 0
+    # - script: sudo docker-compose stop source && sudo docker-compose rm -f source && sudo docker-compose up -d source
+    #   assertions:
+    #     - result.code ShouldEqual 0
     # Set up data connector
     - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
     # Wait for database available (10 retries)

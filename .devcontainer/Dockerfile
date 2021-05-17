@@ -46,10 +46,8 @@ RUN wget -O- -nv https://github.com/adrienaury/docker-credential-mock/releases/d
 ADD https://github.com/bronze1man/yaml2json/releases/download/v1.3/yaml2json_linux_amd64 /bin/yaml2json
 RUN chmod +x /bin/yaml2json
 
-ARG VERSION_GOLICENSE=0.2.0
 ARG VERSION_MILLER=5.10.2
-RUN    wget -nv -O- https://github.com/mitchellh/golicense/releases/download/v${VERSION_GOLICENSE}/golicense_${VERSION_GOLICENSE}_linux_x86_64.tar.gz | tar xz -C /usr/bin golicense \
-    && wget -nv -O/usr/bin/mlr https://github.com/johnkerl/miller/releases/download/v${VERSION_MILLER}/mlr.linux.x86_64 \
-    && chmod +x /usr/bin/golicense /usr/bin/mlr
+RUN    wget -nv -O/usr/bin/mlr https://github.com/johnkerl/miller/releases/download/v${VERSION_MILLER}/mlr.linux.x86_64 \
+    && chmod +x /usr/bin/mlr
 
 USER vscode

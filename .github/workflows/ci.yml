@@ -39,6 +39,7 @@ jobs:
       - uses: FranzDiebold/github-env-vars-action@v2
       - name: Run CI # up to test-int (info → refresh → lint → test → release → test-int)
         run: |
+          export COMPOSE_INTERACTIVE_NO_CLI=1
           docker-compose exec \
             -w /workspace \
             -u vscode \

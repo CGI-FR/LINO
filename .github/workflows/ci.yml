@@ -40,7 +40,6 @@ jobs:
       - name: Run CI # up to test-int (info → refresh → lint → test → release → test-int)
         run: |
           docker-compose exec \
-            -T \
             -w /workspace \
             -u vscode \
             -e PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/home/vscode/go/bin:/workspace/bin \

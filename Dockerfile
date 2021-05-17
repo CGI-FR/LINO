@@ -17,7 +17,8 @@
 
 FROM gcr.io/distroless/base
 
-COPY bin/lino /
+COPY bin/lino /usr/bin/lino
+
 WORKDIR /home/lino
 
-ENTRYPOINT [ "/lino" ]
+ENTRYPOINT [ "/usr/bin/lino" ]

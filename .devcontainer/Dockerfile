@@ -42,16 +42,20 @@ RUN wget -O /tmp/instantclient-basic-linux-x64.zip https://download.oracle.com/o
     ldconfig -v /usr/lib/oracle/instantclient_19_3 && \
     ldd /usr/lib/oracle/instantclient_19_3/libclntsh.so
 
-RUN wget -O- -nv https://github.com/adrienaury/docker-credential-mock/releases/download/0.1.0/docker-credential-mock_0.1.0_linux_amd64.tar.gz | tar -xz -C /usr/local/bin/ docker-credential-mock
+ARG VERSION_DCM=0.1.0
+RUN wget -O- -nv https://github.com/adrienaury/docker-credential-mock/releases/download/${VERSION_DCM}/docker-credential-mock_${VERSION_DCM}_linux_amd64.tar.gz | tar -xz -C /usr/local/bin/ docker-credential-mock \
+ && chmod +x /usr/local/bin/docker-credential-mock
 
-ADD https://github.com/bronze1man/yaml2json/releases/download/v1.3/yaml2json_linux_amd64 /bin/yaml2json
-RUN chmod +x /bin/yaml2json
+ARG VERSION_YAML2JSON=1.3
+ADD https://github.com/bronze1man/yaml2json/releases/download/v${VERSION_YAML2JSON}/yaml2json_linux_amd64 /usr/bin/yaml2json
+RUN chmod +x /usr/bin/yaml2json
 
-ADD https://github.com/josephburnett/jd/releases/download/v1.4.0/jd-amd64-linux /bin/jd
-RUN chmod +x /bin/jd
+ARG VERSION_JD=1.4.0
+ADD https://github.com/josephburnett/jd/releases/download/v${VERSION_JD}/jd-amd64-linux /usr/bin/jd
+RUN chmod +x /usr/bin/jd
 
 ARG VERSION_MILLER=5.10.2
-RUN    wget -nv -O/usr/bin/mlr https://github.com/johnkerl/miller/releases/download/v${VERSION_MILLER}/mlr.linux.x86_64 \
-    && chmod +x /usr/bin/mlr
+ADD https://github.com/johnkerl/miller/releases/download/v${VERSION_MILLER}/mlr.linux.x86_64
+RUN chmod +x /usr/bin/mlr
 
 USER vscode

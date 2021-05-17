@@ -26,14 +26,13 @@ jobs:
           fetch-depth: 0
 
       - name: Start services
-        run: | 
-          docker-compose up -d vscode
-          docker-compose exec -T -w /workspace -u root vscode chown $(id -u):$(id -g) tests/workspace
+        run: docker-compose up -d vscode
 
       - name: Init env
         run: | 
           docker-compose exec -T -w /workspace -u root vscode usermod -u $(id -u) vscode
           docker-compose exec -T -w /workspace -u root vscode groupmod -g $(id -g) vscode
+          docker-compose exec -T -w /workspace -u root vscode chown $(id -u):$(id -g) tests/workspace
           docker-compose exec -T -w /workspace -u vscode vscode touch /home/vscode/.dockerhub.yml /home/vscode/.github.yml
 
       - uses: FranzDiebold/github-env-vars-action@v2

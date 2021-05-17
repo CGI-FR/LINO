@@ -58,4 +58,8 @@ ARG VERSION_MILLER=5.10.2
 ADD https://github.com/johnkerl/miller/releases/download/v${VERSION_MILLER}/mlr.linux.x86_64 /usr/bin/mlr
 RUN chmod +x /usr/bin/mlr
 
+ARG VERSION_GOMPLATE=3.9.0
+ADD https://github.com/hairyhenderson/gomplate/releases/download/v${VERSION_GOMPLATE}/gomplate_linux-amd64 /usr/bin/gomplate
+RUN chmod +x /usr/bin/gomplate
+
 USER vscode

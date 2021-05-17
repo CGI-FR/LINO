@@ -14,7 +14,7 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
-## [UNRELEASE]
+## [1.1.2]
 
 - `Fixed` extract composite primary keys for oracle
 - `Fixed` protect columns names in insert statement

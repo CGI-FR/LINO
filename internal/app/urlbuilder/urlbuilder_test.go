@@ -6,9 +6,7 @@ import (
 	"github.com/xo/dburl"
 )
 
-// TODO : fix this test
 func TestBuildOracleURL(t *testing.T) {
-	t.Skip("WARNING : skipping test")
 	tests := []struct {
 		name string
 		args string

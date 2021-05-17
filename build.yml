@@ -14,7 +14,8 @@ expose: [
     "docker",
     "docker-tag",
     "docker-push",
-    "license",
+    # Doesn't work yet with CGO binaries
+    # "license",
   ]
 configuration: ["~/.dockerhub.yml", "~/.github.yml"] # DO NOT COMMIT THESE FILES
 # ~/.dockerhub.yml should contains:
@@ -92,7 +93,7 @@ targets:
           print -P "%B%F{blue}docker%f%b       Build docker images [info]"
           print -P "%B%F{blue}docker-tag%f%b   Tag docker images [info->docker]"
           print -P "%B%F{blue}docker-push%f%b  Publish docker images to Dockerhub [info->docker->docker-tag]"
-          print -P "%B%F{blue}license%f%b      Scan licenses from binaries and generate notice file [info->refresh->compile]"
+          # print -P "%B%F{blue}license%f%b      Scan licenses from binaries and generate notice file [info->refresh->compile]"
           print
           print -P "%BExample:%b neon promote release"
           print
@@ -101,7 +102,7 @@ targets:
           print -P "→ help"
           print -P "→ promote"
           print -P "→ info ┰ docker → docker-tag → docker-push"
-          print -P "       ┖ refresh ┰ compile → license"
+          print -P "       ┖ refresh ┰ compile"
           print -P "                 ┖ lint → test → release → test-int"
 
   info:

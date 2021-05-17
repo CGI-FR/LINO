@@ -266,7 +266,7 @@ targets:
       - copy: "**/*.yml"
         dir: "tests/suites"
         todir: =TEST_WS_DIR
-      - $: export COMPOSE_PROJECT_NAME=lino; venom run ={TEST_WS_DIR}/*/*.yml
+      - $: export COMPOSE_PROJECT_NAME=lino; venom run --stop-on-failure ={TEST_WS_DIR}/*/*.yml
 
   # run "neon -props '{buildpaths: ["path/to/main/package1","path/to/main/package2"]}' publish" to publish specific targets
   # example : neon -props '{buildpaths: ["cmd/cli"]}' publish

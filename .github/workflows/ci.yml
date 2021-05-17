@@ -32,7 +32,7 @@ jobs:
         run: docker-compose up -d vscode
 
       - name: Init env
-        run: docker-compose exec -T -w /workspace vscode touch ~/.dockerhub.yml ~/.github.yml
+        run: docker-compose exec -T -w /workspace vscode touch /home/vscode/.dockerhub.yml /home/vscode/.github.yml
 
       - uses: FranzDiebold/github-env-vars-action@v2
       - name: Run CI # up to test-int (info → refresh → lint → test → release → test-int)

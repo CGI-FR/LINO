@@ -32,7 +32,7 @@ properties:
   LDFLAGS: "" # Add custom standard ldflags, will be applied everywhere everytime
   BUILD_DIR: "bin" # Subfolder where the build will output, should be ignored by .gitignore
   TEST_WS_DIR: "tests/workspace" # Workspace for integration tests
-  DOCKERHUB_USER: "cgi-fr" # Image tag : cgi-fr/lino
+  DOCKERHUB_USER: "cgifr" # Image tag : cgifr/lino
 
   # Build parameters (use the -props flag or change these default values)
   tag: "" # Default to the current branch or tag, can be overriden
@@ -134,7 +134,7 @@ targets:
           - $: "echo -n ={BY}"
             1=: "by"
             3x: true
-      - $: 'if expr match "={version}" "\d\+\.\d\+\.\d\+" 1>/dev/null 2>&1; then echo -n "yes"; else echo -n "no"; fi'
+      - $: 'if expr match "={version}" "v\?[0-9]\+\.[0-9]\+\.[0-9]\+" 1>/dev/null 2>&1; then echo -n "yes"; else echo -n "no"; fi'
         1=: "is_release"
         3x: true
       - $: "cut -f1 -d."
@@ -330,7 +330,7 @@ targets:
       - if: 'is_release == "yes"'
         then:
           - try:
-              - $: "# ={DOCKERHUB_PASS}"
+              - $: "# ={DOCKERHUB_USER}"
                 3x: true
             catch:
               - print: |

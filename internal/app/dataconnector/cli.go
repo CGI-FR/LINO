@@ -25,16 +25,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var storage dataconnector.Storage
-var dataPingerFactory map[string]dataconnector.DataPingerFactory
-
-var logger dataconnector.Logger = dataconnector.Nologger{}
-
-// SetLogger if needed, default no logger
-func SetLogger(l dataconnector.Logger) {
-	logger = l
-	dataconnector.SetLogger(l)
-}
+var (
+	storage           dataconnector.Storage
+	dataPingerFactory map[string]dataconnector.DataPingerFactory
+)
 
 // Inject dependencies
 func Inject(dbas dataconnector.Storage, dpf map[string]dataconnector.DataPingerFactory) {

@@ -25,6 +25,7 @@ import (
 
 	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 )
 
 func DeleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,11 +52,11 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 	)
 
 	if dcDestination, ok = pathParams["dataDestination"]; !ok {
-		logger.Error("param dataDestination is required\n")
+		log.Error().Msg("param dataDestination is required\n")
 		w.WriteHeader(http.StatusBadRequest)
 		_, ew := w.Write([]byte("{\"error\": \"param dataDestination is required\"}"))
 		if ew != nil {
-			logger.Error("Write failed\n")
+			log.Error().Msg("Write failed\n")
 			return
 		}
 		return
@@ -63,11 +64,11 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 
 	datadestination, err := getDataDestination(dcDestination)
 	if err != nil {
-		logger.Error(err.Error())
+		log.Error().Msg(err.Error())
 		w.WriteHeader(http.StatusNotFound)
 		_, ew := w.Write([]byte("{\"error\": \"" + html.EscapeString(err.Description) + "\"}"))
 		if ew != nil {
-			logger.Error("Write failed\n")
+			log.Error().Msg("Write failed\n")
 			return
 		}
 		return
@@ -75,11 +76,11 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 
 	plan, e2 := getPlan(idStorageFactory(query.Get("table")))
 	if e2 != nil {
-		logger.Error(e2.Error())
+		log.Error().Msg(e2.Error())
 		w.WriteHeader(http.StatusNotFound)
 		_, ew := w.Write([]byte("{\"error\": \"" + e2.Description + "\"}"))
 		if ew != nil {
-			logger.Error("Write failed\n")
+			log.Error().Msg("Write failed\n")
 			return
 		}
 		return
@@ -88,11 +89,11 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 	if query.Get("commitsize") != "" {
 		commitsize64, ecommitsize := strconv.ParseUint(query.Get("commitsize"), 10, 64)
 		if ecommitsize != nil {
-			logger.Error("can't parse commitsize\n")
+			log.Error().Msg("can't parse commitsize\n")
 			w.WriteHeader(http.StatusBadRequest)
 			_, ew := w.Write([]byte("{\"error\" : \"param commitsize must be an positive integer\"}\n"))
 			if ew != nil {
-				logger.Error("Write failed\n")
+				log.Error().Msg("Write failed\n")
 				return
 			}
 			return
@@ -104,33 +105,33 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 		var edisableConstraints error
 		disableConstraints, edisableConstraints = strconv.ParseBool(query.Get("disable-constraints"))
 		if edisableConstraints != nil {
-			logger.Error("can't parse disable-constraints\n")
+			log.Error().Msg("can't parse disable-constraints\n")
 			w.WriteHeader(http.StatusBadRequest)
 			_, ew := w.Write([]byte("{\"error\" : \"param disable-constraints must be a boolean\"}\n"))
 			if ew != nil {
-				logger.Error("Write failed\n")
+				log.Error().Msg("Write failed\n")
 				return
 			}
 			return
 		}
 	}
 
-	logger.Debug(fmt.Sprintf("call Push with mode %s", mode))
+	log.Debug().Msg(fmt.Sprintf("call Push with mode %s", mode))
 
 	e3 := push.Push(rowIteratorFactory(r.Body), datadestination, plan, mode, commitSize, disableConstraints, push.NoErrorCaptureRowWriter{})
 	if e3 != nil {
-		logger.Error(e3.Error())
+		log.Error().Msg(e3.Error())
 		w.WriteHeader(http.StatusNotFound)
 		_, ew := w.Write([]byte("{\"error\": \"" + e3.Description + "\"}"))
 		if ew != nil {
-			logger.Error("Write failed\n")
+			log.Error().Msg("Write failed\n")
 			return
 		}
 		return
 	}
 	_, ew := w.Write([]byte("{\"error\": \"\"}"))
 	if ew != nil {
-		logger.Error("Write failed\n")
+		log.Error().Msg("Write failed\n")
 		return
 	}
 }

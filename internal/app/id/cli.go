@@ -27,15 +27,12 @@ import (
 	"github.com/cgi-fr/lino/pkg/relation"
 )
 
-var idStorage id.Storage
-var relStorage relation.Storage
-var idExporter id.Exporter
-var idJSONExporter id.Storage
-
-// SetLogger if needed, default no logger
-func SetLogger(l id.Logger) {
-	id.SetLogger(l)
-}
+var (
+	idStorage      id.Storage
+	relStorage     relation.Storage
+	idExporter     id.Exporter
+	idJSONExporter id.Storage
+)
 
 // Inject dependencies
 func Inject(ids id.Storage, rels relation.Storage, ex id.Exporter, jSONEx id.Storage) {

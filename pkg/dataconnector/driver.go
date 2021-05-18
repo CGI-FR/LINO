@@ -17,13 +17,13 @@
 
 package dataconnector
 
-var logger Logger = Nologger{}
+import "github.com/rs/zerolog/log"
 
 // Add an alias to the storage, if it does not exist
 func Add(s Storage, m *DataConnector) *Error {
 	exist, err := Get(s, m.Name)
 	if err != nil {
-		logger.Error(err.Description)
+		log.Error().Msg(err.Description)
 		return err
 	}
 
@@ -32,7 +32,7 @@ func Add(s Storage, m *DataConnector) *Error {
 	}
 	err = s.Store(m)
 	if err != nil {
-		logger.Error(err.Description)
+		log.Error().Msg(err.Description)
 		return err
 	}
 	return nil
@@ -42,7 +42,7 @@ func Add(s Storage, m *DataConnector) *Error {
 func Get(s Storage, name string) (*DataConnector, *Error) {
 	list, err := s.List()
 	if err != nil {
-		logger.Error(err.Description)
+		log.Error().Msg(err.Description)
 		return nil, err
 	}
 	for _, a := range list {
@@ -57,16 +57,11 @@ func Get(s Storage, name string) (*DataConnector, *Error) {
 func List(s Storage) ([]DataConnector, *Error) {
 	aliases, err := s.List()
 	if err != nil {
-		logger.Error(err.Description)
+		log.Error().Msg(err.Description)
 		return nil, err
 	}
 	if aliases == nil {
 		aliases = []DataConnector{}
 	}
 	return aliases, err
-}
-
-// SetLogger if needed, default no logger
-func SetLogger(l Logger) {
-	logger = l
 }

@@ -17,7 +17,11 @@
 
 package id
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/rs/zerolog/log"
+)
 
 // cycles applies the cycles detection algorithm
 type cycles struct {
@@ -33,7 +37,7 @@ type cycles struct {
 func (g graph) relCycles(startTable Table) CycleList {
 	result := [][]IngressRelation{}
 	tableCycles := g.cycles()
-	logger.Trace(fmt.Sprintf("cycle(s) %v", tableCycles))
+	log.Trace().Msg(fmt.Sprintf("cycle(s) %v", tableCycles))
 	for _, tableCycle := range tableCycles {
 		var idx int
 		for i, table := range tableCycle {
@@ -43,7 +47,7 @@ func (g graph) relCycles(startTable Table) CycleList {
 		}
 		tableCycle = append(tableCycle[idx:], tableCycle[:idx]...)
 		tableCycle = append(tableCycle, startTable)
-		logger.Trace(fmt.Sprintf("rotated cycle is %v", tableCycle))
+		log.Trace().Msg(fmt.Sprintf("rotated cycle is %v", tableCycle))
 		result = append(result, g.develop(tableCycle)...)
 	}
 	list := []IngressRelationList{}

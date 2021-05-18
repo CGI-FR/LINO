@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/cgi-fr/lino/internal/app/urlbuilder"
@@ -32,23 +33,17 @@ import (
 	"github.com/cgi-fr/lino/pkg/table"
 )
 
-var dataconnectorStorage dataconnector.Storage
-var relStorage relation.Storage
-var tabStorage table.Storage
-var idStorageFactory func(string) id.Storage
-var dataSourceFactories map[string]pull.DataSourceFactory
-var pullExporterFactory func(io.Writer) pull.RowExporter
-var rowReaderFactory func(io.ReadCloser) pull.RowReader
+var (
+	dataconnectorStorage dataconnector.Storage
+	relStorage           relation.Storage
+	tabStorage           table.Storage
+	idStorageFactory     func(string) id.Storage
+	dataSourceFactories  map[string]pull.DataSourceFactory
+	pullExporterFactory  func(io.Writer) pull.RowExporter
+	rowReaderFactory     func(io.ReadCloser) pull.RowReader
+)
 
 var traceListener pull.TraceListener
-
-// SetLogger if needed, default no logger
-func SetLogger(l pull.Logger) {
-	logger = l
-	pull.SetLogger(l)
-}
-
-var logger pull.Logger
 
 // Inject dependencies
 func Inject(
@@ -207,7 +202,7 @@ func getStepList(ep id.PullerPlan, relations []relation.Relation, tables []table
 		smap = append(smap, ep.Step(idx))
 	}
 
-	logger.Debug(fmt.Sprintf("there is %v step(s) to build", ep.Len()))
+	log.Debug().Msg(fmt.Sprintf("there is %v step(s) to build", ep.Len()))
 
 	converter := epToStepListConverter{
 		rmap:   rmap,
@@ -221,7 +216,7 @@ func getStepList(ep id.PullerPlan, relations []relation.Relation, tables []table
 	if err != nil {
 		return nil, err
 	}
-	logger.Debug(fmt.Sprintf("finished building %v step(s) with success", ep.Len()))
+	log.Debug().Msg(fmt.Sprintf("finished building %v step(s) with success", ep.Len()))
 	return steps, nil
 }
 
@@ -242,11 +237,11 @@ func (c epToStepListConverter) getTable(name string) pull.Table {
 
 	table, ok := c.tmap[name]
 	if !ok {
-		logger.Warn(fmt.Sprintf("missing table %v in tables.yaml", name))
+		log.Warn().Msg(fmt.Sprintf("missing table %v in tables.yaml", name))
 		return pull.NewTable(name, []string{})
 	}
 
-	logger.Trace(fmt.Sprintf("building table %v", table))
+	log.Trace().Msg(fmt.Sprintf("building table %v", table))
 
 	return pull.NewTable(table.Name, table.Keys)
 }
@@ -263,11 +258,11 @@ func (c epToStepListConverter) getRelation(name string) (pull.Relation, error) {
 	relation, ok := c.rmap[name]
 	if !ok {
 		err := fmt.Errorf("missing relation '%s' in relations.yaml", name)
-		logger.Error(err.Error())
+		log.Error().Msg(err.Error())
 		return nil, err
 	}
 
-	logger.Trace(fmt.Sprintf("building relation %v", relation))
+	log.Trace().Msg(fmt.Sprintf("building relation %v", relation))
 
 	return pull.NewRelation(
 		relation.Name,
@@ -323,7 +318,7 @@ func (c epToStepListConverter) getStep(idx uint) (pull.Step, error) {
 
 	step := c.smap[idx-1]
 
-	logger.Trace(fmt.Sprintf("building %v", step))
+	log.Trace().Msg(fmt.Sprintf("building %v", step))
 
 	var exstep pull.Step
 	rel, err := c.getRelation(step.Following().Name())

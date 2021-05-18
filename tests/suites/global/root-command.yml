@@ -17,39 +17,49 @@
 
 name: root command
 testcases:
-- name: help
-  steps:
-    # Clean working directory
-  - type: exec
-    script: rm -f *yaml
-  - type: exec
-    script: lino
-    assertions:
-        - result.code ShouldEqual 0
-  - type: exec
-    script: lino --help
-    assertions:
-        - result.code ShouldEqual 0
-        - result.timeseconds ShouldBeLessThan 1
-        - result.systemout ShouldContainSubstring Usage
-        - result.systemerr ShouldBeEmpty
-  - type: exec
-    script: lino -h
-    assertions:
-        - result.code ShouldEqual 0
-        - result.timeseconds ShouldBeLessThan 1
-        - result.systemout ShouldContainSubstring Usage
-        - result.systemerr ShouldBeEmpty
-  - type: exec
-    script: lino NoExistCommand
-    assertions:
-        - result.code ShouldEqual 1
-        - result.timeseconds ShouldBeLessThan 1
-        - result.systemout ShouldContainSubstring "unknown command"
-        - result.systemerr ShouldContainSubstring usage
-  - type: exec
-    script: ls -l | grep .yaml | wc -l
-    assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldContainSubstring "0"
-        - result.systemerr ShouldBeEmpty
+  - name: help
+    steps:
+      # Clean working directory
+      - type: exec
+        script: rm -f *yaml
+      - type: exec
+        script: lino
+        assertions:
+          - result.code ShouldEqual 0
+      - type: exec
+        script: lino --help
+        assertions:
+          - result.code ShouldEqual 0
+          - result.timeseconds ShouldBeLessThan 1
+          - result.systemout ShouldContainSubstring Usage
+          - result.systemerr ShouldBeEmpty
+      - type: exec
+        script: lino -h
+        assertions:
+          - result.code ShouldEqual 0
+          - result.timeseconds ShouldBeLessThan 1
+          - result.systemout ShouldContainSubstring Usage
+          - result.systemerr ShouldBeEmpty
+      - type: exec
+        script: lino NoExistCommand
+        assertions:
+          - result.code ShouldEqual 1
+          - result.timeseconds ShouldBeLessThan 1
+          - result.systemout ShouldContainSubstring "unknown command"
+          - result.systemerr ShouldContainSubstring usage
+      - type: exec
+        script: ls -l | grep .yaml | wc -l
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring "0"
+          - result.systemerr ShouldBeEmpty
+      - type: exec
+        script: lino -vinfo --log-json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldBeEmpty
+      - type: exec
+        script: lino -vinfo --debug
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldBeEmpty

@@ -23,14 +23,14 @@ type Table struct {
 	Keys []string
 }
 
-// Relation holds a parent Table and a child Table
+// Relation holds a parent Table and a child Table.
 type Relation struct {
 	Name   string
 	Parent Table
 	Child  Table
 }
 
-// Error is the error type returned by the domain
+// Error is the error type returned by the domain.
 type Error struct {
 	Description string
 }

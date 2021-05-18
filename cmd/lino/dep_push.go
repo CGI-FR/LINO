@@ -26,9 +26,9 @@ import (
 
 func pushDataDestinationFactory() map[string]domain.DataDestinationFactory {
 	return map[string]domain.DataDestinationFactory{
-		"postgres":   infra.NewPostgresDataDestinationFactory(logger),
-		"godror":     infra.NewOracleDataDestinationFactory(logger),
-		"godror-raw": infra.NewOracleDataDestinationFactory(logger),
+		"postgres":   infra.NewPostgresDataDestinationFactory(),
+		"godror":     infra.NewOracleDataDestinationFactory(),
+		"godror-raw": infra.NewOracleDataDestinationFactory(),
 	}
 }
 

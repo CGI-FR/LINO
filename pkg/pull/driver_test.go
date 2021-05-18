@@ -26,12 +26,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var logger = Logger{}
-
-func init() {
-	pull.SetLogger(logger)
-}
-
 func makeTable(name string) pull.Table {
 	return pull.NewTable(name, []string{name + "_ID"})
 }

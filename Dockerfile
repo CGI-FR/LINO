@@ -22,3 +22,21 @@ COPY bin/lino /usr/bin/lino
 WORKDIR /home/lino
 
 ENTRYPOINT [ "/usr/bin/lino" ]
+
+ARG BUILD_DATE
+ARG VERSION
+ARG REVISION
+
+# https://github.com/opencontainers/image-spec/blob/master/annotations.md
+LABEL org.opencontainers.image.created       "${BUILD_DATE:?Missing BUILD_DATE argument}"
+LABEL org.opencontainers.image.authors       "CGI Lino <lino.fr@cgi.com>"
+LABEL org.opencontainers.image.url           "https://github.com/CGI-FR/LINO"
+LABEL org.opencontainers.image.documentation "https://github.com/CGI-FR/LINO/blob/main/README.md"
+LABEL org.opencontainers.image.source        "https://github.com/CGI-FR/LINO.git"
+LABEL org.opencontainers.image.version       "${VERSION:?Missing VERSION argument}"
+LABEL org.opencontainers.image.revision      "${REVISION:?Missing REVISION argument}"
+LABEL org.opencontainers.image.vendor        "CGI France"
+LABEL org.opencontainers.image.licenses      "GPL-3.0-only"
+LABEL org.opencontainers.image.ref.name      "cgi-lino"
+LABEL org.opencontainers.image.title         "CGI LINO"
+LABEL org.opencontainers.image.description   "LINO is a simple ETL (Extract Transform Load) tools to manage tests datas."

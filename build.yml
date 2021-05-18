@@ -308,6 +308,13 @@ targets:
                 DOCKERHUB_USER: <your dockerhub user>
                 DOCKERHUB_PASS: <your dockerhub password or a dockerhub token>
           - $: return 1
+      - $: "date -u +'%Y-%m-%dT%H:%M:%SZ'"
+        1=: "daterfc3339"
+        3x: true
+      - |
+        build_args  = " --build-arg BUILD_DATE=" + daterfc3339
+        build_args += " --build-arg VERSION=" + version
+        build_args += " --build-arg REVISION=" + commit
       - for: key
         in: keys(dockerfiles)
         do:
@@ -317,7 +324,7 @@ targets:
             if len(keycomponents) > 1 {
               suffix = "-" + keycomponents[len(keycomponents)-1]
             }
-          - $: "sudo docker build -q --iidfile ={BUILD_DIR}/last-={key} -t ={DOCKERHUB_USER}/={project}={suffix}:={tag} -f ={key} ={dockerfiles[key]}"
+          - $: "sudo docker build -q --iidfile ={BUILD_DIR}/last-={key} -t ={DOCKERHUB_USER}/={project}={suffix}:={tag} -f ={key} ={build_args} ={dockerfiles[key]}"
             1x: true
           - $: "sudo docker images --no-trunc | grep $(cat ={BUILD_DIR}/last-={key})"
 

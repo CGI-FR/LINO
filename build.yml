@@ -184,9 +184,8 @@ targets:
   promote:
     doc: "Promote the project with a new tag based on git log history"
     steps:
-      - try:
-          - $: "# ={tag}"
-        catch:
+      - if: tag==""
+        then:
           - $: svu next || echo -n v0.1.0
             3x: true
             1=: tag

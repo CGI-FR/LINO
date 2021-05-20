@@ -17,80 +17,87 @@
 
 name: pull with where SQL clause
 testcases:
-- name: prepare test
-  steps:
-    # Clean working directory
-    - script: rm -f *
-    - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: lino relation extract source
-    - script: lino table extract source
-    - script: lino id create customer
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup staff_store_id_fkey true
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino relation extract source
+      - script: lino table extract source
+      - script: lino id create customer
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup staff_store_id_fkey true
 
-- name: pull greater than filter
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino pull -v 5 source --where "address_id > 13"
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":14,"create_date":"2006-02-14T00:00:00Z","customer_id":10,"email":"DOROTHY.TAYLOR@sakilacustomer.org","first_name":"DOROTHY","last_name":"TAYLOR","last_update":"2006-02-15T09:57:20Z","store_id":1}
-        - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE address_id > 13 LIMIT 1'
+  - name: pull greater than filter
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino pull -v 5 source --where "address_id > 13"
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":14,"create_date":"2006-02-14T00:00:00Z","customer_id":10,"email":"DOROTHY.TAYLOR@sakilacustomer.org","first_name":"DOROTHY","last_name":"TAYLOR","last_update":"2006-02-15T09:57:20Z","store_id":1}
+          - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE address_id > 13 LIMIT 1'
 
+  - name: pull greater than filter with json logs
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino pull -v 5 source --where "address_id > 13" --log-json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":14,"create_date":"2006-02-14T00:00:00Z","customer_id":10,"email":"DOROTHY.TAYLOR@sakilacustomer.org","first_name":"DOROTHY","last_name":"TAYLOR","last_update":"2006-02-15T09:57:20Z","store_id":1}
+          - result.systemerr ShouldContainSubstring {"level":"debug","message":"SELECT * FROM customer WHERE address_id > 13 LIMIT 1"}
 
-- name: pull greater than  10 and less than 20 filter without limit
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino pull -v 5 source -l 0 --where "address_id > 10 and address_id < 20"
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldContainSubstring {"active":1,"activebool":true,"address_id":14,"create_date":"2006-02-14T00:00:00Z","customer_id":10,"email":"DOROTHY.TAYLOR@sakilacustomer.org","first_name":"DOROTHY","last_name":"TAYLOR","last_update":"2006-02-15T09:57:20Z","store_id":1}
-        - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE address_id > 10 and address_id < 20'
+  - name: pull greater than  10 and less than 20 filter without limit
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino pull -v 5 source -l 0 --where "address_id > 10 and address_id < 20"
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring {"active":1,"activebool":true,"address_id":14,"create_date":"2006-02-14T00:00:00Z","customer_id":10,"email":"DOROTHY.TAYLOR@sakilacustomer.org","first_name":"DOROTHY","last_name":"TAYLOR","last_update":"2006-02-15T09:57:20Z","store_id":1}
+          - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE address_id > 10 and address_id < 20'
 
-- name: pull with filter and where without limit
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino pull -v 5 source -l 0 --filter active=1 --where "address_id = 14"
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":14,"create_date":"2006-02-14T00:00:00Z","customer_id":10,"email":"DOROTHY.TAYLOR@sakilacustomer.org","first_name":"DOROTHY","last_name":"TAYLOR","last_update":"2006-02-15T09:57:20Z","store_id":1}
-        - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE active=1 AND address_id = 14'
+  - name: pull with filter and where without limit
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino pull -v 5 source -l 0 --filter active=1 --where "address_id = 14"
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":14,"create_date":"2006-02-14T00:00:00Z","customer_id":10,"email":"DOROTHY.TAYLOR@sakilacustomer.org","first_name":"DOROTHY","last_name":"TAYLOR","last_update":"2006-02-15T09:57:20Z","store_id":1}
+          - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE active=1 AND address_id = 14'
 
-- name: pull with filter, where and limit
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino pull -v 5 source -l 1 --filter active=1 --where "address_id = 14"
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":14,"create_date":"2006-02-14T00:00:00Z","customer_id":10,"email":"DOROTHY.TAYLOR@sakilacustomer.org","first_name":"DOROTHY","last_name":"TAYLOR","last_update":"2006-02-15T09:57:20Z","store_id":1}
-        - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE active=1 AND address_id = 14 LIMIT 1'
+  - name: pull with filter, where and limit
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino pull -v 5 source -l 1 --filter active=1 --where "address_id = 14"
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":14,"create_date":"2006-02-14T00:00:00Z","customer_id":10,"email":"DOROTHY.TAYLOR@sakilacustomer.org","first_name":"DOROTHY","last_name":"TAYLOR","last_update":"2006-02-15T09:57:20Z","store_id":1}
+          - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE active=1 AND address_id = 14 LIMIT 1'
 
-- name: pull with where and like operator
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino pull -v 5 source --where "email like 'LISA%'"
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":15,"create_date":"2006-02-14T00:00:00Z","customer_id":11,"email":"LISA.ANDERSON@sakilacustomer.org","first_name":"LISA","last_name":"ANDERSON","last_update":"2006-02-15T09:57:20Z","store_id":2}
-        - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE email like 'LISA%' LIMIT 1'
+  - name: pull with where and like operator
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino pull -v 5 source --where "email like 'LISA%'"
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":15,"create_date":"2006-02-14T00:00:00Z","customer_id":11,"email":"LISA.ANDERSON@sakilacustomer.org","first_name":"LISA","last_name":"ANDERSON","last_update":"2006-02-15T09:57:20Z","store_id":2}
+          - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE email like 'LISA%' LIMIT 1'
 
-- name: pull with filter from file and where clause
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"customer_id":11}' > customer_filter.jsonl
-    - script: lino pull -v 5 source --filter-from-file customer_filter.jsonl --where "email like 'LISA%'"
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":15,"create_date":"2006-02-14T00:00:00Z","customer_id":11,"email":"LISA.ANDERSON@sakilacustomer.org","first_name":"LISA","last_name":"ANDERSON","last_update":"2006-02-15T09:57:20Z","store_id":2}
-        - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE customer_id=11 AND email like 'LISA%' LIMIT 1'
+  - name: pull with filter from file and where clause
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"customer_id":11}' > customer_filter.jsonl
+      - script: lino pull -v 5 source --filter-from-file customer_filter.jsonl --where "email like 'LISA%'"
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":15,"create_date":"2006-02-14T00:00:00Z","customer_id":11,"email":"LISA.ANDERSON@sakilacustomer.org","first_name":"LISA","last_name":"ANDERSON","last_update":"2006-02-15T09:57:20Z","store_id":2}
+          - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE customer_id=11 AND email like 'LISA%' LIMIT 1'
 
-
-- name: pull with empty where clause
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"customer_id":11}' > customer_filter.jsonl
-    - script: lino pull -v 5 source --where "    "
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
-        - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE  1=1  LIMIT 1'
+  - name: pull with empty where clause
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"customer_id":11}' > customer_filter.jsonl
+      - script: lino pull -v 5 source --where "    "
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
+          - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE  1=1  LIMIT 1'

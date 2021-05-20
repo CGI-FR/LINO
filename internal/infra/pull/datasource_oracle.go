@@ -7,12 +7,11 @@ import (
 )
 
 // OracleDataSourceFactory exposes methods to create new Oracle pullers.
-type OracleDataSourceFactory struct { // logger pull.Logger
-}
+type OracleDataSourceFactory struct{}
 
 // NewOracleDataSourceFactory creates a new oracle datasource factory.
-func NewOracleDataSourceFactory( /*l pull.Logger*/ ) *OracleDataSourceFactory {
-	return &OracleDataSourceFactory{ /*l*/ }
+func NewOracleDataSourceFactory() *OracleDataSourceFactory {
+	return &OracleDataSourceFactory{}
 }
 
 // New return a Oracle puller

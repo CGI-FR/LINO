@@ -23,8 +23,7 @@ import (
 	"github.com/xo/dburl"
 )
 
-type SQLDataPingerFactory struct { // logger dataconnector.Logger
-}
+type SQLDataPingerFactory struct{}
 
 // NewSQLDataPinger creates a new SQL pinger.
 func NewSQLDataPingerFactory() *SQLDataPingerFactory {

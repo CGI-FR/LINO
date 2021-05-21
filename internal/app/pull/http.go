@@ -95,7 +95,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	datasource, err = getDataSource(datasourceName, w)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Err(err).Msg("")
 		w.WriteHeader(http.StatusNotFound)
 		_, ew := w.Write([]byte("{\"error\": \"" + err.Description + "\"}"))
 		if ew != nil {

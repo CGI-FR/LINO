@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/cgi-fr/lino/pkg/push"
+	"github.com/rs/zerolog/log"
 )
 
 type rowIterator struct {
@@ -80,35 +81,7 @@ type rowWriter struct {
 }
 
 func (rw *rowWriter) Write(row push.Row) *push.Error {
-	logger.Trace(fmt.Sprintf("append row %s to %s", row, rw.rows))
+	log.Trace().Msg(fmt.Sprintf("append row %s to %s", row, rw.rows))
 	rw.rows = append(rw.rows, row)
 	return nil
-}
-
-// Logger implementation.
-type Logger struct{}
-
-// Trace event.
-func (l Logger) Trace(msg string) {
-	fmt.Printf("[trace] %v\n", msg)
-}
-
-// Debug event.
-func (l Logger) Debug(msg string) {
-	fmt.Printf("[debug] %v\n", msg)
-}
-
-// Info event.
-func (l Logger) Info(msg string) {
-	fmt.Printf("[info]  %v\n", msg)
-}
-
-// Warn event.
-func (l Logger) Warn(msg string) {
-	fmt.Printf("[warn]  %v\n", msg)
-}
-
-// Error event.
-func (l Logger) Error(msg string) {
-	fmt.Printf("[error] %v\n", msg)
 }

@@ -24,12 +24,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var logger = Logger{}
-
-func init() {
-	push.SetLogger(logger)
-}
-
 func makeTable(name string) push.Table {
 	return push.NewTable(name, []string{})
 }
@@ -84,7 +78,8 @@ func TestRelationPush(t *testing.T) {
 			"B->C": map[string]interface{}{
 				"sex": "M",
 			},
-		}}}
+		},
+	}}
 
 	tables := map[string]*rowWriter{
 		A.Name(): &rowWriter{},
@@ -183,7 +178,8 @@ func TestInversseRelationPush(t *testing.T) {
 				map[string]interface{}{"history": "2"},
 				map[string]interface{}{"history": "3"},
 			},
-		}}}
+		},
+	}}
 
 	tables := map[string]*rowWriter{
 		A.Name(): &rowWriter{},

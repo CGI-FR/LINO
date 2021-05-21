@@ -24,6 +24,7 @@ import (
 
 	"github.com/cgi-fr/lino/pkg/pull"
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -47,11 +48,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		for _, f := range strings.Split(query.Get("filter"), ",") {
 			kv := strings.SplitN(f, ":", 2)
 			if len(kv) != 2 {
-				logger.Error("can't parse filter\n")
+				log.Error().Msg("can't parse filter")
 				w.WriteHeader(http.StatusBadRequest)
 				_, ew := w.Write([]byte("{\"error\": \"param filter must be a string map (key1:value1,key2:value2)\"}\n"))
 				if ew != nil {
-					logger.Error("Write failed\n")
+					log.Error().Msg("Write failed")
 					return
 				}
 				return
@@ -63,11 +64,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	if query.Get("limit") != "" {
 		limit64, elimit := strconv.ParseUint(query.Get("limit"), 10, 64)
 		if elimit != nil {
-			logger.Error("can't parse limie\n")
+			log.Error().Msg("can't parse limit")
 			w.WriteHeader(http.StatusBadRequest)
 			_, ew := w.Write([]byte("{\"error\" : \"param limit must be an positive integer\"}\n"))
 			if ew != nil {
-				logger.Error("Write failed\n")
+				log.Error().Msg("Write failed")
 				return
 			}
 			return
@@ -82,11 +83,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if datasourceName, ok = pathParams["dataSource"]; !ok {
-		logger.Error("param datasource is required\n")
+		log.Error().Msg("param datasource is required")
 		w.WriteHeader(http.StatusBadRequest)
 		_, ew := w.Write([]byte("{\"error\": \"param datasource is required\"}"))
 		if ew != nil {
-			logger.Error("Write failed\n")
+			log.Error().Err(ew).Msg("Write failed")
 			return
 		}
 		return
@@ -94,11 +95,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	datasource, err = getDataSource(datasourceName, w)
 	if err != nil {
-		logger.Error(err.Error())
+		log.Error().Err(err).Msg("")
 		w.WriteHeader(http.StatusNotFound)
 		_, ew := w.Write([]byte("{\"error\": \"" + err.Description + "\"}"))
 		if ew != nil {
-			logger.Error("Write failed\n")
+			log.Error().Err(ew).Msg("Write failed")
 			return
 		}
 		return
@@ -106,11 +107,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	plan, e2 := getPullerPlan(filter, limit, where, idStorageFactory(query.Get("table")))
 	if e2 != nil {
-		logger.Error(e2.Error())
+		log.Error().Err(e2).Msg("")
 		w.WriteHeader(http.StatusInternalServerError)
 		_, ew := w.Write([]byte("{\"error\": \"" + e2.Description + "}"))
 		if ew != nil {
-			logger.Error("Write failed\n")
+			log.Error().Err(ew).Msg("Write failed")
 			return
 		}
 		return
@@ -120,11 +121,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	e3 := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, pullExporter, pull.NoTraceListener{})
 	if e3 != nil {
-		logger.Error(e3.Error())
+		log.Error().Err(e3).Msg("")
 		w.WriteHeader(http.StatusInternalServerError)
 		_, ew := w.Write([]byte(e3.Description))
 		if ew != nil {
-			logger.Error("Write failed\n")
+			log.Error().Err(ew).Msg("Write failed")
 			return
 		}
 		return

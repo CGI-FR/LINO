@@ -27,13 +27,11 @@ import (
 )
 
 // PostgresDataSourceFactory exposes methods to create new Postgres pullers.
-type PostgresDataSourceFactory struct {
-	logger pull.Logger
-}
+type PostgresDataSourceFactory struct{}
 
 // NewPostgresDataSourceFactory creates a new postgres datasource factory.
-func NewPostgresDataSourceFactory(l pull.Logger) *PostgresDataSourceFactory {
-	return &PostgresDataSourceFactory{l}
+func NewPostgresDataSourceFactory() *PostgresDataSourceFactory {
+	return &PostgresDataSourceFactory{}
 }
 
 // New return a Postgres puller
@@ -42,7 +40,6 @@ func (e *PostgresDataSourceFactory) New(url string, schema string) pull.DataSour
 		url:     url,
 		schema:  schema,
 		dialect: PostgresDialect{},
-		logger:  e.logger,
 	}
 }
 

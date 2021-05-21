@@ -24,6 +24,7 @@ import (
 
 	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 	"github.com/xo/dburl"
 )
 
@@ -31,7 +32,6 @@ import (
 type SQLDataDestination struct {
 	url                string
 	schema             string
-	logger             push.Logger
 	db                 *sqlx.DB
 	tx                 *sql.Tx
 	rowWriter          map[string]*SQLRowWriter
@@ -41,11 +41,10 @@ type SQLDataDestination struct {
 }
 
 // NewSQLDataDestination creates a new SQL datadestination.
-func NewSQLDataDestination(url string, schema string, dialect SQLDialect, logger push.Logger) *SQLDataDestination {
+func NewSQLDataDestination(url string, schema string, dialect SQLDialect) *SQLDataDestination {
 	return &SQLDataDestination{
 		url:       url,
 		schema:    schema,
-		logger:    logger,
 		rowWriter: map[string]*SQLRowWriter{},
 		dialect:   dialect,
 	}
@@ -61,11 +60,10 @@ func (dd *SQLDataDestination) Close() *push.Error {
 	}
 
 	err := dd.tx.Commit()
-
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}
-	dd.logger.Debug("transaction committed")
+	log.Debug().Msg("transaction committed")
 
 	for _, rw := range dd.rowWriter {
 		err := rw.close()
@@ -92,11 +90,10 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 	}
 
 	err := dd.tx.Commit()
-
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}
-	dd.logger.Debug("transaction committed")
+	log.Debug().Msg("transaction committed")
 
 	for _, rw := range dd.rowWriter {
 		err := rw.commit()
@@ -106,7 +103,6 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 	}
 
 	tx, err := dd.db.Begin()
-
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}
@@ -195,7 +191,7 @@ func NewSQLRowWriter(table push.Table, dd *SQLDataDestination) *SQLRowWriter {
 
 // open table writer
 func (rw *SQLRowWriter) open() *push.Error {
-	rw.dd.logger.Debug(fmt.Sprintf("open table with mode %s", rw.dd.mode))
+	log.Debug().Msg(fmt.Sprintf("open table with mode %s", rw.dd.mode))
 	if rw.dd.mode == push.Truncate {
 		err := rw.truncate()
 		if err != nil {
@@ -221,7 +217,7 @@ func (rw *SQLRowWriter) commit() *push.Error {
 			return &push.Error{Description: err.Error()}
 		}
 		rw.statement = nil
-		rw.dd.logger.Debug(fmt.Sprintf("close statement %s", rw.dd.mode))
+		log.Debug().Msg(fmt.Sprintf("close statement %s", rw.dd.mode))
 	}
 	return nil
 }
@@ -277,7 +273,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 
 	var prepareStmt string
 	var pusherr *push.Error
-	rw.dd.logger.Debug(fmt.Sprintf("received mode %s", rw.dd.mode))
+	log.Debug().Msg(fmt.Sprintf("received mode %s", rw.dd.mode))
 	switch {
 	case rw.dd.mode == push.Delete:
 		/* #nosec */
@@ -295,12 +291,12 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 			return pusherr
 		}
 		rw.headers = names
-	default: //Insert:
+	default: // Insert:
 		/* #nosec */
 		prepareStmt = rw.dd.dialect.InsertStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey())
 		rw.headers = names
 	}
-	rw.dd.logger.Debug(prepareStmt)
+	log.Debug().Msg(prepareStmt)
 
 	stmt, err := rw.dd.tx.Prepare(prepareStmt)
 	if err != nil {
@@ -321,12 +317,12 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 	for _, h := range rw.headers {
 		values = append(values, rw.dd.dialect.ConvertValue(row[h]))
 	}
-	rw.dd.logger.Trace(fmt.Sprint(values))
+	log.Trace().Msg(fmt.Sprint(values))
 
 	_, err2 := rw.statement.Exec(values...)
 	if err2 != nil {
 		if rw.dd.dialect.IsDuplicateError(err2) {
-			rw.dd.logger.Trace(fmt.Sprintf("duplicate key %v (%s) for %s", row, rw.table.PrimaryKey(), rw.table.Name()))
+			log.Trace().Msg(fmt.Sprintf("duplicate key %v (%s) for %s", row, rw.table.PrimaryKey(), rw.table.Name()))
 		} else {
 			return &push.Error{Description: err2.Error()}
 		}
@@ -337,7 +333,7 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 
 func (rw *SQLRowWriter) truncate() *push.Error {
 	stm := rw.dd.dialect.TruncateStatement(rw.tableName())
-	rw.dd.logger.Debug(stm)
+	log.Debug().Msg(stm)
 	_, err := rw.dd.db.Exec(stm)
 	if err != nil {
 		return &push.Error{Description: err.Error()}
@@ -347,7 +343,7 @@ func (rw *SQLRowWriter) truncate() *push.Error {
 
 func (rw *SQLRowWriter) disableConstraints() *push.Error {
 	stm := rw.dd.dialect.DisableConstraintsStatement(rw.tableName())
-	rw.dd.logger.Debug(stm)
+	log.Debug().Msg(stm)
 	_, err := rw.dd.db.Exec(stm)
 	if err != nil {
 		return &push.Error{Description: err.Error()}
@@ -357,7 +353,7 @@ func (rw *SQLRowWriter) disableConstraints() *push.Error {
 
 func (rw *SQLRowWriter) enableConstraints() *push.Error {
 	stm := rw.dd.dialect.EnableConstraintsStatement(rw.tableName())
-	rw.dd.logger.Debug(stm)
+	log.Debug().Msg(stm)
 	_, err := rw.dd.db.Exec(stm)
 	if err != nil {
 		return &push.Error{Description: err.Error()}

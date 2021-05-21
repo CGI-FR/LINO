@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [1.2.0]
+
+- `Added` structured logs (debug & json format)
+
 ## [1.1.2]
 
 - `Fixed` extract composite primary keys for oracle

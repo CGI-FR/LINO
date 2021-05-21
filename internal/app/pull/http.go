@@ -83,7 +83,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if datasourceName, ok = pathParams["dataSource"]; !ok {
-		log.Error().Msg("param datasource is required\n")
+		log.Error().Msg("param datasource is required")
 		w.WriteHeader(http.StatusBadRequest)
 		_, ew := w.Write([]byte("{\"error\": \"param datasource is required\"}"))
 		if ew != nil {

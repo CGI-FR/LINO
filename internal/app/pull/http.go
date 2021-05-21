@@ -121,7 +121,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	e3 := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, pullExporter, pull.NoTraceListener{})
 	if e3 != nil {
-		log.Error().Msg(e3.Error())
+		log.Error().Err(e3).Msg("")
 		w.WriteHeader(http.StatusInternalServerError)
 		_, ew := w.Write([]byte(e3.Description))
 		if ew != nil {

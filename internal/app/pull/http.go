@@ -48,7 +48,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		for _, f := range strings.Split(query.Get("filter"), ",") {
 			kv := strings.SplitN(f, ":", 2)
 			if len(kv) != 2 {
-				log.Error().Msg("can't parse filter\n")
+				log.Error().Msg("can't parse filter")
 				w.WriteHeader(http.StatusBadRequest)
 				_, ew := w.Write([]byte("{\"error\": \"param filter must be a string map (key1:value1,key2:value2)\"}\n"))
 				if ew != nil {

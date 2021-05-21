@@ -258,7 +258,7 @@ func (c epToStepListConverter) getRelation(name string) (pull.Relation, error) {
 	relation, ok := c.rmap[name]
 	if !ok {
 		err := fmt.Errorf("missing relation '%s' in relations.yaml", name)
-		log.Error().Msg(err.Error())
+		log.Error().Err(err).Msg("")
 		return nil, err
 	}
 

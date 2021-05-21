@@ -131,7 +131,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 	}
 	_, ew := w.Write([]byte("{\"error\": \"\"}"))
 	if ew != nil {
-		log.Error().Msg("Write failed\n")
+		log.Error().Err(ew).Msg("Write failed")
 		return
 	}
 }

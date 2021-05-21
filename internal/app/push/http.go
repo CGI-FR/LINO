@@ -76,7 +76,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 
 	plan, e2 := getPlan(idStorageFactory(query.Get("table")))
 	if e2 != nil {
-		log.Error().Msg(e2.Error())
+		log.Error().Err(e2).Msg("")
 		w.WriteHeader(http.StatusNotFound)
 		_, ew := w.Write([]byte("{\"error\": \"" + e2.Description + "\"}"))
 		if ew != nil {

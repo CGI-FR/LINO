@@ -87,7 +87,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		_, ew := w.Write([]byte("{\"error\": \"param datasource is required\"}"))
 		if ew != nil {
-			log.Error().Msg("Write failed\n")
+			log.Error().Err(ew).Msg("Write failed")
 			return
 		}
 		return

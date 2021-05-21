@@ -64,7 +64,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	if query.Get("limit") != "" {
 		limit64, elimit := strconv.ParseUint(query.Get("limit"), 10, 64)
 		if elimit != nil {
-			log.Error().Msg("can't parse limie\n")
+			log.Error().Msg("can't parse limit")
 			w.WriteHeader(http.StatusBadRequest)
 			_, ew := w.Write([]byte("{\"error\" : \"param limit must be an positive integer\"}\n"))
 			if ew != nil {

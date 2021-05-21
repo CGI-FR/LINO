@@ -111,7 +111,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, ew := w.Write([]byte("{\"error\": \"" + e2.Description + "}"))
 		if ew != nil {
-			log.Error().Msg("Write failed\n")
+			log.Error().Err(ew).Msg("Write failed")
 			return
 		}
 		return

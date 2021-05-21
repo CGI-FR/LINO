@@ -52,7 +52,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusBadRequest)
 				_, ew := w.Write([]byte("{\"error\": \"param filter must be a string map (key1:value1,key2:value2)\"}\n"))
 				if ew != nil {
-					log.Error().Msg("Write failed\n")
+					log.Error().Msg("Write failed")
 					return
 				}
 				return

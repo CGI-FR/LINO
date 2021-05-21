@@ -105,7 +105,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 		var edisableConstraints error
 		disableConstraints, edisableConstraints = strconv.ParseBool(query.Get("disable-constraints"))
 		if edisableConstraints != nil {
-			log.Error().Msg("can't parse disable-constraints\n")
+			log.Error().Err(edisableConstraints).Msg("can't parse disable-constraints")
 			w.WriteHeader(http.StatusBadRequest)
 			_, ew := w.Write([]byte("{\"error\" : \"param disable-constraints must be a boolean\"}\n"))
 			if ew != nil {

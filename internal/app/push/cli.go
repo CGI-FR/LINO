@@ -228,7 +228,7 @@ func (c idToPushConverter) getRelation(name string) push.Relation {
 
 	relation, ok := c.rmap[name]
 	if !ok {
-		log.Error().Msg(fmt.Sprintf("missing relation %v in relations.yaml", name))
+		log.Error().Err(fmt.Errorf("missing relation %v in relations.yaml", name)).Msg("")
 		return push.NewRelation(name, nil, nil)
 	}
 

@@ -64,7 +64,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 
 	datadestination, err := getDataDestination(dcDestination)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Err(err).Msg("")
 		w.WriteHeader(http.StatusNotFound)
 		_, ew := w.Write([]byte("{\"error\": \"" + html.EscapeString(err.Description) + "\"}"))
 		if ew != nil {

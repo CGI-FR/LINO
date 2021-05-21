@@ -23,7 +23,7 @@ import "github.com/rs/zerolog/log"
 func Add(s Storage, m *DataConnector) *Error {
 	exist, err := Get(s, m.Name)
 	if err != nil {
-		log.Error().Msg(err.Description)
+		log.Error().Err(err).Msg("")
 		return err
 	}
 

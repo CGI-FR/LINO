@@ -89,7 +89,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 	if query.Get("commitsize") != "" {
 		commitsize64, ecommitsize := strconv.ParseUint(query.Get("commitsize"), 10, 64)
 		if ecommitsize != nil {
-			log.Error().Msg("can't parse commitsize\n")
+			log.Error().Err(ecommitsize).Msg("can't parse commitsize")
 			w.WriteHeader(http.StatusBadRequest)
 			_, ew := w.Write([]byte("{\"error\" : \"param commitsize must be an positive integer\"}\n"))
 			if ew != nil {

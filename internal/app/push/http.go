@@ -93,7 +93,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 			w.WriteHeader(http.StatusBadRequest)
 			_, ew := w.Write([]byte("{\"error\" : \"param commitsize must be an positive integer\"}\n"))
 			if ew != nil {
-				log.Error().Msg("Write failed\n")
+				log.Error().Err(ew).Msg("Write failed")
 				return
 			}
 			return

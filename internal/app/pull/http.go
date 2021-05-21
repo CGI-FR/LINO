@@ -99,7 +99,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		_, ew := w.Write([]byte("{\"error\": \"" + err.Description + "\"}"))
 		if ew != nil {
-			log.Error().Msg("Write failed\n")
+			log.Error().Err(ew).Msg("Write failed")
 			return
 		}
 		return

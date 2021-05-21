@@ -120,7 +120,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 
 	e3 := push.Push(rowIteratorFactory(r.Body), datadestination, plan, mode, commitSize, disableConstraints, push.NoErrorCaptureRowWriter{})
 	if e3 != nil {
-		log.Error().Msg(e3.Error())
+		log.Error().Err(e3).Msg("")
 		w.WriteHeader(http.StatusNotFound)
 		_, ew := w.Write([]byte("{\"error\": \"" + e3.Description + "\"}"))
 		if ew != nil {

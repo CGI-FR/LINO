@@ -52,7 +52,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 	)
 
 	if dcDestination, ok = pathParams["dataDestination"]; !ok {
-		log.Error().Msg("param dataDestination is required\n")
+		log.Error().Msg("param dataDestination is required")
 		w.WriteHeader(http.StatusBadRequest)
 		_, ew := w.Write([]byte("{\"error\": \"param dataDestination is required\"}"))
 		if ew != nil {

@@ -39,6 +39,7 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKERHUB_PASS: ${{ secrets.DOCKERHUB_PASS }}
         run: |
           docker-compose exec -e GITHUB_TOKEN=${GITHUB_TOKEN} -T -u vscode vscode bash -c 'echo "GITHUB_TOKEN: ${GITHUB_TOKEN}" > ~/.github.yml'
           docker-compose exec -T -u vscode vscode bash -c 'echo "DOCKERHUB_USER: cgibot" > ~/.dockerhub.yml'

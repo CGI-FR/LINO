@@ -17,3 +17,4 @@ tests/workspace/*
 !/.vscode/tasks.json
 /.history
 .vscode/
+dist/

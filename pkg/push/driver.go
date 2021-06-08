@@ -17,9 +17,11 @@
 
 package push
 
-import "fmt"
+import (
+	"fmt"
 
-var logger Logger = Nologger{}
+	"github.com/rs/zerolog/log"
+)
 
 // Push write rows to target table
 func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter) *Error {
@@ -40,11 +42,11 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			if err4 != nil {
 				return &Error{Description: fmt.Sprintf("%s (%s)", err2.Error(), err4.Error())}
 			}
-			logger.Info(fmt.Sprintf("Error catched : %s", err2.Error()))
+			log.Info().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
 		}
 		i++
 		if i%commitSize == 0 {
-			logger.Info("Intermediate commit")
+			log.Info().Msg("Intermediate commit")
 			errCommit := destination.Commit()
 			if errCommit != nil {
 				return errCommit
@@ -56,7 +58,7 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 		return ri.Error()
 	}
 
-	logger.Info("End of stream")
+	log.Info().Msg("End of stream")
 	return nil
 }
 
@@ -92,12 +94,12 @@ func FilterRelation(row Row, relations map[string]Relation) (Row, map[string]Row
 				fInverseRel[rel.Name()] = sa
 
 			case nil:
-				logger.Debug(fmt.Sprintf("null relation for key %s", name))
+				log.Debug().Msg(fmt.Sprintf("null relation for key %s", name))
 
 			default:
-				logger.Error(fmt.Sprintf("key = %s", name))
-				logger.Error(fmt.Sprintf("type = %T", val))
-				logger.Error(fmt.Sprintf("val = %s", val))
+				log.Error().Msg(fmt.Sprintf("key = %s", name))
+				log.Error().Msg(fmt.Sprintf("type = %T", val))
+				log.Error().Msg(fmt.Sprintf("val = %s", val))
 
 				return frow, frel, fInverseRel, &Error{Description: fmt.Sprintf("%v is not a array", val)}
 			}
@@ -178,9 +180,4 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode) *Er
 	}
 
 	return nil
-}
-
-// SetLogger if needed, default no logger
-func SetLogger(l Logger) {
-	logger = l
 }

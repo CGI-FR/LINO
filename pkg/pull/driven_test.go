@@ -106,31 +106,3 @@ func (re *MemoryRowExporter) Export(r pull.Row) *pull.Error {
 	fmt.Println("Exported:", r)
 	return nil
 }
-
-// Logger implementation.
-type Logger struct{}
-
-// Trace event.
-func (l Logger) Trace(msg string) {
-	fmt.Printf("[trace] %v\n", msg)
-}
-
-// Debug event.
-func (l Logger) Debug(msg string) {
-	fmt.Printf("[debug] %v\n", msg)
-}
-
-// Info event.
-func (l Logger) Info(msg string) {
-	fmt.Printf("[info]  %v\n", msg)
-}
-
-// Warn event.
-func (l Logger) Warn(msg string) {
-	fmt.Printf("[warn]  %v\n", msg)
-}
-
-// Error event.
-func (l Logger) Error(msg string) {
-	fmt.Printf("[error] %v\n", msg)
-}

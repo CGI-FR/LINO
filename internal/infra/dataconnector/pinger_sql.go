@@ -23,28 +23,23 @@ import (
 	"github.com/xo/dburl"
 )
 
-type SQLDataPingerFactory struct {
-	logger dataconnector.Logger
-}
+type SQLDataPingerFactory struct{}
 
 // NewSQLDataPinger creates a new SQL pinger.
-func NewSQLDataPingerFactory(logger dataconnector.Logger) *SQLDataPingerFactory {
-	return &SQLDataPingerFactory{
-		logger: logger,
-	}
+func NewSQLDataPingerFactory() *SQLDataPingerFactory {
+	return &SQLDataPingerFactory{}
 }
 
 func (pdpf SQLDataPingerFactory) New(url string) dataconnector.DataPinger {
-	return NewSQLDataPinger(url, pdpf.logger)
+	return NewSQLDataPinger(url)
 }
 
-func NewSQLDataPinger(url string, logger dataconnector.Logger) SQLDataPinger {
-	return SQLDataPinger{url, logger}
+func NewSQLDataPinger(url string) SQLDataPinger {
+	return SQLDataPinger{url}
 }
 
 type SQLDataPinger struct {
-	url    string
-	logger dataconnector.Logger
+	url string
 }
 
 func (pdp SQLDataPinger) Ping() *dataconnector.Error {

@@ -25,14 +25,15 @@ import (
 	"github.com/cgi-fr/lino/pkg/pull"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/xo/dburl"
 )
 
-// DataSource to read in the pull process.
+// SQLDataSource to read in the pull process.
 type SQLDataSource struct {
 	url     string
 	schema  string
-	logger  pull.Logger
 	dbx     *sqlx.DB
 	db      *sql.DB
 	dialect SQLDialect
@@ -110,12 +111,12 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 		fmt.Fprint(sql, ds.dialect.Limit(filter.Limit()))
 	}
 
-	if ds.logger != nil {
+	if log.Logger.GetLevel() <= zerolog.DebugLevel {
 		printSQL := sql.String()
 		for i, v := range values {
 			printSQL = strings.ReplaceAll(printSQL, ds.dialect.Placeholder(i+1), fmt.Sprintf("%v", v))
 		}
-		ds.logger.Debug(fmt.Sprint(printSQL))
+		log.Debug().Msg(fmt.Sprint(printSQL))
 	}
 
 	rows, err := ds.dbx.Queryx(sql.String(), values...)

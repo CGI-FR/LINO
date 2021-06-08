@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 
+	over "github.com/Trendyol/overlog"
 	"github.com/cgi-fr/lino/internal/app/dataconnector"
 	"github.com/cgi-fr/lino/internal/app/http"
 	"github.com/cgi-fr/lino/internal/app/id"
@@ -28,6 +29,8 @@ import (
 	"github.com/cgi-fr/lino/internal/app/push"
 	"github.com/cgi-fr/lino/internal/app/relation"
 	"github.com/cgi-fr/lino/internal/app/table"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -39,10 +42,10 @@ var (
 	buildDate string
 	builtBy   string
 
-	logger Logger
-
 	// global flags
 	loglevel string
+	jsonlog  bool
+	debug    bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -86,6 +89,8 @@ func init() {
 
 	// global flags
 	rootCmd.PersistentFlags().StringVarP(&loglevel, "verbosity", "v", "none", "set level of log verbosity : none (0), error (1), warn (2), info (3), debug (4), trace (5)")
+	rootCmd.PersistentFlags().BoolVar(&jsonlog, "log-json", false, "output logs in JSON format")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "add debug information to logs (very slow)")
 	rootCmd.AddCommand(dataconnector.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(table.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(relation.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
@@ -96,30 +101,36 @@ func init() {
 }
 
 func initConfig() {
-	switch loglevel {
-	case "trace", "5":
-		logger = NewLogger(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
-		logger.Trace("Logger level set to trace")
-	case "debug", "4":
-		logger = NewLogger(nil, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
-		logger.Debug("Logger level set to debug")
-	case "info", "3":
-		logger = NewLogger(nil, nil, os.Stderr, os.Stderr, os.Stderr)
-		logger.Info("Logger level set to info")
-	case "warn", "2":
-		logger = NewLogger(nil, nil, nil, os.Stderr, os.Stderr)
-		logger.Warn("Logger level set to warn")
-	case "error", "1":
-		logger = NewLogger(nil, nil, nil, nil, os.Stderr)
-		logger.Error("Logger level set to error")
-	default:
-		logger = NewLogger(nil, nil, nil, nil, nil)
+	var logger zerolog.Logger
+
+	if jsonlog {
+		logger = zerolog.New(os.Stderr)
+	} else {
+		logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+	if debug {
+		logger = logger.With().Caller().Logger()
 	}
 
-	dataconnector.SetLogger(logger)
-	id.SetLogger(logger)
-	pull.SetLogger(logger)
-	push.SetLogger(logger)
+	over.New(logger)
+
+	switch loglevel {
+	case "trace", "5":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+		log.Info().Msg("Logger level set to trace")
+	case "debug", "4":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		log.Info().Msg("Logger level set to debug")
+	case "info", "3":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		log.Info().Msg("Logger level set to info")
+	case "warn", "2":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "error", "1":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.Disabled)
+	}
 
 	dataconnector.Inject(dataconnectorStorage(), dataPingerFactory())
 	relation.Inject(dataconnectorStorage(), relationStorage(), relationExtractorFactory())

@@ -26,18 +26,16 @@ import (
 )
 
 // PostgresDataDestinationFactory exposes methods to create new Postgres pullers.
-type PostgresDataDestinationFactory struct {
-	logger push.Logger
-}
+type PostgresDataDestinationFactory struct{}
 
 // NewPostgresDataDestinationFactory creates a new postgres datadestination factory.
-func NewPostgresDataDestinationFactory(l push.Logger) *PostgresDataDestinationFactory {
-	return &PostgresDataDestinationFactory{l}
+func NewPostgresDataDestinationFactory() *PostgresDataDestinationFactory {
+	return &PostgresDataDestinationFactory{}
 }
 
 // New return a Postgres pusher
 func (e *PostgresDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, PostgresDialect{}, e.logger)
+	return NewSQLDataDestination(url, schema, PostgresDialect{})
 }
 
 // PostgresDialect inject postgres variations

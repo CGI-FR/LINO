@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/cgi-fr/lino/internal/app/urlbuilder"
@@ -32,21 +33,15 @@ import (
 	"github.com/cgi-fr/lino/pkg/table"
 )
 
-var dataconnectorStorage dataconnector.Storage
-var relStorage relation.Storage
-var tabStorage table.Storage
-var idStorageFactory func(string) id.Storage
-var datadestinationFactories map[string]push.DataDestinationFactory
-var rowIteratorFactory func(io.ReadCloser) push.RowIterator
-var rowExporterFactory func(io.Writer) push.RowWriter
-
-var logger push.Logger = push.Nologger{}
-
-// SetLogger if needed, default no logger
-func SetLogger(l push.Logger) {
-	logger = l
-	push.SetLogger(l)
-}
+var (
+	dataconnectorStorage     dataconnector.Storage
+	relStorage               relation.Storage
+	tabStorage               table.Storage
+	idStorageFactory         func(string) id.Storage
+	datadestinationFactories map[string]push.DataDestinationFactory
+	rowIteratorFactory       func(io.ReadCloser) push.RowIterator
+	rowExporterFactory       func(io.Writer) push.RowWriter
+)
 
 // Inject dependencies
 func Inject(
@@ -95,8 +90,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			return fmt.Errorf("accepts 1 or 2 args, received %d", len(args))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			var dcDestination = args[0]
-			var mode, _ = push.ParseMode("insert")
+			dcDestination := args[0]
+			mode, _ := push.ParseMode("insert")
 
 			if len(args) == 2 {
 				dcDestination = args[1]
@@ -114,7 +109,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(2)
 			}
-			logger.Debug(fmt.Sprintf("call Push with mode %s", mode))
+			log.Debug().Msg(fmt.Sprintf("call Push with mode %s", mode))
 
 			if catchErrors != "" {
 				errorFile, e4 := os.Create(catchErrors)
@@ -217,11 +212,11 @@ func (c idToPushConverter) getTable(name string) push.Table {
 
 	table, ok := c.tmap[name]
 	if !ok {
-		logger.Warn(fmt.Sprintf("missing table %v in tables.yaml", name))
+		log.Warn().Msg(fmt.Sprintf("missing table %v in tables.yaml", name))
 		return push.NewTable(name, []string{})
 	}
 
-	logger.Trace(fmt.Sprintf("building table %v", table))
+	log.Trace().Msg(fmt.Sprintf("building table %v", table))
 
 	return push.NewTable(table.Name, table.Keys)
 }
@@ -233,11 +228,11 @@ func (c idToPushConverter) getRelation(name string) push.Relation {
 
 	relation, ok := c.rmap[name]
 	if !ok {
-		logger.Error(fmt.Sprintf("missing relation %v in relations.yaml", name))
+		log.Error().Err(fmt.Errorf("missing relation %v in relations.yaml", name)).Msg("")
 		return push.NewRelation(name, nil, nil)
 	}
 
-	logger.Trace(fmt.Sprintf("building relation %v", relation))
+	log.Trace().Msg(fmt.Sprintf("building relation %v", relation))
 
 	return push.NewRelation(
 		relation.Name,

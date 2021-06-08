@@ -135,7 +135,7 @@ targets:
           - $: "echo -n ={BY}"
             1=: "by"
             3x: true
-      - $: 'if expr match "={version}" "\d\+\.\d\+\.\d\+" 1>/dev/null 2>&1; then echo -n "yes"; else echo -n "no"; fi'
+      - $: 'if expr match "={version}" "v\?[0-9]\+\.[0-9]\+\.[0-9]\+" 1>/dev/null 2>&1; then echo -n "yes"; else echo -n "no"; fi'
         1=: "is_release"
         3x: true
       - $: "cut -f1 -d."
@@ -185,9 +185,8 @@ targets:
   promote:
     doc: "Promote the project with a new tag based on git log history"
     steps:
-      - try:
-          - $: "# ={tag}"
-        catch:
+      - if: tag==""
+        then:
           - $: svu next || echo -n v0.1.0
             3x: true
             1=: tag
@@ -278,20 +277,19 @@ targets:
     doc: "Publish tagged binaries to Github"
     depends: ["info", "refresh", "lint", "test", "release", "test-int"]
     steps:
-      - if: len(buildpaths) == 0
-        then:
-          - buildpaths = appendpath("cmd", find("cmd", "*"))
-      - ldflags = ldflags + " -s -w" # Omit the DWARF symbol table. Omit the symbol table and debug information.
-      - ldflags = ldflags + " -X main.version=" + tag + " -X main.commit=" + commit + " -X main.buildDate=" + date + " -X main.builtBy=" + by
-      - $: (export LDFLAGS="={ldflags}"; export BUILDPATHS="={buildpaths}"; cat .goreleaser.template.yml | gomplate)
-        1>: ={BUILD_DIR}/.goreleaser.yml
-        1x: true
-      - $: git reset --hard
       - if: snapshot
         then:
-          - $: goreleaser release -f ={BUILD_DIR}/.goreleaser.yml --rm-dist --snapshot
+          - $: |
+              export GITHUB_TOKEN=={GITHUB_TOKEN}
+              export BUILD_DATE=={date}
+              export VERSION=={tag}
+              goreleaser release --rm-dist --snapshot
         else:
-          - $: (export GITHUB_TOKEN=={GITHUB_TOKEN}; goreleaser release -f ={BUILD_DIR}/.goreleaser.yml --rm-dist)
+          - $: |
+              export GITHUB_TOKEN=={GITHUB_TOKEN}
+              export BUILD_DATE=={date}
+              export VERSION=={tag}
+              goreleaser release --rm-dist
       - $: go mod tidy
 
   # run "neon -props '{dockerfiles: {"path/to/Dockerfile1": "path/to/root/build/context"}}' docker" to build specific Dockerfiles
@@ -307,6 +305,13 @@ targets:
           - print: |
               To use this target, make sure your DOCKERHUB_ORGANIZATION is set.
           - $: return 1
+      - $: "date -u +'%Y-%m-%dT%H:%M:%SZ'"
+        1=: "daterfc3339"
+        3x: true
+      - |
+        build_args  = " --build-arg BUILD_DATE=" + daterfc3339
+        build_args += " --build-arg VERSION=" + version
+        build_args += " --build-arg REVISION=" + commit
       - for: key
         in: keys(dockerfiles)
         do:

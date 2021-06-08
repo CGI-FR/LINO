@@ -17,14 +17,11 @@
 
 package id
 
-import "fmt"
+import (
+	"fmt"
 
-var logger Logger = Nologger{}
-
-// SetLogger if needed, default no logger
-func SetLogger(l Logger) {
-	logger = l
-}
+	"github.com/rs/zerolog/log"
+)
 
 // Create and store ingress descriptor for the given start table and relation set.
 func Create(startTable string, relReader RelationReader, storage Storage) *Error {
@@ -79,7 +76,6 @@ func Create(startTable string, relReader RelationReader, storage Storage) *Error
 // SetStartTable update ingress descriptor start table
 func SetStartTable(table Table, storage Storage) *Error {
 	id, err := storage.Read()
-
 	if err != nil {
 		return err
 	}
@@ -105,7 +101,6 @@ func SetStartTable(table Table, storage Storage) *Error {
 // SetChildLookup update child lookup relation's parameter in ingress descriptor
 func SetChildLookup(relation string, flag bool, storage Storage) *Error {
 	id, err := storage.Read()
-
 	if err != nil {
 		return err
 	}
@@ -136,7 +131,6 @@ func SetChildLookup(relation string, flag bool, storage Storage) *Error {
 // SetParentLookup update parent lookup relation's parameter in ingress descriptor
 func SetParentLookup(relation string, flag bool, storage Storage) *Error {
 	id, err := storage.Read()
-
 	if err != nil {
 		return err
 	}
@@ -178,12 +172,12 @@ func GetPullerPlan(storage Storage) (PullerPlan, *Error) {
 	components := g.condense()
 	for i, component := range components {
 		cycles := g.subGraph(component).relCycles(id.StartTable())
-		logger.Debug(fmt.Sprintf("component %v - %v - %v", i, component, cycles))
+		log.Debug().Msg(fmt.Sprintf("component %v - %v - %v", i, component, cycles))
 		if component.Contains(id.StartTable().Name()) {
 			startComponent = component
 		}
 	}
-	logger.Debug("")
+	log.Debug().Msg("")
 
 	startRelationsList := NewIngressRelationList([]IngressRelation{})
 	startTableList := NewTableList([]Table{id.StartTable()})
@@ -197,18 +191,18 @@ func GetPullerPlan(storage Storage) (PullerPlan, *Error) {
 	steps := []Step{
 		NewStep(1, id.StartTable(), NewIngressRelation(NewRelation("", nil, nil), false, false), startRelationsList, startTableList, startCycles, 0),
 	}
-	logger.Debug(fmt.Sprintf("%v", steps[0]))
+	log.Debug().Msg(fmt.Sprintf("%v", steps[0]))
 
 	err = g.visitComponents(id.StartTable().Name(), func(r IngressRelation, comingFrom, goingTo Table, fromComponent, toComponent TableList, fromIndex, toIndex int, thisStepNumber, fromStepNumber uint) bool {
 		subgraph := g.subGraph(toComponent)
 		step := NewStep(thisStepNumber+1, goingTo, r, subgraph.relations, toComponent, subgraph.relCycles(goingTo), fromStepNumber+1)
-		logger.Debug(fmt.Sprintf("%v", step))
+		log.Debug().Msg(fmt.Sprintf("%v", step))
 		steps = append(steps, step)
 		return true
 	})
 
 	if err != nil {
-		logger.Warn(err.Error())
+		log.Warn().Msg(err.Error())
 	}
 
 	return NewPullerPlan(steps, g.relations, g.tables), nil

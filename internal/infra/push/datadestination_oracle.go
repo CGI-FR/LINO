@@ -12,18 +12,16 @@ import (
 )
 
 // OracleDataDestinationFactory exposes methods to create new Oracle extractors.
-type OracleDataDestinationFactory struct {
-	logger push.Logger
-}
+type OracleDataDestinationFactory struct{}
 
 // NewOracleDataDestinationFactory creates a new Oracle datadestination factory.
-func NewOracleDataDestinationFactory(l push.Logger) *OracleDataDestinationFactory {
-	return &OracleDataDestinationFactory{l}
+func NewOracleDataDestinationFactory() *OracleDataDestinationFactory {
+	return &OracleDataDestinationFactory{}
 }
 
 // New return a Oracle pusher
 func (e *OracleDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, OracleDialect{}, e.logger)
+	return NewSQLDataDestination(url, schema, OracleDialect{})
 }
 
 // OracleDialect inject oracle variations

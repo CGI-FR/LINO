@@ -82,6 +82,30 @@ relations:
 
 At least user can edit the `relations.yml` manually to add relations that are not part of the database model.
 
+## Extract Tables
+
+The `table` action extract informations about tables.
+
+```
+$ lino table extract source
+lino finds 15 table(s)
+```
+
+`lino` store the table description in `table.yml` file :
+
+```yaml
+version: v1
+tables:
+  - name: public.actor
+    keys:
+      - actor_id
+  - name: public.address
+    keys:
+      - address_id
+  - name: public.category
+    keys:
+```
+
 ## Ingress descriptor
 
 Ingress descriptor object describe how `lino` has to go through the relations to extract data test.
@@ -136,30 +160,6 @@ $ lino id customer show-graph
 `lino` open your browser to visualize graph generated.
 
 ![Test Image 1](doc/img/lino-graph-export.svg)
-
-## Table
-
-The `table` action extract informations about tables.
-
-```
-$ lino table extract source
-lino finds 15 table(s)
-```
-
-`lino` store the table description in `table.yml` file :
-
-```yaml
-version: v1
-tables:
-  - name: public.actor
-    keys:
-      - actor_id
-  - name: public.address
-    keys:
-      - address_id
-  - name: public.category
-    keys:
-```
 
 ## Pull
 

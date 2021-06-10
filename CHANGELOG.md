@@ -14,9 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
-## [X.X.X]
+## [1.3.0]
 
-- `Fixed` Convert JSON date to Oracle date format as a workaround for godror
+- `Fixed` convert JSON date to Oracle date format as a workaround for godror
+- `Added` update Pimo to v1.6.1
 
 ## [1.2.1]
 

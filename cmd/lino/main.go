@@ -20,6 +20,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
+	"strings"
 
 	over "github.com/Trendyol/overlog"
 	"github.com/cgi-fr/lino/internal/app/dataconnector"
@@ -29,6 +31,7 @@ import (
 	"github.com/cgi-fr/lino/internal/app/push"
 	"github.com/cgi-fr/lino/internal/app/relation"
 	"github.com/cgi-fr/lino/internal/app/table"
+	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -43,9 +46,10 @@ var (
 	builtBy   string
 
 	// global flags
-	loglevel string
-	jsonlog  bool
-	debug    bool
+	loglevel  string
+	jsonlog   bool
+	debug     bool
+	colormode string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -91,6 +95,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&loglevel, "verbosity", "v", "none", "set level of log verbosity : none (0), error (1), warn (2), info (3), debug (4), trace (5)")
 	rootCmd.PersistentFlags().BoolVar(&jsonlog, "log-json", false, "output logs in JSON format")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "add debug information to logs (very slow)")
+	rootCmd.PersistentFlags().StringVar(&colormode, "color", "auto", "use colors in log outputs : yes, no or auto")
 	rootCmd.AddCommand(dataconnector.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(table.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(relation.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
@@ -101,12 +106,22 @@ func init() {
 }
 
 func initConfig() {
+	color := false
+	switch strings.ToLower(colormode) {
+	case "auto":
+		if isatty.IsTerminal(os.Stdout.Fd()) && runtime.GOOS != "windows" {
+			color = true
+		}
+	case "yes", "true", "1", "on", "enable":
+		color = true
+	}
+
 	var logger zerolog.Logger
 
 	if jsonlog {
 		logger = zerolog.New(os.Stderr)
 	} else {
-		logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: !color})
 	}
 	if debug {
 		logger = logger.With().Caller().Logger()

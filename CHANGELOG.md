@@ -14,6 +14,11 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+
+## [1.2.1]
+
+- `Fixed` Remove ENTRYPOINT and change CMD in oracle docker image
+
 ## [1.2.0]
 
 - `Added` structured logs (debug & json format)

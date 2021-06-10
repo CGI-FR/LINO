@@ -33,8 +33,7 @@ COPY --from=pimo /usr/bin/pimo /usr/bin/pimo
 
 WORKDIR /home/lino
 
-ENTRYPOINT [ "/usr/bin/bash" ]
-
+CMD ["bash"]
 
 ARG BUILD_DATE
 ARG VERSION

@@ -170,6 +170,6 @@ func (d OracleDialect) ConvertValue(from push.Value) push.Value {
 	if err != nil {
 		return from
 	} else {
-		return aTime
+		return aTime.Format("2-Jan-06 3:04:05.000000 PM")
 	}
 }

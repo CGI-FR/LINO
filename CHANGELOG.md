@@ -17,6 +17,7 @@ Types of changes
 ## [1.3.0]
 
 - `Fixed` convert JSON date to Oracle date format as a workaround for godror
+- `Added` flag to enable or disable coloring in output logs (--color [yes|no|auto])
 - `Added` update Pimo to v1.6.1
 
 ## [1.2.1]

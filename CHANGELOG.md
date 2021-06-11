@@ -14,9 +14,11 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
-## [X.X.X]
+## [1.3.0]
 
-- `Added` Update Pimo to v1.6.1
+- `Added` flag to enable or disable coloring in output logs (--color [yes|no|auto])
+- `Added` update Pimo to v1.6.1
+
 ## [1.2.1]
 
 - `Fixed` Remove ENTRYPOINT and change CMD in oracle docker image

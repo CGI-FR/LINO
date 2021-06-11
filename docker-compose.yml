@@ -33,7 +33,6 @@ services:
     environment:
       - TZ=Europe/Paris
       - CGO_ENABLED=1
-      - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
     cap_add:
       - SYS_PTRACE
     security_opt:

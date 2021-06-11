@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [1.3.1]
+
+ - `Fixed` Revert convert JSON date to Oracle date format as a workaround for godror
+
 ## [1.3.0]
 
 - `Added` flag to enable or disable coloring in output logs (--color [yes|no|auto])

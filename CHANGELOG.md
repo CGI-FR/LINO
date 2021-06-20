@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [1.4.0]
+
+- `Added` `--parallel <int>` or `-p <int>` options to execute pull from filters file with many workers.
+
 ## [1.3.1]
 
  - `Fixed` Revert convert JSON date to Oracle date format as a workaround for godror

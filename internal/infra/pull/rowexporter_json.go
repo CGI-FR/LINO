@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/cgi-fr/lino/pkg/pull"
 )
@@ -28,11 +29,12 @@ import (
 // JSONRowExporter export rows to JSON format.
 type JSONRowExporter struct {
 	file io.Writer
+	sync.Mutex
 }
 
 // NewJSONRowExporter creates a new JSONRowExporter.
 func NewJSONRowExporter(file io.Writer) *JSONRowExporter {
-	return &JSONRowExporter{file}
+	return &JSONRowExporter{file, sync.Mutex{}}
 }
 
 // Export rows in JSON format.
@@ -41,6 +43,8 @@ func (re *JSONRowExporter) Export(r pull.Row) *pull.Error {
 	if err != nil {
 		return &pull.Error{Description: err.Error()}
 	}
+	re.Lock()
+	defer re.Unlock()
 	fmt.Fprintln(re.file, string(jsonString))
 	return nil
 }

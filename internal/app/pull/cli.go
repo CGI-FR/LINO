@@ -75,6 +75,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var initialFilters map[string]string
 	var diagnostic bool
 	var filters pull.RowReader
+	var workers int
 
 	cmd := &cobra.Command{
 		Use:     "pull [DB Alias Name]",
@@ -116,19 +117,21 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				}
 				filters = rowReaderFactory(filterReader)
 			}
-			e3 := pull.Pull(plan, filters, datasource, pullExporterFactory(out), tracer)
+			e3 := pull.Pull(plan, filters, datasource, pullExporterFactory(out), tracer, workers)
 			if e3 != nil {
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
 			}
 		},
 	}
+
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")
 	cmd.Flags().StringToStringVarP(&initialFilters, "filter", "f", map[string]string{}, "filter of start table")
 	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
 	cmd.Flags().StringVarP(&filefilter, "filter-from-file", "F", "", "Use file to filter start table")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "pull content of table without relations instead of ingress descriptor definition")
 	cmd.Flags().StringVarP(&where, "where", "w", "", "Advanced SQL where clause to filter")
+	cmd.Flags().IntVarP(&workers, "parallel", "p", 1, "Number of workers to execute pull in parallel")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

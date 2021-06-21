@@ -100,7 +100,7 @@ func TestPull1(t *testing.T) {
 	}
 	datasource := &MemoryDataSource{source}
 
-	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{})
+	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{}, 1)
 
 	assert.Nil(t, err)
 	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
@@ -153,7 +153,7 @@ func TestPull2(t *testing.T) {
 	}
 	datasource := &MemoryDataSource{source}
 
-	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{})
+	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{}, 1)
 
 	assert.Nil(t, err)
 	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
@@ -219,7 +219,7 @@ func TestPull3(t *testing.T) {
 	}
 	datasource := &MemoryDataSource{source}
 
-	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{})
+	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{}, 1)
 
 	assert.Nil(t, err)
 	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
@@ -272,7 +272,7 @@ func TestPull4(t *testing.T) {
 	}
 	datasource := &MemoryDataSource{source}
 
-	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{})
+	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{}, 1)
 
 	/* Expected result
 	map[

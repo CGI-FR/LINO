@@ -118,7 +118,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 
 	log.Debug().Msg(fmt.Sprintf("call Push with mode %s", mode))
 
-	e3 := push.Push(rowIteratorFactory(r.Body), datadestination, plan, mode, commitSize, disableConstraints, push.NoErrorCaptureRowWriter{})
+	e3 := push.Push(rowIteratorFactory(r.Body), datadestination, plan, mode, commitSize, disableConstraints, push.NoErrorCaptureRowWriter{}, 1)
 	if e3 != nil {
 		log.Error().Err(e3).Msg("")
 		w.WriteHeader(http.StatusNotFound)

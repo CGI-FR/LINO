@@ -19,6 +19,7 @@ package push_test
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/rs/zerolog/log"
@@ -55,9 +56,12 @@ type memoryDataDestination struct {
 	closed    bool
 	committed bool
 	opened    bool
+	sync.Mutex
 }
 
 func (mdd *memoryDataDestination) RowWriter(table push.Table) (push.RowWriter, *push.Error) {
+	mdd.Lock()
+	defer mdd.Unlock()
 	return mdd.tables[table.Name()], nil
 }
 

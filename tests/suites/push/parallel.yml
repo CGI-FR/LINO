@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
 
-name: push children relation
+name: push with many workers
 testcases:
 - name: prepare test
   steps:
@@ -31,9 +31,9 @@ testcases:
 
 
 
-- name: push insert lot of row with small commit size
+- name: push insert lot of row with 5 workers
   steps:
-    - script: cat store1.json | lino push truncate -c 10  -d dest
+    - script: cat store1.json | lino push truncate -p 5 -d dest
       assertions:
         - result.code ShouldEqual 0
         - result.systemout ShouldBeEmpty

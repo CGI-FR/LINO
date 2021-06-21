@@ -19,12 +19,13 @@ package push
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 )
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter) *Error {
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, workers int) *Error {
 	err1 := destination.Open(plan, mode, disableConstraints)
 	if err1 != nil {
 		return err1
@@ -32,34 +33,80 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 	defer destination.Close()
 	defer ri.Close()
 
-	i := uint(0)
-	for ri.Next() {
-		row := ri.Value()
-
-		err2 := pushRow(*row, destination, plan.FirstTable(), plan, mode)
-		if err2 != nil {
-			err4 := catchError.Write(*row)
-			if err4 != nil {
-				return &Error{Description: fmt.Sprintf("%s (%s)", err2.Error(), err4.Error())}
-			}
-			log.Info().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
-		}
-		i++
-		if i%commitSize == 0 {
-			log.Info().Msg("Intermediate commit")
-			errCommit := destination.Commit()
-			if errCommit != nil {
-				return errCommit
-			}
-		}
+	type ErrorWithRow struct {
+		err *Error
+		row *Row
 	}
 
-	if ri.Error() != nil {
-		return ri.Error()
+	var wg sync.WaitGroup
+	jobs := make(chan chan *Row)
+	errors := make(chan ErrorWithRow)
+	commitError := make(chan *Error)
+	done := make(chan bool)
+	for w := 1; w <= workers; w++ {
+		go func(jobs chan chan *Row, errors chan ErrorWithRow, wg *sync.WaitGroup) {
+			for chunk := range jobs {
+				for row := range chunk {
+					err := pushRow(*row, destination, plan.FirstTable(), plan, mode)
+					if err != nil {
+						errors <- ErrorWithRow{err, row}
+					}
+				}
+				wg.Done()
+			}
+		}(jobs, errors, &wg)
 	}
 
-	log.Info().Msg("End of stream")
-	return nil
+	go func() {
+		push := make(chan *Row)
+		i := uint(0)
+
+		for w := 1; w <= workers; w++ {
+			jobs <- push
+		}
+		wg.Add(workers)
+
+		for ri.Next() {
+			push <- ri.Value()
+
+			i++
+			if i%commitSize == 0 {
+				close(push)
+				wg.Wait()
+				log.Info().Msg("Intermediate commit")
+				errCommit := destination.Commit()
+				if errCommit != nil {
+					commitError <- errCommit
+				}
+				push = make(chan *Row)
+				for w := 1; w <= workers; w++ {
+					jobs <- push
+				}
+				wg.Add(workers)
+			}
+		}
+		close(push)
+		if ri.Error() == nil {
+			log.Info().Msg("End of stream")
+			wg.Wait()
+		}
+		done <- true
+	}()
+
+	for {
+		select {
+		case <-done:
+			return ri.Error()
+		case err := <-commitError:
+			return err
+		case errorWithRow := <-errors:
+			err := catchError.Write(*errorWithRow.row)
+			if err != nil {
+				return &Error{Description: fmt.Sprintf("%s (%s)", errorWithRow.err.Error(), err.Error())}
+			}
+			log.Info().Msg(fmt.Sprintf("Error catched : %s", errorWithRow.err.Error()))
+		}
+	}
 }
 
 // FilterRelation split values and relations to follow

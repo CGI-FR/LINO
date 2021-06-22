@@ -43,19 +43,21 @@ type Db2Dialect struct{}
 
 func (d Db2Dialect) SQL(schema string) string {
 	SQL := `
-    select
-      ref.constname as constraint_name,
-      ref.reftabname as primary_table,
-	  ref.refkeyname as primary_key,
-      ref.tabname as foreign_table,
-	  k.colname as foreign_key
-    from syscat.references ref
-	join syscat.keycoluse k on ref.constname = k.constname
-	where k.colseq = 1
+	select
+		ref.constname as constraint_name,
+		ref.reftabname as primary_table,
+		ref.refkeyname as primary_key,
+		ref.tabname as foreign_table,
+		LISTAGG(k.colname, ',') AS foreign_key_names
+	from syscat.references ref
+	inner join syscat.keycoluse k
+		on ref.constname = k.constname
+	where ref.ownertype = 'U'
+	group by ref.constname, ref.reftabname, ref.refkeyname, ref.tabname
   `
 
 	if schema != "" {
-		SQL += fmt.Sprintf(" and ref.reftabschema = '%s'", schema)
+		SQL += fmt.Sprintf(" and ref.tabschema = '%s' and ref.reftabschema = '%s'", schema, schema)
 	}
 	return SQL
 }

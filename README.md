@@ -36,6 +36,7 @@ Currently supported vendors are :
 * postgresql
 * oracle
 * oracle-raw (for full TNS support `oracle-raw://user:pwd@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost.example.com)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orclpdb1)))`)
+* db2 (alpha feature) : the DB2 driver is currently in development, contact us for a compilation of a LINO binary with DB2 support with your target os/arch
 
 ### dataconnector.yml
 

@@ -31,5 +31,6 @@ func relationExtractorFactory() map[string]domain.ExtractorFactory {
 		"postgres":   infra.NewPostgresExtractorFactory(),
 		"godror":     infra.NewOracleExtractorFactory(),
 		"godror-raw": infra.NewOracleExtractorFactory(),
+		"db2":        infra.NewDb2ExtractorFactory(),
 	}
 }

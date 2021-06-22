@@ -70,6 +70,7 @@ RUN go get -d github.com/ibmdb/go_ibm_db && \
     cd /home/vscode/go/pkg/mod/github.com/ibmdb/go_ibm_db@v0.4.1/installer && \
     go run setup.go
 
-ENV DB2HOME=/home/uname/go/src/github.com/ibmdb/clidriver
+ENV DB2HOME=/home/vscode/go/pkg/mod/github.com/ibmdb/clidriver
 ENV CGO_CFLAGS=-I$DB2HOME/include \
-    CGO_LDFLAGS=-L$DB2HOME/lib
+    CGO_LDFLAGS=-L$DB2HOME/lib \
+    LD_LIBRARY_PATH=$DB2HOME/lib

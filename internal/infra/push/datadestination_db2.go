@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	// import db2 connector
 	"github.com/cgi-fr/lino/pkg/push"
+	_ "github.com/ibmdb/go_ibm_db"
 )
 
 // Db2DataDestinationFactory exposes methods to create new Db2 extractors.

@@ -20,8 +20,8 @@ package table
 import (
 	"fmt"
 
-	// import postgresql connector
-	_ "github.com/lib/pq"
+	// import db2 connector
+	_ "github.com/ibmdb/go_ibm_db"
 
 	"github.com/cgi-fr/lino/pkg/table"
 )

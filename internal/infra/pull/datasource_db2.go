@@ -3,7 +3,9 @@ package pull
 import (
 	"fmt"
 
+	// import db2 connector
 	"github.com/cgi-fr/lino/pkg/pull"
+	_ "github.com/ibmdb/go_ibm_db"
 )
 
 // Db2DataSourceFactory exposes methods to create new Db2 pullers.

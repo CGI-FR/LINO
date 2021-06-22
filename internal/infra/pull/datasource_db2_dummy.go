@@ -15,15 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-// +build db2
+// +build !db2
 
 package pull
 
 import (
 	"fmt"
-
-	// import db2 connector
-	_ "github.com/ibmdb/go_ibm_db"
 
 	"github.com/cgi-fr/lino/pkg/pull"
 )
@@ -49,9 +46,9 @@ func (e *Db2DataSourceFactory) New(url string, schema string) pull.DataSource {
 type Db2Dialect struct{}
 
 func (od Db2Dialect) Placeholder(position int) string {
-	return "?"
+	panic(fmt.Errorf("Not implemented"))
 }
 
 func (od Db2Dialect) Limit(limit uint) string {
-	return fmt.Sprintf(" LIMIT %d", limit)
+	panic(fmt.Errorf("Not implemented"))
 }

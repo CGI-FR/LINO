@@ -15,20 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-// +build db2
+// +build !db2
 
-package table
+package relation
 
 import (
 	"fmt"
 
-	// import db2 connector
-	_ "github.com/ibmdb/go_ibm_db"
-
-	"github.com/cgi-fr/lino/pkg/table"
+	"github.com/cgi-fr/lino/pkg/relation"
 )
 
-// NewDb2ExtractorFactory creates a new postgres extractor factory.
+// NewDb2ExtractorFactory creates a new db2 extractor factory.
 func NewDb2ExtractorFactory() *Db2ExtractorFactory {
 	return &Db2ExtractorFactory{}
 }
@@ -37,34 +34,12 @@ func NewDb2ExtractorFactory() *Db2ExtractorFactory {
 type Db2ExtractorFactory struct{}
 
 // New return a Db2 extractor
-func (e *Db2ExtractorFactory) New(url string, schema string) table.Extractor {
+func (e *Db2ExtractorFactory) New(url string, schema string) relation.Extractor {
 	return NewSQLExtractor(url, schema, Db2Dialect{})
 }
 
 type Db2Dialect struct{}
 
 func (d Db2Dialect) SQL(schema string) string {
-	SQL := `
-	select
-		tab.tabschema as schema_name,
-		tab.tabname as table_name,
-		LISTAGG(key.colname, ',') AS column_names
-	from syscat.tables tab
-	inner join syscat.tabconst const
-		on const.tabschema = tab.tabschema
-		and const.tabname = tab.tabname and const.type = 'P'
-	inner join syscat.keycoluse key
-		on const.tabschema = key.tabschema
-		and const.tabname = key.tabname
-		and const.constname = key.constname
-	where tab.type = 'T'
-		and tab.tabschema not like 'SYS%'
-	group by tab.tabschema, tab.tabname
-	`
-
-	if schema != "" {
-		SQL += fmt.Sprintf("and t.tabschema = '%s'", schema)
-	}
-
-	return SQL
+	panic(fmt.Errorf("Not implemented"))
 }

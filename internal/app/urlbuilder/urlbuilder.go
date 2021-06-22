@@ -67,6 +67,21 @@ func init() {
 		Proto:     dburl.ProtoAny,
 	}
 	dburl.Register(oracleScheme)
+
+	db2Scheme := dburl.Scheme{
+		Driver: "db2",
+		Generator: func(u *dburl.URL) (string, error) {
+			password, _ := u.User.Password()
+			database := strings.TrimPrefix(u.Path, "/")
+			result := fmt.Sprintf("HOSTNAME=%s;DATABASE=%s;PORT=%s;UID=%s;PWD=%s", u.Hostname(), database, u.Port(), u.User.Username(), password)
+			return result, nil
+		},
+		Proto:    dburl.ProtoAny,
+		Opaque:   false,
+		Aliases:  []string{"go_ibm_db"},
+		Override: "go_ibm_db",
+	}
+	dburl.Register(db2Scheme)
 }
 
 func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {

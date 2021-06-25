@@ -38,6 +38,7 @@ properties:
   tag: "" # Default to the current branch or tag, can be overriden
   latest: false # Do not tag the Docker image with latest, specify othewise with `-props "{latest: true}"`
   ldflags: "" # Specify a additional ldflags with `-props "{ldflags: '<flags>'}"`
+  tags: [] # Specify additional tags with `-props "{tags: ['tag']}"`
   buildpaths: [] # By default, all paths under the cmd/ folder are built, specify a different folder list with `-props "{buildpaths: ["other/path", "to/build"]}"`
 
   # List of linters to run on the lint target, if left empty : run all linters
@@ -219,7 +220,8 @@ targets:
           - |
             pathcomponents = split(unixpath(path), "/")
             name = pathcomponents[len(pathcomponents)-1]
-          - $: go build -ldflags "-X main.name=={name} ={ldflags} ={LDFLAGS}" -o ./={BUILD_DIR}/={name} ./={path}
+            alltags = join(tags,',')
+          - $: go build -tags "={alltags}" -ldflags "-X main.name=={name} ={ldflags} ={LDFLAGS}" -o ./={BUILD_DIR}/={name} ./={path}
 
   lint:
     doc: "Examine source code and report suspicious constructs"

@@ -39,7 +39,7 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldBeEmpty
-          - result.systemerr ShouldContainSubstring {"level":"info","stats":{"inputLinesCount":1,"createdLinesCount":{},"deletedLinesCount":{"staff":1,"store":1},"commitsCount":0},"return":0,"config":""
+          - result.systemerr ShouldContainSubstring {"level":"info","stats":{"inputLinesCount":1,"createdLinesCount":{},"deletedLinesCount":{"staff":1,"store":1},"commitsCount":0},"return":0
 
       - script: lino pull dest --limit 1 -f store_id=2
         assertions:

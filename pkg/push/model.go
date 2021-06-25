@@ -65,7 +65,8 @@ type StopIteratorError struct{}
 
 // ExecutionStats provides an overview of the work done
 type ExecutionStats interface {
-	GetInputLinesCount() map[string]int
+	GetInputLinesCount() int
+	GetCreatedLinesCount() map[string]int
 	GetDeletedLinesCount() map[string]int
 	GetCommitsCount() int
 
@@ -73,14 +74,15 @@ type ExecutionStats interface {
 }
 
 type stats struct {
-	InputLinesCount   map[string]int `json:"inputLinesCount"`
+	InputLinesCount   int            `json:"inputLinesCount"`
+	CreatedLinesCount map[string]int `json:"createdLinesCount"`
 	DeletedLinesCount map[string]int `json:"deletedLinesCount"`
 	CommitsCount      int            `json:"commitsCount"`
 }
 
 // Reset all statistics to zero
 func Reset() {
-	over.MDC().Set("stats", &stats{InputLinesCount: map[string]int{}, DeletedLinesCount: map[string]int{}})
+	over.MDC().Set("stats", &stats{CreatedLinesCount: map[string]int{}, DeletedLinesCount: map[string]int{}})
 }
 
 // Compute current statistics and give a snapshot
@@ -101,7 +103,11 @@ func (s *stats) ToJSON() []byte {
 	return b
 }
 
-func (s *stats) GetInputLinesCount() map[string]int {
+func (s *stats) GetCreatedLinesCount() map[string]int {
+	return s.CreatedLinesCount
+}
+
+func (s *stats) GetInputLinesCount() int {
 	return s.InputLinesCount
 }
 
@@ -113,9 +119,14 @@ func (s *stats) GetCommitsCount() int {
 	return s.CommitsCount
 }
 
-func IncLinesCreatedCount(table string) {
+func IncCreatedLinesCount(table string) {
 	stats := getStats()
-	stats.InputLinesCount[table]++
+	stats.CreatedLinesCount[table]++
+}
+
+func IncInputLinesCount() {
+	stats := getStats()
+	stats.InputLinesCount++
 }
 
 func IncCommitsCount() {

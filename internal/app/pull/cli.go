@@ -85,8 +85,6 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Example: fmt.Sprintf("  %[1]s pull mydatabase --limit 1", fullName),
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			over.AddGlobalFields("context")
-
 			log.Info().
 				Uint("limit", limit).
 				Interface("filter", initialFilters).
@@ -140,7 +138,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			duration := time.Since(startTime)
 			over.MDC().Set("duration", duration)
 			stats := pull.Compute()
-			over.SetGlobalFields([]string{"config", "duration"})
+			over.SetGlobalFields([]string{"duration"})
 			log.Info().RawJSON("stats", stats.ToJSON()).Int("return", 0).Msg("End LINO in pull mode")
 		},
 	}

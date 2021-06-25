@@ -142,7 +142,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			duration := time.Since(startTime)
 			over.MDC().Set("duration", duration)
 			stats := push.Compute()
-			over.SetGlobalFields([]string{"config", "duration"})
+			over.SetGlobalFields([]string{"duration"})
 			log.Info().RawJSON("stats", stats.ToJSON()).Int("return", 0).Msg("End LINO in push mode")
 		},
 	}

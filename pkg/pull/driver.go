@@ -31,6 +31,8 @@ func Pull(plan Plan, filters RowReader, source DataSource, exporter RowExporter,
 
 	defer source.Close()
 
+	Reset()
+
 	e := puller{source}
 	if err := e.pull(plan, filters, exporter.Export, diagnostic); err != nil {
 		return err
@@ -45,6 +47,8 @@ type puller struct {
 
 func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diagnostic TraceListener) *Error {
 	for filters.Next() {
+		IncFiltersCount()
+
 		fileFilter := filters.Value()
 
 		initFilter := filter{plan.InitFilter().Limit(), fileFilter.Update(plan.InitFilter().Values()), plan.InitFilter().Where()}
@@ -69,6 +73,8 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 	for rowIterator.Next() {
 		row := rowIterator.Value()
 		i++
+
+		IncLinesPerStepCount(step.Entry().Name())
 		log.Trace().Msg(fmt.Sprintf("pull: process row number %v", i))
 
 		allRows := map[string][]Row{}

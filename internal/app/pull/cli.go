@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
+	over "github.com/Trendyol/overlog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -83,6 +85,19 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Example: fmt.Sprintf("  %[1]s pull mydatabase --limit 1", fullName),
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			over.AddGlobalFields("context")
+
+			log.Info().
+				Uint("limit", limit).
+				Interface("filter", initialFilters).
+				Bool("diagnostic", diagnostic).
+				Str("filter-from-file", filefilter).
+				Str("table", table).
+				Str("where", where).
+				Msg("Start LINO in pull mode")
+
+			startTime := time.Now()
+
 			datasource, e1 := getDataSource(args[0], out)
 			if e1 != nil {
 				fmt.Fprintln(err, e1.Error())
@@ -121,6 +136,12 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
 			}
+
+			duration := time.Since(startTime)
+			over.MDC().Set("duration", duration)
+			stats := pull.Compute()
+			over.SetGlobalFields([]string{"config", "duration"})
+			log.Info().RawJSON("stats", stats.ToJSON()).Int("return", 0).Msg("End LINO in pull mode")
 		},
 	}
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")

@@ -33,6 +33,7 @@ services:
     environment:
       - TZ=Europe/Paris
       - CGO_ENABLED=1
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
     cap_add:
       - SYS_PTRACE
     security_opt:
@@ -55,6 +56,18 @@ services:
       POSTGRES_PASSWORD: sakila
     expose:
       - 5432
+  
+  db2:
+    image: ibmcom/db2
+    restart: always
+    privileged: true
+    environment:
+      DB2INST1_PASSWORD: sakila
+      DBNAME: sakila
+      LICENSE: accept
+      SAMPLEDB: "true"
+    volumes:
+      - ./test/data/db2:/var/custom
 
   lino:
     build:

@@ -32,6 +32,7 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 	defer destination.Close()
 	defer ri.Close()
 
+	Reset()
 	i := uint(0)
 	for ri.Next() {
 		row := ri.Value()
@@ -51,8 +52,11 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			if errCommit != nil {
 				return errCommit
 			}
+			IncCommitsCount()
 		}
 	}
+	pushStats := Compute()
+	log.Info().RawJSON("stats", pushStats.ToJSON()).Msg("Push over")
 
 	if ri.Error() != nil {
 		return ri.Error()
@@ -138,6 +142,8 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode) *Er
 		// Current table
 		err3 := rw.Write(frow)
 
+		IncDeletedLinesCount(table.Name())
+
 		if err3 != nil {
 			return err3
 		}
@@ -162,6 +168,8 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode) *Er
 
 		// current
 		err3 := rw.Write(frow)
+
+		IncLinesCreatedCount(table.Name())
 
 		if err3 != nil {
 			return err3

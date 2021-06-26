@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/jmoiron/sqlx"
@@ -38,6 +39,7 @@ type SQLDataDestination struct {
 	mode               push.Mode
 	disableConstraints bool
 	dialect            SQLDialect
+	sync.Mutex
 }
 
 // NewSQLDataDestination creates a new SQL datadestination.
@@ -52,6 +54,9 @@ func NewSQLDataDestination(url string, schema string, dialect SQLDialect) *SQLDa
 
 // Close SQL connections
 func (dd *SQLDataDestination) Close() *push.Error {
+	dd.Lock()
+	defer dd.Unlock()
+
 	for _, rw := range dd.rowWriter {
 		err := rw.commit()
 		if err != nil {
@@ -82,6 +87,9 @@ func (dd *SQLDataDestination) Close() *push.Error {
 
 // Commit SQL for connection
 func (dd *SQLDataDestination) Commit() *push.Error {
+	dd.Lock()
+	defer dd.Unlock()
+
 	for _, rw := range dd.rowWriter {
 		err := rw.commit()
 		if err != nil {
@@ -114,6 +122,9 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 
 // Open SQL Connection
 func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
+	dd.Lock()
+	defer dd.Unlock()
+
 	dd.mode = mode
 	dd.disableConstraints = disableConstraints
 
@@ -157,6 +168,9 @@ func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode, disableConstr
 
 // RowWriter return SQL table writer
 func (dd *SQLDataDestination) RowWriter(table push.Table) (push.RowWriter, *push.Error) {
+	dd.Lock()
+	defer dd.Unlock()
+
 	rw, ok := dd.rowWriter[table.Name()]
 	if ok {
 		return rw, nil
@@ -179,6 +193,7 @@ type SQLRowWriter struct {
 	duplicateKeysCache map[push.Value]struct{}
 	statement          *sql.Stmt
 	headers            []string
+	sync.Mutex
 }
 
 // NewSQLRowWriter creates a new SQL row writer.
@@ -249,6 +264,9 @@ func (rw *SQLRowWriter) tableName() string {
 }
 
 func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
+	rw.Lock()
+	defer rw.Unlock()
+
 	if rw.statement != nil {
 		return nil
 	}

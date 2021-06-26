@@ -70,6 +70,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		catchErrors        string
 		table              string
 		rowExporter        push.RowWriter
+		workers            int
 	)
 
 	cmd := &cobra.Command{
@@ -122,7 +123,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			} else {
 				rowExporter = push.NoErrorCaptureRowWriter{}
 			}
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter)
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, workers)
 			if e3 != nil {
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
@@ -133,6 +134,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().BoolVarP(&disableConstraints, "disable-constraints", "d", false, "Disable constraint during push")
 	cmd.Flags().StringVarP(&catchErrors, "catch-errors", "e", "", "Catch errors and write line in file")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "Table to writes json")
+	cmd.Flags().IntVarP(&workers, "parallel", "p", 1, "Number of workers to execute push in parallel")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

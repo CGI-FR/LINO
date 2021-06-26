@@ -18,6 +18,7 @@
 package push_test
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/cgi-fr/lino/pkg/push"
@@ -47,9 +48,9 @@ func TestSimplePush(t *testing.T) {
 		B.Name(): &rowWriter{},
 		C.Name(): &rowWriter{},
 	}
-	dest := memoryDataDestination{tables, false, false, false}
+	dest := memoryDataDestination{tables, false, false, false, sync.Mutex{}}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{})
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{}, 1)
 
 	assert.Nil(t, err)
 	assert.Equal(t, true, dest.closed)
@@ -86,9 +87,9 @@ func TestRelationPush(t *testing.T) {
 		B.Name(): &rowWriter{},
 		C.Name(): &rowWriter{},
 	}
-	dest := memoryDataDestination{tables, false, false, false}
+	dest := memoryDataDestination{tables, false, false, false, sync.Mutex{}}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{})
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{}, 1)
 
 	// no error
 	assert.Nil(t, err)
@@ -135,9 +136,9 @@ func TestRelationPushWithEmptyRelation(t *testing.T) {
 		B.Name(): &rowWriter{},
 		C.Name(): &rowWriter{},
 	}
-	dest := memoryDataDestination{tables, false, false, false}
+	dest := memoryDataDestination{tables, false, false, false, sync.Mutex{}}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{})
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{}, 1)
 
 	// no error
 	assert.Nil(t, err)
@@ -186,9 +187,9 @@ func TestInversseRelationPush(t *testing.T) {
 		B.Name(): &rowWriter{},
 		C.Name(): &rowWriter{},
 	}
-	dest := memoryDataDestination{tables, false, false, false}
+	dest := memoryDataDestination{tables, false, false, false, sync.Mutex{}}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 5, true, push.NoErrorCaptureRowWriter{})
+	err := push.Push(&ri, &dest, plan, push.Insert, 5, true, push.NoErrorCaptureRowWriter{}, 1)
 
 	// no error
 	assert.Nil(t, err)

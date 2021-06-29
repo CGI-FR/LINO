@@ -91,14 +91,15 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			}
 			return fmt.Errorf("accepts 1 or 2 args, received %d", len(args))
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, args []string) {
 			log.Info().
 				Uint("commitSize", commitSize).
 				Bool("disable-constraints", disableConstraints).
 				Str("catch-errors", catchErrors).
 				Str("table", table).
 				Msg("Push mode")
-
+		},
+		Run: func(cmd *cobra.Command, args []string) {
 			startTime := time.Now()
 
 			dcDestination := args[0]

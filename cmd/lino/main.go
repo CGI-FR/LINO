@@ -72,6 +72,22 @@ Copyright (C) 2021 CGI France
 License GPLv3: GNU GPL version 3 <https://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.`, version, commit, buildDate, builtBy),
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		log.Info().
+			Str("verbosity", loglevel).
+			Bool("log-json", jsonlog).
+			Bool("debug", debug).
+			Str("color", colormode).
+			Msg("Start LINO")
+	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		stats, ok := over.MDC().Get("stats")
+		if ok {
+			log.Info().RawJSON("stats", stats.([]byte)).Int("return", 0).Msg("End LINO")
+		} else {
+			log.Info().Int("return", 0).Msg("End LINO")
+		}
+	},
 }
 
 func main() {
@@ -82,23 +98,9 @@ func main() {
 	   	defer pprof.StopCPUProfile() */
 	// CPU profiling code ends here
 
-	log.Info().
-		Str("verbosity", loglevel).
-		Bool("log-json", jsonlog).
-		Bool("debug", debug).
-		Str("color", colormode).
-		Msg("Start LINO")
-
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
-	}
-
-	stats, ok := over.MDC().Get("stats")
-	if ok {
-		log.Info().RawJSON("stats", stats.([]byte)).Int("return", 0).Msg("End LINO")
-	} else {
-		log.Info().Int("return", 0).Msg("End LINO")
 	}
 }
 
@@ -106,7 +108,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// global flags
-	rootCmd.PersistentFlags().StringVarP(&loglevel, "verbosity", "v", "none", "set level of log verbosity : none (0), error (1), warn (2), info (3), debug (4), trace (5)")
+	rootCmd.PersistentFlags().StringVarP(&loglevel, "verbosity", "v", "error", "set level of log verbosity : none (0), error (1), warn (2), info (3), debug (4), trace (5)")
 	rootCmd.PersistentFlags().BoolVar(&jsonlog, "log-json", false, "output logs in JSON format")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "add debug information to logs (very slow)")
 	rootCmd.PersistentFlags().StringVar(&colormode, "color", "auto", "use colors in log outputs : yes, no or auto")

@@ -84,7 +84,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Long:    "",
 		Example: fmt.Sprintf("  %[1]s pull mydatabase --limit 1", fullName),
 		Args:    cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, args []string) {
 			log.Info().
 				Uint("limit", limit).
 				Interface("filter", initialFilters).
@@ -93,7 +93,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Str("table", table).
 				Str("where", where).
 				Msg("Pull mode")
-
+		},
+		Run: func(cmd *cobra.Command, args []string) {
 			startTime := time.Now()
 
 			datasource, e1 := getDataSource(args[0], out)

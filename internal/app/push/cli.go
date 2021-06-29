@@ -97,7 +97,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Bool("disable-constraints", disableConstraints).
 				Str("catch-errors", catchErrors).
 				Str("table", table).
-				Msg("Start LINO in push mode")
+				Msg("Push mode")
 
 			startTime := time.Now()
 
@@ -142,8 +142,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			duration := time.Since(startTime)
 			over.MDC().Set("duration", duration)
 			stats := push.Compute()
+			over.MDC().Set("stats", stats.ToJSON())
 			over.SetGlobalFields([]string{"duration"})
-			log.Info().RawJSON("stats", stats.ToJSON()).Int("return", 0).Msg("End LINO in push mode")
 		},
 	}
 	cmd.Flags().UintVarP(&commitSize, "commitSize", "c", 500, "Commit size")

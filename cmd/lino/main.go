@@ -82,9 +82,23 @@ func main() {
 	   	defer pprof.StopCPUProfile() */
 	// CPU profiling code ends here
 
+	log.Info().
+		Str("verbosity", loglevel).
+		Bool("log-json", jsonlog).
+		Bool("debug", debug).
+		Str("color", colormode).
+		Msg("Start LINO")
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+
+	stats, ok := over.MDC().Get("stats")
+	if ok {
+		log.Info().RawJSON("stats", stats.([]byte)).Int("return", 0).Msg("End LINO")
+	} else {
+		log.Info().Int("return", 0).Msg("End LINO")
 	}
 }
 

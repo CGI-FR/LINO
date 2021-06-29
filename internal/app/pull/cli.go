@@ -92,7 +92,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Str("filter-from-file", filefilter).
 				Str("table", table).
 				Str("where", where).
-				Msg("Start LINO in pull mode")
+				Msg("Pull mode")
 
 			startTime := time.Now()
 
@@ -138,8 +138,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			duration := time.Since(startTime)
 			over.MDC().Set("duration", duration)
 			stats := pull.Compute()
+			over.MDC().Set("stats", stats.ToJSON())
 			over.SetGlobalFields([]string{"duration"})
-			log.Info().RawJSON("stats", stats.ToJSON()).Int("return", 0).Msg("End LINO in pull mode")
 		},
 	}
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")

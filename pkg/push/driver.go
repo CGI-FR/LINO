@@ -44,7 +44,7 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			if err4 != nil {
 				return &Error{Description: fmt.Sprintf("%s (%s)", err2.Error(), err4.Error())}
 			}
-			log.Info().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
+			log.Warn().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
 		}
 		i++
 		if i%commitSize == 0 {

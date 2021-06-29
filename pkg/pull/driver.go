@@ -67,7 +67,7 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 	}
 	diagnostic = diagnostic.TraceStep(step, filter)
 
-	log.Info().Msg(fmt.Sprintf("pull: from %v with filter %v", step.Entry(), filter))
+	log.Debug().Msg(fmt.Sprintf("from %v with filter %v", step.Entry(), filter))
 
 	i := 0
 	for rowIterator.Next() {
@@ -75,7 +75,7 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 		i++
 
 		IncLinesPerStepCount(step.Entry().Name())
-		log.Trace().Msg(fmt.Sprintf("pull: process row number %v", i))
+		log.Trace().Msg(fmt.Sprintf("process row number %v", i))
 
 		allRows := map[string][]Row{}
 		allRows[step.Entry().Name()] = []Row{row}
@@ -91,9 +91,9 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 			rel := nextStep.Follow()
 			fromTable := findFromTable(rel, step.Relations(), step.Entry())
 			directionParent := rel.Child().Name() == fromTable.Name()
-			log.Trace().Msg(fmt.Sprintf("pull: row #%v, following %v from %v", i, rel, fromTable.Name()))
+			log.Trace().Msg(fmt.Sprintf("row #%v, following %v from %v", i, rel, fromTable.Name()))
 			relatedToRows := allRows[fromTable.Name()]
-			log.Trace().Msg(fmt.Sprintf("pull: row #%v, %v related row(s)", i, len(relatedToRows)))
+			log.Trace().Msg(fmt.Sprintf("row #%v, %v related row(s)", i, len(relatedToRows)))
 			for _, relatedToRow := range relatedToRows {
 				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow)
 				if relatedToRow[rel.Name()] == nil {
@@ -130,33 +130,33 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 func (e puller) exhaust(step Step, allRows map[string][]Row) *Error {
 	cycles := step.Cycles()
 
-	log.Trace().Msg(fmt.Sprintf("pull: %v cycle(s) to traverse", cycles.Len()))
+	log.Trace().Msg(fmt.Sprintf("%v cycle(s) to traverse", cycles.Len()))
 
 	fromTable := step.Entry()
 	for cycleIdx := uint(0); cycleIdx < step.Cycles().Len(); cycleIdx++ {
 		cycle := step.Cycles().Cycle(cycleIdx)
-		log.Trace().Msg(fmt.Sprintf("pull: traversing cycle %v", cycle))
+		log.Trace().Msg(fmt.Sprintf("traversing cycle %v", cycle))
 		for relationIdx := uint(0); relationIdx < cycle.Len(); relationIdx++ {
 			relation := cycle.Relation(relationIdx)
 			fromRows := allRows[fromTable.Name()]
-			log.Trace().Msg(fmt.Sprintf("pull: following relation %v has %v source row(s)", relation, len(fromRows)))
+			log.Trace().Msg(fmt.Sprintf("following relation %v has %v source row(s)", relation, len(fromRows)))
 			for i, fromRow := range fromRows {
-				log.Trace().Msg(fmt.Sprintf("pull: following relation %v on row #%v (%v)", relation, i, fromRow))
+				log.Trace().Msg(fmt.Sprintf("following relation %v on row #%v (%v)", relation, i, fromRow))
 				toTable := relation.OppositeOf(fromTable.Name())
 				nextFilter := relatedTo(toTable, relation, fromRow)
-				log.Trace().Msg(fmt.Sprintf("pull: following relation %v on row #%v with filter %v", relation, i, nextFilter))
+				log.Trace().Msg(fmt.Sprintf("following relation %v on row #%v with filter %v", relation, i, nextFilter))
 				directionParent := toTable.Name() == relation.Parent().Name()
 				rows, err := e.read(toTable, nextFilter)
 				if err != nil {
 					return err
 				}
 
-				log.Trace().Msg(fmt.Sprintf("pull: following relation %v on row #%v returned %v related row(s)", relation, i, len(rows)))
+				log.Trace().Msg(fmt.Sprintf("following relation %v on row #%v returned %v related row(s)", relation, i, len(rows)))
 				rows = removeDuplicate(toTable.PrimaryKey(), rows, allRows[toTable.Name()])
-				log.Trace().Msg(fmt.Sprintf("pull: following relation %v on row #%v returned %v unseen row(s)", relation, i, len(rows)))
+				log.Trace().Msg(fmt.Sprintf("following relation %v on row #%v returned %v unseen row(s)", relation, i, len(rows)))
 
 				if len(rows) == 0 {
-					log.Trace().Msg(fmt.Sprintf("pull: stop traversing cycle %v", cycle))
+					log.Trace().Msg(fmt.Sprintf("stop traversing cycle %v", cycle))
 					break
 				}
 
@@ -228,9 +228,9 @@ func buildFilterRow(targetKey []string, localKey []string, data Row) Row {
 }
 
 func relatedTo(from Table, follow Relation, data Row) Filter {
-	log.Trace().Msg(fmt.Sprintf("pull: build filter with row %v and relation %v to pull data from table %v", data, follow, from))
+	log.Trace().Msg(fmt.Sprintf("build filter with row %v and relation %v to pull data from table %v", data, follow, from))
 	if from.Name() != follow.Parent().Name() && from.Name() != follow.Child().Name() {
-		log.Error().Msg(fmt.Sprintf("pull: cannot build filter with row %v and relation %v to pull data from table %v", data, follow, from))
+		log.Error().Msg(fmt.Sprintf("cannot build filter with row %v and relation %v to pull data from table %v", data, follow, from))
 		panic(nil)
 	}
 

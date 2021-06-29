@@ -100,6 +100,9 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Msg("Push mode")
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			over.MDC().Set("action", "push")
+			over.SetGlobalFields([]string{"action"})
+
 			startTime := time.Now()
 
 			dcDestination := args[0]

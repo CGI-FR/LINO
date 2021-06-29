@@ -95,6 +95,9 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Msg("Pull mode")
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			over.MDC().Set("action", "pull")
+			over.SetGlobalFields([]string{"action"})
+
 			startTime := time.Now()
 
 			datasource, e1 := getDataSource(args[0], out)

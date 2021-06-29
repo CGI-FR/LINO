@@ -53,7 +53,7 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":14,"create_date":"2006-02-14T00:00:00Z","customer_id":10,"email":"DOROTHY.TAYLOR@sakilacustomer.org","first_name":"DOROTHY","last_name":"TAYLOR","last_update":"2006-02-15T09:57:20Z","store_id":1}
-          - result.systemerr ShouldContainSubstring {"level":"debug","message":"SELECT * FROM customer WHERE address_id > 13 LIMIT 1"}
+          - result.systemerr ShouldContainSubstring {"level":"debug","action":"pull","message":"SELECT * FROM customer WHERE address_id > 13 LIMIT 1"}
 
   - name: pull greater than  10 and less than 20 filter without limit
     steps:

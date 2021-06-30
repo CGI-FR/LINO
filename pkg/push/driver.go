@@ -57,8 +57,6 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 		}
 		IncInputLinesCount()
 	}
-	pushStats := Compute()
-	log.Info().RawJSON("stats", pushStats.ToJSON()).Msg("Push over")
 
 	if ri.Error() != nil {
 		return ri.Error()

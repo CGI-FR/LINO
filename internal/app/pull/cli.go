@@ -143,7 +143,6 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			over.MDC().Set("duration", duration)
 			stats := pull.Compute()
 			over.MDC().Set("stats", stats.ToJSON())
-			over.SetGlobalFields([]string{"duration"})
 		},
 	}
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")

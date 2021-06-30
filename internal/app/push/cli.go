@@ -147,7 +147,6 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			over.MDC().Set("duration", duration)
 			stats := push.Compute()
 			over.MDC().Set("stats", stats.ToJSON())
-			over.SetGlobalFields([]string{"duration"})
 		},
 	}
 	cmd.Flags().UintVarP(&commitSize, "commitSize", "c", 500, "Commit size")

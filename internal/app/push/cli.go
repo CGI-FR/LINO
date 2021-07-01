@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
+	over "github.com/Trendyol/overlog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -89,7 +91,20 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			}
 			return fmt.Errorf("accepts 1 or 2 args, received %d", len(args))
 		},
+		PreRun: func(cmd *cobra.Command, args []string) {
+			log.Info().
+				Uint("commitSize", commitSize).
+				Bool("disable-constraints", disableConstraints).
+				Str("catch-errors", catchErrors).
+				Str("table", table).
+				Msg("Push mode")
+		},
 		Run: func(cmd *cobra.Command, args []string) {
+			over.MDC().Set("action", "push")
+			over.SetGlobalFields([]string{"action"})
+
+			startTime := time.Now()
+
 			dcDestination := args[0]
 			mode, _ := push.ParseMode("insert")
 
@@ -127,6 +142,11 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
 			}
+
+			duration := time.Since(startTime)
+			over.MDC().Set("duration", duration)
+			stats := push.Compute()
+			over.MDC().Set("stats", stats.ToJSON())
 		},
 	}
 	cmd.Flags().UintVarP(&commitSize, "commitSize", "c", 500, "Commit size")

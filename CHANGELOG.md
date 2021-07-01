@@ -14,9 +14,14 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [1.4.0]
+
+- `Added` statistics report for push and pull executions
+- `Changed` some info level logs to debug level in pull module
+
 ## [1.3.1]
 
- - `Fixed` Revert convert JSON date to Oracle date format as a workaround for godror
+- `Fixed` Revert convert JSON date to Oracle date format as a workaround for godror
 
 ## [1.3.0]
 

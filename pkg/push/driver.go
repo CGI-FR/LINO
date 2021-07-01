@@ -32,6 +32,8 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 	defer destination.Close()
 	defer ri.Close()
 
+	Reset()
+
 	i := uint(0)
 	for ri.Next() {
 		row := ri.Value()
@@ -42,7 +44,7 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			if err4 != nil {
 				return &Error{Description: fmt.Sprintf("%s (%s)", err2.Error(), err4.Error())}
 			}
-			log.Info().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
+			log.Warn().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
 		}
 		i++
 		if i%commitSize == 0 {
@@ -51,7 +53,9 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			if errCommit != nil {
 				return errCommit
 			}
+			IncCommitsCount()
 		}
+		IncInputLinesCount()
 	}
 
 	if ri.Error() != nil {
@@ -138,6 +142,8 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode) *Er
 		// Current table
 		err3 := rw.Write(frow)
 
+		IncDeletedLinesCount(table.Name())
+
 		if err3 != nil {
 			return err3
 		}
@@ -162,6 +168,8 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode) *Er
 
 		// current
 		err3 := rw.Write(frow)
+
+		IncCreatedLinesCount(table.Name())
 
 		if err3 != nil {
 			return err3

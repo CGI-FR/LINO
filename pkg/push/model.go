@@ -17,6 +17,13 @@
 
 package push
 
+import (
+	"encoding/json"
+
+	over "github.com/Trendyol/overlog"
+	"github.com/rs/zerolog/log"
+)
+
 // Table from which to push data.
 type Table interface {
 	Name() string
@@ -55,3 +62,88 @@ func (e *Error) Error() string {
 
 // StopIteratorError signal the end of iterator
 type StopIteratorError struct{}
+
+// ExecutionStats provides an overview of the work done
+type ExecutionStats interface {
+	GetInputLinesCount() int
+	GetCreatedLinesCount() map[string]int
+	GetDeletedLinesCount() map[string]int
+	GetCommitsCount() int
+
+	ToJSON() []byte
+}
+
+type stats struct {
+	InputLinesCount   int            `json:"inputLinesCount"`
+	CreatedLinesCount map[string]int `json:"createdLinesCount"`
+	DeletedLinesCount map[string]int `json:"deletedLinesCount"`
+	CommitsCount      int            `json:"commitsCount"`
+}
+
+// Reset all statistics to zero
+func Reset() {
+	over.MDC().Set("stats", &stats{CreatedLinesCount: map[string]int{}, DeletedLinesCount: map[string]int{}})
+}
+
+// Compute current statistics and give a snapshot
+func Compute() ExecutionStats {
+	value, exists := over.MDC().Get("stats")
+	if stats, ok := value.(ExecutionStats); exists && ok {
+		return stats
+	}
+	log.Warn().Msg("Unable to compute statistics")
+	return &stats{}
+}
+
+func (s *stats) ToJSON() []byte {
+	b, err := json.Marshal(s)
+	if err != nil {
+		log.Warn().Msg("Unable to read statistics")
+	}
+	return b
+}
+
+func (s *stats) GetCreatedLinesCount() map[string]int {
+	return s.CreatedLinesCount
+}
+
+func (s *stats) GetInputLinesCount() int {
+	return s.InputLinesCount
+}
+
+func (s *stats) GetDeletedLinesCount() map[string]int {
+	return s.DeletedLinesCount
+}
+
+func (s *stats) GetCommitsCount() int {
+	return s.CommitsCount
+}
+
+func IncCreatedLinesCount(table string) {
+	stats := getStats()
+	stats.CreatedLinesCount[table]++
+}
+
+func IncInputLinesCount() {
+	stats := getStats()
+	stats.InputLinesCount++
+}
+
+func IncCommitsCount() {
+	stats := getStats()
+	stats.CommitsCount++
+}
+
+func IncDeletedLinesCount(table string) {
+	stats := getStats()
+	stats.DeletedLinesCount[table]++
+}
+
+func getStats() *stats {
+	value, exists := over.MDC().Get("stats")
+	if stats, ok := value.(*stats); exists && ok {
+		return stats
+	}
+	log.Warn().Msg("Statistics uncorrectly initialized")
+	return &stats{}
+}

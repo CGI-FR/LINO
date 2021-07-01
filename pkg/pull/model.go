@@ -17,6 +17,13 @@
 
 package pull
 
+import (
+	"encoding/json"
+
+	over "github.com/Trendyol/overlog"
+	"github.com/rs/zerolog/log"
+)
+
 // Table from which to pull data.
 type Table interface {
 	Name() string
@@ -100,4 +107,68 @@ type Error struct {
 
 func (e *Error) Error() string {
 	return e.Description
+}
+
+type ExecutionStats interface {
+	GetLinesPerStepCount() map[string]int
+	GetFiltersCount() int
+
+	ToJSON() []byte
+}
+
+type stats struct {
+	LinesPerStepCount map[string]int `json:"linesPerStepCount"`
+	FiltersCount      int            `json:"filtersCount"`
+}
+
+// Reset all statistics to zero
+func Reset() {
+	over.MDC().Set("stats", &stats{LinesPerStepCount: map[string]int{}})
+}
+
+// Compute current statistics and give a snapshot
+func Compute() ExecutionStats {
+	value, exists := over.MDC().Get("stats")
+	if stats, ok := value.(ExecutionStats); exists && ok {
+		return stats
+	}
+	log.Warn().Msg("Unable to compute statistics")
+	return &stats{}
+}
+
+// Exports statistics to readable json format
+func (s *stats) ToJSON() []byte {
+	b, err := json.Marshal(s)
+	if err != nil {
+		log.Warn().Msg("Unable to read statistics")
+	}
+	return b
+}
+
+func (s *stats) GetLinesPerStepCount() map[string]int {
+	return s.LinesPerStepCount
+}
+
+func (s *stats) GetFiltersCount() int {
+	return s.FiltersCount
+}
+
+func IncLinesPerStepCount(step string) {
+	stats := getStats()
+	stats.LinesPerStepCount[step]++
+}
+
+func IncFiltersCount() {
+	stats := getStats()
+	stats.FiltersCount++
+}
+
+// Compute current statistics and give a snapshot
+func getStats() *stats {
+	value, exists := over.MDC().Get("stats")
+	if stats, ok := value.(*stats); exists && ok {
+		return stats
+	}
+	log.Warn().Msg("Statistics uncorrectly initialized")
+	return &stats{}
 }

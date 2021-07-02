@@ -37,7 +37,7 @@ type JSONRowIterator struct {
 func NewJSONRowIterator(file io.ReadCloser) push.RowIterator {
 	scanner := bufio.NewScanner(file)
 	buf := make([]byte, 0, 64*1024)
-	scanner.Buffer(buf, 1024*1024)
+	scanner.Buffer(buf, 10*1024*1024)
 	return &JSONRowIterator{file, scanner, nil, nil}
 }
 

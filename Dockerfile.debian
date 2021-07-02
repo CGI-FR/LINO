@@ -20,7 +20,7 @@ FROM cgifr/pimo:v1.6.1 AS pimo
 FROM debian:stable-slim
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends less jq wget git && \
+    apt-get install -y --no-install-recommends less jq wget git postgresql-client-11 && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     rm -r /var/cache/* /var/lib/apt/lists/*

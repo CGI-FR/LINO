@@ -30,6 +30,7 @@ func pullDataSourceFactory() map[string]domain.DataSourceFactory {
 		"postgres":   infra.NewPostgresDataSourceFactory(),
 		"godror":     infra.NewOracleDataSourceFactory(),
 		"godror-raw": infra.NewOracleDataSourceFactory(),
+		"db2":        infra.NewDb2DataSourceFactory(),
 	}
 }
 

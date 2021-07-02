@@ -9,6 +9,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/godror/godror v0.20.8
 	github.com/gorilla/mux v1.7.4
+	github.com/ibmdb/go_ibm_db v0.4.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lib/pq v1.3.0

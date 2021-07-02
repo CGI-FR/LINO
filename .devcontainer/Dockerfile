@@ -36,6 +36,7 @@ ENV no_proxy ${no_proxy:-}
 
 ENV DEBIAN_FRONTEND noninteractive
 
+# Oracle
 RUN wget -O /tmp/instantclient-basic-linux-x64.zip https://download.oracle.com/otn_software/linux/instantclient/193000/instantclient-basic-linux.x64-19.3.0.0.0dbru.zip && \
     mkdir -p /usr/lib/oracle && \
     unzip /tmp/instantclient-basic-linux-x64.zip -d /usr/lib/oracle && \
@@ -44,7 +45,7 @@ RUN wget -O /tmp/instantclient-basic-linux-x64.zip https://download.oracle.com/o
 
 ARG VERSION_DCM=0.1.0
 RUN wget -O- -nv https://github.com/adrienaury/docker-credential-mock/releases/download/${VERSION_DCM}/docker-credential-mock_${VERSION_DCM}_linux_amd64.tar.gz | tar -xz -C /usr/local/bin/ docker-credential-mock \
- && chmod +x /usr/local/bin/docker-credential-mock
+    && chmod +x /usr/local/bin/docker-credential-mock
 
 ARG VERSION_YAML2JSON=1.3
 ADD https://github.com/bronze1man/yaml2json/releases/download/v${VERSION_YAML2JSON}/yaml2json_linux_amd64 /usr/bin/yaml2json
@@ -63,3 +64,13 @@ ADD https://github.com/hairyhenderson/gomplate/releases/download/v${VERSION_GOMP
 RUN chmod +x /usr/bin/gomplate
 
 USER vscode
+
+# Db2 (must run as vscode)
+RUN go get -d github.com/ibmdb/go_ibm_db && \
+    cd /home/vscode/go/pkg/mod/github.com/ibmdb/go_ibm_db@v0.4.1/installer && \
+    go run setup.go
+
+ENV DB2HOME=/home/vscode/go/pkg/mod/github.com/ibmdb/clidriver
+ENV CGO_CFLAGS=-I$DB2HOME/include \
+    CGO_LDFLAGS=-L$DB2HOME/lib \
+    LD_LIBRARY_PATH=$DB2HOME/lib

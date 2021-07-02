@@ -15,22 +15,31 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+// +build !db2
+
+package table
 
 import (
-	infra "github.com/cgi-fr/lino/internal/infra/table"
-	domain "github.com/cgi-fr/lino/pkg/table"
+	"fmt"
+
+	"github.com/cgi-fr/lino/pkg/table"
 )
 
-func tableStorage() domain.Storage {
-	return infra.NewYAMLStorage()
+// NewDb2ExtractorFactory creates a new postgres extractor factory.
+func NewDb2ExtractorFactory() *Db2ExtractorFactory {
+	return &Db2ExtractorFactory{}
 }
 
-func tableExtractorFactory() map[string]domain.ExtractorFactory {
-	return map[string]domain.ExtractorFactory{
-		"postgres":   infra.NewPostgresExtractorFactory(),
-		"godror":     infra.NewOracleExtractorFactory(),
-		"godror-raw": infra.NewOracleExtractorFactory(),
-		"db2":        infra.NewDb2ExtractorFactory(),
-	}
+// Db2ExtractorFactory exposes methods to create new Db2 extractors.
+type Db2ExtractorFactory struct{}
+
+// New return a Db2 extractor
+func (e *Db2ExtractorFactory) New(url string, schema string) table.Extractor {
+	return NewSQLExtractor(url, schema, Db2Dialect{})
+}
+
+type Db2Dialect struct{}
+
+func (d Db2Dialect) SQL(schema string) string {
+	panic(fmt.Errorf("Not implemented"))
 }

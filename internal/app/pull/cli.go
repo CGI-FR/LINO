@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
+	over "github.com/Trendyol/overlog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -83,7 +85,22 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Long:    "",
 		Example: fmt.Sprintf("  %[1]s pull mydatabase --limit 1", fullName),
 		Args:    cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			log.Info().
+				Uint("limit", limit).
+				Interface("filter", initialFilters).
+				Bool("diagnostic", diagnostic).
+				Str("filter-from-file", filefilter).
+				Str("table", table).
+				Str("where", where).
+				Msg("Pull mode")
+		},
 		Run: func(cmd *cobra.Command, args []string) {
+			over.MDC().Set("action", "pull")
+			over.SetGlobalFields([]string{"action"})
+
+			startTime := time.Now()
+
 			datasource, e1 := getDataSource(args[0], out)
 			if e1 != nil {
 				fmt.Fprintln(err, e1.Error())
@@ -122,6 +139,11 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
 			}
+
+			duration := time.Since(startTime)
+			over.MDC().Set("duration", duration)
+			stats := pull.Compute()
+			over.MDC().Set("stats", stats.ToJSON())
 		},
 	}
 

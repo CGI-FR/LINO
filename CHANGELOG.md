@@ -20,6 +20,7 @@ Types of changes
 
 ## [1.4.0]
 
+- `Added` `--parallel <int>` or `-p <int>` options to execute pull from filters file with many workers
 - `Added` statistics report for push and pull executions
 - `Changed` some info level logs to debug level in pull module
 

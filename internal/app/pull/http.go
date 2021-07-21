@@ -119,7 +119,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	pullExporter := pullExporterFactory(w)
 
-	e3 := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, pullExporter, pull.NoTraceListener{})
+	e3 := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, pullExporter, pull.NoTraceListener{}, 1)
 	if e3 != nil {
 		log.Error().Err(e3).Msg("")
 		w.WriteHeader(http.StatusInternalServerError)

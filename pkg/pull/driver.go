@@ -19,12 +19,13 @@ package pull
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 )
 
 // Pull data from source following the given puller plan.
-func Pull(plan Plan, filters RowReader, source DataSource, exporter RowExporter, diagnostic TraceListener) *Error {
+func Pull(plan Plan, filters RowReader, source DataSource, exporter RowExporter, diagnostic TraceListener, workers int) *Error {
 	if err := source.Open(); err != nil {
 		return err
 	}
@@ -34,7 +35,7 @@ func Pull(plan Plan, filters RowReader, source DataSource, exporter RowExporter,
 	Reset()
 
 	e := puller{source}
-	if err := e.pull(plan, filters, exporter.Export, diagnostic); err != nil {
+	if err := e.pull(plan, filters, exporter.Export, diagnostic, workers); err != nil {
 		return err
 	}
 
@@ -45,19 +46,51 @@ type puller struct {
 	datasource DataSource
 }
 
-func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diagnostic TraceListener) *Error {
-	for filters.Next() {
-		IncFiltersCount()
+func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diagnostic TraceListener, workers int) *Error {
+	var wg sync.WaitGroup
+	pulls := make(chan filter)
+	errors := make(chan *Error)
+	done := make(chan bool)
 
-		fileFilter := filters.Value()
+	for w := 1; w <= workers; w++ {
+		wg.Add(1)
+		worker := func(id int, pulls <-chan filter, errChan chan<- *Error, wg *sync.WaitGroup) {
+			defer wg.Done()
+			log.Info().Msg(fmt.Sprintf("starting worker %d", id))
 
-		initFilter := filter{plan.InitFilter().Limit(), fileFilter.Update(plan.InitFilter().Values()), plan.InitFilter().Where()}
-		if err := e.pullStep(plan.Steps().Step(0), initFilter, export, diagnostic); err != nil {
-			return err
+			for initFilter := range pulls {
+				if err := e.pullStep(plan.Steps().Step(0), initFilter, export, diagnostic); err != nil {
+					errChan <- err
+				}
+			}
 		}
+		go worker(w, pulls, errors, &wg)
 	}
 
-	return filters.Error()
+	go func() {
+		for filters.Next() {
+			IncFiltersCount()
+
+			fileFilter := filters.Value()
+
+			initFilter := filter{plan.InitFilter().Limit(), fileFilter.Update(plan.InitFilter().Values()), plan.InitFilter().Where()}
+			pulls <- initFilter
+		}
+
+		close(pulls)
+	}()
+
+	go func() {
+		wg.Wait()
+		done <- true
+	}()
+
+	select {
+	case <-done:
+		return filters.Error()
+	case err := <-errors:
+		return err
+	}
 }
 
 func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diagnostic TraceListener) *Error {

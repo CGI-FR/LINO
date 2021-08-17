@@ -63,7 +63,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 		}
 
 		if query.Get("limit") != "" {
-			limit64, elimit := strconv.ParseUint(query.Get("limit"), 10, 64)
+			limit64, elimit := strconv.ParseUint(query.Get("limit"), 10, 32)
 			if elimit != nil {
 				log.Error().Msg("can't parse limit")
 				w.WriteHeader(http.StatusBadRequest)

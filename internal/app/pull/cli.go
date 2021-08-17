@@ -39,7 +39,7 @@ var (
 	dataconnectorStorage dataconnector.Storage
 	relStorage           relation.Storage
 	tabStorage           table.Storage
-	idStorageFactory     func(string) id.Storage
+	idStorageFactory     func(string, string) id.Storage
 	dataSourceFactories  map[string]pull.DataSourceFactory
 	pullExporterFactory  func(io.Writer) pull.RowExporter
 	rowReaderFactory     func(io.ReadCloser) pull.RowReader
@@ -52,7 +52,7 @@ func Inject(
 	dbas dataconnector.Storage,
 	rs relation.Storage,
 	ts table.Storage,
-	idsf func(string) id.Storage,
+	idsf func(string, string) id.Storage,
 	dsfmap map[string]pull.DataSourceFactory,
 	exporterFactory func(io.Writer) pull.RowExporter,
 	rrf func(io.ReadCloser) pull.RowReader,
@@ -73,6 +73,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var limit uint
 	var filefilter string
 	var table string
+	var ingressDescriptor string
 	var where string
 	var initialFilters map[string]string
 	var diagnostic bool
@@ -106,7 +107,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPullerPlan(initialFilters, limit, where, idStorageFactory(table))
+			plan, e2 := getPullerPlan(initialFilters, limit, where, idStorageFactory(table, ingressDescriptor))
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(1)
@@ -151,6 +152,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVarP(&filefilter, "filter-from-file", "F", "", "Use file to filter start table")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "pull content of table without relations instead of ingress descriptor definition")
 	cmd.Flags().StringVarP(&where, "where", "w", "", "Advanced SQL where clause to filter")
+	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "pull content using ingress descriptor definition")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

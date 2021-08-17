@@ -38,7 +38,7 @@ func Test_getDataDestination(t *testing.T) {
 		&dcStorage,
 		&relation.MockStorage{},
 		&table.MockStorage{},
-		func(string) id.Storage { return &id.MockStorage{} },
+		func(string, string) id.Storage { return &id.MockStorage{} },
 		map[string]push.DataDestinationFactory{},
 		func(io.ReadCloser) push.RowIterator { return &push.MockRowIterator{} },
 		func(io.Writer) push.RowWriter { return &push.MockRowWriter{} },

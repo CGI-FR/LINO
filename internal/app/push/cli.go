@@ -39,7 +39,7 @@ var (
 	dataconnectorStorage     dataconnector.Storage
 	relStorage               relation.Storage
 	tabStorage               table.Storage
-	idStorageFactory         func(string) id.Storage
+	idStorageFactory         func(string, string) id.Storage
 	datadestinationFactories map[string]push.DataDestinationFactory
 	rowIteratorFactory       func(io.ReadCloser) push.RowIterator
 	rowExporterFactory       func(io.Writer) push.RowWriter
@@ -50,7 +50,7 @@ func Inject(
 	dbas dataconnector.Storage,
 	rs relation.Storage,
 	ts table.Storage,
-	idsf func(string) id.Storage,
+	idsf func(string, string) id.Storage,
 	dsfmap map[string]push.DataDestinationFactory,
 	rif func(io.ReadCloser) push.RowIterator,
 	ref func(io.Writer) push.RowWriter,
@@ -71,6 +71,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		disableConstraints bool
 		catchErrors        string
 		table              string
+		ingressDescriptor  string
 		rowExporter        push.RowWriter
 	)
 
@@ -119,7 +120,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPlan(idStorageFactory(table))
+			plan, e2 := getPlan(idStorageFactory(table, ingressDescriptor))
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(2)
@@ -153,6 +154,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().BoolVarP(&disableConstraints, "disable-constraints", "d", false, "Disable constraint during push")
 	cmd.Flags().StringVarP(&catchErrors, "catch-errors", "e", "", "Catch errors and write line in file")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "Table to writes json")
+	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "Ingress descriptor filename")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

@@ -33,7 +33,7 @@ func newExportCommand(fullName string, err *os.File, out *os.File, in *os.File) 
 		Example: fmt.Sprintf("  %[1]s id export", fullName),
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			id, e := idStorage.Read()
+			id, e := idStorageFactory("", ingressDescriptor).Read()
 			if e != nil {
 				fmt.Fprintln(err, e.Description)
 				os.Exit(1)

@@ -31,7 +31,10 @@ import (
 
 // NewCommand implements the cli http command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
-	var port uint
+	var (
+		port              uint
+		ingressDescriptor string
+	)
 
 	cmd := &cobra.Command{
 		Use:     "http",
@@ -46,23 +49,23 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			api.Path("/data/{dataSource}").
 				Methods(http.MethodGet).
-				HandlerFunc(pull.Handler)
+				HandlerFunc(pull.HandlerFactory(ingressDescriptor))
 
 			api.Path("/data/{dataDestination}").
 				Queries("mode", "delete").
-				HandlerFunc(push.DeleteHandler)
+				HandlerFunc(push.DeleteHandlerFactory(ingressDescriptor))
 
 			api.Path("/data/{dataDestination}").
 				Queries("mode", "insert").
-				HandlerFunc(push.InsertHandler)
+				HandlerFunc(push.InsertHandlerFactory(ingressDescriptor))
 
 			api.Path("/data/{dataDestination}").
 				Queries("mode", "truncate").
-				HandlerFunc(push.TruncatHandler)
+				HandlerFunc(push.TruncatHandlerFactory(ingressDescriptor))
 
 			api.Path("/data/{dataDestination}").
 				Methods(http.MethodPost).
-				HandlerFunc(push.TruncatHandler)
+				HandlerFunc(push.TruncatHandlerFactory(ingressDescriptor))
 
 			http.Handle("/", r)
 			bind := fmt.Sprintf(":%d", port)
@@ -75,6 +78,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		},
 	}
 	cmd.Flags().UintVarP(&port, "port", "p", 8000, "HTTP Port to bind")
+	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "Ingress descriptor filename")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

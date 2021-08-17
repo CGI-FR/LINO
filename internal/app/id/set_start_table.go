@@ -36,7 +36,7 @@ func newSetStartTableCommand(fullName string, err *os.File, out *os.File, in *os
 		Run: func(cmd *cobra.Command, args []string) {
 			table := args[0]
 
-			e := id.SetStartTable(id.NewTable(table), idStorage)
+			e := id.SetStartTable(id.NewTable(table), idStorageFactory("", ingressDescriptor))
 			if e != nil {
 				fmt.Fprintln(err, e.Description)
 				os.Exit(1)

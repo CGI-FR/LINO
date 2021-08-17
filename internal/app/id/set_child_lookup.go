@@ -41,7 +41,7 @@ func newSetChildLookupCommand(fullName string, err *os.File, out *os.File, in *o
 				os.Exit(1)
 			}
 
-			e := id.SetChildLookup(relation, flag, idStorage)
+			e := id.SetChildLookup(relation, flag, idStorageFactory("", ingressDescriptor))
 			if e != nil {
 				fmt.Fprintln(err, e.Description)
 				os.Exit(1)

@@ -34,7 +34,7 @@ func newShowGraphCommand(fullName string, err *os.File, out *os.File, in *os.Fil
 		Example: fmt.Sprintf("  %[1]s id show-graph", fullName),
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			e := id.Export(idStorage, idExporter)
+			e := id.Export(idStorageFactory("", ingressDescriptor), idExporter)
 			if e != nil {
 				fmt.Fprintln(err, e.Description)
 				os.Exit(1)

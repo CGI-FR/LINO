@@ -51,11 +51,12 @@ type YAMLTable struct {
 
 // YAMLStorage provides storage in a local YAML file
 type YAMLStorage struct {
+	filename string
 }
 
 // NewYAMLStorage create a new YAML storage
-func NewYAMLStorage() *YAMLStorage {
-	return &YAMLStorage{}
+func NewYAMLStorage(filename string) *YAMLStorage {
+	return &YAMLStorage{filename: filename}
 }
 
 // Store ingress descriptor in the YAML file
@@ -80,7 +81,7 @@ func (s *YAMLStorage) Store(id id.IngressDescriptor) *id.Error {
 		Relations:  relations,
 	}
 
-	err := writeFile(&structure)
+	err := writeFile(&structure, s.filename)
 	if err != nil {
 		return err
 	}
@@ -89,7 +90,7 @@ func (s *YAMLStorage) Store(id id.IngressDescriptor) *id.Error {
 }
 
 func (s *YAMLStorage) Read() (id.IngressDescriptor, *id.Error) {
-	structure, err := readFile()
+	structure, err := readFile(s.filename)
 	if err != nil {
 		return nil, err
 	}
@@ -110,13 +111,13 @@ func (s *YAMLStorage) Read() (id.IngressDescriptor, *id.Error) {
 	return id.NewIngressDescriptor(id.NewTable(structure.IngressDescriptor.StartTable), id.NewIngressRelationList(relations)), nil
 }
 
-func writeFile(structure *YAMLStructure) *id.Error {
+func writeFile(structure *YAMLStructure, filename string) *id.Error {
 	out, err := yaml.Marshal(structure)
 	if err != nil {
 		return &id.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("ingress-descriptor.yaml", out, 0600)
+	err = ioutil.WriteFile(filename, out, 0600)
 	if err != nil {
 		return &id.Error{Description: err.Error()}
 	}
@@ -124,12 +125,12 @@ func writeFile(structure *YAMLStructure) *id.Error {
 	return nil
 }
 
-func readFile() (*YAMLStructure, *id.Error) {
+func readFile(filename string) (*YAMLStructure, *id.Error) {
 	structure := &YAMLStructure{
 		Version: Version,
 	}
 
-	dat, err := ioutil.ReadFile("ingress-descriptor.yaml")
+	dat, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, &id.Error{Description: err.Error()}
 	}

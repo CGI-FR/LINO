@@ -135,6 +135,11 @@ IngressDescriptor:
             name: public.language
 ```
 
+### `--ingress-descriptor` argument
+
+Ingress desriptor file is parametrable with the `--ingress-descriptor` argument.
+This argument is present for all below command.
+
 ### Display plan
 
 The `display-plan` utilities explain the `lino`'s plan to extract data from database.

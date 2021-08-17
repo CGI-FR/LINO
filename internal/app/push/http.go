@@ -28,19 +28,25 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func DeleteHandler(w http.ResponseWriter, r *http.Request) {
-	Handler(w, r, push.Delete)
+func DeleteHandlerFactory(ingressDescriptor string) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		Handler(w, r, push.Delete, ingressDescriptor)
+	}
 }
 
-func InsertHandler(w http.ResponseWriter, r *http.Request) {
-	Handler(w, r, push.Insert)
+func InsertHandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		Handler(w, r, push.Insert, ingressDescriptor)
+	}
 }
 
-func TruncatHandler(w http.ResponseWriter, r *http.Request) {
-	Handler(w, r, push.Truncate)
+func TruncatHandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		Handler(w, r, push.Truncate, ingressDescriptor)
+	}
 }
 
-func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
+func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode, ingressDescriptor string) {
 	pathParams := mux.Vars(r)
 	query := r.URL.Query()
 
@@ -74,7 +80,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode) {
 		return
 	}
 
-	plan, e2 := getPlan(idStorageFactory(query.Get("table")))
+	plan, e2 := getPlan(idStorageFactory(query.Get("table"), ingressDescriptor))
 	if e2 != nil {
 		log.Error().Err(e2).Msg("")
 		w.WriteHeader(http.StatusNotFound)

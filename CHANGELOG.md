@@ -18,6 +18,10 @@ Types of changes
 
 - `Added` option to change ingress-descriptor filename
 
+## [1.5.0]
+
+- `Added` update Pimo to v1.8.0
+
 ## [1.4.0]
 
 - `Added` statistics report for push and pull executions

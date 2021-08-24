@@ -137,8 +137,8 @@ IngressDescriptor:
 
 ### `--ingress-descriptor` argument
 
-Ingress desriptor file is parametrable with the `--ingress-descriptor` argument.
-This argument is present for all below command.
+Ingress descriptor filename is parameterized with the `--ingress-descriptor` argument or its short alias `-i`.
+this argument is present for all commands below.
 
 ### Display plan
 

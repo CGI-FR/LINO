@@ -17,6 +17,7 @@ Types of changes
 ## [1.6.0]
 
 - `Added` option to change ingress-descriptor filename
+- `Changed` update debian image to last stable (debian:stable-20210816-slim)
 
 ## [1.5.0]
 

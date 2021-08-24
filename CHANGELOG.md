@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [1.6.0]
+
+- `Added` option to change ingress-descriptor filename
+
 ## [1.5.0]
 
 - `Added` update Pimo to v1.8.0

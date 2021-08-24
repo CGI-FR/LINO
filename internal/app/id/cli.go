@@ -28,15 +28,16 @@ import (
 )
 
 var (
-	idStorage      id.Storage
-	relStorage     relation.Storage
-	idExporter     id.Exporter
-	idJSONExporter id.Storage
+	idStorageFactory  func(string) id.Storage
+	relStorage        relation.Storage
+	idExporter        id.Exporter
+	idJSONExporter    id.Storage
+	ingressDescriptor string
 )
 
 // Inject dependencies
-func Inject(ids id.Storage, rels relation.Storage, ex id.Exporter, jSONEx id.Storage) {
-	idStorage = ids
+func Inject(ids func(string) id.Storage, rels relation.Storage, ex id.Exporter, jSONEx id.Storage) {
+	idStorageFactory = ids
 	relStorage = rels
 	idExporter = ex
 	idJSONExporter = jSONEx
@@ -57,6 +58,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.AddCommand(newSetStartTableCommand(fullName, err, out, in))
 	cmd.AddCommand(newSetChildLookupCommand(fullName, err, out, in))
 	cmd.AddCommand(newSetParentLookupCommand(fullName, err, out, in))
+	cmd.PersistentFlags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "Ingress descriptor filename")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

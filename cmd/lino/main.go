@@ -97,7 +97,6 @@ func main() {
 	   	pprof.StartCPUProfile(f)
 	   	defer pprof.StopCPUProfile() */
 	// CPU profiling code ends here
-
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -166,7 +165,7 @@ func initConfig() {
 	dataconnector.Inject(dataconnectorStorage(), dataPingerFactory())
 	relation.Inject(dataconnectorStorage(), relationStorage(), relationExtractorFactory())
 	table.Inject(dataconnectorStorage(), tableStorage(), tableExtractorFactory())
-	id.Inject(idStorage(), relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
+	id.Inject(idStorageFile, relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
 	pull.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pullDataSourceFactory(), pullRowExporterFactory(), pullRowReaderFactory(), traceListner(os.Stderr))
 	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pushDataDestinationFactory(), pushRowIteratorFactory(), pushRowExporterFactory())
 }

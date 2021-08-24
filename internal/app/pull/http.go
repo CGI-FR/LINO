@@ -27,107 +27,109 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func Handler(w http.ResponseWriter, r *http.Request) {
-	var (
-		datasource     pull.DataSource
-		err            *pull.Error
-		datasourceName string
-		ok             bool
-		filter         map[string]string
-		limit          uint
-		where          string
-	)
+func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			datasource     pull.DataSource
+			err            *pull.Error
+			datasourceName string
+			ok             bool
+			filter         map[string]string
+			limit          uint
+			where          string
+		)
 
-	pathParams := mux.Vars(r)
+		pathParams := mux.Vars(r)
 
-	query := r.URL.Query()
+		query := r.URL.Query()
 
-	filter = map[string]string{}
+		filter = map[string]string{}
 
-	if query.Get("filter") != "" {
-		for _, f := range strings.Split(query.Get("filter"), ",") {
-			kv := strings.SplitN(f, ":", 2)
-			if len(kv) != 2 {
-				log.Error().Msg("can't parse filter")
+		if query.Get("filter") != "" {
+			for _, f := range strings.Split(query.Get("filter"), ",") {
+				kv := strings.SplitN(f, ":", 2)
+				if len(kv) != 2 {
+					log.Error().Msg("can't parse filter")
+					w.WriteHeader(http.StatusBadRequest)
+					_, ew := w.Write([]byte("{\"error\": \"param filter must be a string map (key1:value1,key2:value2)\"}\n"))
+					if ew != nil {
+						log.Error().Msg("Write failed")
+						return
+					}
+					return
+				}
+				filter[kv[0]] = kv[1]
+			}
+		}
+
+		if query.Get("limit") != "" {
+			limit64, elimit := strconv.ParseUint(query.Get("limit"), 10, 32)
+			if elimit != nil {
+				log.Error().Msg("can't parse limit")
 				w.WriteHeader(http.StatusBadRequest)
-				_, ew := w.Write([]byte("{\"error\": \"param filter must be a string map (key1:value1,key2:value2)\"}\n"))
+				_, ew := w.Write([]byte("{\"error\" : \"param limit must be an positive integer\"}\n"))
 				if ew != nil {
 					log.Error().Msg("Write failed")
 					return
 				}
 				return
 			}
-			filter[kv[0]] = kv[1]
+			limit = uint(limit64)
 		}
-	}
 
-	if query.Get("limit") != "" {
-		limit64, elimit := strconv.ParseUint(query.Get("limit"), 10, 64)
-		if elimit != nil {
-			log.Error().Msg("can't parse limit")
+		if query.Get("where") != "" {
+			where = query.Get("where")
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if datasourceName, ok = pathParams["dataSource"]; !ok {
+			log.Error().Msg("param datasource is required")
 			w.WriteHeader(http.StatusBadRequest)
-			_, ew := w.Write([]byte("{\"error\" : \"param limit must be an positive integer\"}\n"))
+			_, ew := w.Write([]byte("{\"error\": \"param datasource is required\"}"))
 			if ew != nil {
-				log.Error().Msg("Write failed")
+				log.Error().Err(ew).Msg("Write failed")
 				return
 			}
 			return
 		}
-		limit = uint(limit64)
-	}
 
-	if query.Get("where") != "" {
-		where = query.Get("where")
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-	if datasourceName, ok = pathParams["dataSource"]; !ok {
-		log.Error().Msg("param datasource is required")
-		w.WriteHeader(http.StatusBadRequest)
-		_, ew := w.Write([]byte("{\"error\": \"param datasource is required\"}"))
-		if ew != nil {
-			log.Error().Err(ew).Msg("Write failed")
+		datasource, err = getDataSource(datasourceName, w)
+		if err != nil {
+			log.Error().Err(err).Msg("")
+			w.WriteHeader(http.StatusNotFound)
+			_, ew := w.Write([]byte("{\"error\": \"" + err.Description + "\"}"))
+			if ew != nil {
+				log.Error().Err(ew).Msg("Write failed")
+				return
+			}
 			return
 		}
-		return
-	}
 
-	datasource, err = getDataSource(datasourceName, w)
-	if err != nil {
-		log.Error().Err(err).Msg("")
-		w.WriteHeader(http.StatusNotFound)
-		_, ew := w.Write([]byte("{\"error\": \"" + err.Description + "\"}"))
-		if ew != nil {
-			log.Error().Err(ew).Msg("Write failed")
+		plan, e2 := getPullerPlan(filter, limit, where, idStorageFactory(query.Get("table"), ingressDescriptor))
+		if e2 != nil {
+			log.Error().Err(e2).Msg("")
+			w.WriteHeader(http.StatusInternalServerError)
+			_, ew := w.Write([]byte("{\"error\": \"" + e2.Description + "}"))
+			if ew != nil {
+				log.Error().Err(ew).Msg("Write failed")
+				return
+			}
 			return
 		}
-		return
-	}
 
-	plan, e2 := getPullerPlan(filter, limit, where, idStorageFactory(query.Get("table")))
-	if e2 != nil {
-		log.Error().Err(e2).Msg("")
-		w.WriteHeader(http.StatusInternalServerError)
-		_, ew := w.Write([]byte("{\"error\": \"" + e2.Description + "}"))
-		if ew != nil {
-			log.Error().Err(ew).Msg("Write failed")
+		pullExporter := pullExporterFactory(w)
+
+		e3 := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, pullExporter, pull.NoTraceListener{})
+		if e3 != nil {
+			log.Error().Err(e3).Msg("")
+			w.WriteHeader(http.StatusInternalServerError)
+			_, ew := w.Write([]byte(e3.Description))
+			if ew != nil {
+				log.Error().Err(ew).Msg("Write failed")
+				return
+			}
 			return
 		}
-		return
-	}
-
-	pullExporter := pullExporterFactory(w)
-
-	e3 := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, pullExporter, pull.NoTraceListener{})
-	if e3 != nil {
-		log.Error().Err(e3).Msg("")
-		w.WriteHeader(http.StatusInternalServerError)
-		_, ew := w.Write([]byte(e3.Description))
-		if ew != nil {
-			log.Error().Err(ew).Msg("Write failed")
-			return
-		}
-		return
 	}
 }

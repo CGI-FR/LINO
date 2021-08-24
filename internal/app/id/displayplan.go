@@ -34,7 +34,7 @@ func newDisplayPlanCommand(fullName string, err *os.File, out *os.File, in *os.F
 		Example: fmt.Sprintf("  %[1]s id display-plan", fullName),
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			result, e := id.GetPullerPlan(idStorage)
+			result, e := id.GetPullerPlan(idStorageFactory(ingressDescriptor))
 			if e != nil {
 				fmt.Fprintln(err, e.Description)
 				os.Exit(1)

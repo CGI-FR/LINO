@@ -41,7 +41,7 @@ func newSetParentLookupCommand(fullName string, err *os.File, out *os.File, in *
 				os.Exit(1)
 			}
 
-			e := id.SetParentLookup(relation, flag, idStorage)
+			e := id.SetParentLookup(relation, flag, idStorageFactory(ingressDescriptor))
 			if e != nil {
 				fmt.Fprintln(err, e.Description)
 				os.Exit(1)

@@ -135,6 +135,11 @@ IngressDescriptor:
             name: public.language
 ```
 
+### `--ingress-descriptor` argument
+
+Ingress descriptor filename is parameterized with the `--ingress-descriptor` argument or its short alias `-i`.
+this argument is present for all commands below.
+
 ### Display plan
 
 The `display-plan` utilities explain the `lino`'s plan to extract data from database.

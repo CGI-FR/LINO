@@ -45,7 +45,7 @@ func newCreateCommand(fullName string, err *os.File, out *os.File, in *os.File) 
 
 			reader := infra.NewRelationReader(relations)
 
-			e := id.Create(table, reader, idStorage)
+			e := id.Create(table, reader, idStorageFactory(ingressDescriptor))
 			if e != nil {
 				fmt.Fprintln(err, e.Description)
 				os.Exit(1)

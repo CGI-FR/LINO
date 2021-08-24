@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	idStorageFactory  func(string, string) id.Storage
+	idStorageFactory  func(string) id.Storage
 	relStorage        relation.Storage
 	idExporter        id.Exporter
 	idJSONExporter    id.Storage
@@ -36,7 +36,7 @@ var (
 )
 
 // Inject dependencies
-func Inject(ids func(string, string) id.Storage, rels relation.Storage, ex id.Exporter, jSONEx id.Storage) {
+func Inject(ids func(string) id.Storage, rels relation.Storage, ex id.Exporter, jSONEx id.Storage) {
 	idStorageFactory = ids
 	relStorage = rels
 	idExporter = ex

@@ -24,14 +24,14 @@ import (
 	domain "github.com/cgi-fr/lino/pkg/id"
 )
 
-func idStorage(filename string) domain.Storage {
+func idStorageFile(filename string) domain.Storage {
 	return infra.NewMultiStorage(infra.NewYAMLStorage(filename), infra.NewDOTStorage())
 }
 
 func idStorageFactory() func(string, string) domain.Storage {
 	return func(table string, filename string) domain.Storage {
 		if table == "" {
-			return idStorage(filename)
+			return idStorageFile(filename)
 		}
 		return infra.NewTableStorage(domain.NewTable(table))
 	}

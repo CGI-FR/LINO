@@ -163,7 +163,12 @@ func (di *SQLDataIterator) Next() bool {
 
 		row := pull.Row{}
 		for i, column := range columns {
-			row[column] = values[i]
+			b, ok := values[i].([]byte)
+			if ok {
+				row[column] = string(b)
+			} else {
+				row[column] = values[i]
+			}
 		}
 		di.value = row
 		return true

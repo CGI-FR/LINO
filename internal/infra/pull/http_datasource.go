@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/cgi-fr/lino/pkg/pull"
+	"github.com/rs/zerolog/log"
 )
 
 // HTTPDataSourceFactory exposes methods to create new HTTP pullers.
@@ -63,7 +64,14 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull
 	}
 	reqbody := strings.NewReader(string(b))
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, ds.url+"/data/"+source.Name(), reqbody)
+	url := ds.url + "/data/" + source.Name()
+	if len(ds.schema) > 0 {
+		url = url + "?schema=" + ds.schema
+	}
+
+	log.Debug().Str("url", url).Msg("External connector request")
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, reqbody)
 	if err != nil {
 		return nil, &pull.Error{Description: err.Error()}
 	}

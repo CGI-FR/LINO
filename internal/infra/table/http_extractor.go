@@ -24,6 +24,7 @@ import (
 	"net/http"
 
 	"github.com/cgi-fr/lino/pkg/table"
+	"github.com/rs/zerolog/log"
 )
 
 // HTTPExtractor provides table extraction logic from an HTTP Rest Endpoint.
@@ -42,7 +43,14 @@ func NewHTTPExtractor(url string, schema string) *HTTPExtractor {
 
 // Extract tables from the database.
 func (e *HTTPExtractor) Extract() ([]table.Table, *table.Error) {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, e.url+"/tables", nil)
+	url := e.url + "/tables"
+	if len(e.schema) > 0 {
+		url = url + "?schema=" + e.schema
+	}
+
+	log.Debug().Str("url", url).Msg("External connector request")
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}

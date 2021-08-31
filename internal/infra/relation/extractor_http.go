@@ -41,7 +41,7 @@ func NewHTTPExtractor(url string, schema string) *HTTPExtractor {
 
 // Extract tables from the database.
 func (e *HTTPExtractor) Extract() ([]relation.Relation, *relation.Error) {
-	resp, err := http.Get("http://httpmock:1080/api/v1/relations")
+	resp, err := http.Get(e.url + "/relations")
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}
 	}

@@ -41,7 +41,7 @@ func NewHTTPExtractor(url string, schema string) *HTTPExtractor {
 
 // Extract tables from the database.
 func (e *HTTPExtractor) Extract() ([]table.Table, *table.Error) {
-	resp, err := http.Get("http://httpmock:1080/api/v1/tables")
+	resp, err := http.Get(e.url + "/tables")
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}

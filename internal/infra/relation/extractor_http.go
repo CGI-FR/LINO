@@ -18,6 +18,7 @@
 package relation
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -41,7 +42,11 @@ func NewHTTPExtractor(url string, schema string) *HTTPExtractor {
 
 // Extract tables from the database.
 func (e *HTTPExtractor) Extract() ([]relation.Relation, *relation.Error) {
-	resp, err := http.Get(e.url + "/relations")
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, e.url+"/relations", nil)
+	if err != nil {
+		return nil, &relation.Error{Description: err.Error()}
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}
 	}

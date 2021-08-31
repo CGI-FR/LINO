@@ -18,6 +18,7 @@
 package table
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -41,7 +42,11 @@ func NewHTTPExtractor(url string, schema string) *HTTPExtractor {
 
 // Extract tables from the database.
 func (e *HTTPExtractor) Extract() ([]table.Table, *table.Error) {
-	resp, err := http.Get(e.url + "/tables")
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, e.url+"/tables", nil)
+	if err != nil {
+		return nil, &table.Error{Description: err.Error()}
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}

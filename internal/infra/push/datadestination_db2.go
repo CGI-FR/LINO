@@ -22,6 +22,7 @@ package push
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	// import db2 connector
 	_ "github.com/ibmdb/go_ibm_db"
@@ -112,5 +113,11 @@ func (d Db2Dialect) IsDuplicateError(err error) bool {
 
 // ConvertValue before load
 func (d Db2Dialect) ConvertValue(from push.Value) push.Value {
-	return from
+	// FIXME: Workaround to parse time from json
+	aTime, err := time.Parse("2006-01-02T15:04:05.999Z07:00", fmt.Sprintf("%v", from))
+	if err != nil {
+		return from
+	} else {
+		return aTime
+	}
 }

@@ -49,9 +49,40 @@ builds:
     goos:
       - linux
     goarch:
-      - "386"
       - amd64
-    binary: lino
+    binary: lino-db2
+    flags:
+      - -tags=db2
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+      - -X main.tag={{.Env.VERSION}} -X main.buildDate={{.Env.BUILD_DATE}}
+  - id: "lino-db2-mingw64"
+    main: ./cmd/lino
+    goos:
+      - windows
+    goarch:
+      - "amd64"
+    env:
+      - CXX_FOR_TARGET=x86_64-w64-mingw32-g++
+      - CC_FOR_TARGET=x86_64-w64-mingw32-gcc
+      - CC=x86_64-w64-mingw32-gcc-win32
+    binary: lino-db2
+    flags:
+      - -tags=db2
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+      - -X main.tag={{.Env.VERSION}} -X main.buildDate={{.Env.BUILD_DATE}}
+  - id: "lino-db2-mingw32"
+    main: ./cmd/lino
+    goos:
+      - windows
+    goarch:
+      - "386"
+    env:
+      - CXX_FOR_TARGET=i686-w64-mingw32-g++
+      - CC_FOR_TARGET=i686-w64-mingw32-gcc
+      - CC=i686-w64-mingw32-gcc-win32
+    binary: lino-db2
     flags:
       - -tags=db2
     ldflags:

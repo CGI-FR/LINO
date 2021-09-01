@@ -92,7 +92,7 @@ func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues 
 	if len(primaryKeys) > 0 {
 		sql.Write([]byte(" WHERE "))
 	} else {
-		return "", &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
+		return "", []string{}, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
 	}
 	for index, pk := range primaryKeys {
 		sql.Write([]byte(pk))

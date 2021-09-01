@@ -287,11 +287,11 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 		}
 		rw.headers = pkNames
 	case rw.dd.mode == push.Update:
-		prepareStmt, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, pkNames, pkVar)
+		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, pkNames, pkVar)
 		if pusherr != nil {
 			return pusherr
 		}
-		rw.headers = append(names, pkNames...)
+
 	default: // Insert:
 		/* #nosec */
 		prepareStmt = rw.dd.dialect.InsertStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey())
@@ -369,7 +369,7 @@ type SQLDialect interface {
 	EnableConstraintsStatement(tableName string) string
 	TruncateStatement(tableName string) string
 	InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string
-	UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error)
+	UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error)
 	IsDuplicateError(error) bool
 	ConvertValue(push.Value) push.Value
 }

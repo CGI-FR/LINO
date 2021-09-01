@@ -76,7 +76,7 @@ func (d Db2Dialect) InsertStatement(tableName string, columns []string, values [
 }
 
 // UpdateStatement
-func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {
+func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("UPDATE "))
 	sql.Write([]byte(tableName))
@@ -102,7 +102,7 @@ func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues 
 			sql.Write([]byte(" AND "))
 		}
 	}
-	return sql.String(), nil
+	return sql.String(), append(columns, primaryKeys...), nil
 }
 
 // IsDuplicateError check if error is a duplicate error

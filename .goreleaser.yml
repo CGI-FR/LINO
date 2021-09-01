@@ -53,7 +53,7 @@ builds:
       - amd64
     binary: lino
     flags:
-      - tags=db2
+      - -tags=db2
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
       - -X main.tag={{.Env.VERSION}} -X main.buildDate={{.Env.BUILD_DATE}}

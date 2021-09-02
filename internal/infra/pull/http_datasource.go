@@ -58,7 +58,15 @@ func (ds *HTTPDataSource) Open() *pull.Error {
 
 // RowReader iterate over rows in table with filter
 func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, *pull.Error) {
-	b, err := json.Marshal(filter)
+	b, err := json.Marshal(struct {
+		Values pull.Row `yaml:"values"`
+		Limit  uint     `yaml:"limit"`
+		Where  string   `yaml:"where"`
+	}{
+		Values: filter.Values(),
+		Limit:  filter.Limit(),
+		Where:  filter.Where(),
+	})
 	if err != nil {
 		return nil, &pull.Error{Description: err.Error()}
 	}

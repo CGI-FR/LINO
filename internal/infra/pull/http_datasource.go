@@ -83,6 +83,7 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull
 	if err != nil {
 		return nil, &pull.Error{Description: err.Error()}
 	}
+	req.Header.Add("Content-Type", "application/json");
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, &pull.Error{Description: err.Error()}

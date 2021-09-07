@@ -23,6 +23,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/rs/zerolog/log"
@@ -43,23 +44,29 @@ func (e *HTTPDataDestinationFactory) New(url string, schema string) push.DataDes
 
 // HTTPDataDestination write data to a HTTP endpoint.
 type HTTPDataDestination struct {
-	url       string
-	schema    string
-	rowWriter map[string]*HTTPRowWriter
+	url                string
+	schema             string
+	rowWriter          map[string]*HTTPRowWriter
+	mode               push.Mode
+	disableConstraints bool
 }
 
 // NewHTTPDataDestination creates a new HTTP datadestination.
 func NewHTTPDataDestination(url string, schema string) *HTTPDataDestination {
 	return &HTTPDataDestination{
-		url:       url,
-		schema:    schema,
-		rowWriter: map[string]*HTTPRowWriter{},
+		url:                url,
+		schema:             schema,
+		rowWriter:          map[string]*HTTPRowWriter{},
+		mode:               push.Insert,
+		disableConstraints: false,
 	}
 }
 
 // Open HTTP Connection
 func (dd *HTTPDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Str("mode", mode.String()).Bool("disableConstraints", disableConstraints).Msg("open HTTP destination")
+	dd.mode = mode
+	dd.disableConstraints = disableConstraints
 	return nil
 }
 
@@ -90,9 +97,10 @@ func (dd *HTTPDataDestination) RowWriter(table push.Table) (push.RowWriter, *pus
 
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Str("table", table.Name()).Msg("build row writer HTTP destination")
 
-	url := dd.url + "/data/" + table.Name()
+	url := dd.url + "/data/" + table.Name() + "?mode=" + dd.mode.String() + "&disableConstraints=" + strconv.FormatBool(dd.disableConstraints)
+
 	if len(dd.schema) > 0 {
-		url = url + "?schema=" + dd.schema
+		url = url + "&schema=" + dd.schema
 	}
 
 	pr, pw := io.Pipe()
@@ -135,7 +143,7 @@ func (rw *HTTPRowWriter) Request() {
 	if err != nil {
 		log.Error().Err(err).Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Str("status", resp.Status).Msg("response")
 	}
-
+	resp.Body.Close()
 	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Str("status", resp.Status).Msg("response")
 }
 
@@ -157,11 +165,12 @@ func (rw *HTTPRowWriter) Write(row push.Row) *push.Error {
 // close table writer
 func (rw *HTTPRowWriter) Close() *push.Error {
 	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Msg("close")
-	_, err := rw.buf.Write([]byte("closed\n"))
+	_, err := rw.buf.Write([]byte("end of data\n"))
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}
 	rw.buf.Close()
+	rw.req.Body.Close()
 	return nil
 }
 

@@ -115,11 +115,11 @@ type HTTPRowWriter struct {
 	table push.Table
 	dd    *HTTPDataDestination
 	req   *http.Request
-	buf   io.Writer
+	buf   io.WriteCloser
 }
 
 // NewHTTPRowWriter creates a new HTTP row writer.
-func NewHTTPRowWriter(table push.Table, dd *HTTPDataDestination, req *http.Request, buf io.Writer) *HTTPRowWriter {
+func NewHTTPRowWriter(table push.Table, dd *HTTPDataDestination, req *http.Request, buf io.WriteCloser) *HTTPRowWriter {
 	return &HTTPRowWriter{
 		table: table,
 		dd:    dd,
@@ -140,18 +140,27 @@ func (rw *HTTPRowWriter) Request() {
 
 // Write
 func (rw *HTTPRowWriter) Write(row push.Row) *push.Error {
-	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Msg("write")
 	jsonline, _ := export(row)
-	rw.buf.Write(jsonline)
-	rw.buf.Write([]byte("\n"))
+	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).RawJSON("data", jsonline).Msg("write")
+	_, err := rw.buf.Write(jsonline)
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+	_, err = rw.buf.Write([]byte("\n"))
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
 	return nil
 }
 
 // close table writer
 func (rw *HTTPRowWriter) Close() *push.Error {
 	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Msg("close")
-	rw.buf.Write([]byte("\n"))
-	rw.req.Body.Close()
+	_, err := rw.buf.Write([]byte("closed\n"))
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+	rw.buf.Close()
 	return nil
 }
 

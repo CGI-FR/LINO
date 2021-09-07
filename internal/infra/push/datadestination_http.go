@@ -165,10 +165,6 @@ func (rw *HTTPRowWriter) Write(row push.Row) *push.Error {
 // close table writer
 func (rw *HTTPRowWriter) Close() *push.Error {
 	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Msg("close")
-	_, err := rw.buf.Write([]byte("end of data\n"))
-	if err != nil {
-		return &push.Error{Description: err.Error()}
-	}
 	rw.buf.Close()
 	rw.req.Body.Close()
 	return nil

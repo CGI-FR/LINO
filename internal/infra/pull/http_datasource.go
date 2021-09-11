@@ -77,13 +77,13 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull
 		url = url + "?schema=" + ds.schema
 	}
 
-	log.Debug().Str("url", url).Msg("External connector request")
+	log.Debug().RawJSON("body", b).Str("url", url).Msg("External connector request")
 
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, reqbody)
 	if err != nil {
 		return nil, &pull.Error{Description: err.Error()}
 	}
-	req.Header.Add("Content-Type", "application/json");
+	req.Header.Add("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, &pull.Error{Description: err.Error()}

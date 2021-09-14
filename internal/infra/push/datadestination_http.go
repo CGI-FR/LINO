@@ -20,6 +20,7 @@ package push
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -125,6 +126,7 @@ type HTTPRowWriter struct {
 	dd    *HTTPDataDestination
 	req   *http.Request
 	buf   io.WriteCloser
+	cmpl  chan int
 }
 
 // NewHTTPRowWriter creates a new HTTP row writer.
@@ -134,6 +136,7 @@ func NewHTTPRowWriter(table push.Table, dd *HTTPDataDestination, req *http.Reque
 		dd:    dd,
 		req:   req,
 		buf:   buf,
+		cmpl:  make(chan int),
 	}
 }
 
@@ -145,6 +148,7 @@ func (rw *HTTPRowWriter) Request() {
 	}
 	resp.Body.Close()
 	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Str("status", resp.Status).Msg("response")
+	rw.cmpl <- resp.StatusCode
 }
 
 // Write
@@ -167,6 +171,11 @@ func (rw *HTTPRowWriter) Close() *push.Error {
 	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Msg("close")
 	rw.buf.Close()
 	rw.req.Body.Close()
+	// wait for request completion
+	code := <-rw.cmpl
+	if code < 200 || code >= 300 {
+		return &push.Error{Description: fmt.Sprintf("HTTP request returned status code %d", code)}
+	}
 	return nil
 }
 

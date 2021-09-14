@@ -24,13 +24,27 @@ import (
 )
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter) *Error {
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter) (err *Error) {
 	err1 := destination.Open(plan, mode, disableConstraints)
 	if err1 != nil {
 		return err1
 	}
-	defer destination.Close()
-	defer ri.Close()
+
+	defer func() {
+		er1 := destination.Close()
+		er2 := ri.Close()
+
+		switch {
+		case er1 != nil && er2 == nil && err == nil:
+			err = er1
+		case er2 != nil && er1 == nil && err == nil:
+			err = er2
+		case err != nil && er1 == nil && er2 == nil:
+			err = er2
+		case err != nil || er1 != nil || er2 != nil:
+			err = &Error{Description: fmt.Sprintf("multiple errors: [%s], [%s], [%s]", err, er1, er2)}
+		}
+	}()
 
 	Reset()
 

@@ -40,7 +40,7 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 		case er2 != nil && er1 == nil && err == nil:
 			err = er2
 		case err != nil && er1 == nil && er2 == nil:
-			err = er2
+			// err = err
 		case err != nil || er1 != nil || er2 != nil:
 			err = &Error{Description: fmt.Sprintf("multiple errors: [%s], [%s], [%s]", err, er1, er2)}
 		}

@@ -96,6 +96,13 @@ func (dd *HTTPDataDestination) RowWriter(table push.Table) (push.RowWriter, *pus
 		return rw, nil
 	}
 
+	pkeys := table.PrimaryKey()
+	b, err := json.Marshal(pkeys)
+	if err != nil {
+		return nil, &push.Error{Description: err.Error()}
+	}
+	pkeysJSON := string(b)
+
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Str("table", table.Name()).Msg("build row writer HTTP destination")
 
 	url := dd.url + "/data/" + table.Name() + "?mode=" + dd.mode.String() + "&disableConstraints=" + strconv.FormatBool(dd.disableConstraints)
@@ -111,6 +118,7 @@ func (dd *HTTPDataDestination) RowWriter(table push.Table) (push.RowWriter, *pus
 		return nil, &push.Error{Description: err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/x-ndjson")
+	req.Header.Add("Primary-Keys", pkeysJSON)
 
 	rw = NewHTTPRowWriter(table, dd, req, pw)
 	dd.rowWriter[table.Name()] = rw

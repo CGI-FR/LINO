@@ -163,7 +163,22 @@ func (di *SQLDataIterator) Next() bool {
 
 		row := pull.Row{}
 		for i, column := range columns {
-			row[column] = values[i]
+			valueType := fmt.Sprintf("%T", (values[i]))
+			switch valueType {
+			case "int64":
+				row[column] = fmt.Sprintf("%d", (values[i]))
+			case "float64":
+				row[column] = fmt.Sprintf("%f", (values[i]))
+			case "uint8":
+				row[column] = fmt.Sprintf("%d", (values[i]))
+			case "[]uint8":
+				row[column] = fmt.Sprintf("%s", (values[i]))
+			case "<nil>":
+				row[column] = nil
+			default:
+				row[column] = values[i]
+			}
+
 		}
 		di.value = row
 		return true

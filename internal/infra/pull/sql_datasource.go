@@ -178,7 +178,6 @@ func (di *SQLDataIterator) Next() bool {
 			default:
 				row[column] = values[i]
 			}
-
 		}
 		di.value = row
 		return true

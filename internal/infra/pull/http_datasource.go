@@ -72,13 +72,6 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull
 	}
 	reqbody := strings.NewReader(string(b))
 
-	pkeys := source.PrimaryKey()
-	b, err = json.Marshal(pkeys)
-	if err != nil {
-		return nil, &pull.Error{Description: err.Error()}
-	}
-	pkeysJSON := string(b)
-
 	url := ds.url + "/data/" + source.Name()
 	if len(ds.schema) > 0 {
 		url = url + "?schema=" + ds.schema
@@ -91,7 +84,20 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull
 		return nil, &pull.Error{Description: err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Primary-Keys", pkeysJSON)
+
+	if pcols := source.Columns(); pcols != nil && pcols.Len() > 0 {
+		pcolsList := []string{}
+		for idx := uint(0); idx < pcols.Len(); idx++ {
+			pcolsList = append(pcolsList, pcols.Column(idx).Name())
+		}
+		b, err = json.Marshal(pcolsList)
+		if err != nil {
+			return nil, &pull.Error{Description: err.Error()}
+		}
+		pcolsJSON := string(b)
+		req.Header.Add("Select-Columns", pcolsJSON)
+	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, &pull.Error{Description: err.Error()}

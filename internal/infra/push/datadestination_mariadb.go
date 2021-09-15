@@ -43,17 +43,17 @@ type MariadbDialect struct{}
 
 // Placeholde return the variable format for mariadb
 func (d MariadbDialect) Placeholder(position int) string {
-	return fmt.Sprintf("?")
+	return "?"
 }
 
 // EnableConstraintsStatement generate statments to activate constraintes
 func (d MariadbDialect) EnableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf("SET GLOBAL FOREIGN_KEY_CHECKS=1")
+	return "SET GLOBAL FOREIGN_KEY_CHECKS=1"
 }
 
 // DisableConstraintsStatement generate statments to deactivate constraintes
 func (d MariadbDialect) DisableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf("SET GLOBAL FOREIGN_KEY_CHECKS=0")
+	return "SET GLOBAL FOREIGN_KEY_CHECKS=0"
 }
 
 // TruncateStatement generate statement to truncat table content (ON DELETE CASCADE must be set to TRUNCATE child tables)
@@ -65,7 +65,7 @@ func (d MariadbDialect) TruncateStatement(tableName string) string {
 func (d MariadbDialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
 	protectedColumns := []string{}
 	for _, c := range columns {
-		protectedColumns = append(protectedColumns, fmt.Sprintf("%s", c))
+		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c))
 	}
 	if len(primaryKeys) > 0 {
 		sql := fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s) ON DUPLICATE KEY UPDATE ", tableName, strings.Join(protectedColumns, ","), strings.Join(values, ","))

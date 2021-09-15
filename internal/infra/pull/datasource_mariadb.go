@@ -47,7 +47,7 @@ func (e *MariadbDataSourceFactory) New(url string, schema string) pull.DataSourc
 type MariadbDialect struct{}
 
 func (pd MariadbDialect) Placeholder(position int) string {
-	return fmt.Sprintf(" ?")
+	return " ?"
 }
 
 func (pd MariadbDialect) Limit(limit uint) string {

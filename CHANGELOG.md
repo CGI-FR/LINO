@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [1.7.0]
+
+- `Added` new datasource type with string connection `http://...` LINO can pull/push data to an HTTP Endpoint API
+
 ## [1.6.0]
 
 - `Added` option to change ingress-descriptor filename

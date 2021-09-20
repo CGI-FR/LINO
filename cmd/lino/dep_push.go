@@ -30,6 +30,7 @@ func pushDataDestinationFactory() map[string]domain.DataDestinationFactory {
 		"godror":     infra.NewOracleDataDestinationFactory(),
 		"godror-raw": infra.NewOracleDataDestinationFactory(),
 		"db2":        infra.NewDb2DataDestinationFactory(),
+		"http":       infra.NewHTTPDataDestinationFactory(),
 	}
 }
 

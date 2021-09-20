@@ -82,6 +82,16 @@ func init() {
 		Override: "go_ibm_db",
 	}
 	dburl.Register(db2Scheme)
+
+	httpScheme := dburl.Scheme{
+		Driver:    "http",
+		Generator: dburl.GenFromURL("http://localhost:8080"),
+		Proto:     dburl.ProtoAny,
+		Opaque:    false,
+		Aliases:   []string{"https"},
+		Override:  "",
+	}
+	dburl.Register(httpScheme)
 }
 
 func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {

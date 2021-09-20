@@ -27,7 +27,7 @@ import (
 )
 
 func makeTable(name string) pull.Table {
-	return pull.NewTable(name, []string{name + "_ID"})
+	return pull.NewTable(name, []string{name + "_ID"}, nil)
 }
 
 func makeRel(from, to pull.Table) pull.Relation {

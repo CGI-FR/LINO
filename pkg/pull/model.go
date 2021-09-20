@@ -28,6 +28,18 @@ import (
 type Table interface {
 	Name() string
 	PrimaryKey() []string
+	Columns() ColumnList
+}
+
+// ColumnList is a list of columns.
+type ColumnList interface {
+	Len() uint
+	Column(idx uint) Column
+}
+
+// Column of a table.
+type Column interface {
+	Name() string
 }
 
 // Relation between two tables.

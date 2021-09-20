@@ -17,10 +17,16 @@
 
 package table
 
+// Column holds the name of a column.
+type Column struct {
+	Name string
+}
+
 // Table holds a name (table name) and a list of keys (table columns).
 type Table struct {
-	Name string
-	Keys []string
+	Name    string
+	Keys    []string
+	Columns []Column
 }
 
 // Error is the error type returned by the domain

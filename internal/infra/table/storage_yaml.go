@@ -35,8 +35,14 @@ type YAMLStructure struct {
 
 // YAMLTable defines how to store a table in YAML format.
 type YAMLTable struct {
-	Name string   `yaml:"name"`
-	Keys []string `yaml:"keys"`
+	Name    string       `yaml:"name"`
+	Keys    []string     `yaml:"keys"`
+	Columns []YAMLColumn `yaml:"columns,omitempty"`
+}
+
+// YAMLColumn defines how to store a column in YAML format.
+type YAMLColumn struct {
+	Name string `yaml:"name"`
 }
 
 // YAMLStorage provides storage in a local YAML file
@@ -56,9 +62,14 @@ func (s YAMLStorage) List() ([]table.Table, *table.Error) {
 	result := []table.Table{}
 
 	for _, ym := range list.Tables {
+		col := []table.Column{}
+		for _, ymc := range ym.Columns {
+			col = append(col, table.Column{Name: ymc.Name})
+		}
 		m := table.Table{
-			Name: ym.Name,
-			Keys: ym.Keys,
+			Name:    ym.Name,
+			Keys:    ym.Keys,
+			Columns: col,
 		}
 		result = append(result, m)
 	}
@@ -73,15 +84,19 @@ func (s YAMLStorage) Store(tables []table.Table) *table.Error {
 	}
 
 	for _, r := range tables {
+		cols := []YAMLColumn{}
+		for _, rc := range r.Columns {
+			cols = append(cols, YAMLColumn{Name: rc.Name})
+		}
 		yml := YAMLTable{
-			Name: r.Name,
-			Keys: r.Keys,
+			Name:    r.Name,
+			Keys:    r.Keys,
+			Columns: cols,
 		}
 		list.Tables = append(list.Tables, yml)
 	}
 
-	err := writeFile(&list)
-	if err != nil {
+	if err := writeFile(&list); err != nil {
 		return err
 	}
 

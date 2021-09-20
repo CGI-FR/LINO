@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/cgi-fr/lino/pkg/pull"
 
@@ -156,6 +157,18 @@ type SQLDataIterator struct {
 	err   *pull.Error
 }
 
+// PrintableStringOrSliceOfByte return a string if all runes are printable else return a slice of bytes
+func PrintableStringOrSliceOfByte(input []byte) interface{} {
+	output := string(input)
+
+	for _, r := range output {
+		if !unicode.IsPrint(r) {
+			return input
+		}
+	}
+	return output
+}
+
 // Next reads the next rows if it exists.
 func (di *SQLDataIterator) Next() bool {
 	if di.rows == nil {
@@ -176,7 +189,12 @@ func (di *SQLDataIterator) Next() bool {
 
 		row := pull.Row{}
 		for i, column := range columns {
-			row[column] = values[i]
+			b, ok := values[i].([]byte)
+			if ok {
+				row[column] = PrintableStringOrSliceOfByte(b)
+			} else {
+				row[column] = values[i]
+			}
 		}
 		di.value = row
 		return true

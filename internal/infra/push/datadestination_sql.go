@@ -192,6 +192,13 @@ func NewSQLRowWriter(table push.Table, dd *SQLDataDestination) *SQLRowWriter {
 // open table writer
 func (rw *SQLRowWriter) open() *push.Error {
 	log.Debug().Msg(fmt.Sprintf("open table with mode %s", rw.dd.mode))
+	if rw.dd.disableConstraints {
+		err2 := rw.disableConstraints()
+		if err2 != nil {
+			return &push.Error{Description: err2.Error()}
+		}
+	}
+
 	if rw.dd.mode == push.Truncate {
 		err := rw.truncate()
 		if err != nil {
@@ -199,14 +206,7 @@ func (rw *SQLRowWriter) open() *push.Error {
 		}
 	}
 
-	if rw.dd.disableConstraints {
-		err2 := rw.disableConstraints()
-		if err2 != nil {
-			return &push.Error{Description: err2.Error()}
-		}
-	}
 	rw.duplicateKeysCache = map[push.Value]struct{}{}
-
 	return nil
 }
 

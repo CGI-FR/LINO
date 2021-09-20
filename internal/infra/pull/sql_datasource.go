@@ -143,6 +143,18 @@ type SQLDataIterator struct {
 	err   *pull.Error
 }
 
+// PrintableStringOrSliceOfByte return a string if all runes are printable else return a slice of bytes 
+func PrintableStringOrSliceOfByte(input []byte) interface{} { 
+	output := string(input) 
+ 
+ 	for _, r := range output { 
+		if !unicode.IsPrint(r) { 
+			return input 
+		} 
+	} 
+	return output 
+} 
+
 // Next reads the next rows if it exists.
 func (di *SQLDataIterator) Next() bool {
 	if di.rows == nil {
@@ -163,19 +175,10 @@ func (di *SQLDataIterator) Next() bool {
 
 		row := pull.Row{}
 		for i, column := range columns {
-			valueType := fmt.Sprintf("%T", (values[i]))
-			switch valueType {
-			case "int64":
-				row[column] = fmt.Sprintf("%d", (values[i]))
-			case "float64":
-				row[column] = fmt.Sprintf("%f", (values[i]))
-			case "uint8":
-				row[column] = fmt.Sprintf("%d", (values[i]))
-			case "[]uint8":
-				row[column] = fmt.Sprintf("%s", (values[i]))
-			case "<nil>":
-				row[column] = nil
-			default:
+			b, ok := values[i].([]byte)
+			if ok {
+				row[column] = PrintableStringOrSliceOfByte(b)
+			} else {
 				row[column] = values[i]
 			}
 		}

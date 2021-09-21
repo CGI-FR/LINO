@@ -67,7 +67,7 @@ func (d Db2Dialect) InsertStatement(tableName string, columns []string, values [
 }
 
 // UpdateStatement
-func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {
+func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error) {
 	panic(fmt.Errorf("Not implemented"))
 }
 

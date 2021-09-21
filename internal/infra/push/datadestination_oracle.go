@@ -128,7 +128,7 @@ func (d OracleDialect) InsertStatement(tableName string, columns []string, value
 }
 
 // UpdateStatement
-func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {
+func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("UPDATE "))
 	sql.Write([]byte(tableName))
@@ -144,7 +144,7 @@ func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValu
 	if len(primaryKeys) > 0 {
 		sql.Write([]byte(" WHERE "))
 	} else {
-		return "", &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
+		return "", []string{}, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
 	}
 	for index, pk := range primaryKeys {
 		sql.Write([]byte(pk))
@@ -154,7 +154,7 @@ func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValu
 			sql.Write([]byte(" AND "))
 		}
 	}
-	return sql.String(), nil
+	return sql.String(), append(columns, primaryKeys...), nil
 }
 
 // IsDuplicateError check if error is a duplicate error

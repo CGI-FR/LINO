@@ -73,23 +73,40 @@ func (d PostgresDialect) InsertStatement(tableName string, columns []string, val
 	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(protectedColumns, ","), strings.Join(values, ","))
 }
 
-func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {
+// isAPrimaryKey return true if columnName is in pknames
+func isAPrimaryKey(columnName string, pkNames []string) bool {
+	for _, pkName := range pkNames {
+		if pkName == columnName {
+			return true
+		}
+	}
+	return false
+}
+
+func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("UPDATE "))
 	sql.Write([]byte(tableName))
 	sql.Write([]byte(" SET "))
+	firstColumn := true
 	for index, column := range columns {
+		// don't update primary key
+		if isAPrimaryKey(column, primaryKeys) {
+			continue
+		}
+		if !firstColumn {
+			sql.Write([]byte(", "))
+		} else {
+			firstColumn = false
+		}
 		sql.Write([]byte(column))
 		fmt.Fprint(sql, "=")
 		fmt.Fprint(sql, uValues[index])
-		if index+1 < len(columns) {
-			sql.Write([]byte(", "))
-		}
 	}
 	if len(primaryKeys) > 0 {
 		sql.Write([]byte(" WHERE "))
 	} else {
-		return "", &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
+		return "", []string{}, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
 	}
 	for index, pk := range primaryKeys {
 		sql.Write([]byte(pk))
@@ -99,7 +116,7 @@ func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uVa
 			sql.Write([]byte(" AND "))
 		}
 	}
-	return sql.String(), nil
+	return sql.String(), columns, nil
 }
 
 // IsDuplicateError check if error is a duplicate error

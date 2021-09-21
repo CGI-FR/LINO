@@ -53,5 +53,5 @@ func (od Db2Dialect) Placeholder(position int) string {
 }
 
 func (od Db2Dialect) Limit(limit uint) string {
-	return fmt.Sprintf(" LIMIT %d", limit)
+	return fmt.Sprintf(" FETCH FIRST %d ROWS ONLY", limit)
 }

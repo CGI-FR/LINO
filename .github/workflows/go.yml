@@ -1,0 +1,30 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Cygwin
+      # You may pin to the exact commit or the version.
+      # uses: egor-tensin/setup-cygwin@4f96f9fecb8c952fa32ff791b0a77d93d5191bb4
+      uses: egor-tensin/setup-cygwin@v3
+      with:
+        # Target platform
+        platform: x64 # optional, default is x64
+        # Installation directory
+        install-dir: C:\tools\cygwin # optional, default is C:\tools\cygwin
+        # Packages to install, separated by a space
+        packages: make # optional
+        # Value to set as the CYGWIN environment variable
+        #env: # optional
+        # Convert symlinks in /usr/bin to hardlinks
+        #hardlinks: # optional, default is 0

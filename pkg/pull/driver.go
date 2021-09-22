@@ -18,7 +18,9 @@
 package pull
 
 import (
+	"encoding/base64"
 	"fmt"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 )
@@ -69,10 +71,8 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 
 	log.Debug().Msg(fmt.Sprintf("from %v with filter %v", step.Entry(), filter))
 
-	i := 0
-	for rowIterator.Next() {
-		row := rowIterator.Value()
-		i++
+	for i := 0; rowIterator.Next(); i++ {
+		row := format(step.Entry(), rowIterator.Value())
 
 		IncLinesPerStepCount(step.Entry().Name())
 		log.Trace().Msg(fmt.Sprintf("process row number %v", i))
@@ -96,19 +96,19 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 			log.Trace().Msg(fmt.Sprintf("row #%v, %v related row(s)", i, len(relatedToRows)))
 			for _, relatedToRow := range relatedToRows {
 				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow)
-				if relatedToRow[rel.Name()] == nil {
-					relatedToRow[rel.Name()] = []Row{}
+				if _, ok := relatedToRow[rel.Name()]; !ok {
+					relatedToRow[rel.Name()] = Value{[]Row{}, []Row{}, true}
 				}
 				if err := e.pullStep(nextStep, nextFilter, func(r Row) *Error {
 					if !directionParent {
-						rowArray, ok := relatedToRow[rel.Name()].([]Row)
+						rowArray, ok := relatedToRow[rel.Name()].Raw.([]Row)
 						if !ok {
 							return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", nextStep.Entry().Name(), rel.Name())}
 						}
 						rowArray = append(rowArray, r)
-						relatedToRow[rel.Name()] = rowArray
+						relatedToRow[rel.Name()] = Value{rowArray, rowArray, true}
 					} else {
-						relatedToRow[rel.Name()] = r
+						relatedToRow[rel.Name()] = Value{r, r, true}
 					}
 					return nil
 				}, diagnostic); err != nil {
@@ -161,17 +161,17 @@ func (e puller) exhaust(step Step, allRows map[string][]Row) *Error {
 				}
 
 				if !directionParent {
-					if fromRow[relation.Name()] == nil {
-						fromRow[relation.Name()] = []Row{}
+					if _, ok := fromRow[relation.Name()]; !ok {
+						fromRow[relation.Name()] = Value{[]Row{}, []Row{}, true}
 					}
-					rowArray, ok := fromRow[relation.Name()].([]Row)
+					rowArray, ok := fromRow[relation.Name()].Raw.([]Row)
 					if !ok {
 						return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", fromTable.Name(), relation.Name())}
 					}
 					rowArray = append(rowArray, rows...)
-					fromRow[relation.Name()] = rowArray
+					fromRow[relation.Name()] = Value{rowArray, rowArray, true}
 				} else {
-					fromRow[relation.Name()] = rows[0]
+					fromRow[relation.Name()] = Value{rows[0], rows[0], true}
 				}
 
 				allRows[toTable.Name()] = append(allRows[toTable.Name()], rows...)
@@ -257,4 +257,61 @@ loop:
 		result = append(result, row1)
 	}
 	return result
+}
+
+func format(table Table, row Row) Row {
+	for i := uint(0); i < table.Columns().Len(); i++ {
+		column := table.Columns().Column(i)
+		log.Info().Str("column", column.Name()).Str("export", column.Export()).Msg("format")
+		key := column.Name()
+		val := row[key].Raw
+
+		switch column.Export() {
+		case "string":
+			row[key] = Value{val, fmt.Sprintf("%v", val), true}
+		case "integer":
+			if i64, ok := val.(int64); ok {
+				row[key] = Value{val, i64, true}
+			} else if f64, ok := val.(float64); ok {
+				row[key] = Value{val, int64(f64), true}
+			} else if str, ok := val.(string); ok {
+				r, err := strconv.ParseInt(str, 10, 64)
+				if err != nil {
+					row[key] = Value{val, r, true}
+				} else {
+					row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				}
+			} else {
+				row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+			}
+		case "decimal":
+			if i64, ok := val.(int64); ok {
+				row[key] = Value{val, float64(i64), true}
+			} else if f64, ok := val.(float64); ok {
+				row[key] = Value{val, f64, true}
+			} else if str, ok := val.(string); ok {
+				r, err := strconv.ParseFloat(str, 64)
+				if err != nil {
+					row[key] = Value{val, r, true}
+				} else {
+					row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				}
+			} else {
+				row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+			}
+		case "base64":
+			if b, ok := val.([]byte); ok {
+				row[key] = Value{val, base64.StdEncoding.EncodeToString(b), true}
+			} else if str, ok := val.(string); ok {
+				row[key] = Value{val, base64.StdEncoding.EncodeToString([]byte(str)), true}
+			} else {
+				row[key] = Value{val, base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v", val))), true}
+			}
+		case "no":
+			row[key] = Value{val, nil, false}
+		default: // auto
+			row[key] = Value{val, val, true}
+		}
+	}
+	return row
 }

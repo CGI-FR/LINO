@@ -40,6 +40,7 @@ type ColumnList interface {
 // Column of a table.
 type Column interface {
 	Name() string
+	Export() string
 }
 
 // Relation between two tables.
@@ -92,7 +93,11 @@ type Plan interface {
 }
 
 // Value is an untyped data.
-type Value interface{}
+type Value struct {
+	Raw      interface{}
+	Formated interface{}
+	Export   bool
+}
 
 // Filter applied to data tables.
 type Filter interface {
@@ -110,6 +115,26 @@ func (r Row) Update(other Row) Row {
 		r[k] = v
 	}
 	return r
+}
+
+func (r Row) Export() map[string]interface{} {
+	result := map[string]interface{}{}
+	for key, val := range r {
+		if val.Export {
+			if sr, ok := val.Formated.(Row); ok {
+				result[key] = sr.Export()
+			} else if sa, ok := val.Formated.([]Row); ok {
+				array := make([]map[string]interface{}, 0, len(sa))
+				for _, sar := range sa {
+					array = append(array, sar.Export())
+				}
+				result[key] = array
+			} else {
+				result[key] = val.Formated
+			}
+		}
+	}
+	return result
 }
 
 // Error is the error type returned by the domain

@@ -19,6 +19,7 @@ package pull
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -266,9 +267,18 @@ func format(table Table, row Row) Row {
 		key := column.Name()
 		val := row[key].Raw
 
+		if val == nil {
+			row[key] = Value{val, nil, true}
+			continue
+		}
+
 		switch column.Export() {
 		case "string":
-			row[key] = Value{val, fmt.Sprintf("%v", val), true}
+			if b, ok := val.([]byte); ok {
+				row[key] = Value{val, string(b), true}
+			} else {
+				row[key] = Value{val, fmt.Sprintf("%v", val), true}
+			}
 		case "integer":
 			if i64, ok := val.(int64); ok {
 				row[key] = Value{val, i64, true}
@@ -276,13 +286,35 @@ func format(table Table, row Row) Row {
 				row[key] = Value{val, int64(f64), true}
 			} else if str, ok := val.(string); ok {
 				r, err := strconv.ParseInt(str, 10, 64)
-				if err != nil {
+				if err == nil {
 					row[key] = Value{val, r, true}
 				} else {
 					row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
 				}
+				// } else if b, ok := val.([]byte); ok {
+				// 	switch len(b) {
+				// 	case 8:
+				// 		row[key] = Value{val, binary.LittleEndian.Uint64(b), true}
+				// 	case 4:
+				// 		row[key] = Value{val, binary.LittleEndian.Uint32(b), true}
+				// 	case 2:
+				// 		row[key] = Value{val, binary.LittleEndian.Uint16(b), true}
+				// 	default:
+				// 		row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				// 	}
 			} else {
-				row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				str := ""
+				if b, ok := val.([]byte); ok {
+					str = fmt.Sprintf("%v", string(b))
+				} else {
+					str = fmt.Sprintf("%v", val)
+				}
+				r, err := strconv.ParseInt(str, 10, 64)
+				if err == nil {
+					row[key] = Value{val, r, true}
+				} else {
+					row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				}
 			}
 		case "decimal":
 			if i64, ok := val.(int64); ok {
@@ -291,13 +323,35 @@ func format(table Table, row Row) Row {
 				row[key] = Value{val, f64, true}
 			} else if str, ok := val.(string); ok {
 				r, err := strconv.ParseFloat(str, 64)
-				if err != nil {
+				if err == nil {
 					row[key] = Value{val, r, true}
 				} else {
 					row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
 				}
+				// } else if b, ok := val.([]byte); ok {
+				// 	switch len(b) {
+				// 	case 8:
+				// 		bits := binary.LittleEndian.Uint64(b)
+				// 		row[key] = Value{val, math.Float64frombits(bits), true}
+				// 	case 4:
+				// 		bits := binary.LittleEndian.Uint32(b)
+				// 		row[key] = Value{val, math.Float32frombits(bits), true}
+				// 	default:
+				// 		row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				// 	}
 			} else {
-				row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				str := ""
+				if b, ok := val.([]byte); ok {
+					str = fmt.Sprintf("%v", string(b))
+				} else {
+					str = fmt.Sprintf("%v", val)
+				}
+				r, err := strconv.ParseFloat(str, 64)
+				if err == nil {
+					row[key] = Value{val, r, true}
+				} else {
+					row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				}
 			}
 		case "base64":
 			if b, ok := val.([]byte); ok {
@@ -306,6 +360,20 @@ func format(table Table, row Row) Row {
 				row[key] = Value{val, base64.StdEncoding.EncodeToString([]byte(str)), true}
 			} else {
 				row[key] = Value{val, base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v", val))), true}
+			}
+		case "json":
+			bytes := []byte{}
+			if b, ok := val.([]byte); ok {
+				bytes = b
+			} else {
+				bytes = []byte(fmt.Sprintf("%v", val))
+			}
+			var result interface{}
+			err := json.Unmarshal(bytes, &result)
+			if err == nil {
+				row[key] = Value{val, result, true}
+			} else {
+				row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
 			}
 		case "no":
 			row[key] = Value{val, nil, false}

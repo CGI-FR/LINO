@@ -110,21 +110,21 @@ func (r *row) Len() int {
 
 func (r *row) MarshalJSON() (res []byte, err error) {
 	res = append(res, '{')
-	front, back := r.l.Front(), r.l.Back()
+	front := r.l.Front()
 	for e := front; e != nil; e = e.Next() {
 		k := e.Value.(string)
-		res = append(res, fmt.Sprintf("%q:", k)...)
-		var b []byte
-		b, err = json.Marshal(r.m[k].Formated)
-		if err != nil {
-			return
-		}
-		res = append(res, b...)
-		if e != back {
+		if r.m[k].Export {
+			res = append(res, fmt.Sprintf("%q:", k)...)
+			var b []byte
+			b, err = json.Marshal(r.m[k].Formated)
+			if err != nil {
+				return
+			}
+			res = append(res, b...)
 			res = append(res, ',')
 		}
 	}
-	res = append(res, '}')
+	res[len(res)-1] = '}'
 	return
 }
 

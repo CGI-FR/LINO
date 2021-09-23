@@ -97,19 +97,19 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 			log.Trace().Msg(fmt.Sprintf("row #%v, %v related row(s)", i, len(relatedToRows)))
 			for _, relatedToRow := range relatedToRows {
 				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow)
-				if _, ok := relatedToRow[rel.Name()]; !ok {
-					relatedToRow[rel.Name()] = Value{[]Row{}, []Row{}, true}
+				if !relatedToRow.Has(rel.Name()) {
+					relatedToRow.Set(rel.Name(), Value{[]Row{}, []Row{}, true})
 				}
 				if err := e.pullStep(nextStep, nextFilter, func(r Row) *Error {
 					if !directionParent {
-						rowArray, ok := relatedToRow[rel.Name()].Raw.([]Row)
+						rowArray, ok := relatedToRow.Get(rel.Name()).Raw.([]Row)
 						if !ok {
 							return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", nextStep.Entry().Name(), rel.Name())}
 						}
 						rowArray = append(rowArray, r)
-						relatedToRow[rel.Name()] = Value{rowArray, rowArray, true}
+						relatedToRow.Set(rel.Name(), Value{rowArray, rowArray, true})
 					} else {
-						relatedToRow[rel.Name()] = Value{r, r, true}
+						relatedToRow.Set(rel.Name(), Value{r, r, true})
 					}
 					return nil
 				}, diagnostic); err != nil {
@@ -162,17 +162,17 @@ func (e puller) exhaust(step Step, allRows map[string][]Row) *Error {
 				}
 
 				if !directionParent {
-					if _, ok := fromRow[relation.Name()]; !ok {
-						fromRow[relation.Name()] = Value{[]Row{}, []Row{}, true}
+					if !fromRow.Has(relation.Name()) {
+						fromRow.Set(relation.Name(), Value{[]Row{}, []Row{}, true})
 					}
-					rowArray, ok := fromRow[relation.Name()].Raw.([]Row)
+					rowArray, ok := fromRow.Get(relation.Name()).Raw.([]Row)
 					if !ok {
 						return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", fromTable.Name(), relation.Name())}
 					}
 					rowArray = append(rowArray, rows...)
-					fromRow[relation.Name()] = Value{rowArray, rowArray, true}
+					fromRow.Set(relation.Name(), Value{rowArray, rowArray, true})
 				} else {
-					fromRow[relation.Name()] = Value{rows[0], rows[0], true}
+					fromRow.Set(relation.Name(), Value{rows[0], rows[0], true})
 				}
 
 				allRows[toTable.Name()] = append(allRows[toTable.Name()], rows...)
@@ -221,9 +221,9 @@ func findFromTable(rel Relation, relations RelationList, defaultTable Table) Tab
 }
 
 func buildFilterRow(targetKey []string, localKey []string, data Row) Row {
-	row := Row{}
+	row := NewRow()
 	for i := 0; i < len(targetKey); i++ {
-		row[targetKey[i]] = data[localKey[i]]
+		row.Set(targetKey[i], data.Get(localKey[i]))
 	}
 	return row
 }
@@ -249,7 +249,7 @@ loop:
 		for _, row2 := range b {
 			all := true
 			for _, pk := range pkList {
-				all = all && row1[pk] == row2[pk]
+				all = all && row1.Get(pk) == row2.Get(pk)
 			}
 			if all {
 				continue loop
@@ -265,31 +265,31 @@ func format(table Table, row Row) Row {
 		column := table.Columns().Column(i)
 		log.Info().Str("column", column.Name()).Str("export", column.Export()).Msg("format")
 		key := column.Name()
-		val := row[key].Raw
+		val := row.Get(key).Raw
 
 		if val == nil {
-			row[key] = Value{val, nil, true}
+			row.Set(key, Value{val, nil, true})
 			continue
 		}
 
 		switch column.Export() {
 		case "string":
 			if b, ok := val.([]byte); ok {
-				row[key] = Value{val, string(b), true}
+				row.Set(key, Value{val, string(b), true})
 			} else {
-				row[key] = Value{val, fmt.Sprintf("%v", val), true}
+				row.Set(key, Value{val, fmt.Sprintf("%v", val), true})
 			}
 		case "integer":
 			if i64, ok := val.(int64); ok {
-				row[key] = Value{val, i64, true}
+				row.Set(key, Value{val, i64, true})
 			} else if f64, ok := val.(float64); ok {
-				row[key] = Value{val, int64(f64), true}
+				row.Set(key, Value{val, int64(f64), true})
 			} else if str, ok := val.(string); ok {
 				r, err := strconv.ParseInt(str, 10, 64)
 				if err == nil {
-					row[key] = Value{val, r, true}
+					row.Set(key, Value{val, r, true})
 				} else {
-					row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
 				}
 				// } else if b, ok := val.([]byte); ok {
 				// 	switch len(b) {
@@ -311,22 +311,22 @@ func format(table Table, row Row) Row {
 				}
 				r, err := strconv.ParseInt(str, 10, 64)
 				if err == nil {
-					row[key] = Value{val, r, true}
+					row.Set(key, Value{val, r, true})
 				} else {
-					row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
 				}
 			}
 		case "decimal":
 			if i64, ok := val.(int64); ok {
-				row[key] = Value{val, float64(i64), true}
+				row.Set(key, Value{val, float64(i64), true})
 			} else if f64, ok := val.(float64); ok {
-				row[key] = Value{val, f64, true}
+				row.Set(key, Value{val, f64, true})
 			} else if str, ok := val.(string); ok {
 				r, err := strconv.ParseFloat(str, 64)
 				if err == nil {
-					row[key] = Value{val, r, true}
+					row.Set(key, Value{val, r, true})
 				} else {
-					row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
 				}
 				// } else if b, ok := val.([]byte); ok {
 				// 	switch len(b) {
@@ -348,18 +348,18 @@ func format(table Table, row Row) Row {
 				}
 				r, err := strconv.ParseFloat(str, 64)
 				if err == nil {
-					row[key] = Value{val, r, true}
+					row.Set(key, Value{val, r, true})
 				} else {
-					row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
 				}
 			}
 		case "base64":
 			if b, ok := val.([]byte); ok {
-				row[key] = Value{val, base64.StdEncoding.EncodeToString(b), true}
+				row.Set(key, Value{val, base64.StdEncoding.EncodeToString(b), true})
 			} else if str, ok := val.(string); ok {
-				row[key] = Value{val, base64.StdEncoding.EncodeToString([]byte(str)), true}
+				row.Set(key, Value{val, base64.StdEncoding.EncodeToString([]byte(str)), true})
 			} else {
-				row[key] = Value{val, base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v", val))), true}
+				row.Set(key, Value{val, base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v", val))), true})
 			}
 		case "json":
 			bytes := []byte{}
@@ -371,14 +371,14 @@ func format(table Table, row Row) Row {
 			var result interface{}
 			err := json.Unmarshal(bytes, &result)
 			if err == nil {
-				row[key] = Value{val, result, true}
+				row.Set(key, Value{val, result, true})
 			} else {
-				row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
 			}
 		case "no":
-			row[key] = Value{val, nil, false}
+			row.Set(key, Value{val, nil, false})
 		default: // auto
-			row[key] = Value{val, val, true}
+			row.Set(key, Value{val, val, true})
 		}
 	}
 	return row

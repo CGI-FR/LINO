@@ -97,12 +97,13 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	whereContentFlag := false
 
 	values := []interface{}{}
-	for key, value := range filter.Values() {
+	iter := filter.Values().Iter()
+	for key, value, ok := iter(); ok; key, value, ok = iter() {
 		sql.Write([]byte(key))
 		values = append(values, value.Raw)
 		fmt.Fprint(sql, "=")
 		fmt.Fprint(sql, ds.dialect.Placeholder(len(values)))
-		if len(values) < len(filter.Values()) {
+		if len(values) < filter.Values().Len() {
 			sql.Write([]byte(" AND "))
 		}
 		whereContentFlag = true
@@ -174,9 +175,9 @@ func (di *SQLDataIterator) Next() bool {
 			return false
 		}
 
-		row := pull.Row{}
+		row := pull.NewRow()
 		for i, column := range columns {
-			row[column] = pull.Value{values[i], values[i], true}
+			row.Set(column, pull.Value{values[i], values[i], true})
 		}
 		di.value = row
 		return true

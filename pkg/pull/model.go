@@ -92,49 +92,11 @@ type Plan interface {
 	Steps() StepList
 }
 
-// Value is an untyped data.
-type Value struct {
-	Raw      interface{}
-	Formated interface{}
-	Export   bool
-}
-
 // Filter applied to data tables.
 type Filter interface {
 	Limit() uint
 	Values() Row
 	Where() string
-}
-
-// Row of data.
-type Row map[string]Value
-
-// Update Row with an other Row to generate a new one
-func (r Row) Update(other Row) Row {
-	for k, v := range other {
-		r[k] = v
-	}
-	return r
-}
-
-func (r Row) Export() map[string]interface{} {
-	result := map[string]interface{}{}
-	for key, val := range r {
-		if val.Export {
-			if sr, ok := val.Formated.(Row); ok {
-				result[key] = sr.Export()
-			} else if sa, ok := val.Formated.([]Row); ok {
-				array := make([]map[string]interface{}, 0, len(sa))
-				for _, sar := range sa {
-					array = append(array, sar.Export())
-				}
-				result[key] = array
-			} else {
-				result[key] = val.Formated
-			}
-		}
-	}
-	return result
 }
 
 // Error is the error type returned by the domain

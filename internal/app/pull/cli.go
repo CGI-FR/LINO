@@ -201,9 +201,9 @@ func getPullerPlan(initialFilters map[string]string, limit uint, where string, i
 		return nil, &pull.Error{Description: err4.Error()}
 	}
 
-	row := pull.Row{}
+	row := pull.NewRow()
 	for column, value := range initialFilters {
-		row[column] = pull.Value{value, value, true}
+		row.Set(column, pull.Value{value, value, true})
 	}
 	filter = pull.NewFilter(limit, row, where)
 

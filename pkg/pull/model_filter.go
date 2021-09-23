@@ -43,19 +43,20 @@ func (f filter) Where() string { return f.where }
 
 func (f filter) String() string {
 	builder := &strings.Builder{}
-	cnt := len(f.Values())
-	for key, value := range f.Values() {
+	cnt := f.Values().Len()
+	iter := f.Values().Iter()
+	for key, value, ok := iter(); ok; key, value, ok = iter() {
 		fmt.Fprintf(builder, "%v=%v", key, value)
 		cnt--
 		if cnt > 0 {
 			fmt.Fprint(builder, " ")
 		}
 	}
-	if len(f.Values()) == 0 && f.Limit() == 0 {
+	if f.Values().Len() == 0 && f.Limit() == 0 {
 		fmt.Fprintf(builder, "true")
 	}
 	if f.Limit() > 0 {
-		if len(f.Values()) > 0 {
+		if f.Values().Len() > 0 {
 			fmt.Fprint(builder, " ")
 		}
 		fmt.Fprintf(builder, "limit %v", f.Limit())

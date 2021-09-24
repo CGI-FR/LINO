@@ -192,7 +192,7 @@ func (e puller) read(t Table, f Filter) ([]Row, *Error) {
 	}
 	result := []Row{}
 	for iter.Next() {
-		row := iter.Value()
+		row := format(t, iter.Value())
 		result = append(result, row)
 	}
 	if iter.Error() != nil {

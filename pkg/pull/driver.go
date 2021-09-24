@@ -18,7 +18,10 @@
 package pull
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 )
@@ -69,10 +72,8 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 
 	log.Debug().Msg(fmt.Sprintf("from %v with filter %v", step.Entry(), filter))
 
-	i := 0
-	for rowIterator.Next() {
-		row := rowIterator.Value()
-		i++
+	for i := 0; rowIterator.Next(); i++ {
+		row := format(step.Entry(), rowIterator.Value())
 
 		IncLinesPerStepCount(step.Entry().Name())
 		log.Trace().Msg(fmt.Sprintf("process row number %v", i))
@@ -96,19 +97,19 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 			log.Trace().Msg(fmt.Sprintf("row #%v, %v related row(s)", i, len(relatedToRows)))
 			for _, relatedToRow := range relatedToRows {
 				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow)
-				if relatedToRow[rel.Name()] == nil {
-					relatedToRow[rel.Name()] = []Row{}
+				if !relatedToRow.Has(rel.Name()) {
+					relatedToRow.Set(rel.Name(), Value{[]Row{}, []Row{}, true})
 				}
 				if err := e.pullStep(nextStep, nextFilter, func(r Row) *Error {
 					if !directionParent {
-						rowArray, ok := relatedToRow[rel.Name()].([]Row)
+						rowArray, ok := relatedToRow.Get(rel.Name()).Raw.([]Row)
 						if !ok {
 							return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", nextStep.Entry().Name(), rel.Name())}
 						}
 						rowArray = append(rowArray, r)
-						relatedToRow[rel.Name()] = rowArray
+						relatedToRow.Set(rel.Name(), Value{rowArray, rowArray, true})
 					} else {
-						relatedToRow[rel.Name()] = r
+						relatedToRow.Set(rel.Name(), Value{r, r, true})
 					}
 					return nil
 				}, diagnostic); err != nil {
@@ -161,17 +162,17 @@ func (e puller) exhaust(step Step, allRows map[string][]Row) *Error {
 				}
 
 				if !directionParent {
-					if fromRow[relation.Name()] == nil {
-						fromRow[relation.Name()] = []Row{}
+					if !fromRow.Has(relation.Name()) {
+						fromRow.Set(relation.Name(), Value{[]Row{}, []Row{}, true})
 					}
-					rowArray, ok := fromRow[relation.Name()].([]Row)
+					rowArray, ok := fromRow.Get(relation.Name()).Raw.([]Row)
 					if !ok {
 						return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", fromTable.Name(), relation.Name())}
 					}
 					rowArray = append(rowArray, rows...)
-					fromRow[relation.Name()] = rowArray
+					fromRow.Set(relation.Name(), Value{rowArray, rowArray, true})
 				} else {
-					fromRow[relation.Name()] = rows[0]
+					fromRow.Set(relation.Name(), Value{rows[0], rows[0], true})
 				}
 
 				allRows[toTable.Name()] = append(allRows[toTable.Name()], rows...)
@@ -191,7 +192,7 @@ func (e puller) read(t Table, f Filter) ([]Row, *Error) {
 	}
 	result := []Row{}
 	for iter.Next() {
-		row := iter.Value()
+		row := format(t, iter.Value())
 		result = append(result, row)
 	}
 	if iter.Error() != nil {
@@ -220,9 +221,9 @@ func findFromTable(rel Relation, relations RelationList, defaultTable Table) Tab
 }
 
 func buildFilterRow(targetKey []string, localKey []string, data Row) Row {
-	row := Row{}
+	row := NewRow()
 	for i := 0; i < len(targetKey); i++ {
-		row[targetKey[i]] = data[localKey[i]]
+		row.Set(targetKey[i], data.Get(localKey[i]))
 	}
 	return row
 }
@@ -248,7 +249,7 @@ loop:
 		for _, row2 := range b {
 			all := true
 			for _, pk := range pkList {
-				all = all && row1[pk] == row2[pk]
+				all = all && row1.Get(pk) == row2.Get(pk)
 			}
 			if all {
 				continue loop
@@ -257,4 +258,128 @@ loop:
 		result = append(result, row1)
 	}
 	return result
+}
+
+func format(table Table, row Row) Row {
+	for i := uint(0); i < table.Columns().Len(); i++ {
+		column := table.Columns().Column(i)
+		log.Info().Str("column", column.Name()).Str("export", column.Export()).Msg("format")
+		key := column.Name()
+		val := row.Get(key).Raw
+
+		if val == nil {
+			row.Set(key, Value{val, nil, true})
+			continue
+		}
+
+		switch column.Export() {
+		case "string":
+			if b, ok := val.([]byte); ok {
+				row.Set(key, Value{val, string(b), true})
+			} else {
+				row.Set(key, Value{val, fmt.Sprintf("%v", val), true})
+			}
+		case "integer":
+			if i64, ok := val.(int64); ok {
+				row.Set(key, Value{val, i64, true})
+			} else if f64, ok := val.(float64); ok {
+				row.Set(key, Value{val, int64(f64), true})
+			} else if str, ok := val.(string); ok {
+				r, err := strconv.ParseInt(str, 10, 64)
+				if err == nil {
+					row.Set(key, Value{val, r, true})
+				} else {
+					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
+				}
+				// } else if b, ok := val.([]byte); ok {
+				// 	switch len(b) {
+				// 	case 8:
+				// 		row[key] = Value{val, binary.LittleEndian.Uint64(b), true}
+				// 	case 4:
+				// 		row[key] = Value{val, binary.LittleEndian.Uint32(b), true}
+				// 	case 2:
+				// 		row[key] = Value{val, binary.LittleEndian.Uint16(b), true}
+				// 	default:
+				// 		row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				// 	}
+			} else {
+				str := ""
+				if b, ok := val.([]byte); ok {
+					str = fmt.Sprintf("%v", string(b))
+				} else {
+					str = fmt.Sprintf("%v", val)
+				}
+				r, err := strconv.ParseInt(str, 10, 64)
+				if err == nil {
+					row.Set(key, Value{val, r, true})
+				} else {
+					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
+				}
+			}
+		case "decimal":
+			if i64, ok := val.(int64); ok {
+				row.Set(key, Value{val, float64(i64), true})
+			} else if f64, ok := val.(float64); ok {
+				row.Set(key, Value{val, f64, true})
+			} else if str, ok := val.(string); ok {
+				r, err := strconv.ParseFloat(str, 64)
+				if err == nil {
+					row.Set(key, Value{val, r, true})
+				} else {
+					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
+				}
+				// } else if b, ok := val.([]byte); ok {
+				// 	switch len(b) {
+				// 	case 8:
+				// 		bits := binary.LittleEndian.Uint64(b)
+				// 		row[key] = Value{val, math.Float64frombits(bits), true}
+				// 	case 4:
+				// 		bits := binary.LittleEndian.Uint32(b)
+				// 		row[key] = Value{val, math.Float32frombits(bits), true}
+				// 	default:
+				// 		row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
+				// 	}
+			} else {
+				str := ""
+				if b, ok := val.([]byte); ok {
+					str = fmt.Sprintf("%v", string(b))
+				} else {
+					str = fmt.Sprintf("%v", val)
+				}
+				r, err := strconv.ParseFloat(str, 64)
+				if err == nil {
+					row.Set(key, Value{val, r, true})
+				} else {
+					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
+				}
+			}
+		case "base64":
+			if b, ok := val.([]byte); ok {
+				row.Set(key, Value{val, base64.StdEncoding.EncodeToString(b), true})
+			} else if str, ok := val.(string); ok {
+				row.Set(key, Value{val, base64.StdEncoding.EncodeToString([]byte(str)), true})
+			} else {
+				row.Set(key, Value{val, base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v", val))), true})
+			}
+		case "json":
+			bytes := []byte{}
+			if b, ok := val.([]byte); ok {
+				bytes = b
+			} else {
+				bytes = []byte(fmt.Sprintf("%v", val))
+			}
+			var result interface{}
+			err := json.Unmarshal(bytes, &result)
+			if err == nil {
+				row.Set(key, Value{val, result, true})
+			} else {
+				row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
+			}
+		case "no":
+			row.Set(key, Value{val, nil, false})
+		default: // auto
+			row.Set(key, Value{val, val, true})
+		}
+	}
+	return row
 }

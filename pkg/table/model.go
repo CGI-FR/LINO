@@ -19,7 +19,8 @@ package table
 
 // Column holds the name of a column.
 type Column struct {
-	Name string
+	Name   string
+	Export string
 }
 
 // Table holds a name (table name) and a list of keys (table columns).

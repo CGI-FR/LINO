@@ -66,12 +66,14 @@ func (l columnList) String() string {
 }
 
 type column struct {
-	name string
+	name   string
+	export string
 }
 
 // NewColumn initialize a new Column object
-func NewColumn(name string) Column {
-	return column{name}
+func NewColumn(name string, export string) Column {
+	return column{name, export}
 }
 
-func (c column) Name() string { return c.name }
+func (c column) Name() string   { return c.name }
+func (c column) Export() string { return c.export }

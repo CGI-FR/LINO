@@ -201,9 +201,9 @@ func getPullerPlan(initialFilters map[string]string, limit uint, where string, i
 		return nil, &pull.Error{Description: err4.Error()}
 	}
 
-	row := pull.Row{}
+	row := pull.NewRow()
 	for column, value := range initialFilters {
-		row[column] = value
+		row.Set(column, pull.Value{value, value, true})
 	}
 	filter = pull.NewFilter(limit, row, where)
 
@@ -269,7 +269,7 @@ func (c epToStepListConverter) getTable(name string) pull.Table {
 
 	columns := []pull.Column{}
 	for _, col := range table.Columns {
-		columns = append(columns, pull.NewColumn(col.Name))
+		columns = append(columns, pull.NewColumn(col.Name, col.Export))
 	}
 
 	return pull.NewTable(table.Name, table.Keys, pull.NewColumnList(columns))

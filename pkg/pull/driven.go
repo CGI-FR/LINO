@@ -58,7 +58,7 @@ func (r *OneEmptyRowReader) Next() bool {
 }
 
 // Value is always an empty row
-func (r OneEmptyRowReader) Value() Row { return Row{} }
+func (r OneEmptyRowReader) Value() Row { return NewRow() }
 
 // Error return always nil
 func (r OneEmptyRowReader) Error() *Error { return nil }

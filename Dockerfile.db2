@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
 
-FROM cgifr/pimo:v1.8.0 AS pimo
+FROM cgifr/pimo:v1.9.0 AS pimo
 
 FROM debian:stable-20210816-slim
 

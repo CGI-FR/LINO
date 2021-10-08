@@ -92,13 +92,6 @@ type Plan interface {
 	Steps() StepList
 }
 
-// Filter applied to data tables.
-type Filter interface {
-	Limit() uint
-	Values() Row
-	Where() string
-}
-
 // Error is the error type returned by the domain
 type Error struct {
 	Description string

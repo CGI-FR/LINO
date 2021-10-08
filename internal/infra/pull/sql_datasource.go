@@ -100,7 +100,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	iter := filter.Values().Iter()
 	for key, value, ok := iter(); ok; key, value, ok = iter() {
 		sql.Write([]byte(key))
-		values = append(values, value.Raw)
+		values = append(values, value)
 		fmt.Fprint(sql, "=")
 		fmt.Fprint(sql, ds.dialect.Placeholder(len(values)))
 		if len(values) < filter.Values().Len() {
@@ -177,7 +177,7 @@ func (di *SQLDataIterator) Next() bool {
 
 		row := pull.NewRow()
 		for i, column := range columns {
-			row.Set(column, pull.Value{values[i], values[i], true})
+			row.Set(column, values[i])
 		}
 		di.value = row
 		return true

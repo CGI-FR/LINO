@@ -22,6 +22,13 @@ import (
 	"strings"
 )
 
+// Filter applied to data tables.
+type Filter interface {
+	Limit() uint
+	Values() Row
+	Where() string
+}
+
 type filter struct {
 	limit  uint
 	values Row

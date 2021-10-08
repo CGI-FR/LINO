@@ -18,11 +18,9 @@
 package pull
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"strconv"
 
+	"github.com/cgi-fr/jsonline/pkg/jsonline"
 	"github.com/rs/zerolog/log"
 )
 
@@ -97,19 +95,13 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 			log.Trace().Msg(fmt.Sprintf("row #%v, %v related row(s)", i, len(relatedToRows)))
 			for _, relatedToRow := range relatedToRows {
 				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow)
-				if !relatedToRow.Has(rel.Name()) {
-					relatedToRow.Set(rel.Name(), Value{[]Row{}, []Row{}, true})
-				}
 				if err := e.pullStep(nextStep, nextFilter, func(r Row) *Error {
 					if !directionParent {
-						rowArray, ok := relatedToRow.Get(rel.Name()).Raw.([]Row)
-						if !ok {
+						if !relatedToRow.AddRows(rel.Name(), r) {
 							return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", nextStep.Entry().Name(), rel.Name())}
 						}
-						rowArray = append(rowArray, r)
-						relatedToRow.Set(rel.Name(), Value{rowArray, rowArray, true})
 					} else {
-						relatedToRow.Set(rel.Name(), Value{r, r, true})
+						relatedToRow.SetRow(rel.Name(), r)
 					}
 					return nil
 				}, diagnostic); err != nil {
@@ -162,17 +154,11 @@ func (e puller) exhaust(step Step, allRows map[string][]Row) *Error {
 				}
 
 				if !directionParent {
-					if !fromRow.Has(relation.Name()) {
-						fromRow.Set(relation.Name(), Value{[]Row{}, []Row{}, true})
-					}
-					rowArray, ok := fromRow.Get(relation.Name()).Raw.([]Row)
-					if !ok {
+					if !fromRow.AddRows(relation.Name(), rows...) {
 						return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", fromTable.Name(), relation.Name())}
 					}
-					rowArray = append(rowArray, rows...)
-					fromRow.Set(relation.Name(), Value{rowArray, rowArray, true})
 				} else {
-					fromRow.Set(relation.Name(), Value{rows[0], rows[0], true})
+					fromRow.SetRow(relation.Name(), rows[0])
 				}
 
 				allRows[toTable.Name()] = append(allRows[toTable.Name()], rows...)
@@ -261,125 +247,25 @@ loop:
 }
 
 func format(table Table, row Row) Row {
+	result := NewRow()
 	for i := uint(0); i < table.Columns().Len(); i++ {
 		column := table.Columns().Column(i)
 		log.Info().Str("column", column.Name()).Str("export", column.Export()).Msg("format")
 		key := column.Name()
-		val := row.Get(key).Raw
-
-		if val == nil {
-			row.Set(key, Value{val, nil, true})
-			continue
-		}
+		val := row.Get(key)
 
 		switch column.Export() {
 		case "string":
-			if b, ok := val.([]byte); ok {
-				row.Set(key, Value{val, string(b), true})
-			} else {
-				row.Set(key, Value{val, fmt.Sprintf("%v", val), true})
-			}
-		case "integer":
-			if i64, ok := val.(int64); ok {
-				row.Set(key, Value{val, i64, true})
-			} else if f64, ok := val.(float64); ok {
-				row.Set(key, Value{val, int64(f64), true})
-			} else if str, ok := val.(string); ok {
-				r, err := strconv.ParseInt(str, 10, 64)
-				if err == nil {
-					row.Set(key, Value{val, r, true})
-				} else {
-					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
-				}
-				// } else if b, ok := val.([]byte); ok {
-				// 	switch len(b) {
-				// 	case 8:
-				// 		row[key] = Value{val, binary.LittleEndian.Uint64(b), true}
-				// 	case 4:
-				// 		row[key] = Value{val, binary.LittleEndian.Uint32(b), true}
-				// 	case 2:
-				// 		row[key] = Value{val, binary.LittleEndian.Uint16(b), true}
-				// 	default:
-				// 		row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
-				// 	}
-			} else {
-				str := ""
-				if b, ok := val.([]byte); ok {
-					str = fmt.Sprintf("%v", string(b))
-				} else {
-					str = fmt.Sprintf("%v", val)
-				}
-				r, err := strconv.ParseInt(str, 10, 64)
-				if err == nil {
-					row.Set(key, Value{val, r, true})
-				} else {
-					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
-				}
-			}
-		case "decimal":
-			if i64, ok := val.(int64); ok {
-				row.Set(key, Value{val, float64(i64), true})
-			} else if f64, ok := val.(float64); ok {
-				row.Set(key, Value{val, f64, true})
-			} else if str, ok := val.(string); ok {
-				r, err := strconv.ParseFloat(str, 64)
-				if err == nil {
-					row.Set(key, Value{val, r, true})
-				} else {
-					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
-				}
-				// } else if b, ok := val.([]byte); ok {
-				// 	switch len(b) {
-				// 	case 8:
-				// 		bits := binary.LittleEndian.Uint64(b)
-				// 		row[key] = Value{val, math.Float64frombits(bits), true}
-				// 	case 4:
-				// 		bits := binary.LittleEndian.Uint32(b)
-				// 		row[key] = Value{val, math.Float32frombits(bits), true}
-				// 	default:
-				// 		row[key] = Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true}
-				// 	}
-			} else {
-				str := ""
-				if b, ok := val.([]byte); ok {
-					str = fmt.Sprintf("%v", string(b))
-				} else {
-					str = fmt.Sprintf("%v", val)
-				}
-				r, err := strconv.ParseFloat(str, 64)
-				if err == nil {
-					row.Set(key, Value{val, r, true})
-				} else {
-					row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
-				}
-			}
+			result.SetValue(key, jsonline.NewValueString(val))
+		case "numeric":
+			result.SetValue(key, jsonline.NewValueNumeric(val))
 		case "base64":
-			if b, ok := val.([]byte); ok {
-				row.Set(key, Value{val, base64.StdEncoding.EncodeToString(b), true})
-			} else if str, ok := val.(string); ok {
-				row.Set(key, Value{val, base64.StdEncoding.EncodeToString([]byte(str)), true})
-			} else {
-				row.Set(key, Value{val, base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v", val))), true})
-			}
-		case "json":
-			bytes := []byte{}
-			if b, ok := val.([]byte); ok {
-				bytes = b
-			} else {
-				bytes = []byte(fmt.Sprintf("%v", val))
-			}
-			var result interface{}
-			err := json.Unmarshal(bytes, &result)
-			if err == nil {
-				row.Set(key, Value{val, result, true})
-			} else {
-				row.Set(key, Value{val, "!!!!!!!!!!!!ERROR!!!!!!!!!!!!", true})
-			}
+			result.SetValue(key, jsonline.NewValueBinary(val))
 		case "no":
-			row.Set(key, Value{val, nil, false})
-		default: // auto
-			row.Set(key, Value{val, val, true})
+			result.SetValue(key, jsonline.NewValueHidden(val))
+		default:
+			result.SetValue(key, jsonline.NewValueAuto(val))
 		}
 	}
-	return row
+	return result
 }

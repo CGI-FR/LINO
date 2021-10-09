@@ -206,7 +206,7 @@ testcases:
               url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
               readonly: false
               password:
-                  valueFromEnv: PASSWORD
+                valueFromEnv: PASSWORD
           EOF
       - script: diff expected.yml dataconnector.yaml
         assertions:

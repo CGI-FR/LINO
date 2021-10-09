@@ -17,199 +17,198 @@
 
 name: data connector add
 testcases:
-- name: add without command
-  steps:
+  - name: add without command
+    steps:
       # Clean working directory
-  - type: exec
-    script: rm -f *
-  - type: exec
-    script: lino dataconnector add
-    assertions:
-      - result.code ShouldEqual 1
-      - result.systemerr ShouldContainSubstring Usage
-  - type: exec
-    script: ls -l
-    assertions:
-      - result.systemout ShouldContainSubstring "total 0"
-- name: add dataconnector
-  steps:
+      - type: exec
+        script: rm -f *
+      - type: exec
+        script: lino dataconnector add
+        assertions:
+          - result.code ShouldEqual 1
+          - result.systemerr ShouldContainSubstring Usage
+      - type: exec
+        script: ls -l
+        assertions:
+          - result.systemout ShouldContainSubstring "total 0"
+  - name: add dataconnector
+    steps:
       # Clean working directory
-  - type: exec
-    script: rm -f *
-  # Enable mock credential helper as docker-credential-pass
-  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
-  - script: export PATH=$PATH:$PWD
-  - type: exec
-    script: lino dataconnector add source 'postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable'
-    assertions:
-      - result.code ShouldEqual 0
-      - 'result.systemerr ShouldContainSubstring warn: password should not be included in URI'
-      - result.systemout ShouldContainSubstring success
-  - script: |- 
-      cat  > expected.yml <<EOF
-      version: v1
-      dataconnectors:
-        - name: source
-          url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
-          readonly: false
-      EOF
-  - script: diff expected.yml dataconnector.yaml
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldBeEmpty
-- name: add dataconnector read only
-  steps:
+      - type: exec
+        script: rm -f *
+      # Enable mock credential helper as docker-credential-pass
+      - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+      - script: export PATH=$PATH:$PWD
+      - type: exec
+        script: lino dataconnector add source 'postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable'
+        assertions:
+          - result.code ShouldEqual 0
+          - "result.systemerr ShouldContainSubstring warn: password should not be included in URI"
+          - result.systemout ShouldContainSubstring success
+      - script: |-
+          cat  > expected.yml <<EOF
+          version: v1
+          dataconnectors:
+            - name: source
+              url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
+              readonly: false
+          EOF
+      - script: diff expected.yml dataconnector.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+  - name: add dataconnector read only
+    steps:
       # Clean working directory
-  - type: exec
-    script: rm -f *
-  # Enable mock credential helper as docker-credential-pass
-  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
-  - type: exec
-    script: lino dataconnector add --read-only source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldContainSubstring success
-  - script: |- 
-      cat  > expected.yml <<EOF
-      version: v1
-      dataconnectors:
-        - name: source
-          url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
-          readonly: true
-      EOF
-  - script: diff expected.yml dataconnector.yaml
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldBeEmpty
+      - type: exec
+        script: rm -f *
+      # Enable mock credential helper as docker-credential-pass
+      - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+      - type: exec
+        script: lino dataconnector add --read-only source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring success
+      - script: |-
+          cat  > expected.yml <<EOF
+          version: v1
+          dataconnectors:
+            - name: source
+              url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
+              readonly: true
+          EOF
+      - script: diff expected.yml dataconnector.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
 
-
-- name: add dataconnector with default schema
-  steps:
+  - name: add dataconnector with default schema
+    steps:
       # Clean working directory
-  - type: exec
-    script: rm -f *
-  # Enable mock credential helper as docker-credential-pass
-  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
-  - type: exec
-    script: lino dataconnector add --schema public source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldContainSubstring success
-  - script: |- 
-      cat  > expected.yml <<EOF
-      version: v1
-      dataconnectors:
-        - name: source
-          url: postgresql://postgres@source:5432/postgres?sslmode=disable
-          readonly: false
-          schema: public
-      EOF
-  - script: diff expected.yml dataconnector.yaml
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldBeEmpty
+      - type: exec
+        script: rm -f *
+      # Enable mock credential helper as docker-credential-pass
+      - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+      - type: exec
+        script: lino dataconnector add --schema public source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring success
+      - script: |-
+          cat  > expected.yml <<EOF
+          version: v1
+          dataconnectors:
+            - name: source
+              url: postgresql://postgres@source:5432/postgres?sslmode=disable
+              readonly: false
+              schema: public
+          EOF
+      - script: diff expected.yml dataconnector.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
 
-- name: add dataconnector with password-from-env
-  steps:
+  - name: add dataconnector with password-from-env
+    steps:
       # Clean working directory
-  - type: exec
-    script: rm -f *
-  - type: exec
-    script: lino dataconnector add --password-from-env=PASSWORD source postgresql://postgres@localhost:5432/postgres?sslmode=disable
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldContainSubstring success
-  - script: |- 
-      cat  > expected.yml <<EOF
-      version: v1
-      dataconnectors:
-        - name: source
-          url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
-          readonly: false
-          password:
-              valueFromEnv: PASSWORD
-      EOF
-  - script: diff expected.yml dataconnector.yaml
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldBeEmpty
+      - type: exec
+        script: rm -f *
+      - type: exec
+        script: lino dataconnector add --password-from-env=PASSWORD source postgresql://postgres@localhost:5432/postgres?sslmode=disable
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring success
+      - script: |-
+          cat  > expected.yml <<EOF
+          version: v1
+          dataconnectors:
+            - name: source
+              url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
+              readonly: false
+              password:
+                valueFromEnv: PASSWORD
+          EOF
+      - script: diff expected.yml dataconnector.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
 
-- name: add dataconnector with password-from-env and user-from-env
-  steps:
+  - name: add dataconnector with password-from-env and user-from-env
+    steps:
       # Clean working directory
-  - type: exec
-    script: rm -f *
-  - type: exec
-    script: lino dataconnector add --user-from-env=USER --password-from-env=PASSWORD source postgresql://localhost:5432/postgres?sslmode=disable
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldContainSubstring success
-  - script: |- 
-      cat  > expected.yml <<EOF
-      version: v1
-      dataconnectors:
-        - name: source
-          url: postgresql://localhost:5432/postgres?sslmode=disable
-          readonly: false
-          user:
-              valueFromEnv: USER
-          password:
-              valueFromEnv: PASSWORD
-      EOF
-  - script: diff expected.yml dataconnector.yaml
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldBeEmpty
+      - type: exec
+        script: rm -f *
+      - type: exec
+        script: lino dataconnector add --user-from-env=USER --password-from-env=PASSWORD source postgresql://localhost:5432/postgres?sslmode=disable
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring success
+      - script: |-
+          cat  > expected.yml <<EOF
+          version: v1
+          dataconnectors:
+            - name: source
+              url: postgresql://localhost:5432/postgres?sslmode=disable
+              readonly: false
+              user:
+                  valueFromEnv: USER
+              password:
+                  valueFromEnv: PASSWORD
+          EOF
+      - script: diff expected.yml dataconnector.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
 
-- name: add dataconnector with password-from-env and user
-  steps:
+  - name: add dataconnector with password-from-env and user
+    steps:
       # Clean working directory
-  - type: exec
-    script: rm -f *
-  - type: exec
-    script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://localhost:5432/postgres?sslmode=disable
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldContainSubstring success
-  - script: |- 
-      cat  > expected.yml <<EOF
-      version: v1
-      dataconnectors:
-        - name: source
-          url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
-          readonly: false
-          password:
-              valueFromEnv: PASSWORD
-      EOF
-  - script: diff expected.yml dataconnector.yaml
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldBeEmpty
+      - type: exec
+        script: rm -f *
+      - type: exec
+        script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://localhost:5432/postgres?sslmode=disable
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring success
+      - script: |-
+          cat  > expected.yml <<EOF
+          version: v1
+          dataconnectors:
+            - name: source
+              url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
+              readonly: false
+              password:
+                  valueFromEnv: PASSWORD
+          EOF
+      - script: diff expected.yml dataconnector.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
 
-- name: add dataconnector with duplicate user password
-  steps:
+  - name: add dataconnector with duplicate user password
+    steps:
       # Clean working directory
-  - type: exec
-    script: rm -f *
-  # Enable mock credential helper as docker-credential-pass
-  - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
-  - type: exec
-    script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
-    assertions:
-      - result.code ShouldEqual 0
-      - 'result.systemerr ShouldContainSubstring warn: password should not be included in URI'
-      - result.systemout ShouldContainSubstring success
-  - script: |- 
-      cat  > expected.yml <<EOF
-      version: v1
-      dataconnectors:
-        - name: source
-          url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
-          readonly: false
-          password:
-              valueFromEnv: PASSWORD
-      EOF
-  - script: diff expected.yml dataconnector.yaml
-    assertions:
-      - result.code ShouldEqual 0
-      - result.systemout ShouldBeEmpty
+      - type: exec
+        script: rm -f *
+      # Enable mock credential helper as docker-credential-pass
+      - script: cp /usr/local/bin/docker-credential-mock docker-credential-secretservice
+      - type: exec
+        script: lino dataconnector add --user=postgres --password-from-env=PASSWORD source postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
+        assertions:
+          - result.code ShouldEqual 0
+          - "result.systemerr ShouldContainSubstring warn: password should not be included in URI"
+          - result.systemout ShouldContainSubstring success
+      - script: |-
+          cat  > expected.yml <<EOF
+          version: v1
+          dataconnectors:
+            - name: source
+              url: postgresql://postgres@localhost:5432/postgres?sslmode=disable
+              readonly: false
+              password:
+                  valueFromEnv: PASSWORD
+          EOF
+      - script: diff expected.yml dataconnector.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty

@@ -60,11 +60,11 @@ func GenOracleRaw(u *dburl.URL) (string, error) {
 func init() {
 	oracleScheme := dburl.Scheme{
 		Driver:    "godror-raw",
-		Override:  "godror",
 		Generator: GenOracleRaw,
+		Transport: dburl.TransportAny,
 		Opaque:    false,
 		Aliases:   []string{"oracle-raw"},
-		Proto:     dburl.ProtoAny,
+		Override:  "godror",
 	}
 	dburl.Register(oracleScheme)
 
@@ -76,17 +76,17 @@ func init() {
 			result := fmt.Sprintf("HOSTNAME=%s;DATABASE=%s;PORT=%s;UID=%s;PWD=%s", u.Hostname(), database, u.Port(), u.User.Username(), password)
 			return result, nil
 		},
-		Proto:    dburl.ProtoAny,
-		Opaque:   false,
-		Aliases:  []string{"go_ibm_db"},
-		Override: "go_ibm_db",
+		Transport: dburl.TransportAny,
+		Opaque:    false,
+		Aliases:   []string{"go_ibm_db"},
+		Override:  "go_ibm_db",
 	}
 	dburl.Register(db2Scheme)
 
 	httpScheme := dburl.Scheme{
 		Driver:    "http",
 		Generator: dburl.GenFromURL("http://localhost:8080"),
-		Proto:     dburl.ProtoAny,
+		Transport: dburl.TransportAny,
 		Opaque:    false,
 		Aliases:   []string{"https"},
 		Override:  "",

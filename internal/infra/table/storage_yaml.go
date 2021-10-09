@@ -18,6 +18,7 @@
 package table
 
 import (
+	"bytes"
 	"io/ioutil"
 
 	"github.com/cgi-fr/lino/pkg/table"
@@ -126,12 +127,16 @@ func readFile() (*YAMLStructure, *table.Error) {
 }
 
 func writeFile(list *YAMLStructure) *table.Error {
-	out, err := yaml.Marshal(list)
+	out := &bytes.Buffer{}
+	enc := yaml.NewEncoder(out)
+	enc.SetIndent(2)
+
+	err := enc.Encode(list)
 	if err != nil {
 		return &table.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("tables.yaml", out, 0600)
+	err = ioutil.WriteFile("tables.yaml", out.Bytes(), 0600)
 	if err != nil {
 		return &table.Error{Description: err.Error()}
 	}

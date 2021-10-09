@@ -18,6 +18,7 @@
 package id
 
 import (
+	"bytes"
 	"io/ioutil"
 
 	"github.com/cgi-fr/lino/pkg/id"
@@ -112,12 +113,16 @@ func (s *YAMLStorage) Read() (id.IngressDescriptor, *id.Error) {
 }
 
 func writeFile(structure *YAMLStructure, filename string) *id.Error {
-	out, err := yaml.Marshal(structure)
+	out := &bytes.Buffer{}
+	enc := yaml.NewEncoder(out)
+	enc.SetIndent(2)
+
+	err := enc.Encode(structure)
 	if err != nil {
 		return &id.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile(filename, out, 0600)
+	err = ioutil.WriteFile(filename, out.Bytes(), 0600)
 	if err != nil {
 		return &id.Error{Description: err.Error()}
 	}

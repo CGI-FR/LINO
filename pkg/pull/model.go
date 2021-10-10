@@ -40,6 +40,7 @@ type ColumnList interface {
 // Column of a table.
 type Column interface {
 	Name() string
+	Export() string
 }
 
 // Relation between two tables.

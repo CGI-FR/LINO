@@ -45,6 +45,7 @@ type YAMLTable struct {
 type YAMLColumn struct {
 	Name   string `yaml:"name"`
 	Export string `yaml:"export"`
+	Import string `yaml:"import"`
 }
 
 // YAMLStorage provides storage in a local YAML file
@@ -66,7 +67,7 @@ func (s YAMLStorage) List() ([]table.Table, *table.Error) {
 	for _, ym := range list.Tables {
 		col := []table.Column{}
 		for _, ymc := range ym.Columns {
-			col = append(col, table.Column{Name: ymc.Name, Export: ymc.Export})
+			col = append(col, table.Column{Name: ymc.Name, Export: ymc.Export, Import: ymc.Import})
 		}
 		m := table.Table{
 			Name:    ym.Name,
@@ -88,7 +89,7 @@ func (s YAMLStorage) Store(tables []table.Table) *table.Error {
 	for _, r := range tables {
 		cols := []YAMLColumn{}
 		for _, rc := range r.Columns {
-			cols = append(cols, YAMLColumn{Name: rc.Name, Export: rc.Export})
+			cols = append(cols, YAMLColumn{Name: rc.Name, Export: rc.Export, Import: rc.Import})
 		}
 		yml := YAMLTable{
 			Name:    r.Name,

@@ -21,6 +21,7 @@ package table
 type Column struct {
 	Name   string
 	Export string
+	Import string
 }
 
 // Table holds a name (table name) and a list of keys (table columns).

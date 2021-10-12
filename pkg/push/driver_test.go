@@ -25,7 +25,7 @@ import (
 )
 
 func makeTable(name string) push.Table {
-	return push.NewTable(name, []string{})
+	return push.NewTable(name, []string{}, nil)
 }
 
 func makeRel(from, to push.Table) push.Relation {

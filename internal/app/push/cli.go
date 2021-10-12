@@ -235,12 +235,17 @@ func (c idToPushConverter) getTable(name string) push.Table {
 	table, ok := c.tmap[name]
 	if !ok {
 		log.Warn().Msg(fmt.Sprintf("missing table %v in tables.yaml", name))
-		return push.NewTable(name, []string{})
+		return push.NewTable(name, []string{}, nil)
 	}
 
 	log.Trace().Msg(fmt.Sprintf("building table %v", table))
 
-	return push.NewTable(table.Name, table.Keys)
+	columns := []push.Column{}
+	for _, col := range table.Columns {
+		columns = append(columns, push.NewColumn(col.Name, col.Import))
+	}
+
+	return push.NewTable(table.Name, table.Keys, push.NewColumnList(columns))
 }
 
 func (c idToPushConverter) getRelation(name string) push.Relation {

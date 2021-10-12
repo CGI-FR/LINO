@@ -59,8 +59,8 @@ func (l columnList) String() string {
 	}
 	sb := strings.Builder{}
 	fmt.Fprintf(&sb, "%v", l.slice[0])
-	for _, rel := range l.slice[1:] {
-		fmt.Fprintf(&sb, " -> %v", rel)
+	for _, col := range l.slice[1:] {
+		fmt.Fprintf(&sb, " -> %v", col)
 	}
 	return sb.String()
 }

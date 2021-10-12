@@ -19,16 +19,17 @@ package pull
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
-	"github.com/rs/zerolog/log"
 )
 
 type table struct {
-	name    string
-	pk      []string
-	columns ColumnList
+	name     string
+	pk       []string
+	columns  ColumnList
+	template jsonline.Template
 }
 
 type columnList struct {
@@ -38,7 +39,7 @@ type columnList struct {
 
 // NewTable initialize a new Table object
 func NewTable(name string, pk []string, columns ColumnList) Table {
-	return table{name: name, pk: pk, columns: columns}
+	return table{name: name, pk: pk, columns: columns, template: initTemplate(columns)}
 }
 
 func (t table) Name() string         { return t.name }
@@ -46,32 +47,43 @@ func (t table) PrimaryKey() []string { return t.pk }
 func (t table) Columns() ColumnList  { return t.columns }
 func (t table) String() string       { return t.name }
 
-func (t table) export(row Row) ExportableRow {
-	result := NewExportableRow()
-	if t.Columns() == nil || t.Columns().Len() == 0 {
-		for k, v := range row {
-			result.set(k, v)
-		}
-		return result
-	}
-	for i := uint(0); i < t.Columns().Len(); i++ {
-		column := t.Columns().Column(i)
-		log.Info().Str("column", column.Name()).Str("export", column.Export()).Msg("format")
-		key := column.Name()
-		val := row[key]
+func initTemplate(columns ColumnList) jsonline.Template {
+	result := jsonline.NewTemplate()
+	if columns != nil {
+		for i := uint(0); i < columns.Len(); i++ {
+			column := columns.Column(i)
+			key := column.Name()
 
-		switch column.Export() {
-		case "string":
-			result.set(key, jsonline.NewValueString(val))
-		case "numeric":
-			result.set(key, jsonline.NewValueNumeric(val))
-		case "base64":
-			result.set(key, jsonline.NewValueBinary(val))
-		case "no":
-			result.set(key, jsonline.NewValueHidden(val))
-		default:
-			result.set(key, jsonline.NewValueAuto(val))
+			switch column.Export() {
+			case "string":
+				result.WithString(key)
+			case "numeric":
+				result.WithNumeric(key)
+			case "base64":
+				result.WithBinary(key)
+			case "datetime":
+				result.WithDateTime(key)
+			case "timestamp":
+				result.WithTimestamp(key)
+			case "no":
+				result.WithHidden(key)
+			default:
+				result.WithAuto(key)
+			}
 		}
+	}
+	return result
+}
+
+func (t table) export(r Row) ExportableRow {
+	result := &row{t.template.CreateRowEmpty()}
+	keys := make([]string, 0, len(r))
+	for k := range r {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys) // this is needed to have a consistent output if no columns is defined by configuration
+	for _, k := range keys {
+		result.set(k, r[k])
 	}
 	return result
 }

@@ -77,7 +77,7 @@ func (r *row) add(key string, others ...ExportableRow) bool {
 	}
 
 	array = append(array, others...)
-	r.Set(key, array)
+	r.set(key, array)
 
 	return true
 }

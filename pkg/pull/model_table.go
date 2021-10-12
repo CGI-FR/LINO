@@ -48,7 +48,7 @@ func (t table) String() string       { return t.name }
 
 func (t table) export(row Row) ExportableRow {
 	result := NewExportableRow()
-	if t.Columns() == nil {
+	if t.Columns() == nil || t.Columns().Len() == 0 {
 		for k, v := range row {
 			result.set(k, v)
 		}

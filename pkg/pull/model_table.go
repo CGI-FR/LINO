@@ -49,6 +49,7 @@ func (t table) String() string       { return t.name }
 
 func initTemplate(columns ColumnList) jsonline.Template {
 	result := jsonline.NewTemplate()
+
 	if columns != nil {
 		for i := uint(0); i < columns.Len(); i++ {
 			column := columns.Column(i)

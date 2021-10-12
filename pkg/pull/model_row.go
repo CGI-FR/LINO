@@ -61,7 +61,7 @@ func NewExportableRow() ExportableRow {
 }
 
 func (r *row) set(key string, value interface{}) {
-	_ = r.Row.Set(key, value)
+	r.Row.Set(key, value)
 }
 
 func (r *row) add(key string, others ...ExportableRow) bool {

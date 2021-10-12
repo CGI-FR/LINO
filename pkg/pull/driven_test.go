@@ -98,10 +98,10 @@ func (ds *MemoryDataSource) RowReader(source pull.Table, filter pull.Filter) (pu
 
 // MemoryRowExporter mock RowExporter.
 type MemoryRowExporter struct {
-	rows []pull.Row
+	rows []pull.ExportableRow
 }
 
-func (re *MemoryRowExporter) Export(r pull.Row) *pull.Error {
+func (re *MemoryRowExporter) Export(r pull.ExportableRow) *pull.Error {
 	re.rows = append(re.rows, r)
 	fmt.Println("Exported:", r)
 	return nil

@@ -20,6 +20,9 @@ package pull
 import (
 	"fmt"
 	"strings"
+
+	"github.com/cgi-fr/jsonline/pkg/jsonline"
+	"github.com/rs/zerolog/log"
 )
 
 type table struct {
@@ -42,6 +45,36 @@ func (t table) Name() string         { return t.name }
 func (t table) PrimaryKey() []string { return t.pk }
 func (t table) Columns() ColumnList  { return t.columns }
 func (t table) String() string       { return t.name }
+
+func (t table) export(row Row) ExportableRow {
+	result := NewExportableRow()
+	if t.Columns() == nil {
+		for k, v := range row {
+			result.set(k, v)
+		}
+		return result
+	}
+	for i := uint(0); i < t.Columns().Len(); i++ {
+		column := t.Columns().Column(i)
+		log.Info().Str("column", column.Name()).Str("export", column.Export()).Msg("format")
+		key := column.Name()
+		val := row[key]
+
+		switch column.Export() {
+		case "string":
+			result.set(key, jsonline.NewValueString(val))
+		case "numeric":
+			result.set(key, jsonline.NewValueNumeric(val))
+		case "base64":
+			result.set(key, jsonline.NewValueBinary(val))
+		case "no":
+			result.set(key, jsonline.NewValueHidden(val))
+		default:
+			result.set(key, jsonline.NewValueAuto(val))
+		}
+	}
+	return result
+}
 
 // NewColumnList initialize a new ColumnList object
 func NewColumnList(columns []Column) ColumnList {

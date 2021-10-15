@@ -17,93 +17,93 @@
 
 name: http pull
 testcases:
-- name: prepare test
-  steps:
-    # Clean working directory
-    - script: rm -f *
-    - script: sudo docker-compose -p lino stop source dest && sudo docker-compose -p lino rm -f source dest && sudo docker-compose -p lino up -d source dest && sudo docker-compose -p lino up -d --build lino
-    # .devcontainer and lino http share same test workdir
-    # edit yaml here is the same as in lino-http's container
-    - script: lino dataconnector add --password-from-env PASSWORD source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: count=0; while ! lino dc ping source; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
-      assertions:
-        - result.code ShouldEqual 0
-    - script: lino relation extract source
-    - script: lino table extract source
-    - script: lino id create store
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup staff_store_id_fkey true
-    - script: cp * /workspace/tests/workspace
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: sudo docker-compose -p lino stop source dest && sudo docker-compose -p lino rm -f source dest && sudo docker-compose -p lino up -d source dest && sudo docker-compose -p lino up -d --build lino
+      # .devcontainer and lino http share same test workdir
+      # edit yaml here is the same as in lino-http's container
+      - script: lino dataconnector add --password-from-env PASSWORD source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: count=0; while ! lino dc ping source; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
+        assertions:
+          - result.code ShouldEqual 0
+      - script: lino relation extract source
+      - script: lino table extract source
+      - script: lino id create store
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup staff_store_id_fkey true
+      - script: cp * /workspace/tests/workspace
 
-- name: pull bad source
-  steps:
-    - type: http
-      method: GET
-      url: http://lino:8000/api/v1/data/badsource
-      assertions:
-        - result.statuscode ShouldEqual 404
-        - result.bodyjson.error ShouldEqual "Data Connector badsource not found"
+  - name: pull bad source
+    steps:
+      - type: http
+        method: GET
+        url: http://lino:8000/api/v1/data/badsource
+        assertions:
+          - result.statuscode ShouldEqual 404
+          - result.bodyjson.error ShouldEqual "Data Connector badsource not found"
 
-- name: pull no query
-  steps:
-    - type: http
-      method: GET
-      url: http://lino:8000/api/v1/data/source
-      assertions:
-        - result.statuscode ShouldEqual 200
-        - result.body ShouldContainSubstring {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}
-        - result.body ShouldContainSubstring {"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}
+  - name: pull no query
+    steps:
+      - type: http
+        method: GET
+        url: http://lino:8000/api/v1/data/source
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.body ShouldContainSubstring {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"store_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}]}
+          - result.body ShouldContainSubstring {"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"store_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}]}
 
-- name: pull limit
-  steps:
-    - type: http
-      method: GET
-      url: http://lino:8000/api/v1/data/source?limit=1
-      assertions:
-        - result.statuscode ShouldEqual 200
-        - result.bodyjson.address_id  ShouldEqual 1
+  - name: pull limit
+    steps:
+      - type: http
+        method: GET
+        url: http://lino:8000/api/v1/data/source?limit=1
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.address_id  ShouldEqual 1
 
-- name: pull filter
-  steps:
-    - type: http
-      method: GET
-      url: http://lino:8000/api/v1/data/source?filter=address_id:1
-      assertions:
-        - result.statuscode ShouldEqual 200
-        - result.bodyjson.address_id  ShouldEqual 1
+  - name: pull filter
+    steps:
+      - type: http
+        method: GET
+        url: http://lino:8000/api/v1/data/source?filter=address_id:1
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.address_id  ShouldEqual 1
 
-- name: pull filter multi values
-  steps:
-    - type: http
-      method: GET
-      url: http://lino:8000/api/v1/data/source?filter=address_id:1,store_id:1
-      assertions:
-        - result.statuscode ShouldEqual 200
-        - result.bodyjson.address_id  ShouldEqual 1
+  - name: pull filter multi values
+    steps:
+      - type: http
+        method: GET
+        url: http://lino:8000/api/v1/data/source?filter=address_id:1,store_id:1
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.address_id  ShouldEqual 1
 
-- name: pull filter without values
-  steps:
-    - type: http
-      method: GET
-      url: http://lino:8000/api/v1/data/source?filter=address_id
-      assertions:
-        - result.statuscode ShouldEqual 400
-        - result.bodyjson.error  ShouldEqual "param filter must be a string map (key1:value1,key2:value2)"
+  - name: pull filter without values
+    steps:
+      - type: http
+        method: GET
+        url: http://lino:8000/api/v1/data/source?filter=address_id
+        assertions:
+          - result.statuscode ShouldEqual 400
+          - result.bodyjson.error  ShouldEqual "param filter must be a string map (key1:value1,key2:value2)"
 
-- name: pull table content
-  steps:
-    - type: http
-      method: GET
-      url: http://lino:8000/api/v1/data/source?table=customer&limit=1
-      assertions:
-        - result.statuscode ShouldEqual 200
-        - result.body ShouldContainSubstring '{"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}'
+  - name: pull table content
+    steps:
+      - type: http
+        method: GET
+        url: http://lino:8000/api/v1/data/source?table=customer&limit=1
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.body ShouldContainSubstring '{"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}'
 
-- name: pull where
-  steps:
-    - type: http
-      method: GET
-      url: http://lino:8000/api/v1/data/source?table=customer&where=address_id%3E14&limit=1
-      assertions:
-        - result.statuscode ShouldEqual 200
-        - result.bodyjson.address_id  ShouldEqual 15
+  - name: pull where
+    steps:
+      - type: http
+        method: GET
+        url: http://lino:8000/api/v1/data/source?table=customer&where=address_id%3E14&limit=1
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.address_id  ShouldEqual 15

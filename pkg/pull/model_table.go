@@ -38,8 +38,15 @@ type columnList struct {
 }
 
 // NewTable initialize a new Table object
-func NewTable(name string, pk []string, columns ColumnList) Table {
-	return table{name: name, pk: pk, columns: columns, template: initTemplate(columns)}
+func NewTable(name string, pks []string, columns ColumnList) Table {
+	// if a PK is not selected and list is not empty, add it with export=no to hide it
+	for _, pk := range pks {
+		if columns.Len() > 0 && !columns.Contains(pk) {
+			columns = columns.add(NewColumn(pk, "no"))
+		}
+	}
+
+	return table{name: name, pk: pks, columns: columns, template: initTemplate(columns)}
 }
 
 func (t table) Name() string         { return t.name }
@@ -94,7 +101,15 @@ func NewColumnList(columns []Column) ColumnList {
 	return columnList{uint(len(columns)), columns}
 }
 
-func (l columnList) Len() uint              { return l.len }
+func (l columnList) Len() uint { return l.len }
+func (l columnList) Contains(c string) bool {
+	for _, v := range l.slice {
+		if c == v.Name() {
+			return true
+		}
+	}
+	return false
+}
 func (l columnList) Column(idx uint) Column { return l.slice[idx] }
 func (l columnList) String() string {
 	switch l.len {
@@ -109,6 +124,10 @@ func (l columnList) String() string {
 		fmt.Fprintf(&sb, " -> %v", rel)
 	}
 	return sb.String()
+}
+
+func (l columnList) add(col Column) ColumnList {
+	return NewColumnList(append(l.slice, col))
 }
 
 type column struct {

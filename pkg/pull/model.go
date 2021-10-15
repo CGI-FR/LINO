@@ -35,7 +35,10 @@ type Table interface {
 // ColumnList is a list of columns.
 type ColumnList interface {
 	Len() uint
+	Contains(string) bool
 	Column(idx uint) Column
+
+	add(Column) ColumnList
 }
 
 // Column of a table.

@@ -68,7 +68,7 @@ func (ds *MemoryDataSource) Close() *pull.Error {
 	return nil
 }
 
-func (ds *MemoryDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, *pull.Error) {
+func (ds *MemoryDataSource) RowReader(source pull.Table, filter pull.Filter, distinct bool) (pull.RowReader, *pull.Error) {
 	rows, ok := ds.data[source.Name()]
 	result := []pull.Row{}
 	if ok {

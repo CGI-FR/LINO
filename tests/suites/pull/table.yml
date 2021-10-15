@@ -17,18 +17,36 @@
 
 name: pull single table
 testcases:
-- name: prepare test
-  steps:
-    # Clean working directory
-    - script: rm -f *
-    - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: lino table extract source
-    - script: lino relation extract source
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino table extract source
+      - script: lino relation extract source
 
-- name: pull one line
-  steps:
-    - script: lino pull --table customer source
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
-        - result.systemerr ShouldBeEmpty
+  - name: pull one line
+    steps:
+      - script: lino pull --table customer source
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
+          - result.systemerr ShouldBeEmpty
+
+  - name: pull distinct
+    steps:
+      - script: |-
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: customer
+              keys:
+                - customer_id
+              columns:
+                - name: activebool
+          EOF
+      - script: lino pull -l 0 -D --table customer source
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"activebool":true}
+          - result.systemerr ShouldBeEmpty

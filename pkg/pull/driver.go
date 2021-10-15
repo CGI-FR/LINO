@@ -24,7 +24,7 @@ import (
 )
 
 // Pull data from source following the given puller plan.
-func Pull(plan Plan, filters RowReader, source DataSource, exporter RowExporter, diagnostic TraceListener) *Error {
+func Pull(plan Plan, filters RowReader, source DataSource, exporter RowExporter, diagnostic TraceListener, distinct bool) *Error {
 	if err := source.Open(); err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func Pull(plan Plan, filters RowReader, source DataSource, exporter RowExporter,
 	Reset()
 
 	e := puller{source}
-	if err := e.pull(plan, filters, exporter.Export, diagnostic); err != nil {
+	if err := e.pull(plan, filters, exporter.Export, diagnostic, distinct); err != nil {
 		return err
 	}
 
@@ -45,14 +45,14 @@ type puller struct {
 	datasource DataSource
 }
 
-func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diagnostic TraceListener) *Error {
+func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diagnostic TraceListener, distinct bool) *Error {
 	for filters.Next() {
 		IncFiltersCount()
 
 		fileFilter := filters.Value()
 
 		initFilter := filter{plan.InitFilter().Limit(), fileFilter.Update(plan.InitFilter().Values()), plan.InitFilter().Where()}
-		if err := e.pullStep(plan.Steps().Step(0), initFilter, export, diagnostic); err != nil {
+		if err := e.pullStep(plan.Steps().Step(0), initFilter, export, diagnostic, distinct); err != nil {
 			return err
 		}
 	}
@@ -60,8 +60,8 @@ func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diag
 	return filters.Error()
 }
 
-func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diagnostic TraceListener) *Error {
-	rowIterator, err := e.datasource.RowReader(step.Entry(), filter)
+func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diagnostic TraceListener, distinct bool) *Error {
+	rowIterator, err := e.datasource.RowReader(step.Entry(), filter, distinct)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 						relatedToRow[rel.Name()] = r
 					}
 					return nil
-				}, diagnostic); err != nil {
+				}, diagnostic, distinct); err != nil {
 					return err
 				}
 			}
@@ -185,7 +185,7 @@ func (e puller) exhaust(step Step, allRows map[string][]Row) *Error {
 }
 
 func (e puller) read(t Table, f Filter) ([]Row, *Error) {
-	iter, err := e.datasource.RowReader(t, f)
+	iter, err := e.datasource.RowReader(t, f, false)
 	if err != nil {
 		return nil, err
 	}

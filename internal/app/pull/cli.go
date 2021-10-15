@@ -70,6 +70,7 @@ func Inject(
 // NewCommand implements the cli pull command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	// local flags
+	var distinct bool
 	var limit uint
 	var filefilter string
 	var table string
@@ -90,6 +91,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Uint("limit", limit).
 				Interface("filter", initialFilters).
 				Bool("diagnostic", diagnostic).
+				Bool("distinct", distinct).
 				Str("filter-from-file", filefilter).
 				Str("table", table).
 				Str("where", where).
@@ -134,7 +136,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				}
 				filters = rowReaderFactory(filterReader)
 			}
-			e3 := pull.Pull(plan, filters, datasource, pullExporterFactory(out), tracer)
+			e3 := pull.Pull(plan, filters, datasource, pullExporterFactory(out), tracer, distinct)
 			if e3 != nil {
 				fmt.Fprintln(err, e3.Error())
 				os.Exit(1)
@@ -149,6 +151,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")
 	cmd.Flags().StringToStringVarP(&initialFilters, "filter", "f", map[string]string{}, "filter of start table")
 	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
+	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "select distinct values from start table")
 	cmd.Flags().StringVarP(&filefilter, "filter-from-file", "F", "", "Use file to filter start table")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "pull content of table without relations instead of ingress descriptor definition")
 	cmd.Flags().StringVarP(&where, "where", "w", "", "Advanced SQL where clause to filter")

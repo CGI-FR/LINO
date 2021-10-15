@@ -41,7 +41,7 @@ type columnList struct {
 func NewTable(name string, pks []string, columns ColumnList) Table {
 	// if a PK is not selected and list is not empty, add it with export=no to hide it
 	for _, pk := range pks {
-		if columns.Len() > 0 && !columns.Contains(pk) {
+		if columns != nil && columns.Len() > 0 && !columns.Contains(pk) {
 			columns = columns.add(NewColumn(pk, "no"))
 		}
 	}

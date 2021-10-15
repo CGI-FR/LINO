@@ -34,6 +34,7 @@ func makeRel(from, to pull.Table) pull.Relation {
 }
 
 func assertResult(t *testing.T, result []pull.ExportableRow, expected string) {
+	t.Helper()
 	b, err := json.Marshal(result)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, string(b))

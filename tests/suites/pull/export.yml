@@ -55,7 +55,7 @@ testcases:
         assertions:
           - result.systemout ShouldEqual {"film_id":1,"title":"ACADEMY DINOSAUR"}
 
-  - name: not selecting primary key will put it back in output after selected columns
+  - name: not selecting primary key will select and hide it in output
     steps:
       - script: |-
           cat > tables.yaml <<EOF
@@ -67,9 +67,10 @@ testcases:
               columns:
                 - name: title
           EOF
-      - script: lino pull source --table film
+      - script: lino pull source --table film -v4
         assertions:
-          - result.systemout ShouldEqual {"title":"ACADEMY DINOSAUR","film_id":1}
+          - result.systemout ShouldEqual {"title":"ACADEMY DINOSAUR"}
+          - result.systemerr ShouldContainSubstring SELECT title, film_id
 
   - name: change output format
     steps:

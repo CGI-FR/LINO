@@ -93,6 +93,8 @@ testcases:
                   export: numeric
                 - name: special_features
                   export: string
+                - name: description
+                  export: no
           EOF
       - script: lino pull source --table film
         assertions:

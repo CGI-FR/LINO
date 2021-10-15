@@ -77,8 +77,30 @@ func (ds *SQLDataSource) tableName(source pull.Table) string {
 // RowReader iterate over rows in table with filter
 func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, *pull.Error) {
 	sql := &strings.Builder{}
-	sql.Write([]byte("SELECT * FROM "))
+	sql.Write([]byte("SELECT "))
 
+	columnset := map[string]struct{}{} // use a set to make sure no column appear more than once
+	for _, pk := range source.PrimaryKey() {
+		columnset[pk] = struct{}{}
+	}
+	if pcols := source.Columns(); pcols != nil && pcols.Len() > 0 {
+		for idx := uint(0); idx < pcols.Len(); idx++ {
+			columnset[pcols.Column(idx).Name()] = struct{}{}
+		}
+	}
+
+	if len(columnset) == 0 || source.Columns().Len() == 0 {
+		sql.Write([]byte("*"))
+	} else {
+		sep := []byte{}
+		for col := range columnset {
+			sql.Write(sep)
+			sql.Write([]byte(col))
+			sep = []byte(", ")
+		}
+	}
+
+	sql.Write([]byte(" FROM "))
 	sql.Write([]byte(ds.tableName(source)))
 	sql.Write([]byte(" WHERE "))
 

@@ -45,7 +45,7 @@ type puller struct {
 	datasource DataSource
 }
 
-func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diagnostic TraceListener) *Error {
+func (e puller) pull(plan Plan, filters RowReader, export func(ExportableRow) *Error, diagnostic TraceListener) *Error {
 	for filters.Next() {
 		IncFiltersCount()
 
@@ -60,7 +60,7 @@ func (e puller) pull(plan Plan, filters RowReader, export func(Row) *Error, diag
 	return filters.Error()
 }
 
-func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diagnostic TraceListener) *Error {
+func (e puller) pullStep(step Step, filter Filter, export func(ExportableRow) *Error, diagnostic TraceListener) *Error {
 	rowIterator, err := e.datasource.RowReader(step.Entry(), filter)
 	if err != nil {
 		return err
@@ -71,14 +71,14 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 
 	i := 0
 	for rowIterator.Next() {
-		row := rowIterator.Value()
+		row := step.Entry().export(rowIterator.Value())
 		i++
 
 		IncLinesPerStepCount(step.Entry().Name())
 		log.Trace().Msg(fmt.Sprintf("process row number %v", i))
 
-		allRows := map[string][]Row{}
-		allRows[step.Entry().Name()] = []Row{row}
+		allRows := map[string][]ExportableRow{}
+		allRows[step.Entry().Name()] = []ExportableRow{row}
 
 		if step.Relations().Len() > 0 {
 			if err := e.exhaust(step, allRows); err != nil {
@@ -96,19 +96,13 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 			log.Trace().Msg(fmt.Sprintf("row #%v, %v related row(s)", i, len(relatedToRows)))
 			for _, relatedToRow := range relatedToRows {
 				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow)
-				if relatedToRow[rel.Name()] == nil {
-					relatedToRow[rel.Name()] = []Row{}
-				}
-				if err := e.pullStep(nextStep, nextFilter, func(r Row) *Error {
+				if err := e.pullStep(nextStep, nextFilter, func(r ExportableRow) *Error {
 					if !directionParent {
-						rowArray, ok := relatedToRow[rel.Name()].([]Row)
-						if !ok {
+						if !relatedToRow.add(rel.Name(), r) {
 							return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", nextStep.Entry().Name(), rel.Name())}
 						}
-						rowArray = append(rowArray, r)
-						relatedToRow[rel.Name()] = rowArray
 					} else {
-						relatedToRow[rel.Name()] = r
+						relatedToRow.set(rel.Name(), r)
 					}
 					return nil
 				}, diagnostic); err != nil {
@@ -127,7 +121,7 @@ func (e puller) pullStep(step Step, filter Filter, export func(Row) *Error, diag
 	return nil
 }
 
-func (e puller) exhaust(step Step, allRows map[string][]Row) *Error {
+func (e puller) exhaust(step Step, allRows map[string][]ExportableRow) *Error {
 	cycles := step.Cycles()
 
 	log.Trace().Msg(fmt.Sprintf("%v cycle(s) to traverse", cycles.Len()))
@@ -161,17 +155,11 @@ func (e puller) exhaust(step Step, allRows map[string][]Row) *Error {
 				}
 
 				if !directionParent {
-					if fromRow[relation.Name()] == nil {
-						fromRow[relation.Name()] = []Row{}
-					}
-					rowArray, ok := fromRow[relation.Name()].([]Row)
-					if !ok {
+					if !fromRow.add(relation.Name(), rows...) {
 						return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", fromTable.Name(), relation.Name())}
 					}
-					rowArray = append(rowArray, rows...)
-					fromRow[relation.Name()] = rowArray
 				} else {
-					fromRow[relation.Name()] = rows[0]
+					fromRow.set(relation.Name(), rows[0])
 				}
 
 				allRows[toTable.Name()] = append(allRows[toTable.Name()], rows...)
@@ -184,14 +172,14 @@ func (e puller) exhaust(step Step, allRows map[string][]Row) *Error {
 	return nil
 }
 
-func (e puller) read(t Table, f Filter) ([]Row, *Error) {
+func (e puller) read(t Table, f Filter) ([]ExportableRow, *Error) {
 	iter, err := e.datasource.RowReader(t, f)
 	if err != nil {
 		return nil, err
 	}
-	result := []Row{}
+	result := []ExportableRow{}
 	for iter.Next() {
-		row := iter.Value()
+		row := t.export(iter.Value())
 		result = append(result, row)
 	}
 	if iter.Error() != nil {
@@ -227,7 +215,7 @@ func buildFilterRow(targetKey []string, localKey []string, data Row) Row {
 	return row
 }
 
-func relatedTo(from Table, follow Relation, data Row) Filter {
+func relatedTo(from Table, follow Relation, data ExportableRow) Filter {
 	log.Trace().Msg(fmt.Sprintf("build filter with row %v and relation %v to pull data from table %v", data, follow, from))
 	if from.Name() != follow.Parent().Name() && from.Name() != follow.Child().Name() {
 		log.Error().Msg(fmt.Sprintf("cannot build filter with row %v and relation %v to pull data from table %v", data, follow, from))
@@ -235,20 +223,20 @@ func relatedTo(from Table, follow Relation, data Row) Filter {
 	}
 
 	if follow.Child().Name() == from.Name() {
-		return NewFilter(0, buildFilterRow(follow.ChildKey(), follow.ParentKey(), data), "", false)
+		return NewFilter(0, buildFilterRow(follow.ChildKey(), follow.ParentKey(), data.AsRow()), "", false)
 	}
 
-	return NewFilter(0, buildFilterRow(follow.ParentKey(), follow.ChildKey(), data), "", false)
+	return NewFilter(0, buildFilterRow(follow.ParentKey(), follow.ChildKey(), data.AsRow()), "", false)
 }
 
-func removeDuplicate(pkList []string, a, b []Row) []Row {
-	result := []Row{}
+func removeDuplicate(pkList []string, a, b []ExportableRow) []ExportableRow {
+	result := []ExportableRow{}
 loop:
 	for _, row1 := range a {
 		for _, row2 := range b {
 			all := true
 			for _, pk := range pkList {
-				all = all && row1[pk] == row2[pk]
+				all = all && row1.GetOrNil(pk) == row2.GetOrNil(pk)
 			}
 			if all {
 				continue loop

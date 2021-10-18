@@ -31,7 +31,7 @@ testcases:
       - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}'| lino push -d dest
       - script: lino pull dest --limit 1 -f store_id=2
         assertions:
-          - result.systemout ShouldEqual {"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}
+          - result.systemout ShouldEqual {"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"store_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}]}
 
   - name: push delete existing data
     steps:

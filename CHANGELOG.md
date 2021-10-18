@@ -14,6 +14,11 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.0.0] (Ureleased)
+
+- `Added` configuration of exported columns in tables.yaml, see issue #33 for more information.
+- `Changed` order of keys in output JSON lines will be alphabetical when pulling (without configuration in tables.yaml).
+
 ## [1.8.0]
 
 - `Added` new parameter to pull only distinct values from the start table

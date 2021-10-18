@@ -19,7 +19,7 @@ package pull
 
 // RowExporter receives pulled rows one by one.
 type RowExporter interface {
-	Export(Row) *Error
+	Export(ExportableRow) *Error
 }
 
 // DataSourceFactory exposes methods to create new datasources.

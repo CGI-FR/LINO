@@ -79,6 +79,10 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	sql := &strings.Builder{}
 	sql.Write([]byte("SELECT "))
 
+	if filter.Distinct() {
+		sql.Write([]byte("DISTINCT "))
+	}
+
 	if pcols := source.Columns(); pcols != nil && pcols.Len() > 0 {
 		for idx := uint(0); idx < pcols.Len(); idx++ {
 			if idx > 0 {

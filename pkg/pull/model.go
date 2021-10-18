@@ -100,6 +100,7 @@ type Filter interface {
 	Limit() uint
 	Values() Row
 	Where() string
+	Distinct() bool
 }
 
 // Row of data.

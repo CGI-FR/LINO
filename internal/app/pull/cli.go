@@ -70,6 +70,7 @@ func Inject(
 // NewCommand implements the cli pull command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	// local flags
+	var distinct bool
 	var limit uint
 	var filefilter string
 	var table string
@@ -90,6 +91,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Uint("limit", limit).
 				Interface("filter", initialFilters).
 				Bool("diagnostic", diagnostic).
+				Bool("distinct", distinct).
 				Str("filter-from-file", filefilter).
 				Str("table", table).
 				Str("where", where).
@@ -107,7 +109,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPullerPlan(initialFilters, limit, where, idStorageFactory(table, ingressDescriptor))
+			plan, e2 := getPullerPlan(initialFilters, limit, where, distinct, idStorageFactory(table, ingressDescriptor))
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(1)
@@ -149,6 +151,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")
 	cmd.Flags().StringToStringVarP(&initialFilters, "filter", "f", map[string]string{}, "filter of start table")
 	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
+	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "select distinct values from start table")
 	cmd.Flags().StringVarP(&filefilter, "filter-from-file", "F", "", "Use file to filter start table")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "pull content of table without relations instead of ingress descriptor definition")
 	cmd.Flags().StringVarP(&where, "where", "w", "", "Advanced SQL where clause to filter")
@@ -178,7 +181,7 @@ func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, *p
 	return datasourceFactory.New(u.URL.String(), alias.Schema), nil
 }
 
-func getPullerPlan(initialFilters map[string]string, limit uint, where string, idStorage id.Storage) (pull.Plan, *pull.Error) {
+func getPullerPlan(initialFilters map[string]string, limit uint, where string, distinct bool, idStorage id.Storage) (pull.Plan, *pull.Error) {
 	ep, err1 := id.GetPullerPlan(idStorage)
 	if err1 != nil {
 		return nil, &pull.Error{Description: err1.Error()}
@@ -205,7 +208,7 @@ func getPullerPlan(initialFilters map[string]string, limit uint, where string, i
 	for column, value := range initialFilters {
 		row[column] = value
 	}
-	filter = pull.NewFilter(limit, row, where)
+	filter = pull.NewFilter(limit, row, where, distinct)
 
 	return pull.NewPlan(filter, stepList), nil
 }

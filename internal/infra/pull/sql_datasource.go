@@ -75,11 +75,11 @@ func (ds *SQLDataSource) tableName(source pull.Table) string {
 }
 
 // RowReader iterate over rows in table with filter
-func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter, distinct bool) (pull.RowReader, *pull.Error) {
+func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, *pull.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("SELECT "))
 
-	if distinct {
+	if filter.Distinct() {
 		sql.Write([]byte("DISTINCT "))
 	}
 

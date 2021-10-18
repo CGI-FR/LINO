@@ -30,7 +30,7 @@ type DataSourceFactory interface {
 // DataSource to read in the pull process.
 type DataSource interface {
 	Open() *Error
-	RowReader(source Table, filter Filter, distinct bool) (RowReader, *Error)
+	RowReader(source Table, filter Filter) (RowReader, *Error)
 	Close() *Error
 }
 

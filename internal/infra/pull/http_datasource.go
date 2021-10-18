@@ -57,7 +57,7 @@ func (ds *HTTPDataSource) Open() *pull.Error {
 }
 
 // RowReader iterate over rows in table with filter
-func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter, distinct bool) (pull.RowReader, *pull.Error) {
+func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, *pull.Error) {
 	b, err := json.Marshal(struct {
 		Values   pull.Row `json:"values"`
 		Limit    uint     `json:"limit"`
@@ -67,7 +67,7 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter, disti
 		Values:   filter.Values(),
 		Limit:    filter.Limit(),
 		Where:    filter.Where(),
-		Distinct: distinct,
+		Distinct: filter.Distinct(),
 	})
 	if err != nil {
 		return nil, &pull.Error{Description: err.Error()}

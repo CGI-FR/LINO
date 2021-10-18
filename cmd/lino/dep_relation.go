@@ -33,5 +33,6 @@ func relationExtractorFactory() map[string]domain.ExtractorFactory {
 		"godror-raw": infra.NewOracleExtractorFactory(),
 		"mysql":      infra.NewMariadbExtractorFactory(),
 		"db2":        infra.NewDb2ExtractorFactory(),
+		"http":       infra.NewHTTPExtractorFactory(),
 	}
 }

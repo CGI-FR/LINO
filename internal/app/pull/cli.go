@@ -262,12 +262,17 @@ func (c epToStepListConverter) getTable(name string) pull.Table {
 	table, ok := c.tmap[name]
 	if !ok {
 		log.Warn().Msg(fmt.Sprintf("missing table %v in tables.yaml", name))
-		return pull.NewTable(name, []string{})
+		return pull.NewTable(name, []string{}, nil)
 	}
 
 	log.Trace().Msg(fmt.Sprintf("building table %v", table))
 
-	return pull.NewTable(table.Name, table.Keys)
+	columns := []pull.Column{}
+	for _, col := range table.Columns {
+		columns = append(columns, pull.NewColumn(col.Name, col.Export))
+	}
+
+	return pull.NewTable(table.Name, table.Keys, pull.NewColumnList(columns))
 }
 
 func (c epToStepListConverter) getRelation(name string) (pull.Relation, error) {

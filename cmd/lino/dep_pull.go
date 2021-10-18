@@ -32,6 +32,7 @@ func pullDataSourceFactory() map[string]domain.DataSourceFactory {
 		"godror-raw": infra.NewOracleDataSourceFactory(),
 		"mysql":      infra.NewMariadbDataSourceFactory(),
 		"db2":        infra.NewDb2DataSourceFactory(),
+		"http":       infra.NewHTTPDataSourceFactory(),
 	}
 }
 

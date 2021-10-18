@@ -1,0 +1,26 @@
+[
+    {
+      "httpRequest": {
+        "path": "/api/v1/tables"
+      },
+      "httpResponse": {
+        "body": {"version":"v1","tables":[{"name":"ACT","keys":["ACTNO"]},{"name":"CATALOG","keys":["NAME"]},{"name":"CUSTOMER","keys":["CID"]},{"name":"DEPARTMENT","keys":["DEPTNO"]},{"name":"EMPLOYEE","keys":["EMPNO"]},{"name":"EMP_PHOTO","keys":["EMPNO","PHOTO_FORMAT"]},{"name":"EMP_RESUME","keys":["EMPNO","RESUME_FORMAT"]},{"name":"INVENTORY","keys":["PID"]},{"name":"PRODUCT","keys":["PID"]},{"name":"PRODUCTSUPPLIER","keys":["PID","SID"]},{"name":"PROJACT","keys":["ACSTDATE","ACTNO","PROJNO"]},{"name":"PROJECT","keys":["PROJNO"]},{"name":"PURCHASEORDER","keys":["POID"]},{"name":"SUPPLIERS","keys":["SID"]}]}
+      }
+    },
+    {
+      "httpRequest": {
+        "path": "/api/v1/relations"
+      },
+      "httpResponse": {
+        "body": {"version":"v1","relations":[{"name":"FK_EMP_PHOTO","parent":{"name":"EMP_PHOTO","keys":["EMPNO"]},"child":{"name":"EMPLOYEE","keys":["PK_EMPLOYEE"]}},{"name":"FK_EMP_RESUME","parent":{"name":"EMP_RESUME","keys":["EMPNO"]},"child":{"name":"EMPLOYEE","keys":["PK_EMPLOYEE"]}},{"name":"FK_PO_CUST","parent":{"name":"PURCHASEORDER","keys":["CUSTID"]},"child":{"name":"CUSTOMER","keys":["PK_CUSTOMER"]}},{"name":"FK_PROJECT_1","parent":{"name":"PROJECT","keys":["DEPTNO"]},"child":{"name":"DEPARTMENT","keys":["PK_DEPARTMENT"]}},{"name":"FK_PROJECT_2","parent":{"name":"PROJECT","keys":["RESPEMP"]},"child":{"name":"EMPLOYEE","keys":["PK_EMPLOYEE"]}},{"name":"RDE","parent":{"name":"DEPARTMENT","keys":["MGRNO"]},"child":{"name":"EMPLOYEE","keys":["PK_EMPLOYEE"]}},{"name":"RED","parent":{"name":"EMPLOYEE","keys":["WORKDEPT"]},"child":{"name":"DEPARTMENT","keys":["PK_DEPARTMENT"]}},{"name":"REPAPA","parent":{"name":"EMPPROJACT","keys":["PROJNO,ACTNO,EMSTDATE"]},"child":{"name":"PROJACT","keys":["PK_PROJACT"]}},{"name":"ROD","parent":{"name":"DEPARTMENT","keys":["ADMRDEPT"]},"child":{"name":"DEPARTMENT","keys":["PK_DEPARTMENT"]}},{"name":"RPAA","parent":{"name":"ACT","keys":["ACTNO"]},"child":{"name":"ACT","keys":["PK_ACT"]}},{"name":"RPAP","parent":{"name":"PROJACT","keys":["PROJNO"]},"child":{"name":"PROJECT","keys":["PK_PROJECT"]}},{"name":"RPP","parent":{"name":"PROJECT","keys":["MAJPROJ"]},"child":{"name":"PROJECT","keys":["PK_PROJECT"]}}]}
+      }
+    },
+    {
+      "httpRequest": {
+        "path": "/api/v1/data/CUSTOMER"
+      },
+      "httpResponse": {
+        "body": "{\"active\":1,\"activebool\":true,\"address_id\":5,\"create_date\":\"2006-02-14T00:00:00Z\",\"customer_id\":1,\"email\":\"MARY.SMITH@sakilacustomer.org\",\"first_name\":\"MARY\",\"last_name\":\"SMITH\",\"last_update\":\"2006-02-15T09:57:20Z\",\"store_id\":1}\n{\"active\":1,\"activebool\":true,\"address_id\":6,\"create_date\":\"2006-02-14T00:00:00Z\",\"customer_id\":2,\"email\":\"PATRICIA.JOHNSON@sakilacustomer.org\",\"first_name\":\"PATRICIA\",\"last_name\":\"JOHNSON\",\"last_update\":\"2006-02-15T09:57:20Z\",\"store_id\":1}"
+      }
+    }
+  ]

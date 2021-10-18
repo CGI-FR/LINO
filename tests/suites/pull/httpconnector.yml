@@ -1,0 +1,40 @@
+# Copyright (C) 2021 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
+name: pull from HTTP connector
+testcases:
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: cp ../../httpmock/default.json ..
+      - script: sudo docker-compose -p lino stop httpmock
+      - script: sudo docker-compose -p lino rm -f httpmock
+      - script: sudo docker-compose -p lino up -d httpmock
+      - script: lino dataconnector add http http://httpmock:1080/api/v1
+      - script: count=0; while ! lino dc ping http; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
+      - script: lino table extract http
+      - script: lino relation extract http
+
+  - name: pull all
+    steps:
+      - script: lino pull --table customer --limit 0 http
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring "customer_id":1
+          - result.systemout ShouldContainSubstring "customer_id":2
+          - result.systemerr ShouldBeEmpty

@@ -18,6 +18,7 @@
 package table
 
 import (
+	"bytes"
 	"io/ioutil"
 
 	"github.com/cgi-fr/lino/pkg/table"
@@ -35,8 +36,16 @@ type YAMLStructure struct {
 
 // YAMLTable defines how to store a table in YAML format.
 type YAMLTable struct {
-	Name string   `yaml:"name"`
-	Keys []string `yaml:"keys"`
+	Name    string       `yaml:"name"`
+	Keys    []string     `yaml:"keys"`
+	Columns []YAMLColumn `yaml:"columns,omitempty"`
+}
+
+// YAMLColumn defines how to store a column in YAML format.
+type YAMLColumn struct {
+	Name   string `yaml:"name"`
+	Export string `yaml:"export"`
+	Import string `yaml:"import"`
 }
 
 // YAMLStorage provides storage in a local YAML file
@@ -56,9 +65,14 @@ func (s YAMLStorage) List() ([]table.Table, *table.Error) {
 	result := []table.Table{}
 
 	for _, ym := range list.Tables {
+		col := []table.Column{}
+		for _, ymc := range ym.Columns {
+			col = append(col, table.Column{Name: ymc.Name, Export: ymc.Export, Import: ymc.Import})
+		}
 		m := table.Table{
-			Name: ym.Name,
-			Keys: ym.Keys,
+			Name:    ym.Name,
+			Keys:    ym.Keys,
+			Columns: col,
 		}
 		result = append(result, m)
 	}
@@ -73,15 +87,19 @@ func (s YAMLStorage) Store(tables []table.Table) *table.Error {
 	}
 
 	for _, r := range tables {
+		cols := []YAMLColumn{}
+		for _, rc := range r.Columns {
+			cols = append(cols, YAMLColumn{Name: rc.Name, Export: rc.Export, Import: rc.Import})
+		}
 		yml := YAMLTable{
-			Name: r.Name,
-			Keys: r.Keys,
+			Name:    r.Name,
+			Keys:    r.Keys,
+			Columns: cols,
 		}
 		list.Tables = append(list.Tables, yml)
 	}
 
-	err := writeFile(&list)
-	if err != nil {
+	if err := writeFile(&list); err != nil {
 		return err
 	}
 
@@ -111,12 +129,16 @@ func readFile() (*YAMLStructure, *table.Error) {
 }
 
 func writeFile(list *YAMLStructure) *table.Error {
-	out, err := yaml.Marshal(list)
+	out := &bytes.Buffer{}
+	enc := yaml.NewEncoder(out)
+	enc.SetIndent(2)
+
+	err := enc.Encode(list)
 	if err != nil {
 		return &table.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("tables.yaml", out, 0600)
+	err = ioutil.WriteFile("tables.yaml", out.Bytes(), 0600)
 	if err != nil {
 		return &table.Error{Description: err.Error()}
 	}

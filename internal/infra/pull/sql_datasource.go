@@ -77,7 +77,20 @@ func (ds *SQLDataSource) tableName(source pull.Table) string {
 // RowReader iterate over rows in table with filter
 func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, *pull.Error) {
 	sql := &strings.Builder{}
-	sql.Write([]byte("SELECT * FROM "))
+	sql.Write([]byte("SELECT "))
+
+	if pcols := source.Columns(); pcols != nil && pcols.Len() > 0 {
+		for idx := uint(0); idx < pcols.Len(); idx++ {
+			if idx > 0 {
+				sql.Write([]byte(", "))
+			}
+			sql.Write([]byte(pcols.Column(idx).Name()))
+		}
+	} else {
+		sql.Write([]byte("*"))
+	}
+
+	sql.Write([]byte(" FROM "))
 	sql.Write([]byte(ds.tableName(source)))
 	sql.Write([]byte(" WHERE "))
 

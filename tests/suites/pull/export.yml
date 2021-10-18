@@ -1,0 +1,101 @@
+# Copyright (C) 2021 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
+name: use export configuration to change order/format of columns
+testcases:
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino relation extract source
+
+  - name: no configuration exports all columns in alphabetical order
+    steps:
+      - script: |-
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: film
+              keys:
+                - film_id
+          EOF
+      - script: lino pull source --table film
+        assertions:
+          - result.systemout ShouldEqual {"description":"A Epic Drama of a Feminist And a Mad Scientist who must Battle a Teacher in The Canadian Rockies","film_id":1,"fulltext":"J2FjYWRlbWknOjEgJ2JhdHRsJzoxNSAnY2FuYWRpYW4nOjIwICdkaW5vc2F1cic6MiAnZHJhbWEnOjUgJ2VwaWMnOjQgJ2ZlbWluaXN0Jzo4ICdtYWQnOjExICdtdXN0JzoxNCAncm9ja2knOjIxICdzY2llbnRpc3QnOjEyICd0ZWFjaGVyJzoxNw==","language_id":1,"last_update":"2007-09-10T17:46:03.905795Z","length":86,"original_language_id":null,"rating":"UEc=","release_year":2006,"rental_duration":6,"rental_rate":"MC45OQ==","replacement_cost":"MjAuOTk=","special_features":"eyJEZWxldGVkIFNjZW5lcyIsIkJlaGluZCB0aGUgU2NlbmVzIn0=","title":"ACADEMY DINOSAUR"}
+
+  - name: select and order columns
+    steps:
+      - script: |-
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: film
+              keys:
+                - film_id
+              columns:
+                - name: film_id
+                - name: title
+          EOF
+      - script: lino pull source --table film
+        assertions:
+          - result.systemout ShouldEqual {"film_id":1,"title":"ACADEMY DINOSAUR"}
+
+  - name: not selecting primary key will select and hide it in output
+    steps:
+      - script: |-
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: film
+              keys:
+                - film_id
+              columns:
+                - name: title
+          EOF
+      - script: lino pull source --table film -v4
+        assertions:
+          - result.systemout ShouldEqual {"title":"ACADEMY DINOSAUR"}
+          - result.systemerr ShouldContainSubstring SELECT title, film_id
+
+  - name: change output format
+    steps:
+      - script: |-
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: film
+              keys:
+                - film_id
+              columns:
+                - name: film_id
+                - name: fulltext
+                  export: string
+                - name: rating
+                  export: string
+                - name: rental_rate
+                  export: numeric
+                - name: replacement_cost
+                  export: numeric
+                - name: special_features
+                  export: string
+                - name: description
+                  export: no
+          EOF
+      - script: lino pull source --table film
+        assertions:
+          - result.systemout ShouldEqual {"film_id":1,"fulltext":"'academi':1 'battl':15 'canadian':20 'dinosaur':2 'drama':5 'epic':4 'feminist':8 'mad':11 'must':14 'rocki':21 'scientist':12 'teacher':17","rating":"PG","rental_rate":0.99,"replacement_cost":20.99,"special_features":"{\"Deleted Scenes\",\"Behind the Scenes\"}"}

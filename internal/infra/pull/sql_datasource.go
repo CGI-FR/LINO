@@ -82,7 +82,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	if pcols := source.Columns(); pcols != nil && pcols.Len() > 0 {
 		for idx := uint(0); idx < pcols.Len(); idx++ {
 			if idx > 0 {
-				sql.Write([]byte(","))
+				sql.Write([]byte(", "))
 			}
 			sql.Write([]byte(pcols.Column(idx).Name()))
 		}

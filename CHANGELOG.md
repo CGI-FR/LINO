@@ -35,7 +35,7 @@ Types of changes
 
 ## [1.4.0]
 
-- `Added` statistics report for push and pull executions
+- `Added` statistics report for push and pull executions (thanks to @CapKicklee)
 - `Changed` some info level logs to debug level in pull module
 
 ## [1.3.1]
@@ -53,7 +53,7 @@ Types of changes
 
 ## [1.2.0]
 
-- `Added` structured logs (debug & json format)
+- `Added` structured logs (debug & json format) (thanks to @CapKicklee)
 
 ## [1.1.2]
 

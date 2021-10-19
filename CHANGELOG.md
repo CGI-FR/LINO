@@ -17,6 +17,7 @@ Types of changes
 ## [2.0.0] (Ureleased)
 
 - `Added` configuration of exported columns in tables.yaml, see issue #33 for more information.
+- `Added` MariaDB/MySQL support (thanks to @joaking85).
 - `Changed` order of keys in output JSON lines will be alphabetical when pulling (without configuration in tables.yaml).
 
 ## [1.7.0]
@@ -34,7 +35,7 @@ Types of changes
 
 ## [1.4.0]
 
-- `Added` statistics report for push and pull executions
+- `Added` statistics report for push and pull executions (thanks to @CapKicklee)
 - `Changed` some info level logs to debug level in pull module
 
 ## [1.3.1]
@@ -52,7 +53,7 @@ Types of changes
 
 ## [1.2.0]
 
-- `Added` structured logs (debug & json format)
+- `Added` structured logs (debug & json format) (thanks to @CapKicklee)
 
 ## [1.1.2]
 

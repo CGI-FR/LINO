@@ -21,7 +21,6 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
-	"unicode"
 
 	"github.com/cgi-fr/lino/pkg/pull"
 

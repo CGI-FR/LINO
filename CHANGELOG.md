@@ -17,6 +17,7 @@ Types of changes
 ## [2.0.0] (Ureleased)
 
 - `Added` configuration of exported columns in tables.yaml, see issue #33 for more information.
+- `Added` MariaDB/MySQL support (thanks to @joaking85).
 - `Changed` order of keys in output JSON lines will be alphabetical when pulling (without configuration in tables.yaml).
 
 ## [1.7.0]

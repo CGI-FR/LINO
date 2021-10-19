@@ -18,8 +18,7 @@
 package pull_test
 
 import (
-	"fmt"
-	"strings"
+	"encoding/json"
 	"testing"
 
 	"github.com/cgi-fr/lino/pkg/pull"
@@ -27,43 +26,22 @@ import (
 )
 
 func makeTable(name string) pull.Table {
-	return pull.NewTable(name, []string{name + "_ID"})
+	return pull.NewTable(name, []string{name + "_ID"}, nil)
 }
 
 func makeRel(from, to pull.Table) pull.Relation {
-	return pull.NewRelation(from.Name()+"->"+to.Name(), from, to, []string{to.Name() + "_ID"}, []string{to.Name() + "_ID"})
+	return pull.NewRelation(from.Name()+to.Name(), from, to, []string{to.Name() + "_ID"}, []string{to.Name() + "_ID"})
 }
 
-/* func assertFollowedParent(t *testing.T, expected pull.Row, actual pull.Row, followed pull.Relation) []pull.Row {
-	fmt.Printf("assert %v is equal to %v after following %v\n", actual, expected, &followed)
-	cleanActual := pull.Row{}
-	for key, value := range actual {
-		if key != followed.Name && !strings.Contains(key, "->") {
-			cleanActual[key] = value
-		}
-	}
-	assert.Equal(t, expected, cleanActual)
-	assert.NotNil(t, actual[followed.Name()])
-	assert.IsType(t, []pull.Row{}, actual[followed.Name()])
-	return actual[followed.Name()].([]pull.Row)
-} */
-
-func assertFollowedChild(t *testing.T, expected pull.Row, actual pull.Row, followed pull.Relation) []pull.Row {
-	fmt.Printf("assert %v is equal to %v after following %v\n", actual, expected, followed)
-	cleanActual := pull.Row{}
-	for key, value := range actual {
-		if key != followed.Name() && !strings.Contains(key, "->") {
-			cleanActual[key] = value
-		}
-	}
-	assert.Equal(t, expected, cleanActual)
-	assert.NotNil(t, actual[followed.Name()])
-	assert.IsType(t, []pull.Row{}, actual[followed.Name()])
-	return actual[followed.Name()].([]pull.Row)
+func assertResult(t *testing.T, result []pull.ExportableRow, expected string) {
+	t.Helper()
+	b, err := json.Marshal(result)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, string(b))
 }
 
 func TestPull1(t *testing.T) {
-	exporter := &MemoryRowExporter{[]pull.Row{}}
+	exporter := &MemoryRowExporter{rows: []pull.ExportableRow{}}
 
 	A := makeTable("A")
 	B := makeTable("B")
@@ -105,18 +83,11 @@ func TestPull1(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
 
-	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
-	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
-
-	C1 := assertFollowedChild(t, source[B.Name()][0], B1[0], BC)
-	C2 := assertFollowedChild(t, source[B.Name()][1], B2[0], BC)
-
-	assert.Equal(t, source[C.Name()][0], C1[0])
-	assert.Equal(t, source[C.Name()][1], C2[0])
+	assertResult(t, exporter.rows, `[{"A_ID":10,"B_ID":20,"AB":[{"B_ID":20,"C_ID":30,"BC":[{"C_ID":30}]}]},{"A_ID":11,"B_ID":21,"AB":[{"B_ID":21,"C_ID":31,"BC":[{"C_ID":31}]}]}]`)
 }
 
 func TestPull2(t *testing.T) {
-	exporter := &MemoryRowExporter{[]pull.Row{}}
+	exporter := &MemoryRowExporter{rows: []pull.ExportableRow{}}
 
 	A := makeTable("A")
 	B := makeTable("B")
@@ -158,21 +129,11 @@ func TestPull2(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
 
-	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
-	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
-
-	assert.Equal(t, source[B.Name()][0], B1[0])
-	assert.Equal(t, source[B.Name()][1], B2[0])
-
-	C1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AC)
-	C2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AC)
-
-	assert.Equal(t, source[C.Name()][0], C1[0])
-	assert.Equal(t, source[C.Name()][1], C2[0])
+	assertResult(t, exporter.rows, `[{"A_ID":10,"B_ID":20,"C_ID":30,"AB":[{"B_ID":20}],"AC":[{"C_ID":30}]},{"A_ID":11,"B_ID":21,"C_ID":31,"AB":[{"B_ID":21}],"AC":[{"C_ID":31}]}]`)
 }
 
 func TestPull3(t *testing.T) {
-	exporter := &MemoryRowExporter{[]pull.Row{}}
+	exporter := &MemoryRowExporter{rows: []pull.ExportableRow{}}
 
 	A := makeTable("A")
 	B := makeTable("B")
@@ -224,25 +185,11 @@ func TestPull3(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
 
-	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
-	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
-
-	C1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AC)
-	C2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AC)
-
-	D1 := assertFollowedChild(t, source[B.Name()][0], B1[0], BD)
-	D2 := assertFollowedChild(t, source[B.Name()][1], B2[0], BD)
-	D3 := assertFollowedChild(t, source[C.Name()][0], C1[0], CD)
-	D4 := assertFollowedChild(t, source[C.Name()][1], C2[0], CD)
-
-	assert.Equal(t, source[D.Name()][0], D1[0])
-	assert.Equal(t, source[D.Name()][1], D2[0])
-	assert.Equal(t, source[D.Name()][0], D3[0])
-	assert.Equal(t, source[D.Name()][1], D4[0])
+	assertResult(t, exporter.rows, `[{"A_ID":10,"B_ID":20,"C_ID":30,"AB":[{"B_ID":20,"D_ID":40,"BD":[{"D_ID":40}]}],"AC":[{"C_ID":30,"D_ID":40,"CD":[{"D_ID":40}]}]},{"A_ID":11,"B_ID":21,"C_ID":31,"AB":[{"B_ID":21,"D_ID":41,"BD":[{"D_ID":41}]}],"AC":[{"C_ID":31,"D_ID":41,"CD":[{"D_ID":41}]}]}]`)
 }
 
 func TestPull4(t *testing.T) {
-	exporter := &MemoryRowExporter{[]pull.Row{}}
+	exporter := &MemoryRowExporter{rows: []pull.ExportableRow{}}
 
 	A := makeTable("A")
 	B := makeTable("B")
@@ -274,22 +221,8 @@ func TestPull4(t *testing.T) {
 
 	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{})
 
-	/* Expected result
-	map[
-		A_ID:10
-		B_ID:20
-		A->B:map[
-			B_ID:20
-			A_ID:10
-		]
-	] */
-
 	assert.Nil(t, err)
 	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
 
-	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
-	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
-
-	assert.Equal(t, source[B.Name()][0], B1[0])
-	assert.Equal(t, source[B.Name()][1], B2[0])
+	assertResult(t, exporter.rows, `[{"A_ID":10,"B_ID":20,"AB":[{"A_ID":10,"B_ID":20}]},{"A_ID":11,"B_ID":21,"AB":[{"A_ID":11,"B_ID":21}]}]`)
 }

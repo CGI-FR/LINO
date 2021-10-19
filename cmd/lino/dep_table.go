@@ -31,6 +31,8 @@ func tableExtractorFactory() map[string]domain.ExtractorFactory {
 		"postgres":   infra.NewPostgresExtractorFactory(),
 		"godror":     infra.NewOracleExtractorFactory(),
 		"godror-raw": infra.NewOracleExtractorFactory(),
+		"mysql":      infra.NewMariadbExtractorFactory(),
 		"db2":        infra.NewDb2ExtractorFactory(),
+		"http":       infra.NewHTTPExtractorFactory(),
 	}
 }

@@ -28,6 +28,23 @@ import (
 type Table interface {
 	Name() string
 	PrimaryKey() []string
+	Columns() ColumnList
+	export(Row) ExportableRow
+}
+
+// ColumnList is a list of columns.
+type ColumnList interface {
+	Len() uint
+	Contains(string) bool
+	Column(idx uint) Column
+
+	add(Column) ColumnList
+}
+
+// Column of a table.
+type Column interface {
+	Name() string
+	Export() string
 }
 
 // Relation between two tables.
@@ -79,25 +96,11 @@ type Plan interface {
 	Steps() StepList
 }
 
-// Value is an untyped data.
-type Value interface{}
-
 // Filter applied to data tables.
 type Filter interface {
 	Limit() uint
 	Values() Row
 	Where() string
-}
-
-// Row of data.
-type Row map[string]Value
-
-// Update Row with an other Row to generate a new one
-func (r Row) Update(other Row) Row {
-	for k, v := range other {
-		r[k] = v
-	}
-	return r
 }
 
 // Error is the error type returned by the domain

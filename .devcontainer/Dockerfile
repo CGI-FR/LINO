@@ -25,7 +25,7 @@ RUN chmod 644 /usr/local/share/ca-certificates/cgi_ca_root.crt && update-ca-cert
 RUN echo "Acquire::http::Proxy \"${http_proxy:-false}\";" > /etc/apt/apt.conf.d/proxy.conf && \
     echo "Acquire::https::Proxy \"${https_proxy:-false}\";" >> /etc/apt/apt.conf.d/proxy.conf && \
     apt-get update && \
-    apt-get install -y --no-install-recommends make less jq expect libaio1 wget unzip gcc-mingw-w64 g++-mingw-w64 gcc-multilib gcc-mingw-w64 && \
+    apt-get install -y --no-install-recommends make less jq expect libaio1 wget unzip gcc-mingw-w64 g++-mingw-w64 gcc-multilib gcc-mingw-w64 libxml2-dev && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     rm -r /var/cache/* /var/lib/apt/lists/*

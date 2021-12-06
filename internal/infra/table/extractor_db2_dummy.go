@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
+//go:build !db2
 // +build !db2
 
 package table
@@ -40,6 +41,14 @@ func (e *Db2ExtractorFactory) New(url string, schema string) table.Extractor {
 
 type Db2Dialect struct{}
 
-func (d Db2Dialect) SQL(schema string) string {
+func (d Db2Dialect) TablesSQL(schema string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d Db2Dialect) SequencesSQL(schema string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d Db2Dialect) UpdateSequenceSQL(schema string, sequence string, tableName string, column string) string {
 	panic(fmt.Errorf("Not implemented"))
 }

@@ -77,6 +77,10 @@ func (e *HTTPExtractor) Extract() ([]table.Table, *table.Error) {
 	return container.Tables, nil
 }
 
+func (e *HTTPExtractor) UpdateSequence(sequence string, table string, key string) *table.Error {
+	panic("update sequence not supported for http data conector")
+}
+
 // NewHTTPExtractorFactory creates a new HTTP extractor factory.
 func NewHTTPExtractorFactory() *HTTPExtractorFactory {
 	return &HTTPExtractorFactory{}

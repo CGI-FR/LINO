@@ -26,9 +26,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var dataconnectorStorage dataconnector.Storage
-var tableStorage table.Storage
-var tableExtractorFactories map[string]table.ExtractorFactory
+var (
+	dataconnectorStorage    dataconnector.Storage
+	tableStorage            table.Storage
+	tableExtractorFactories map[string]table.ExtractorFactory
+)
 
 // Inject dependencies
 func Inject(dbas dataconnector.Storage, rs table.Storage, exmap map[string]table.ExtractorFactory) {
@@ -47,6 +49,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Aliases: []string{"tab"},
 	}
 	cmd.AddCommand(newExtractCommand(fullName, err, out, in))
+	cmd.AddCommand(newUpdateSequenceCommand(fullName, err, out, in))
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

@@ -17,6 +17,8 @@
 
 package table
 
+import "github.com/rs/zerolog/log"
+
 // Extract table metadatas from a relational database.
 func Extract(e Extractor, s Storage) *Error {
 	tables, err := e.Extract()
@@ -27,5 +29,25 @@ func Extract(e Extractor, s Storage) *Error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// Update sequence with the max of value + 1
+func UpdateSequence(su Extractor, s Storage) *Error {
+	tables, err := s.List()
+	if err != nil {
+		return err
+	}
+
+	for _, table := range tables {
+		for _, seq := range table.Sequences {
+			log.Debug().Str("sequence", seq.Name).Msg("update sequence")
+			err := su.UpdateSequence(seq.Name, table.Name, seq.Key)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }

@@ -36,9 +36,10 @@ type YAMLStructure struct {
 
 // YAMLTable defines how to store a table in YAML format.
 type YAMLTable struct {
-	Name    string       `yaml:"name"`
-	Keys    []string     `yaml:"keys"`
-	Columns []YAMLColumn `yaml:"columns,omitempty"`
+	Name      string         `yaml:"name"`
+	Keys      []string       `yaml:"keys"`
+	Columns   []YAMLColumn   `yaml:"columns,omitempty"`
+	Sequences []YAMLSequence `yaml:"sequences,omitempty"`
 }
 
 // YAMLColumn defines how to store a column in YAML format.
@@ -46,6 +47,12 @@ type YAMLColumn struct {
 	Name   string `yaml:"name"`
 	Export string `yaml:"export"`
 	Import string `yaml:"import"`
+}
+
+// YAMLSequence defines how to store a sequence
+type YAMLSequence struct {
+	Name string `yaml:"name"`
+	Key  string `yaml:"key"`
 }
 
 // YAMLStorage provides storage in a local YAML file
@@ -69,11 +76,19 @@ func (s YAMLStorage) List() ([]table.Table, *table.Error) {
 		for _, ymc := range ym.Columns {
 			col = append(col, table.Column{Name: ymc.Name, Export: ymc.Export, Import: ymc.Import})
 		}
-		m := table.Table{
-			Name:    ym.Name,
-			Keys:    ym.Keys,
-			Columns: col,
+
+		seq := []table.Sequence{}
+		for _, yms := range ym.Sequences {
+			seq = append(seq, table.Sequence{Name: yms.Name, Key: yms.Key})
 		}
+
+		m := table.Table{
+			Name:      ym.Name,
+			Keys:      ym.Keys,
+			Columns:   col,
+			Sequences: seq,
+		}
+
 		result = append(result, m)
 	}
 
@@ -91,10 +106,15 @@ func (s YAMLStorage) Store(tables []table.Table) *table.Error {
 		for _, rc := range r.Columns {
 			cols = append(cols, YAMLColumn{Name: rc.Name, Export: rc.Export, Import: rc.Import})
 		}
+		seqs := []YAMLSequence{}
+		for _, rs := range r.Sequences {
+			seqs = append(seqs, YAMLSequence{Name: rs.Name, Key: rs.Key})
+		}
 		yml := YAMLTable{
-			Name:    r.Name,
-			Keys:    r.Keys,
-			Columns: cols,
+			Name:      r.Name,
+			Keys:      r.Keys,
+			Columns:   cols,
+			Sequences: seqs,
 		}
 		list.Tables = append(list.Tables, yml)
 	}

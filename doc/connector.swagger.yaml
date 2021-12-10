@@ -121,6 +121,12 @@ paths:
         type: "string"
         description: "Name of the schema where is located the table"
         required: false
+      - in: "query"
+        name: "mode"
+        type: "string"
+        description: "Push mode"
+        enum: ["insert", "truncate", "update", "delete"]
+        required: false
       - name: "data"
         in: "body"
         schema: {}

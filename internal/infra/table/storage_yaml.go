@@ -77,16 +77,10 @@ func (s YAMLStorage) List() ([]table.Table, *table.Error) {
 			col = append(col, table.Column{Name: ymc.Name, Export: ymc.Export, Import: ymc.Import})
 		}
 
-		seq := []table.Sequence{}
-		for _, yms := range ym.Sequences {
-			seq = append(seq, table.Sequence{Name: yms.Name, Key: yms.Key})
-		}
-
 		m := table.Table{
-			Name:      ym.Name,
-			Keys:      ym.Keys,
-			Columns:   col,
-			Sequences: seq,
+			Name:    ym.Name,
+			Keys:    ym.Keys,
+			Columns: col,
 		}
 
 		result = append(result, m)
@@ -106,15 +100,10 @@ func (s YAMLStorage) Store(tables []table.Table) *table.Error {
 		for _, rc := range r.Columns {
 			cols = append(cols, YAMLColumn{Name: rc.Name, Export: rc.Export, Import: rc.Import})
 		}
-		seqs := []YAMLSequence{}
-		for _, rs := range r.Sequences {
-			seqs = append(seqs, YAMLSequence{Name: rs.Name, Key: rs.Key})
-		}
 		yml := YAMLTable{
-			Name:      r.Name,
-			Keys:      r.Keys,
-			Columns:   cols,
-			Sequences: seqs,
+			Name:    r.Name,
+			Keys:    r.Keys,
+			Columns: cols,
 		}
 		list.Tables = append(list.Tables, yml)
 	}

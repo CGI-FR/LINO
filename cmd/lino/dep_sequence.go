@@ -15,17 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package table
+package main
 
-// Extract table metadatas from a relational database.
-func Extract(e Extractor, s Storage) *Error {
-	tables, err := e.Extract()
-	if err != nil {
-		return err
+import (
+	infra "github.com/cgi-fr/lino/internal/infra/sequence"
+	domain "github.com/cgi-fr/lino/pkg/sequence"
+)
+
+func sequenceStorage() domain.Storage {
+	return infra.NewYAMLStorage()
+}
+
+func sequenceUpdatorFactory() map[string]domain.UpdatorFactory {
+	return map[string]domain.UpdatorFactory{
+		"postgres": infra.NewPostgresUpdatorFactory(),
+		// "godror":     infra.NewOracleUpdatorFactory(),
+		// "godror-raw": infra.NewOracleUpdatorFactory(),
+		// "db2":        infra.NewDb2UpdatorFactory(),
+		// "http":       infra.NewHTTPUpdatorFactory(),
 	}
-	err = s.Store(tables)
-	if err != nil {
-		return err
-	}
-	return nil
 }

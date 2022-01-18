@@ -20,8 +20,6 @@ package table
 import (
 	"strings"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/cgi-fr/lino/pkg/table"
 	"github.com/xo/dburl"
 )
@@ -36,10 +34,6 @@ type SQLExtractor struct {
 type Dialect interface {
 	// TablesSQL return SQL command to list tables from meta data
 	TablesSQL(schema string) string
-	// SequencesSQL return SQL command to list sequences from meta data
-	SequencesSQL(schema string) string
-	// UpdateSequenceSQL return SQL Command to update sequence to max +1  of tablename/column values
-	UpdateSequenceSQL(schema string, sequence string, tableName string, column string) string
 }
 
 // NewSQLExtractor creates a new SQL extractor.
@@ -71,7 +65,7 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 		return nil, &table.Error{Description: err.Error()}
 	}
 
-	tables := map[string]*table.Table{}
+	result := []table.Table{}
 
 	var (
 		tableSchema string
@@ -90,70 +84,12 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 			Name: tableName,
 			Keys: strings.Split(keyColumns, ","),
 		}
-		tables[table.Name] = &table
+		result = append(result, table)
 	}
 	err = rows.Err()
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
 
-	rows, err = db.Query(e.dialect.SequencesSQL(e.schema))
-	if err != nil {
-		return nil, &table.Error{Description: err.Error()}
-	}
-
-	var sequenceName string
-
-	for rows.Next() {
-		err := rows.Scan(&sequenceName)
-		if err != nil {
-			return nil, &table.Error{Description: err.Error()}
-		}
-
-		log.Debug().Str("sequence", sequenceName).Msg("find new sequence")
-
-		for _, tbl := range tables {
-			sequences := tbl.Sequences
-			for _, key := range tbl.Keys {
-				if strings.Contains(sequenceName, tbl.Name) && strings.Contains(sequenceName, key) {
-					log.Debug().Str("sequence", sequenceName).Str("table", tbl.Name).Str("key", key).Msg("sequence match")
-					sequences = append(sequences, table.Sequence{Name: sequenceName, Key: key})
-				}
-			}
-			tbl.Sequences = sequences
-		}
-	}
-	err = rows.Err()
-	if err != nil {
-		return nil, &table.Error{Description: err.Error()}
-	}
-
-	result := []table.Table{}
-	for _, table := range tables {
-		result = append(result, *table)
-	}
 	return result, nil
-}
-
-// Update sequence
-func (e *SQLExtractor) UpdateSequence(sequence string, tableName string, column string) *table.Error {
-	db, err := dburl.Open(e.url)
-	if err != nil {
-		return &table.Error{Description: err.Error()}
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		return &table.Error{Description: err.Error()}
-	}
-
-	SQL := e.dialect.UpdateSequenceSQL(e.schema, sequence, tableName, column)
-	log.Debug().Str("sql", SQL).Msg("SQL to update sequence")
-	_, err = db.Query(SQL)
-	if err != nil {
-		return &table.Error{Description: err.Error()}
-	}
-
-	return nil
 }

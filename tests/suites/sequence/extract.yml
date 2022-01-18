@@ -1,0 +1,152 @@
+# Copyright (C) 2021 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
+name: sequence
+testcases:
+  - name: extract sequence
+    steps:
+      - script: rm -f *
+      - script: lino dataconnector add --schema public source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
+      - script: lino table extract source
+      - script: lino sequence extract source > result.yaml
+      - script: yaml2json <sequences.yaml | jq -S "." > sequences.json
+      - script: |-
+          cat  > expected.json <<EOF
+          {
+            "sequences": [
+              {
+                "column": "actor_id",
+                "name": "actor_actor_id_seq",
+                "table": "actor"
+              },
+              {
+                "column": "category_id",
+                "name": "category_category_id_seq",
+                "table": "category"
+              },
+              {
+                "column": "film_id",
+                "name": "film_film_id_seq",
+                "table": "film"
+              },
+              {
+                "column": "address_id",
+                "name": "address_address_id_seq",
+                "table": "address"
+              },
+              {
+                "column": "city_id",
+                "name": "city_city_id_seq",
+                "table": "city"
+              },
+              {
+                "column": "country_id",
+                "name": "country_country_id_seq",
+                "table": "country"
+              },
+              {
+                "column": "customer_id",
+                "name": "customer_customer_id_seq",
+                "table": "customer"
+              },
+              {
+                "column": "inventory_id",
+                "name": "inventory_inventory_id_seq",
+                "table": "inventory"
+              },
+              {
+                "column": "language_id",
+                "name": "language_language_id_seq",
+                "table": "language"
+              },
+              {
+                "column": "payment_id",
+                "name": "payment_payment_id_seq",
+                "table": "payment"
+              },
+              {
+                "column": "rental_id",
+                "name": "rental_rental_id_seq",
+                "table": "rental"
+              },
+              {
+                "column": "staff_id",
+                "name": "staff_staff_id_seq",
+                "table": "staff"
+              },
+              {
+                "column": "store_id",
+                "name": "store_store_id_seq",
+                "table": "store"
+              }
+            ],
+            "version": "v1"
+          }
+          EOF
+      - script: jd -set expected.json sequences.json
+        assertions:
+          - result.systemout ShouldBeEmpty
+          - result.code ShouldEqual 0
+
+  - name: status sequence
+    steps:
+      - script: rm -f *
+      - script: lino dataconnector add --schema public source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
+      - script: lino table extract source
+      - script: lino sequence extract source
+      - script: lino sequence status source > result.txt
+      - script: |-
+          cat  > expected.txt <<EOF
+          actor_actor_id_seq 200
+          category_category_id_seq 16
+          film_film_id_seq 1000
+          address_address_id_seq 605
+          city_city_id_seq 600
+          country_country_id_seq 109
+          customer_customer_id_seq 599
+          inventory_inventory_id_seq 4581
+          language_language_id_seq 6
+          payment_payment_id_seq 32098
+          rental_rental_id_seq 16049
+          staff_staff_id_seq 2
+          store_store_id_seq 2
+          EOF
+      - script: diff result.txt expected.txt
+        assertions:
+          - result.systemout ShouldBeEmpty
+          - result.code ShouldEqual 0
+
+  - name: update sequence
+    steps:
+      - script: rm -f *
+      - script: lino dataconnector add --schema public dest 'postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable'
+      - script: lino table extract dest
+      - script: lino relation extract dest
+      - script: lino sequence extract dest
+      - script: |-
+          echo '{"actor_id" : 10, "first_name":"Toto", "last_name": "Bond"}' | \
+          lino push truncate --table actor dest
+      - script: lino sequence update dest
+      - script: lino sequence status dest | grep actor_actor > result.txt
+      - script: |-
+          cat  > expected.txt <<EOF
+          actor_actor_id_seq 10
+          EOF
+      - script: diff result.txt expected.txt
+        assertions:
+          - result.systemout ShouldBeEmpty
+          - result.code ShouldEqual 0

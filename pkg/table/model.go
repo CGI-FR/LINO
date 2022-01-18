@@ -24,18 +24,11 @@ type Column struct {
 	Import string
 }
 
-// Sequence holds the name of a sequence and the key associate.
-type Sequence struct {
-	Name string
-	Key  string
-}
-
 // Table holds a name (table name) and a list of keys (table columns).
 type Table struct {
-	Name      string
-	Keys      []string
-	Columns   []Column
-	Sequences []Sequence
+	Name    string
+	Keys    []string
+	Columns []Column
 }
 
 // Error is the error type returned by the domain

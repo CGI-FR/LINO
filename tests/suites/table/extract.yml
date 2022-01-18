@@ -37,21 +37,18 @@ testcases:
                   "actor_id"
                 ],
                 "name": "actor"
-                "sequence": "actor_actor_id_seq"
               },
               {
                 "keys": [
                   "address_id"
                 ],
                 "name": "address"
-                "sequence": "address_address_id_seq"
               },
               {
                 "keys": [
                   "category_id"
                 ],
                 "name": "category"
-                "sequence": "category_category_id_seq"
               },
               {
                 "keys": [

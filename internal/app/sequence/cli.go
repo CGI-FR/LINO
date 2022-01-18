@@ -15,40 +15,45 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package table
+package sequence
 
 import (
 	"fmt"
 	"os"
 
 	"github.com/cgi-fr/lino/pkg/dataconnector"
+	"github.com/cgi-fr/lino/pkg/sequence"
 	"github.com/cgi-fr/lino/pkg/table"
 	"github.com/spf13/cobra"
 )
 
 var (
-	dataconnectorStorage    dataconnector.Storage
-	tableStorage            table.Storage
-	tableExtractorFactories map[string]table.ExtractorFactory
+	dataconnectorStorage     dataconnector.Storage
+	tableStorage             table.Storage
+	sequenceStorage          sequence.Storage
+	sequenceUpdatorFactories map[string]sequence.UpdatorFactory
 )
 
 // Inject dependencies
-func Inject(dbas dataconnector.Storage, rs table.Storage, exmap map[string]table.ExtractorFactory) {
+func Inject(dbas dataconnector.Storage, rs table.Storage, ss sequence.Storage, exmap map[string]sequence.UpdatorFactory) {
 	dataconnectorStorage = dbas
 	tableStorage = rs
-	tableExtractorFactories = exmap
+	sequenceStorage = ss
+	sequenceUpdatorFactories = exmap
 }
 
 // NewCommand implements the cli dataconnector command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "table {extract} [arguments ...]",
-		Short:   "Manage tables",
+		Use:     "sequence {extract|status|update} [arguments ...]",
+		Short:   "Manage sequences",
 		Long:    "",
-		Example: fmt.Sprintf("  %[1]s table extract mydatabase", fullName),
-		Aliases: []string{"tab"},
+		Example: fmt.Sprintf("  %[1]s sequence extract mydatabase", fullName),
+		Aliases: []string{"seq"},
 	}
 	cmd.AddCommand(newExtractCommand(fullName, err, out, in))
+	cmd.AddCommand(newStatusCommand(fullName, err, out, in))
+	cmd.AddCommand(newUpdateCommand(fullName, err, out, in))
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

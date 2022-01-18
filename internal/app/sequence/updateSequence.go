@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package table
+package sequence
 
 import (
 	"fmt"
@@ -23,17 +23,17 @@ import (
 
 	"github.com/cgi-fr/lino/internal/app/urlbuilder"
 	"github.com/cgi-fr/lino/pkg/dataconnector"
-	"github.com/cgi-fr/lino/pkg/table"
+	"github.com/cgi-fr/lino/pkg/sequence"
 	"github.com/spf13/cobra"
 )
 
-// newUpdateSequenceCommand implements the cli sequence update
-func newUpdateSequenceCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
+// newUpdateCommand implements the cli sequence update
+func newUpdateCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "update-sequence [DB Alias Name]",
-		Short:   "Extract tables metadatas from database",
+		Use:     "update [DB Alias Name]",
+		Short:   "",
 		Long:    "",
-		Example: fmt.Sprintf("  %[1]s table update-sequence mydatabase", fullName),
+		Example: fmt.Sprintf("  %[1]s sequence update mydatabase", fullName),
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			alias, e1 := dataconnector.Get(dataconnectorStorage, args[0])
@@ -49,7 +49,7 @@ func newUpdateSequenceCommand(fullName string, err *os.File, out *os.File, in *o
 
 			u := urlbuilder.BuildURL(alias, err)
 
-			factory, ok := tableExtractorFactories[u.Unaliased]
+			factory, ok := sequenceUpdatorFactories[u.Unaliased]
 			if !ok {
 				fmt.Fprintln(err, "no extractor found for database type")
 				os.Exit(1)
@@ -57,7 +57,7 @@ func newUpdateSequenceCommand(fullName string, err *os.File, out *os.File, in *o
 
 			updater := factory.New(u.URL.String(), alias.Schema)
 
-			e2 := table.UpdateSequence(updater, tableStorage)
+			e2 := sequence.Update(sequenceStorage, updater)
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Description)
 				os.Exit(1)

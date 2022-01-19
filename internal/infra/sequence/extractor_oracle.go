@@ -10,28 +10,26 @@ import (
 )
 
 // NewOracleExtractorFactory creates a new oracle extractor factory.
-func NewOracleExtractorFactory() *OracleExtractorFactory {
-	return &OracleExtractorFactory{}
+func NewOracleUpdatorFactory() *OracleUpdatorFactory {
+	return &OracleUpdatorFactory{}
 }
 
 // OracleExtractorFactory exposes methods to create new Oracle extractors.
-type OracleExtractorFactory struct{}
+type OracleUpdatorFactory struct{}
 
 // New return a Oracle extractor
-func (e *OracleExtractorFactory) New(url string, schema string) sequence.Updator {
+func (e *OracleUpdatorFactory) New(url string, schema string) sequence.Updator {
 	return NewSQLUpdator(url, schema, OracleDialect{})
 }
 
 type OracleDialect struct{}
 
 func (d OracleDialect) SequencesSQL(schema string) string {
-	SQL := "select sequence_name from dba_sequences"
-
-	if schema != "" {
-		SQL += fmt.Sprintf(" WHERE sequence_owner = '%s'", schema)
+	if schema == "" {
+		return fmt.Sprintf("SELECT sequence_name FROM user_sequences")
+	} else {
+		return fmt.Sprintf("SELECT sequence_name FROM dba_sequences WHERE sequence_owner='%s'", schema)
 	}
-
-	return SQL
 }
 
 func (d OracleDialect) UpdateSequenceSQL(schema string, sequence string, tableName string, column string) string {
@@ -58,5 +56,12 @@ func (d OracleDialect) UpdateSequenceSQL(schema string, sequence string, tableNa
 }
 
 func (d OracleDialect) StatusSequenceSQL(schema string, sequence string) string {
-	return fmt.Sprintf("select cur_val('%s');", sequence) // TODO
+	if schema == "" {
+		return fmt.Sprintf("SELECT last_number FROM user_sequences WHERE sequence_name = '%s'", sequence)
+	} else {
+		return fmt.Sprintf(
+			"SELECT last_number FROM dba_sequences WHERE sequence_name = '%s' AND sequence_owner='%s'",
+			sequence, schema,
+		)
+	}
 }

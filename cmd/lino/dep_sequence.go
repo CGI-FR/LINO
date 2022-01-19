@@ -28,9 +28,9 @@ func sequenceStorage() domain.Storage {
 
 func sequenceUpdatorFactory() map[string]domain.UpdatorFactory {
 	return map[string]domain.UpdatorFactory{
-		"postgres": infra.NewPostgresUpdatorFactory(),
-		// "godror":     infra.NewOracleUpdatorFactory(),
-		// "godror-raw": infra.NewOracleUpdatorFactory(),
+		"postgres":   infra.NewPostgresUpdatorFactory(),
+		"godror":     infra.NewOracleUpdatorFactory(),
+		"godror-raw": infra.NewOracleUpdatorFactory(),
 		// "db2":        infra.NewDb2UpdatorFactory(),
 		// "http":       infra.NewHTTPUpdatorFactory(),
 	}

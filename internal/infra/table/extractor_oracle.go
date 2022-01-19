@@ -24,7 +24,7 @@ func (e *OracleExtractorFactory) New(url string, schema string) table.Extractor 
 
 type OracleDialect struct{}
 
-func (d OracleDialect) TablesSQL(schema string) string {
+func (d OracleDialect) SQL(schema string) string {
 	SQL := `
 SELECT
 	all_cons_columns.owner as schema_name,

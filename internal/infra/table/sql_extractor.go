@@ -32,8 +32,7 @@ type SQLExtractor struct {
 }
 
 type Dialect interface {
-	// TablesSQL return SQL command to list tables from meta data
-	TablesSQL(schema string) string
+	SQL(schema string) string
 }
 
 // NewSQLExtractor creates a new SQL extractor.
@@ -58,14 +57,14 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 		return nil, &table.Error{Description: err.Error()}
 	}
 
-	SQL := e.dialect.TablesSQL(e.schema)
+	SQL := e.dialect.SQL(e.schema)
 
 	rows, err := db.Query(SQL)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
 
-	result := []table.Table{}
+	tables := []table.Table{}
 
 	var (
 		tableSchema string
@@ -84,12 +83,12 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 			Name: tableName,
 			Keys: strings.Split(keyColumns, ","),
 		}
-		result = append(result, table)
+		tables = append(tables, table)
 	}
 	err = rows.Err()
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
 
-	return result, nil
+	return tables, nil
 }

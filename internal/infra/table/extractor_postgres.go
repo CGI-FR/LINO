@@ -39,9 +39,10 @@ func (e *PostgresExtractorFactory) New(url string, schema string) table.Extracto
 	return NewSQLExtractor(url, schema, PostgresDialect{})
 }
 
-type PostgresDialect struct{}
+type PostgresDialect struct {
+}
 
-func (d PostgresDialect) TablesSQL(schema string) string {
+func (d PostgresDialect) SQL(schema string) string {
 	SQL := `SELECT kcu.table_schema,
 	kcu.table_name,
 	string_agg(kcu.column_name,',') AS key_columns
@@ -65,18 +66,4 @@ ORDER BY kcu.table_schema,
 	kcu.table_name`
 
 	return SQL
-}
-
-func (d PostgresDialect) SequencesSQL(schema string) string {
-	SQL := "SELECT c.relname FROM pg_class c WHERE c.relkind = 'S'"
-
-	if schema != "" {
-		SQL += fmt.Sprintf(" AND  relnamespace::regnamespace::text  = '%s'", schema)
-	}
-
-	return SQL
-}
-
-func (d PostgresDialect) UpdateSequenceSQL(schema string, sequence string, tableName string, column string) string {
-	return fmt.Sprintf("select setval('%s',  (SELECT GREATEST(MAX(%s), 1)  FROM %s));", sequence, column, tableName)
 }

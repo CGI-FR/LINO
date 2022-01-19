@@ -26,7 +26,7 @@ type OracleDialect struct{}
 
 func (d OracleDialect) SequencesSQL(schema string) string {
 	if schema == "" {
-		return fmt.Sprintf("SELECT sequence_name FROM user_sequences")
+		return "SELECT sequence_name FROM user_sequences"
 	} else {
 		return fmt.Sprintf("SELECT sequence_name FROM dba_sequences WHERE sequence_owner='%s'", schema)
 	}

@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [1.9.0]
+
+- `Added` new verb to extract, to get status and to update sequences
+
 ## [1.8.0]
 
 - `Added` new parameter to pull only distinct values from the start table

@@ -101,7 +101,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 		sql.Write([]byte("DISTINCT "))
 	}
 
-	if pcols := source.Columns; pcols != nil && len(pcols) > 0 {
+	if pcols := source.Columns; len(pcols) > 0 {
 		for idx := int(0); idx < len(pcols); idx++ {
 			if idx > 0 {
 				sql.Write([]byte(", "))

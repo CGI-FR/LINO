@@ -109,7 +109,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, start, e2 := getPullerPlan(initialFilters, limit, where, distinct, idStorageFactory(table, ingressDescriptor))
+			plan, start, e2 := getPullerPlan(idStorageFactory(table, ingressDescriptor))
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(1)
@@ -138,13 +138,26 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				}
 				filters = rowReaderFactory(filterReader)
 			}
-			puller := pull.NewPuller(plan, datasource, pullExporterFactory(out), tracer)
-			if e3 := puller.Pull(start, pull.Filter{
+
+			row := pull.Row{}
+			for column, value := range initialFilters {
+				row[column] = value
+			}
+			filter := pull.Filter{
 				Limit:    limit,
-				Values:   filters.Value(),
+				Values:   row,
 				Where:    where,
 				Distinct: distinct,
-			}); e3 != nil {
+			}
+
+			for filters.Next() {
+				for key, val := range filters.Value() {
+					filter.Values[key] = val
+				}
+			}
+
+			puller := pull.NewPuller(plan, datasource, pullExporterFactory(out), tracer)
+			if e3 := puller.Pull(start, filter); e3 != nil {
 				fmt.Fprintln(err, e3)
 				os.Exit(1)
 			}
@@ -188,7 +201,7 @@ func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, er
 	return datasourceFactory.New(u.URL.String(), alias.Schema), nil
 }
 
-func getPullerPlan(initialFilters map[string]string, limit uint, where string, distinct bool, idStorage id.Storage) (pull.Plan, pull.Table, error) {
+func getPullerPlan(idStorage id.Storage) (pull.Plan, pull.Table, error) {
 	ep, err1 := id.GetPullerPlan(idStorage)
 	if err1 != nil {
 		return pull.Plan{}, pull.Table{}, err1

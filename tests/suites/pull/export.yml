@@ -55,22 +55,23 @@ testcases:
         assertions:
           - result.systemout ShouldEqual {"film_id":1,"title":"ACADEMY DINOSAUR"}
 
-  - name: not selecting primary key will select and hide it in output
-    steps:
-      - script: |-
-          cat > tables.yaml <<EOF
-          version: v1
-          tables:
-            - name: film
-              keys:
-                - film_id
-              columns:
-                - name: title
-          EOF
-      - script: lino pull source --table film -v4
-        assertions:
-          - result.systemout ShouldEqual {"title":"ACADEMY DINOSAUR"}
-          - result.systemerr ShouldContainSubstring SELECT title, film_id
+  # OBSOLETE : lino v2 will remove unecessary keys from select clause
+  # - name: not selecting primary key will select and hide it in output
+  #   steps:
+  #     - script: |-
+  #         cat > tables.yaml <<EOF
+  #         version: v1
+  #         tables:
+  #           - name: film
+  #             keys:
+  #               - film_id
+  #             columns:
+  #               - name: title
+  #         EOF
+  #     - script: lino pull source --table film -v4
+  #       assertions:
+  #         - result.systemout ShouldEqual {"title":"ACADEMY DINOSAUR"}
+  #         - result.systemerr ShouldContainSubstring SELECT title, film_id
 
   - name: change output format
     steps:

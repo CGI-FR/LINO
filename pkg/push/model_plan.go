@@ -17,6 +17,8 @@
 
 package push
 
+import "sort"
+
 type plan struct {
 	firstTable Table
 	relations  []Relation
@@ -39,17 +41,42 @@ func (p plan) RelationsFromTable(table Table) map[string]Relation {
 	}
 	return result
 }
-func (p plan) Tables() []Table {
-	result := []Table{}
 
-	tables := map[string]Table{}
+func (p plan) Tables() []Table {
+	tableOrder := map[string]int{}
+
+	name2Table := map[string]Table{}
 	for _, r := range p.relations {
-		tables[r.Child().Name()] = r.Child()
-		tables[r.Parent().Name()] = r.Parent()
+		tableOrder[r.Child().Name()] = tableOrder[r.Parent().Name()] + 1
+		name2Table[r.Child().Name()] = r.Child()
+		name2Table[r.Parent().Name()] = r.Parent()
 	}
 
+	// propagate priority to children
+	for i := 0; i < len(tableOrder); i++ {
+		for _, r := range p.relations {
+			tableOrder[r.Child().Name()] = tableOrder[r.Parent().Name()] + 1
+		}
+	}
+
+	type to struct {
+		t Table
+		o int
+	}
+
+	tables := []to{}
+
+	for name, table := range name2Table {
+		tables = append(tables, to{table, tableOrder[name]})
+	}
+
+	sort.Slice(tables, func(i, j int) bool {
+		return tables[i].o > tables[j].o
+	})
+
+	result := []Table{}
 	for _, v := range tables {
-		result = append(result, v)
+		result = append(result, v.t)
 	}
 	return result
 }

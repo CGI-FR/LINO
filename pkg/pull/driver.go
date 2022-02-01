@@ -51,7 +51,7 @@ func (e puller) pull(plan Plan, filters RowReader, export func(ExportableRow) *E
 
 		fileFilter := filters.Value()
 
-		initFilter := filter{plan.InitFilter().Limit(), fileFilter.Update(plan.InitFilter().Values()), plan.InitFilter().Where()}
+		initFilter := filter{plan.InitFilter().Limit(), fileFilter.Update(plan.InitFilter().Values()), plan.InitFilter().Where(), plan.InitFilter().Distinct()}
 		if err := e.pullStep(plan.Steps().Step(0), initFilter, export, diagnostic); err != nil {
 			return err
 		}
@@ -223,10 +223,10 @@ func relatedTo(from Table, follow Relation, data ExportableRow) Filter {
 	}
 
 	if follow.Child().Name() == from.Name() {
-		return NewFilter(0, buildFilterRow(follow.ChildKey(), follow.ParentKey(), data.AsRow()), "")
+		return NewFilter(0, buildFilterRow(follow.ChildKey(), follow.ParentKey(), data.AsRow()), "", false)
 	}
 
-	return NewFilter(0, buildFilterRow(follow.ParentKey(), follow.ChildKey(), data.AsRow()), "")
+	return NewFilter(0, buildFilterRow(follow.ParentKey(), follow.ChildKey(), data.AsRow()), "", false)
 }
 
 func removeDuplicate(pkList []string, a, b []ExportableRow) []ExportableRow {

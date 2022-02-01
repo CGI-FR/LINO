@@ -101,6 +101,7 @@ type Filter interface {
 	Limit() uint
 	Values() Row
 	Where() string
+	Distinct() bool
 }
 
 // Error is the error type returned by the domain

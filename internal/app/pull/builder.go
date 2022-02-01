@@ -84,7 +84,7 @@ func (b builder) plan() (pull.Plan, pull.Table, error) {
 		}
 
 		for relIdx := uint(0); relIdx < step.Relations().Len(); relIdx++ {
-			result, err := b.buildRelation(step.Following())
+			result, err := b.buildRelation(step.Relations().Relation(relIdx))
 			if err != nil {
 				return pull.Plan{}, pull.Table{}, err
 			}

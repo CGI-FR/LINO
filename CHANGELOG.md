@@ -21,6 +21,10 @@ Types of changes
 - `Changed` order of keys in output JSON lines will be alphabetical when pulling (without configuration in tables.yaml).
 - `Fixed` limit keyword on DB2 dialect.
 
+## [1.9.0]
+
+- `Added` new verb to extract, to get status and to update sequences
+
 ## [1.8.0]
 
 - `Added` new parameter to pull only distinct values from the start table

@@ -30,6 +30,7 @@ import (
 	"github.com/cgi-fr/lino/internal/app/pull"
 	"github.com/cgi-fr/lino/internal/app/push"
 	"github.com/cgi-fr/lino/internal/app/relation"
+	"github.com/cgi-fr/lino/internal/app/sequence"
 	"github.com/cgi-fr/lino/internal/app/table"
 	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog"
@@ -113,6 +114,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&colormode, "color", "auto", "use colors in log outputs : yes, no or auto")
 	rootCmd.AddCommand(dataconnector.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(table.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
+	rootCmd.AddCommand(sequence.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(relation.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(id.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(pull.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
@@ -165,6 +167,7 @@ func initConfig() {
 	dataconnector.Inject(dataconnectorStorage(), dataPingerFactory())
 	relation.Inject(dataconnectorStorage(), relationStorage(), relationExtractorFactory())
 	table.Inject(dataconnectorStorage(), tableStorage(), tableExtractorFactory())
+	sequence.Inject(dataconnectorStorage(), tableStorage(), sequenceStorage(), sequenceUpdatorFactory())
 	id.Inject(idStorageFile, relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
 	pull.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pullDataSourceFactory(), pullRowExporterFactory(), pullRowReaderFactory(), traceListner(os.Stderr))
 	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pushDataDestinationFactory(), pushRowIteratorFactory(), pushRowExporterFactory())

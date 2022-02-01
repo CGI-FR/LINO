@@ -130,7 +130,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 		whereContentFlag = true
 	}
 
-	if filter.Where != "" {
+	if strings.TrimSpace(filter.Where) != "" {
 		if whereContentFlag {
 			sql.Write([]byte(" AND "))
 		}

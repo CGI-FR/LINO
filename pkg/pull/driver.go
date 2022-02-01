@@ -42,7 +42,7 @@ func NewStep(puller *puller, out ExportedRow, entry Relation) *Step {
 }
 
 type Puller interface {
-	Pull(start Table, filter Filter) error
+	Pull(start Table, filter Filter, filterCohort RowReader) error
 }
 
 type puller struct {
@@ -61,7 +61,7 @@ func NewPuller(plan Plan, datasource DataSource, exporter RowExporter, diagnosti
 	}
 }
 
-func (p *puller) Pull(start Table, filter Filter) error {
+func (p *puller) Pull(start Table, filter Filter, filterCohort RowReader) error {
 	start = p.graph.addMissingColumns(start)
 
 	if err := p.datasource.Open(); err != nil {
@@ -70,25 +70,54 @@ func (p *puller) Pull(start Table, filter Filter) error {
 
 	defer p.datasource.Close()
 
-	reader, err := p.datasource.RowReader(start, filter)
-	if err != nil {
-		return fmt.Errorf("%w", err)
+	filters := []Filter{}
+	if filterCohort != nil {
+		for filterCohort.Next() {
+			fc := filterCohort.Value()
+			values := Row{}
+			for key, val := range fc {
+				values[key] = val
+			}
+			for key, val := range filter.Values {
+				values[key] = val
+			}
+			filters = append(filters, Filter{
+				Limit:    filter.Limit,
+				Values:   values,
+				Where:    filter.Where,
+				Distinct: filter.Distinct,
+			})
+		}
+	} else {
+		filters = append(filters, Filter{
+			Limit:    filter.Limit,
+			Values:   filter.Values,
+			Where:    filter.Where,
+			Distinct: filter.Distinct,
+		})
 	}
 
-	for reader.Next() {
-		row := start.export(reader.Value())
-
-		if err := p.pull(start, row); err != nil {
+	for _, f := range filters {
+		reader, err := p.datasource.RowReader(start, f)
+		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
-		if err := p.exporter.Export(row); err != nil {
-			return fmt.Errorf("%w", err)
-		}
-	}
+		for reader.Next() {
+			row := start.export(reader.Value())
 
-	if reader.Error() != nil {
-		return fmt.Errorf("%w", reader.Error())
+			if err := p.pull(start, row); err != nil {
+				return fmt.Errorf("%w", err)
+			}
+
+			if err := p.exporter.Export(row); err != nil {
+				return fmt.Errorf("%w", err)
+			}
+		}
+
+		if reader.Error() != nil {
+			return fmt.Errorf("%w", reader.Error())
+		}
 	}
 
 	return nil

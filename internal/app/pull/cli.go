@@ -137,6 +137,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 					os.Exit(1)
 				}
 				filters = rowReaderFactory(filterReader)
+				log.Trace().Str("file", filefilter).Msg("reading file")
 			}
 
 			row := pull.Row{}
@@ -150,14 +151,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Distinct: distinct,
 			}
 
-			for filters.Next() {
-				for key, val := range filters.Value() {
-					filter.Values[key] = val
-				}
-			}
-
 			puller := pull.NewPuller(plan, datasource, pullExporterFactory(out), tracer)
-			if e3 := puller.Pull(start, filter); e3 != nil {
+			if e3 := puller.Pull(start, filter, filters); e3 != nil {
 				fmt.Fprintln(err, e3)
 				os.Exit(1)
 			}

@@ -1,0 +1,182 @@
+// Copyright (C) 2021 CGI France
+//
+// This file is part of LINO.
+//
+// LINO is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// LINO is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with LINO.  If not, see <http://www.gnu.org/licenses/>.
+
+package pull
+
+import (
+	"context"
+	"fmt"
+	"sync"
+
+	over "github.com/Trendyol/overlog"
+	"github.com/hashicorp/go-multierror"
+	"github.com/rs/zerolog/log"
+)
+
+type pullerParallel struct {
+	puller
+
+	nbworkers uint
+	inChan    chan Row
+	errChan   chan error
+	outChan   chan ExportedRow
+	errors    []error
+}
+
+func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, diagnostic TraceListener, nbworkers uint) Puller { //nolint:lll
+	puller := &puller{
+		graph:      plan.buildGraph(),
+		datasource: datasource,
+		exporter:   exporter,
+		diagnostic: diagnostic,
+	}
+
+	if nbworkers > 1 {
+		return &pullerParallel{
+			puller:    *puller,
+			nbworkers: nbworkers,
+			inChan:    nil,
+			errChan:   nil,
+			outChan:   nil,
+			errors:    nil,
+		}
+	}
+
+	return puller
+}
+
+func (p *pullerParallel) Pull(start Table, filter Filter) error {
+	start = p.graph.addMissingColumns(start)
+
+	if err := p.datasource.Open(); err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	defer p.datasource.Close()
+
+	reader, err := p.datasource.RowReader(start, filter)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	p.inChan = make(chan Row)
+	p.errChan = make(chan error)
+	p.outChan = make(chan ExportedRow)
+	p.errors = []error{}
+
+	wg := &sync.WaitGroup{}
+
+	for i := uint(0); i < p.nbworkers; i++ {
+		wg.Add(1)
+
+		go p.worker(context.Background(), wg, i, start)
+	}
+
+	done := make(chan struct{})
+
+	go p.collect(done)
+
+	for reader.Next() {
+		p.inChan <- reader.Value()
+	}
+	close(p.inChan)
+
+	if reader.Error() != nil {
+		return fmt.Errorf("%w", reader.Error())
+	}
+
+	wg.Wait()
+	close(p.errChan)
+	close(p.outChan)
+
+	<-done
+
+	if len(p.errors) > 0 {
+		return multierror.Append(p.errors[0], p.errors[1:]...)
+	}
+
+	return nil
+}
+
+func (p *pullerParallel) worker(ctx context.Context, wg *sync.WaitGroup, id uint, start Table) {
+	over.MDC().Set("workerid", id)
+	over.AddGlobalFields("workerid")
+	log.Debug().Msg("start worker")
+
+	defer wg.Done()
+	defer log.Debug().Msg("end worker")
+
+LOOP:
+	for p.inChan != nil {
+		log.Debug().Msg("waiting for row")
+
+		select {
+		case row, ok := <-p.inChan:
+			if !ok {
+				break LOOP
+			}
+
+			log.Debug().Msg("received row")
+
+			out := start.export(row)
+
+			err := p.pull(start, out)
+			if err != nil {
+				p.errChan <- err
+			} else {
+				p.outChan <- out
+
+				log.Debug().Msg("exported row")
+			}
+		case <-ctx.Done():
+			break LOOP
+		}
+	}
+}
+
+func (p *pullerParallel) collect(done chan<- struct{}) {
+	defer func() { done <- struct{}{} }()
+
+LOOP:
+	for p.errChan != nil || p.outChan != nil {
+		log.Debug().Msg("waiting for error or result")
+		select {
+		case err, ok := <-p.errChan:
+			if !ok {
+				p.errChan = nil
+
+				continue LOOP
+			}
+
+			log.Error().Err(err).Msg("received error")
+
+			p.errors = append(p.errors, err)
+		case result, ok := <-p.outChan:
+			if !ok {
+				p.outChan = nil
+
+				continue LOOP
+			}
+
+			log.Debug().Msg("received result")
+
+			if err := p.exporter.Export(result); err != nil {
+				p.errors = append(p.errors, err)
+			}
+		}
+	}
+}

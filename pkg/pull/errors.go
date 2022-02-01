@@ -17,30 +17,6 @@
 
 package pull
 
-import (
-	"encoding/json"
-	"fmt"
-	"io"
+import "errors"
 
-	"github.com/cgi-fr/lino/pkg/pull"
-)
-
-// JSONRowExporter export rows to JSON format.
-type JSONRowExporter struct {
-	file io.Writer
-}
-
-// NewJSONRowExporter creates a new JSONRowExporter.
-func NewJSONRowExporter(file io.Writer) *JSONRowExporter {
-	return &JSONRowExporter{file}
-}
-
-// Export rows in JSON format.
-func (re *JSONRowExporter) Export(r pull.ExportedRow) error {
-	jsonString, err := json.Marshal(r)
-	if err != nil {
-		return err
-	}
-	fmt.Fprintln(re.file, string(jsonString))
-	return nil
-}
+var ErrMultipleRowInOneToOneRelation = errors.New("multiple rows for one to one relationship")

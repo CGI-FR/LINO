@@ -1,0 +1,76 @@
+# same test as simple.yaml, but order and export format of columns is different
+tables:
+  actors: &actors
+    name: actors
+    keys: [id]
+    columns:
+      - name: first_name
+      - name: last_name
+  films_actors: &films_actors
+    name: films_actors
+    keys: [id_film, id_actor]
+    columns:
+      - name: id_actor
+        export: no
+  films: &films
+    name: films
+    keys: [id]
+    columns:
+      - name: title
+dataset:
+  actors:
+    - { "id": 0, "first_name": "Harrison", "last_name": "Ford" }
+    - { "id": 1, "first_name": "Carrie", "last_name": "Fisher" }
+  films_actors:
+    - { "id_film": 0, "id_actor": 0 }
+    - { "id_film": 0, "id_actor": 1 }
+    - { "id_film": 1, "id_actor": 0 }
+    - { "id_film": 1, "id_actor": 1 }
+    - { "id_film": 2, "id_actor": 0 }
+  films:
+    - { "id": 0, "title": "Star Wars: Episode IV – A New Hope" }
+    - { "id": 1, "title": "Star Wars : Episode V – The Empire Strikes Back" }
+    - { "id": 2, "title": "Indiana Jones and the Temple of Doom" }
+plan:
+  components:
+    actors: 0
+    films_actors: 1
+    films: 2
+  relations:
+    - name: films
+      cardinality: true # = many
+      local:
+        table: *actors
+        keys: [id]
+      foreign:
+        table: *films_actors
+        keys: [id_actor]
+    - name: film
+      cardinality: false # = single
+      local:
+        table: *films_actors
+        keys: [id_film]
+      foreign:
+        table: *films
+        keys: [id]
+executions:
+  - start: *actors
+    filter:
+      limit: 0
+      values: { "first_name": "Harrison" }
+      where: ""
+    result:
+      - '{"first_name":"Harrison","last_name":"Ford","films":[{"film":{"title":"Star Wars: Episode IV – A New Hope"}},{"film":{"title":"Star Wars : Episode V – The Empire Strikes Back"}},{"film":{"title":"Indiana Jones and the Temple of Doom"}}]}'
+  - start: *actors
+    filter:
+      limit: 0
+      values: { "last_name": "Fisher" }
+      where: ""
+    result:
+      - '{"first_name":"Carrie","last_name":"Fisher","films":[{"film":{"title":"Star Wars: Episode IV – A New Hope"}},{"film":{"title":"Star Wars : Episode V – The Empire Strikes Back"}}]}'
+  - start: *actors
+    filter:
+      limit: 0
+      values: { "last_name": "Reeves" }
+      where: ""
+    result: []

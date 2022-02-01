@@ -17,30 +17,24 @@
 
 package pull
 
-import (
-	"encoding/json"
-	"fmt"
-	"io"
-
-	"github.com/cgi-fr/lino/pkg/pull"
-)
-
-// JSONRowExporter export rows to JSON format.
-type JSONRowExporter struct {
-	file io.Writer
+// OneOneEmptyRowReader return one empty row
+type OneEmptyRowReader struct {
+	done bool
 }
 
-// NewJSONRowExporter creates a new JSONRowExporter.
-func NewJSONRowExporter(file io.Writer) *JSONRowExporter {
-	return &JSONRowExporter{file}
+func NewOneEmptyRowReader() *OneEmptyRowReader {
+	return &OneEmptyRowReader{false}
 }
 
-// Export rows in JSON format.
-func (re *JSONRowExporter) Export(r pull.ExportedRow) error {
-	jsonString, err := json.Marshal(r)
-	if err != nil {
-		return err
-	}
-	fmt.Fprintln(re.file, string(jsonString))
-	return nil
+// Next is always false except for the first one
+func (r *OneEmptyRowReader) Next() bool {
+	result := !r.done
+	r.done = true
+	return result
 }
+
+// Value is always an empty row
+func (r OneEmptyRowReader) Value() Row { return Row{} }
+
+// Error return always nil
+func (r OneEmptyRowReader) Error() error { return nil }

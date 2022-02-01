@@ -19,7 +19,7 @@ package pull
 
 // RowExporter receives pulled rows one by one.
 type RowExporter interface {
-	Export(ExportableRow) *Error
+	Export(ExportedRow) error
 }
 
 // DataSourceFactory exposes methods to create new datasources.
@@ -29,47 +29,26 @@ type DataSourceFactory interface {
 
 // DataSource to read in the pull process.
 type DataSource interface {
-	Open() *Error
-	RowReader(source Table, filter Filter) (RowReader, *Error)
-	Close() *Error
+	Open() error
+	RowReader(source Table, filter Filter) (RowReader, error)
+	Read(source Table, filter Filter) (RowSet, error)
+	Close() error
 }
 
 // RowReader over DataSource.
 type RowReader interface {
 	Next() bool
 	Value() Row
-	Error() *Error
+	Error() error
 }
 
-// OneOneEmptyRowReader return one empty row
-type OneEmptyRowReader struct {
-	done bool
-}
-
-func NewOneEmptyRowReader() *OneEmptyRowReader {
-	return &OneEmptyRowReader{false}
-}
-
-// Next is always false except for the first one
-func (r *OneEmptyRowReader) Next() bool {
-	result := !r.done
-	r.done = true
-	return result
-}
-
-// Value is always an empty row
-func (r OneEmptyRowReader) Value() Row { return Row{} }
-
-// Error return always nil
-func (r OneEmptyRowReader) Error() *Error { return nil }
-
-// TraceListener receives diagnostic trace
+// TraceListener receives diagnostic trace.
 type TraceListener interface {
-	TraceStep(Step, Filter) TraceListener
+	TraceStep(Step) TraceListener
 }
 
 // NoTraceListener default implementation do nothing.
 type NoTraceListener struct{}
 
 // TraceStep catch Step event.
-func (t NoTraceListener) TraceStep(s Step, filter Filter) TraceListener { return t }
+func (t NoTraceListener) TraceStep(s Step) TraceListener { return t }

@@ -47,19 +47,19 @@ type Event struct {
 }
 
 // TraceStep catch Step event.
-func (t JSONTraceListener) TraceStep(s pull.Step, filter pull.Filter) pull.TraceListener {
+func (t JSONTraceListener) TraceStep(s pull.Step) pull.TraceListener {
 	now := time.Now()
 	event := Event{
 		Duration: now.Sub(t.last).Milliseconds(),
-		Index:    s.Index(),
-		Entry:    s.Entry().Name(),
+		Index:    0,  // TODO
+		Entry:    "", // TODO
 		Follow: func() string {
-			if s.Follow() != nil {
-				return s.Follow().Name()
-			}
+			// if s != nil {
+			// 	return s.Follow().Name()
+			// }
 			return ""
 		}(),
-		Filter: fmt.Sprintf("%v", filter.Values()),
+		Filter: "", // fmt.Sprintf("%v", filter.Values),
 	}
 	t.last = now
 	jsonString, err := json.Marshal(event)

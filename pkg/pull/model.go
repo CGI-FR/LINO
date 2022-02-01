@@ -18,161 +18,79 @@
 package pull
 
 import (
-	"encoding/json"
-
-	over "github.com/Trendyol/overlog"
-	"github.com/rs/zerolog/log"
+	"github.com/cgi-fr/jsonline/pkg/jsonline"
 )
 
-// Table from which to pull data.
-type Table interface {
-	Name() string
-	PrimaryKey() []string
-	Columns() ColumnList
-	export(Row) ExportableRow
+type Cardinality bool
+
+const (
+	Many Cardinality = true
+	One  Cardinality = false
+)
+
+type (
+	TableName    string
+	RelationName string
+)
+
+type Column struct {
+	Name   string
+	Export string
 }
 
-// ColumnList is a list of columns.
-type ColumnList interface {
-	Len() uint
-	Contains(string) bool
-	Column(idx uint) Column
+type Table struct {
+	Name    TableName
+	Keys    []string
+	Columns []Column
 
-	add(Column) ColumnList
+	template jsonline.Template
 }
 
-// Column of a table.
-type Column interface {
-	Name() string
-	Export() string
+type RelationTip struct {
+	Table Table
+	Keys  []string
 }
 
-// Relation between two tables.
-type Relation interface {
-	Name() string
-	Parent() Table
-	Child() Table
-	ParentKey() []string
-	ChildKey() []string
-	OppositeOf(tablename string) Table
+type Relation struct {
+	Name        RelationName
+	Cardinality Cardinality
+	Local       RelationTip
+	Foreign     RelationTip
 }
 
-// RelationList is a list of relations.
-type RelationList interface {
-	Len() uint
-	Relation(idx uint) Relation
+type RelationSet []Relation
+
+type Plan struct {
+	Relations  RelationSet
+	Components map[TableName]uint // <= could be deduced from relations with tarjan algorithm
 }
 
-// Cycle is a list of relations.
-type Cycle interface {
-	RelationList
+type Graph struct {
+	Relations  map[TableName]RelationSet
+	Components map[TableName]uint
+	Cached     map[TableName]bool
 }
 
-// CycleList is a list of cycles.
-type CycleList interface {
-	Len() uint
-	Cycle(idx uint) Cycle
+type Row map[string]interface{}
+
+type RowSet []Row
+
+type DataSet map[TableName]RowSet
+
+type Filter struct {
+	Limit    uint
+	Values   Row
+	Where    string
+	Distinct bool
 }
 
-// Step group of follows to perform.
-type Step interface {
-	Index() uint
-	Entry() Table
-	Follow() Relation
-	Relations() RelationList
-	Cycles() CycleList
-	NextSteps() StepList
+// ExportedRow is a row but with keys ordered and values in export format for jsonline.
+type ExportedRow struct {
+	jsonline.Row
 }
 
-// StepList list of steps to perform.
-type StepList interface {
-	Len() uint
-	Step(uint) Step
-}
+func (er ExportedRow) GetOrNil(key string) interface{} {
+	v, _ := er.Get(key)
 
-// Plan of the puller process.
-type Plan interface {
-	InitFilter() Filter
-	Steps() StepList
-}
-
-// Filter applied to data tables.
-type Filter interface {
-	Limit() uint
-	Values() Row
-	Where() string
-	Distinct() bool
-}
-
-// Error is the error type returned by the domain
-type Error struct {
-	Description string
-}
-
-func (e *Error) Error() string {
-	return e.Description
-}
-
-type ExecutionStats interface {
-	GetLinesPerStepCount() map[string]int
-	GetFiltersCount() int
-
-	ToJSON() []byte
-}
-
-type stats struct {
-	LinesPerStepCount map[string]int `json:"linesPerStepCount"`
-	FiltersCount      int            `json:"filtersCount"`
-}
-
-// Reset all statistics to zero
-func Reset() {
-	over.MDC().Set("stats", &stats{LinesPerStepCount: map[string]int{}})
-}
-
-// Compute current statistics and give a snapshot
-func Compute() ExecutionStats {
-	value, exists := over.MDC().Get("stats")
-	if stats, ok := value.(ExecutionStats); exists && ok {
-		return stats
-	}
-	log.Warn().Msg("Unable to compute statistics")
-	return &stats{}
-}
-
-// Exports statistics to readable json format
-func (s *stats) ToJSON() []byte {
-	b, err := json.Marshal(s)
-	if err != nil {
-		log.Warn().Msg("Unable to read statistics")
-	}
-	return b
-}
-
-func (s *stats) GetLinesPerStepCount() map[string]int {
-	return s.LinesPerStepCount
-}
-
-func (s *stats) GetFiltersCount() int {
-	return s.FiltersCount
-}
-
-func IncLinesPerStepCount(step string) {
-	stats := getStats()
-	stats.LinesPerStepCount[step]++
-}
-
-func IncFiltersCount() {
-	stats := getStats()
-	stats.FiltersCount++
-}
-
-// Compute current statistics and give a snapshot
-func getStats() *stats {
-	value, exists := over.MDC().Get("stats")
-	if stats, ok := value.(*stats); exists && ok {
-		return stats
-	}
-	log.Warn().Msg("Statistics uncorrectly initialized")
-	return &stats{}
+	return v
 }

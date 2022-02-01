@@ -23,226 +23,244 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Pull data from source following the given puller plan.
-func Pull(plan Plan, filters RowReader, source DataSource, exporter RowExporter, diagnostic TraceListener) *Error {
-	if err := source.Open(); err != nil {
-		return err
+type Step struct {
+	p     *puller
+	out   ExportedRow
+	entry Relation
+	cache DataSet
+	next  []*Step
+}
+
+func NewStep(puller *puller, out ExportedRow, entry Relation) *Step {
+	return &Step{
+		p:     puller,
+		out:   out,
+		entry: entry,
+		cache: DataSet{},
+		next:  []*Step{},
 	}
+}
 
-	defer source.Close()
-
-	Reset()
-
-	e := puller{source}
-	if err := e.pull(plan, filters, exporter.Export, diagnostic); err != nil {
-		return err
-	}
-
-	return nil
+type Puller interface {
+	Pull(start Table, filter Filter) error
 }
 
 type puller struct {
+	graph      Graph
 	datasource DataSource
+	exporter   RowExporter
+	diagnostic TraceListener
 }
 
-func (e puller) pull(plan Plan, filters RowReader, export func(ExportableRow) *Error, diagnostic TraceListener) *Error {
-	for filters.Next() {
-		IncFiltersCount()
+func NewPuller(plan Plan, datasource DataSource, exporter RowExporter, diagnostic TraceListener) Puller {
+	return &puller{
+		graph:      plan.buildGraph(),
+		datasource: datasource,
+		exporter:   exporter,
+		diagnostic: diagnostic,
+	}
+}
 
-		fileFilter := filters.Value()
+func (p *puller) Pull(start Table, filter Filter) error {
+	start = p.graph.addMissingColumns(start)
 
-		initFilter := filter{plan.InitFilter().Limit(), fileFilter.Update(plan.InitFilter().Values()), plan.InitFilter().Where(), plan.InitFilter().Distinct()}
-		if err := e.pullStep(plan.Steps().Step(0), initFilter, export, diagnostic); err != nil {
-			return err
+	if err := p.datasource.Open(); err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	defer p.datasource.Close()
+
+	reader, err := p.datasource.RowReader(start, filter)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	for reader.Next() {
+		row := start.export(reader.Value())
+
+		if err := p.pull(start, row); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
+		if err := p.exporter.Export(row); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 
-	return filters.Error()
+	if reader.Error() != nil {
+		return fmt.Errorf("%w", reader.Error())
+	}
+
+	return nil
 }
 
-func (e puller) pullStep(step Step, filter Filter, export func(ExportableRow) *Error, diagnostic TraceListener) *Error {
-	rowIterator, err := e.datasource.RowReader(step.Entry(), filter)
-	if err != nil {
-		return err
-	}
-	diagnostic = diagnostic.TraceStep(step, filter)
-
-	log.Debug().Msg(fmt.Sprintf("from %v with filter %v", step.Entry(), filter))
-
-	i := 0
-	for rowIterator.Next() {
-		row := step.Entry().export(rowIterator.Value())
-		i++
-
-		IncLinesPerStepCount(step.Entry().Name())
-		log.Trace().Msg(fmt.Sprintf("process row number %v", i))
-
-		allRows := map[string][]ExportableRow{}
-		allRows[step.Entry().Name()] = []ExportableRow{row}
-
-		if step.Relations().Len() > 0 {
-			if err := e.exhaust(step, allRows); err != nil {
+func (p *puller) pull(source Table, out ExportedRow) error {
+	relations, ok := p.graph.Relations[source.Name]
+	if ok {
+		for _, relation := range relations {
+			if err := p.run(NewStep(p, out, relation)); err != nil {
 				return err
 			}
 		}
+	}
 
-		for stepIdx := uint(0); stepIdx < step.NextSteps().Len(); stepIdx++ {
-			nextStep := step.NextSteps().Step(stepIdx)
-			rel := nextStep.Follow()
-			fromTable := findFromTable(rel, step.Relations(), step.Entry())
-			directionParent := rel.Child().Name() == fromTable.Name()
-			log.Trace().Msg(fmt.Sprintf("row #%v, following %v from %v", i, rel, fromTable.Name()))
-			relatedToRows := allRows[fromTable.Name()]
-			log.Trace().Msg(fmt.Sprintf("row #%v, %v related row(s)", i, len(relatedToRows)))
-			for _, relatedToRow := range relatedToRows {
-				nextFilter := relatedTo(nextStep.Entry(), rel, relatedToRow)
-				if err := e.pullStep(nextStep, nextFilter, func(r ExportableRow) *Error {
-					if !directionParent {
-						if !relatedToRow.add(rel.Name(), r) {
-							return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", nextStep.Entry().Name(), rel.Name())}
-						}
-					} else {
-						relatedToRow.set(rel.Name(), r)
-					}
-					return nil
-				}, diagnostic); err != nil {
-					return err
-				}
+	return nil
+}
+
+func (p *puller) run(step *Step) error {
+	if err := step.Execute(); err != nil {
+		return err
+	}
+
+	// This code seems to be counter-productive,
+	// There may be a tipping point on len(step.next) where it become useful.
+	// if len(step.next) > 10 {
+	// 	group := errgroup.Group{}
+
+	// 	for _, nextStep := range step.next {
+	// 		step := nextStep
+
+	// 		group.Go(func() error {
+	// 			return p.run(step)
+	// 		})
+	// 	}
+
+	// 	if err := group.Wait(); err != nil {
+	// 		return fmt.Errorf("%w", err)
+	// 	}
+	// } else {
+	for _, nextStep := range step.next {
+		if err := p.run(nextStep); err != nil {
+			return err
+		}
+	}
+	// }
+
+	return nil
+}
+
+func (s *Step) Execute() error {
+	log.Debug().Interface("entry", s.entry.Name).Msg("begin step execution")
+	s.p.diagnostic.TraceStep(*s)
+
+	s.addToCache(s.entry.Local.Table, s.entry.Local.Table.getKeyValues(s.out))
+
+	if err := s.follow(s.entry, s.out, s.p.graph.Components[s.entry.Foreign.Table.Name]); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Step) pull(source Table, out ExportedRow, currentStep uint) error {
+	relations, ok := s.p.graph.Relations[source.Name]
+	if ok {
+		for _, relation := range relations {
+			if err := s.follow(relation, out, currentStep); err != nil {
+				return err
 			}
 		}
-		if err := export(row); err != nil {
+	}
+
+	return nil
+}
+
+func (s *Step) follow(relation Relation, out ExportedRow, currentStep uint) error {
+	if s.p.graph.Components[relation.Foreign.Table.Name] != currentStep {
+		log.Debug().Interface("relation", relation.Name).Msg("edge of component reached")
+		s.next = append(s.next, NewStep(s.p, out, relation))
+
+		return nil
+	}
+
+	filter := createFilter(relation, out)
+
+	rows, err := s.p.datasource.Read(relation.Foreign.Table, Filter{Limit: 0, Values: filter, Where: ""})
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	exportedRows := s.removeDuplicates(relation.Foreign.Table, rows...)
+
+	if relation.Cardinality == One {
+		switch {
+		case len(exportedRows) > 1:
+			return fmt.Errorf("%w", ErrMultipleRowInOneToOneRelation)
+		case len(exportedRows) == 1:
+			out.Set(string(relation.Name), exportedRows[0])
+		}
+	} else if len(exportedRows) > 0 {
+		out.Set(string(relation.Name), exportedRows)
+	}
+
+	for _, row := range exportedRows {
+		if err := s.pull(relation.Foreign.Table, row, currentStep); err != nil {
 			return err
 		}
 	}
 
-	if rowIterator.Error() != nil {
-		return rowIterator.Error()
-	}
 	return nil
 }
 
-func (e puller) exhaust(step Step, allRows map[string][]ExportableRow) *Error {
-	cycles := step.Cycles()
+func (s *Step) removeDuplicates(table Table, rows ...Row) []ExportedRow {
+	result := []ExportedRow{}
 
-	log.Trace().Msg(fmt.Sprintf("%v cycle(s) to traverse", cycles.Len()))
+	// this table is not involved in a local tip (only foreign)
+	// then it is not needed to cache seen pks
+	if !s.p.graph.Cached[table.Name] {
+		for _, row := range rows {
+			result = append(result, table.export(row))
+		}
 
-	fromTable := step.Entry()
-	for cycleIdx := uint(0); cycleIdx < step.Cycles().Len(); cycleIdx++ {
-		cycle := step.Cycles().Cycle(cycleIdx)
-		log.Trace().Msg(fmt.Sprintf("traversing cycle %v", cycle))
-		for relationIdx := uint(0); relationIdx < cycle.Len(); relationIdx++ {
-			relation := cycle.Relation(relationIdx)
-			fromRows := allRows[fromTable.Name()]
-			log.Trace().Msg(fmt.Sprintf("following relation %v has %v source row(s)", relation, len(fromRows)))
-			for i, fromRow := range fromRows {
-				log.Trace().Msg(fmt.Sprintf("following relation %v on row #%v (%v)", relation, i, fromRow))
-				toTable := relation.OppositeOf(fromTable.Name())
-				nextFilter := relatedTo(toTable, relation, fromRow)
-				log.Trace().Msg(fmt.Sprintf("following relation %v on row #%v with filter %v", relation, i, nextFilter))
-				directionParent := toTable.Name() == relation.Parent().Name()
-				rows, err := e.read(toTable, nextFilter)
-				if err != nil {
-					return err
-				}
+		return result
+	}
 
-				log.Trace().Msg(fmt.Sprintf("following relation %v on row #%v returned %v related row(s)", relation, i, len(rows)))
-				rows = removeDuplicate(toTable.PrimaryKey(), rows, allRows[toTable.Name()])
-				log.Trace().Msg(fmt.Sprintf("following relation %v on row #%v returned %v unseen row(s)", relation, i, len(rows)))
+loop:
+	for _, row1 := range rows {
+		for _, row2 := range s.cache[table.Name] {
+			all := true
+			for _, pk := range table.Keys {
+				all = all && row1[pk] == row2[pk]
 
-				if len(rows) == 0 {
-					log.Trace().Msg(fmt.Sprintf("stop traversing cycle %v", cycle))
+				if !all {
 					break
 				}
-
-				if !directionParent {
-					if !fromRow.add(relation.Name(), rows...) {
-						return &Error{Description: fmt.Sprintf("table %v has a column whose name collides with the relation name %v", fromTable.Name(), relation.Name())}
-					}
-				} else {
-					fromRow.set(relation.Name(), rows[0])
-				}
-
-				allRows[toTable.Name()] = append(allRows[toTable.Name()], rows...)
-
-				fromTable = toTable
-			}
-		}
-	}
-
-	return nil
-}
-
-func (e puller) read(t Table, f Filter) ([]ExportableRow, *Error) {
-	iter, err := e.datasource.RowReader(t, f)
-	if err != nil {
-		return nil, err
-	}
-	result := []ExportableRow{}
-	for iter.Next() {
-		row := t.export(iter.Value())
-		result = append(result, row)
-	}
-	if iter.Error() != nil {
-		return nil, iter.Error()
-	}
-	return result, err
-}
-
-func findFromTable(rel Relation, relations RelationList, defaultTable Table) Table {
-	for i := uint(0); i < relations.Len(); i++ {
-		relation := relations.Relation(i)
-		if rel.Child().Name() == relation.Parent().Name() {
-			return rel.Child()
-		}
-		if rel.Parent().Name() == relation.Parent().Name() {
-			return rel.Parent()
-		}
-		if rel.Child().Name() == relation.Child().Name() {
-			return rel.Child()
-		}
-		if rel.Parent().Name() == relation.Child().Name() {
-			return rel.Parent()
-		}
-	}
-	return defaultTable
-}
-
-func buildFilterRow(targetKey []string, localKey []string, data Row) Row {
-	row := Row{}
-	for i := 0; i < len(targetKey); i++ {
-		row[targetKey[i]] = data[localKey[i]]
-	}
-	return row
-}
-
-func relatedTo(from Table, follow Relation, data ExportableRow) Filter {
-	log.Trace().Msg(fmt.Sprintf("build filter with row %v and relation %v to pull data from table %v", data, follow, from))
-	if from.Name() != follow.Parent().Name() && from.Name() != follow.Child().Name() {
-		log.Error().Msg(fmt.Sprintf("cannot build filter with row %v and relation %v to pull data from table %v", data, follow, from))
-		panic(nil)
-	}
-
-	if follow.Child().Name() == from.Name() {
-		return NewFilter(0, buildFilterRow(follow.ChildKey(), follow.ParentKey(), data.AsRow()), "", false)
-	}
-
-	return NewFilter(0, buildFilterRow(follow.ParentKey(), follow.ChildKey(), data.AsRow()), "", false)
-}
-
-func removeDuplicate(pkList []string, a, b []ExportableRow) []ExportableRow {
-	result := []ExportableRow{}
-loop:
-	for _, row1 := range a {
-		for _, row2 := range b {
-			all := true
-			for _, pk := range pkList {
-				all = all && row1.GetOrNil(pk) == row2.GetOrNil(pk)
 			}
 			if all {
+				log.Debug().Interface("table", table.Name).Interface("row", row2).Msg("row removed because it has been seen")
+
 				continue loop
 			}
 		}
-		result = append(result, row1)
+		result = append(result, table.export(row1))
 	}
+
+	s.addToCache(table, rows...)
+
 	return result
+}
+
+func (s *Step) addToCache(table Table, rows ...Row) {
+	for _, row := range rows {
+		seen := Row{}
+		for _, pk := range table.Keys {
+			seen[pk] = row[pk]
+		}
+
+		s.cache[table.Name] = append(s.cache[table.Name], seen)
+
+		log.Debug().Interface("table", table.Name).Interface("seen", seen).Msg("update cache")
+	}
+}
+
+func createFilter(relation Relation, localRow ExportedRow) map[string]interface{} {
+	filter := Row{}
+
+	for i := 0; i < len(relation.Foreign.Keys); i++ {
+		foreignKey := relation.Foreign.Keys[i]
+		localKey := relation.Local.Keys[i]
+		filter[foreignKey] = localRow.GetOrNil(localKey)
+	}
+
+	return filter
 }

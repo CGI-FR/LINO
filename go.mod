@@ -10,6 +10,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/godror/godror v0.28.0
 	github.com/gorilla/mux v1.8.0
+	github.com/hashicorp/go-multierror v1.1.0
 	github.com/ibmdb/go_ibm_db v0.4.1
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/lib/pq v1.10.3
@@ -26,6 +27,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect

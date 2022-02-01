@@ -20,6 +20,7 @@ package pull
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -52,29 +53,47 @@ type HTTPDataSource struct {
 }
 
 // Open a connection to the HTTP DB
-func (ds *HTTPDataSource) Open() *pull.Error {
+func (ds *HTTPDataSource) Open() error {
 	return nil
 }
 
+func (ds *HTTPDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSet, error) {
+	reader, err := ds.RowReader(source, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	result := pull.RowSet{}
+	for reader.Next() {
+		result = append(result, reader.Value())
+	}
+
+	if reader.Error() != nil {
+		return result, fmt.Errorf("%w", reader.Error())
+	}
+
+	return result, nil
+}
+
 // RowReader iterate over rows in table with filter
-func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, *pull.Error) {
+func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, error) {
 	b, err := json.Marshal(struct {
 		Values   pull.Row `json:"values"`
 		Limit    uint     `json:"limit"`
 		Where    string   `json:"where"`
 		Distinct bool     `json:"distinct"`
 	}{
-		Values:   filter.Values(),
-		Limit:    filter.Limit(),
-		Where:    filter.Where(),
-		Distinct: filter.Distinct(),
+		Values:   filter.Values,
+		Limit:    filter.Limit,
+		Where:    filter.Where,
+		Distinct: filter.Distinct,
 	})
 	if err != nil {
-		return nil, &pull.Error{Description: err.Error()}
+		return nil, err
 	}
 	reqbody := strings.NewReader(string(b))
 
-	url := ds.url + "/data/" + source.Name()
+	url := ds.url + "/data/" + string(source.Name)
 	if len(ds.schema) > 0 {
 		url = url + "?schema=" + ds.schema
 	}
@@ -83,18 +102,18 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull
 
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, reqbody)
 	if err != nil {
-		return nil, &pull.Error{Description: err.Error()}
+		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
 
-	if pcols := source.Columns(); pcols != nil && pcols.Len() > 0 {
+	if pcols := source.Columns; pcols != nil && len(pcols) > 0 {
 		pcolsList := []string{}
-		for idx := uint(0); idx < pcols.Len(); idx++ {
-			pcolsList = append(pcolsList, pcols.Column(idx).Name())
+		for idx := int(0); idx < len(pcols); idx++ {
+			pcolsList = append(pcolsList, pcols[idx].Name)
 		}
 		b, err = json.Marshal(pcolsList)
 		if err != nil {
-			return nil, &pull.Error{Description: err.Error()}
+			return nil, err
 		}
 		pcolsJSON := string(b)
 		req.Header.Add("Select-Columns", pcolsJSON)
@@ -102,7 +121,7 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, &pull.Error{Description: err.Error()}
+		return nil, err
 	}
 	ds.result = resp.Body
 
@@ -110,7 +129,7 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull
 }
 
 // Close a connection to the HTTP DB
-func (ds *HTTPDataSource) Close() *pull.Error {
+func (ds *HTTPDataSource) Close() error {
 	if ds.result != nil {
 		ds.result.Close()
 	}

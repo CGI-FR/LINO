@@ -1,0 +1,144 @@
+swagger: "2.0"
+info:
+  description: "This is the description of the connector API for LINO."
+  version: "v0.1.0"
+  title: "LINO Connector"
+  contact:
+    email: "LINO.fr@cgi.com"
+  license:
+    name: "License GPL-3.0"
+    url: "https://github.com/CGI-FR/LINO/blob/main/LICENSE"
+host: "example"
+basePath: "/v1"
+tags:
+- name: "info"
+  description: "Retrieve information about tables and relations"
+- name: "data"
+  description: "Push/pull data out of the database"
+schemes:
+- "https"
+- "http"
+paths:
+  /tables:
+    get:
+      tags:
+      - "info"
+      summary: "List tables"
+      description: "List all tables filtered by the specified schema (or all schemas)"
+      operationId: "getTables"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "query"
+        name: "schema"
+        type: "string"
+        description: "Name of the schema to filter tables"
+        required: false
+      responses:
+        "200":
+          description: "successful operation"
+  /relations:
+    get:
+      tags:
+      - "info"
+      summary: "List relations"
+      description: "List all relations filtered by the specified schema (or all schemas)"
+      operationId: "getRelations"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "query"
+        name: "schema"
+        type: "string"
+        description: "Name of the schema to filter tables"
+        required: false
+      responses:
+        "200":
+          description: "successful operation"
+  /data/{tableName}:
+    get:
+      tags:
+      - "data"
+      summary: "List rows of table"
+      description: "List all rows of the given table"
+      operationId: "pulData"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "tableName"
+        in: "path"
+        description: "Name of the table"
+        required: true
+        type: "string"
+      - in: "query"
+        name: "schema"
+        type: "string"
+        description: "Name of the schema where is located the table"
+        required: false
+      - name: "filter"
+        in: "body"
+        schema:
+          type: "object"
+          properties:
+            values:
+              type: "object"
+              description: "keys and values used in where clause to filter rows"
+            limit:
+              type: "integer"
+              description: "limit the output to N rows"
+              example: 1
+            where:
+              type: "string"
+              description: "additionnal where clause"
+        description: "Filter to apply"
+        required: true
+      - name: "Select-Column"
+        in: "header"
+        type: "array"
+        items:
+          type: "string"
+        description: "List of columns to include in the response (if not set, then all columns will be included)"
+        required: false
+      responses:
+        "200":
+          description: "successful operation"
+    post:
+      tags:
+      - "data"
+      summary: "Push rows to table"
+      description: "Insert, update or delete rows from the table"
+      operationId: "pushData"
+      consumes:
+      - "application/x-ndjson"
+      parameters:
+      - name: "tableName"
+        in: "path"
+        description: "Name of the table"
+        required: true
+        type: "string"
+      - in: "query"
+        name: "schema"
+        type: "string"
+        description: "Name of the schema where is located the table"
+        required: false
+      - in: "query"
+        name: "mode"
+        type: "string"
+        description: "Push mode"
+        enum: ["insert", "truncate", "update", "delete"]
+        required: false
+      - name: "data"
+        in: "body"
+        schema: {}
+        description: "Stream of JSON lines, each line is a row to insert"
+        required: true
+      - name: "Primary-Keys"
+        in: "header"
+        type: "array"
+        items:
+          type: "string"
+        description: "List of columns to consider as key identifier when updating existing rows"
+        required: false
+      responses:
+        "200":
+          description: "successful operation"

@@ -55,7 +55,7 @@ func TestPull1(t *testing.T) {
 	step1 := pull.NewStep(1, A, nil, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{step2}))
 
 	plan := pull.NewPlan(
-		pull.NewFilter(2, pull.Row{}, ""),
+		pull.NewFilter(2, pull.Row{}, "", false),
 		pull.NewStepList([]pull.Step{step1, step2, step3}),
 	)
 
@@ -101,7 +101,7 @@ func TestPull2(t *testing.T) {
 	step1 := pull.NewStep(1, A, nil, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{step2, step3}))
 
 	plan := pull.NewPlan(
-		pull.NewFilter(2, pull.Row{}, ""),
+		pull.NewFilter(2, pull.Row{}, "", false),
 		pull.NewStepList([]pull.Step{step1, step2, step3}),
 	)
 
@@ -152,7 +152,7 @@ func TestPull3(t *testing.T) {
 	step1 := pull.NewStep(1, A, nil, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{step2, step3}))
 
 	plan := pull.NewPlan(
-		pull.NewFilter(2, pull.Row{}, ""),
+		pull.NewFilter(2, pull.Row{}, "", false),
 		pull.NewStepList([]pull.Step{step1, step2, step3, step4, step5}),
 	)
 
@@ -201,7 +201,7 @@ func TestPull4(t *testing.T) {
 	step1 := pull.NewStep(1, A, nil, cycle1, pull.NewCycleList([]pull.Cycle{cycle1}), pull.NewStepList([]pull.Step{}))
 
 	plan := pull.NewPlan(
-		pull.NewFilter(2, pull.Row{}, ""),
+		pull.NewFilter(2, pull.Row{}, "", false),
 		pull.NewStepList([]pull.Step{step1}),
 	)
 

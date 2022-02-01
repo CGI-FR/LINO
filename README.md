@@ -195,6 +195,10 @@ Each line is a filter and `lino` apply it to the start table to extract data.
 
 `--where` argument is a raw SQL clause criteria (without `where` keyword) applied to the **start table only**. It's combined with `--filter` or `--filter-from-file` with the `and` operator.
 
+#### --distinct
+
+`--distinct` option (or `-D`) to return only distincts rows from the first table.
+
 ## Push
 
 The `push` sub-command import a **json** line stream (jsonline format http://jsonlines.org/) in each table, following the ingress descriptor defined in current directory.

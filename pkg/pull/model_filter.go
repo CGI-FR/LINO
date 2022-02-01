@@ -23,23 +23,26 @@ import (
 )
 
 type filter struct {
-	limit  uint
-	values Row
-	where  string
+	limit    uint
+	values   Row
+	where    string
+	distinct bool
 }
 
 // NewFilter initialize a new Filter object
-func NewFilter(limit uint, values Row, where string) Filter {
+func NewFilter(limit uint, values Row, where string, distinct bool) Filter {
 	return filter{
-		limit:  limit,
-		values: values,
-		where:  strings.TrimSpace(where),
+		limit:    limit,
+		values:   values,
+		where:    strings.TrimSpace(where),
+		distinct: distinct,
 	}
 }
 
-func (f filter) Limit() uint   { return f.limit }
-func (f filter) Values() Row   { return f.values }
-func (f filter) Where() string { return f.where }
+func (f filter) Limit() uint    { return f.limit }
+func (f filter) Values() Row    { return f.values }
+func (f filter) Where() string  { return f.where }
+func (f filter) Distinct() bool { return f.distinct }
 
 func (f filter) String() string {
 	builder := &strings.Builder{}

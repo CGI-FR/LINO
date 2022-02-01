@@ -59,13 +59,15 @@ func (ds *HTTPDataSource) Open() *pull.Error {
 // RowReader iterate over rows in table with filter
 func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, *pull.Error) {
 	b, err := json.Marshal(struct {
-		Values pull.Row `json:"values"`
-		Limit  uint     `json:"limit"`
-		Where  string   `json:"where"`
+		Values   pull.Row `json:"values"`
+		Limit    uint     `json:"limit"`
+		Where    string   `json:"where"`
+		Distinct bool     `json:"distinct"`
 	}{
-		Values: filter.Values(),
-		Limit:  filter.Limit(),
-		Where:  filter.Where(),
+		Values:   filter.Values(),
+		Limit:    filter.Limit(),
+		Where:    filter.Where(),
+		Distinct: filter.Distinct(),
 	})
 	if err != nil {
 		return nil, &pull.Error{Description: err.Error()}

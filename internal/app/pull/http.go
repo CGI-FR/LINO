@@ -34,6 +34,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 			err            *pull.Error
 			datasourceName string
 			ok             bool
+			distinct       bool
 			filter         map[string]string
 			limit          uint
 			where          string
@@ -77,6 +78,22 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 			limit = uint(limit64)
 		}
 
+		if query.Get("distinct") != "" {
+			var edistinct error
+
+			distinct, edistinct = strconv.ParseBool(query.Get("distinct"))
+			if edistinct != nil {
+				log.Error().Msg("can't parse distinct")
+				w.WriteHeader(http.StatusBadRequest)
+				_, ew := w.Write([]byte("{\"error\" : \"param distinct must be a boolean\"}\n"))
+				if ew != nil {
+					log.Error().Msg("Write failed")
+					return
+				}
+				return
+			}
+		}
+
 		if query.Get("where") != "" {
 			where = query.Get("where")
 		}
@@ -106,7 +123,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 			return
 		}
 
-		plan, e2 := getPullerPlan(filter, limit, where, idStorageFactory(query.Get("table"), ingressDescriptor))
+		plan, e2 := getPullerPlan(filter, limit, where, distinct, idStorageFactory(query.Get("table"), ingressDescriptor))
 		if e2 != nil {
 			log.Error().Err(e2).Msg("")
 			w.WriteHeader(http.StatusInternalServerError)

@@ -96,6 +96,9 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 
 		if query.Get("where") != "" {
 			where = query.Get("where")
+			// CWE-117 : sanitize user input
+			where = strings.ReplaceAll(where, "\n", "")
+			where = strings.ReplaceAll(where, "\r", "")
 		}
 
 		w.Header().Set("Content-Type", "application/json")

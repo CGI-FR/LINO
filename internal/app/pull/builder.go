@@ -67,13 +67,13 @@ func (b builder) plan() (pull.Plan, pull.Table, error) {
 	}
 
 	for stepidx, step := range b.smap {
-		log.Debug().Int("stepidx", stepidx).Stringer("step", step).Msg("building step")
+		log.Debug().Int("stepidx", stepidx+1).Stringer("step", step).Msg("building step")
 		plan.Components[pull.TableName(step.Entry().Name())] = uint(stepidx)
 
-		log.Debug().
-			Int("stepidx", stepidx).
+		log.Trace().
+			Int("stepidx", stepidx+1).
 			Stringer("step", step).
-			Msg(fmt.Sprintf("there is %v relation(s) to build for step %v", step.Relations().Len(), stepidx))
+			Msg(fmt.Sprintf("there is %v relation(s) to build for step %v", step.Relations().Len(), stepidx+1))
 
 		if step.Following() != nil && step.Following().Name() != "" {
 			result, err := b.buildRelation(step.Following())
@@ -99,7 +99,7 @@ func (b builder) plan() (pull.Plan, pull.Table, error) {
 }
 
 func (b builder) buildRelation(rel id.IngressRelation) ([]pull.Relation, error) {
-	log.Debug().Stringer("rel", rel).Msg("building relation")
+	log.Trace().Stringer("rel", rel).Msg("building relation")
 
 	result := []pull.Relation{}
 

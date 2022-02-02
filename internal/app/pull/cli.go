@@ -115,7 +115,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			log.Debug().Interface("start", start).Interface("plan", plan).Msg("pull plan is complete")
+			log.Debug().Interface("start", start).Msg("pull plan is complete")
 
 			var tracer pull.TraceListener
 

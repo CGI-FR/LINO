@@ -177,7 +177,7 @@ func (p *puller) run(step *Step) error {
 }
 
 func (s *Step) Execute() error {
-	log.Debug().Interface("entry", s.entry.Name).Msg("begin step execution")
+	log.Trace().Interface("entry", s.entry.Name).Msg("begin step execution")
 	s.p.diagnostic.TraceStep(*s)
 
 	s.addToCache(s.entry.Local.Table, s.entry.Local.Table.getKeyValues(s.out))
@@ -204,7 +204,7 @@ func (s *Step) pull(source Table, out ExportedRow, currentStep uint) error {
 
 func (s *Step) follow(relation Relation, out ExportedRow, currentStep uint) error {
 	if s.p.graph.Components[relation.Foreign.Table.Name] != currentStep {
-		log.Debug().Interface("relation", relation.Name).Msg("edge of component reached")
+		log.Trace().Interface("relation", relation.Name).Msg("edge of component reached")
 		s.next = append(s.next, NewStep(s.p, out, relation))
 
 		return nil
@@ -267,7 +267,7 @@ loop:
 				}
 			}
 			if all {
-				log.Debug().Interface("table", table.Name).Interface("row", row2).Msg("row removed because it has been seen")
+				log.Trace().Interface("table", table.Name).Interface("row", row2).Msg("row removed because it has been seen")
 
 				continue loop
 			}
@@ -289,7 +289,7 @@ func (s *Step) addToCache(table Table, rows ...Row) {
 
 		s.cache[table.Name] = append(s.cache[table.Name], seen)
 
-		log.Debug().Interface("table", table.Name).Interface("seen", seen).Msg("update cache")
+		log.Trace().Interface("table", table.Name).Interface("seen", seen).Msg("update cache")
 	}
 }
 

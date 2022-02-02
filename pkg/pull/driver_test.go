@@ -20,10 +20,8 @@ package pull_test
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"testing"
 
-	over "github.com/Trendyol/overlog"
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
 	"github.com/cgi-fr/lino/pkg/pull"
 	"github.com/rs/zerolog"
@@ -68,8 +66,7 @@ func LoadTest(filename string) (*Test, error) {
 
 func RunTest(t *testing.T, test *Test) {
 	t.Helper()
-	over.New(zerolog.New(os.Stderr))
-
+	// over.New(zerolog.New(os.Stderr))
 	collector := pull.NewRowExporterCollector()
 
 	puller := pull.NewPuller(test.Plan, pull.NewDataSourceInMemory(test.DataSet), collector, pull.NoTraceListener{})

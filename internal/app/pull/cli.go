@@ -159,8 +159,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			duration := time.Since(startTime)
 			over.MDC().Set("duration", duration)
-			// stats := pull.Compute() TODO
-			// over.MDC().Set("stats", stats.ToJSON())
+			stats := pull.Compute()
+			over.MDC().Set("stats", stats.ToJSON())
 		},
 	}
 	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")

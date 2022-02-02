@@ -18,7 +18,11 @@
 package pull
 
 import (
+	"encoding/json"
+
+	over "github.com/Trendyol/overlog"
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
+	"github.com/rs/zerolog/log"
 )
 
 type Cardinality bool
@@ -93,4 +97,64 @@ func (er ExportedRow) GetOrNil(key string) interface{} {
 	v, _ := er.Get(key)
 
 	return v
+}
+
+type ExecutionStats interface {
+	GetLinesPerStepCount() map[string]int
+	GetFiltersCount() int
+
+	ToJSON() []byte
+}
+
+type stats struct {
+	LinesPerStepCount map[string]int `json:"linesPerStepCount"`
+	FiltersCount      int            `json:"filtersCount"`
+}
+
+func (s *stats) ToJSON() []byte {
+	b, err := json.Marshal(s)
+	if err != nil {
+		log.Warn().Msg("Unable to read statistics")
+	}
+	return b
+}
+
+func (s *stats) GetLinesPerStepCount() map[string]int {
+	return s.LinesPerStepCount
+}
+
+func (s *stats) GetFiltersCount() int {
+	return s.FiltersCount
+}
+
+func IncLinesPerStepCount(step string) {
+	stats := getStats()
+	stats.LinesPerStepCount[step]++
+}
+
+func IncFiltersCount() {
+	stats := getStats()
+	stats.FiltersCount++
+}
+
+func getStats() *stats {
+	value, exists := over.MDC().Get("stats")
+	if stats, ok := value.(*stats); exists && ok {
+		return stats
+	}
+	log.Warn().Msg("Statistics uncorrectly initialized")
+	return &stats{}
+}
+
+func Compute() ExecutionStats {
+	value, exists := over.MDC().Get("stats")
+	if stats, ok := value.(ExecutionStats); exists && ok {
+		return stats
+	}
+	log.Warn().Msg("Unable to compute statistics")
+	return &stats{}
+}
+
+func Reset() {
+	over.MDC().Set("stats", &stats{LinesPerStepCount: map[string]int{}})
 }

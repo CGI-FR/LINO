@@ -31,6 +31,10 @@ type Step struct {
 	next  []*Step
 }
 
+func (s *Step) Entry() Relation {
+	return s.entry
+}
+
 func NewStep(puller *puller, out ExportedRow, entry Relation) *Step {
 	return &Step{
 		p:     puller,
@@ -70,6 +74,8 @@ func (p *puller) Pull(start Table, filter Filter, filterCohort RowReader) error 
 
 	defer p.datasource.Close()
 
+	Reset()
+
 	filters := []Filter{}
 	if filterCohort != nil {
 		for filterCohort.Next() {
@@ -98,12 +104,14 @@ func (p *puller) Pull(start Table, filter Filter, filterCohort RowReader) error 
 	}
 
 	for _, f := range filters {
+		IncFiltersCount()
 		reader, err := p.datasource.RowReader(start, f)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
 		for reader.Next() {
+			IncLinesPerStepCount(string(start.Name))
 			row := start.export(reader.Value())
 
 			if err := p.pull(start, row); err != nil {
@@ -205,6 +213,8 @@ func (s *Step) follow(relation Relation, out ExportedRow, currentStep uint) erro
 	filter := createFilter(relation, out)
 
 	rows, err := s.p.datasource.Read(relation.Foreign.Table, Filter{Limit: 0, Values: filter, Where: ""})
+	IncFiltersCount()
+
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -223,6 +233,7 @@ func (s *Step) follow(relation Relation, out ExportedRow, currentStep uint) erro
 	}
 
 	for _, row := range exportedRows {
+		IncLinesPerStepCount(string(s.Entry().Name))
 		if err := s.pull(relation.Foreign.Table, row, currentStep); err != nil {
 			return err
 		}

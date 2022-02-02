@@ -18,127 +18,94 @@
 package pull
 
 import (
-	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
+	"github.com/rs/zerolog/log"
 )
 
-type table struct {
-	name     string
-	pk       []string
-	columns  ColumnList
-	template jsonline.Template
-}
+func (t *Table) initTemplate() {
+	t.template = jsonline.NewTemplate()
 
-type columnList struct {
-	len   uint
-	slice []Column
-}
+	if len(t.Columns) > 0 {
+		for _, column := range t.Columns {
+			key := column.Name
 
-// NewTable initialize a new Table object
-func NewTable(name string, pks []string, columns ColumnList) Table {
-	// if a PK is not selected and list is not empty, add it with export=no to hide it
-	for _, pk := range pks {
-		if columns != nil && columns.Len() > 0 && !columns.Contains(pk) {
-			columns = columns.add(NewColumn(pk, "no"))
-		}
-	}
-
-	return table{name: name, pk: pks, columns: columns, template: initTemplate(columns)}
-}
-
-func (t table) Name() string         { return t.name }
-func (t table) PrimaryKey() []string { return t.pk }
-func (t table) Columns() ColumnList  { return t.columns }
-func (t table) String() string       { return t.name }
-
-func initTemplate(columns ColumnList) jsonline.Template {
-	result := jsonline.NewTemplate()
-
-	if columns != nil {
-		for i := uint(0); i < columns.Len(); i++ {
-			column := columns.Column(i)
-			key := column.Name()
-
-			switch column.Export() {
+			switch column.Export {
 			case "string":
-				result.WithString(key)
+				t.template.WithString(key)
 			case "numeric":
-				result.WithNumeric(key)
+				t.template.WithNumeric(key)
 			case "base64":
-				result.WithBinary(key)
+				t.template.WithBinary(key)
 			case "datetime":
-				result.WithDateTime(key)
+				t.template.WithDateTime(key)
 			case "timestamp":
-				result.WithTimestamp(key)
+				t.template.WithTimestamp(key)
 			case "no":
-				result.WithHidden(key)
+				t.template.WithHidden(key)
 			default:
-				result.WithAuto(key)
+				t.template.WithAuto(key)
 			}
 		}
 	}
-	return result
 }
 
-func (t table) export(r Row) ExportableRow {
-	result := &row{t.template.CreateRowEmpty()}
-	keys := make([]string, 0, len(r))
-	for k := range r {
-		keys = append(keys, k)
+func (t *Table) export(row Row) ExportedRow {
+	if t.template == nil {
+		t.initTemplate()
 	}
+
+	result := ExportedRow{t.template.CreateRowEmpty()}
+	keys := make([]string, 0, len(row))
+
+	if len(t.Columns) > 0 {
+		for _, col := range t.Columns {
+			keys = append(keys, col.Name)
+		}
+	} else {
+		for k := range row {
+			keys = append(keys, k)
+		}
+	}
+
 	sort.Strings(keys) // this is needed to have a consistent output if no columns is defined by configuration
+
 	for _, k := range keys {
-		result.set(k, r[k])
+		result.Set(k, row[k])
 	}
+
 	return result
 }
 
-// NewColumnList initialize a new ColumnList object
-func NewColumnList(columns []Column) ColumnList {
-	return columnList{uint(len(columns)), columns}
+func (t Table) getKeyValues(row ExportedRow) Row {
+	result := Row{}
+	for _, key := range t.Keys {
+		result[key] = row.GetOrNil(key)
+	}
+
+	return result
 }
 
-func (l columnList) Len() uint { return l.len }
-func (l columnList) Contains(c string) bool {
-	for _, v := range l.slice {
-		if c == v.Name() {
+func (t *Table) containsColumn(columnName string) bool {
+	for _, col := range t.Columns {
+		if col.Name == columnName {
 			return true
 		}
 	}
+
 	return false
 }
-func (l columnList) Column(idx uint) Column { return l.slice[idx] }
-func (l columnList) String() string {
-	switch l.len {
-	case 0:
-		return ""
-	case 1:
-		return fmt.Sprint(l.slice[0])
+
+func (t *Table) addMissingColumns(columnNames ...string) {
+	for _, key := range columnNames {
+		if !t.containsColumn(key) {
+			t.Columns = append(t.Columns, Column{Name: key, Export: "no"})
+
+			log.Warn().
+				Str("key", key).
+				Interface("table", t.Name).
+				Msg("missing required key was automatically added as hidden column")
+		}
 	}
-	sb := strings.Builder{}
-	fmt.Fprintf(&sb, "%v", l.slice[0])
-	for _, rel := range l.slice[1:] {
-		fmt.Fprintf(&sb, " -> %v", rel)
-	}
-	return sb.String()
 }
-
-func (l columnList) add(col Column) ColumnList {
-	return NewColumnList(append(l.slice, col))
-}
-
-type column struct {
-	name   string
-	export string
-}
-
-// NewColumn initialize a new Column object
-func NewColumn(name string, export string) Column {
-	return column{name, export}
-}
-
-func (c column) Name() string   { return c.name }
-func (c column) Export() string { return c.export }

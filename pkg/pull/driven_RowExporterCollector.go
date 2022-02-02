@@ -17,30 +17,20 @@
 
 package pull
 
-import (
-	"encoding/json"
-	"fmt"
-	"io"
-
-	"github.com/cgi-fr/lino/pkg/pull"
-)
-
-// JSONRowExporter export rows to JSON format.
-type JSONRowExporter struct {
-	file io.Writer
+type RowExporterCollector struct {
+	Result []ExportedRow
 }
 
-// NewJSONRowExporter creates a new JSONRowExporter.
-func NewJSONRowExporter(file io.Writer) *JSONRowExporter {
-	return &JSONRowExporter{file}
+func NewRowExporterCollector() *RowExporterCollector {
+	return &RowExporterCollector{[]ExportedRow{}}
 }
 
-// Export rows in JSON format.
-func (re *JSONRowExporter) Export(r pull.ExportedRow) error {
-	jsonString, err := json.Marshal(r)
-	if err != nil {
-		return err
-	}
-	fmt.Fprintln(re.file, string(jsonString))
+func (re *RowExporterCollector) Export(row ExportedRow) error {
+	re.Result = append(re.Result, row)
+
 	return nil
+}
+
+func (re *RowExporterCollector) Reset() {
+	re.Result = []ExportedRow{}
 }

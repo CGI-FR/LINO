@@ -31,7 +31,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			datasource     pull.DataSource
-			err            *pull.Error
+			err            error
 			datasourceName string
 			ok             bool
 			distinct       bool
@@ -115,7 +115,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 		if err != nil {
 			log.Error().Err(err).Msg("")
 			w.WriteHeader(http.StatusNotFound)
-			_, ew := w.Write([]byte("{\"error\": \"" + err.Description + "\"}"))
+			_, ew := w.Write([]byte("{\"error\": \"" + err.Error() + "\"}"))
 			if ew != nil {
 				log.Error().Err(ew).Msg("Write failed")
 				return
@@ -123,11 +123,11 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 			return
 		}
 
-		plan, e2 := getPullerPlan(filter, limit, where, distinct, idStorageFactory(query.Get("table"), ingressDescriptor))
+		plan, start, e2 := getPullerPlan(idStorageFactory(query.Get("table"), ingressDescriptor))
 		if e2 != nil {
 			log.Error().Err(e2).Msg("")
 			w.WriteHeader(http.StatusInternalServerError)
-			_, ew := w.Write([]byte("{\"error\": \"" + e2.Description + "}"))
+			_, ew := w.Write([]byte("{\"error\": \"" + e2.Error() + "}"))
 			if ew != nil {
 				log.Error().Err(ew).Msg("Write failed")
 				return
@@ -136,12 +136,13 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 		}
 
 		pullExporter := pullExporterFactory(w)
+		puller := pull.NewPuller(plan, datasource, pullExporter, pull.NoTraceListener{})
 
-		e3 := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, pullExporter, pull.NoTraceListener{})
+		e3 := puller.Pull(start, pull.Filter{Limit: limit, Values: pull.Row{}, Where: where, Distinct: distinct}, nil)
 		if e3 != nil {
 			log.Error().Err(e3).Msg("")
 			w.WriteHeader(http.StatusInternalServerError)
-			_, ew := w.Write([]byte(e3.Description))
+			_, ew := w.Write([]byte(e3.Error()))
 			if ew != nil {
 				log.Error().Err(ew).Msg("Write failed")
 				return

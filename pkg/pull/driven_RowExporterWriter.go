@@ -18,38 +18,23 @@
 package pull
 
 import (
+	"encoding/json"
 	"fmt"
-	"strings"
+	"io"
 )
 
-// NewCycle initialize a new Cycle object
-func NewCycle(relations []Relation) Cycle {
-	return relationList{uint(len(relations)), relations}
+type RowExporterWriter struct {
+	out io.Writer
 }
 
-type cycleList struct {
-	len   uint
-	slice []Cycle
+func NewRowExporterWriter(out io.Writer) RowExporter {
+	return RowExporterWriter{out}
 }
 
-// NewCycleList initialize a new CycleList object
-func NewCycleList(cycles []Cycle) CycleList {
-	return cycleList{uint(len(cycles)), cycles}
-}
-
-func (l cycleList) Len() uint            { return l.len }
-func (l cycleList) Cycle(idx uint) Cycle { return l.slice[idx] }
-func (l cycleList) String() string {
-	switch l.len {
-	case 0:
-		return ""
-	case 1:
-		return fmt.Sprint(l.slice[0])
+func (re RowExporterWriter) Export(row ExportedRow) error {
+	if err := json.NewEncoder(re.out).Encode(row); err != nil {
+		return fmt.Errorf("%w", err)
 	}
-	sb := strings.Builder{}
-	fmt.Fprintf(&sb, "%v", l.slice[0])
-	for _, rel := range l.slice[1:] {
-		fmt.Fprintf(&sb, ", %v", rel)
-	}
-	return sb.String()
+
+	return nil
 }

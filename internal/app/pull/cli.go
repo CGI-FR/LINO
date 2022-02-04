@@ -79,6 +79,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var initialFilters map[string]string
 	var diagnostic bool
 	var filters pull.RowReader
+	var parallel uint
 
 	cmd := &cobra.Command{
 		Use:     "pull [DB Alias Name]",
@@ -95,6 +96,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Str("filter-from-file", filefilter).
 				Str("table", table).
 				Str("where", where).
+				Uint("parallel", parallel).
 				Msg("Pull mode")
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -151,7 +153,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Distinct: distinct,
 			}
 
-			puller := pull.NewPuller(plan, datasource, pullExporterFactory(out), tracer)
+			puller := pull.NewPullerParallel(plan, datasource, pullExporterFactory(out), tracer, parallel)
 			if e3 := puller.Pull(start, filter, filters); e3 != nil {
 				fmt.Fprintln(err, e3)
 				os.Exit(1)
@@ -171,6 +173,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVarP(&table, "table", "t", "", "pull content of table without relations instead of ingress descriptor definition")
 	cmd.Flags().StringVarP(&where, "where", "w", "", "Advanced SQL where clause to filter")
 	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "pull content using ingress descriptor definition")
+	cmd.Flags().UintVarP(&parallel, "parallel", "p", 1, "number of parallel workers")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

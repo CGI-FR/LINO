@@ -68,9 +68,33 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 
 	defer p.datasource.Close()
 
-	reader, err := p.datasource.RowReader(start, filter)
-	if err != nil {
-		return fmt.Errorf("%w", err)
+	Reset()
+
+	filters := []Filter{}
+	if filterCohort != nil {
+		for filterCohort.Next() {
+			fc := filterCohort.Value()
+			values := Row{}
+			for key, val := range fc {
+				values[key] = val
+			}
+			for key, val := range filter.Values {
+				values[key] = val
+			}
+			filters = append(filters, Filter{
+				Limit:    filter.Limit,
+				Values:   values,
+				Where:    filter.Where,
+				Distinct: filter.Distinct,
+			})
+		}
+	} else {
+		filters = append(filters, Filter{
+			Limit:    filter.Limit,
+			Values:   filter.Values,
+			Where:    filter.Where,
+			Distinct: filter.Distinct,
+		})
 	}
 
 	p.inChan = make(chan Row)
@@ -90,14 +114,24 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 
 	go p.collect(done)
 
-	for reader.Next() {
-		p.inChan <- reader.Value()
-	}
-	close(p.inChan)
+	for _, f := range filters {
+		IncFiltersCount()
 
-	if reader.Error() != nil {
-		return fmt.Errorf("%w", reader.Error())
+		reader, err := p.datasource.RowReader(start, f)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
+		for reader.Next() {
+			p.inChan <- reader.Value()
+		}
+
+		if reader.Error() != nil {
+			return fmt.Errorf("%w", reader.Error())
+		}
 	}
+
+	close(p.inChan)
 
 	wg.Wait()
 	close(p.errChan)

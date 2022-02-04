@@ -143,7 +143,10 @@ func getStats() *stats {
 		return stats
 	}
 	log.Warn().Msg("Statistics uncorrectly initialized")
-	return &stats{}
+	return &stats{
+		LinesPerStepCount: map[string]int{},
+		FiltersCount:      0,
+	}
 }
 
 func Compute() ExecutionStats {

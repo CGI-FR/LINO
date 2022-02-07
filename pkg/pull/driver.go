@@ -228,7 +228,7 @@ func (s *Step) follow(relation Relation, out ExportedRow, currentStep uint) erro
 		case len(exportedRows) == 1:
 			out.Set(string(relation.Name), exportedRows[0])
 		}
-	} else if len(exportedRows) > 0 {
+	} else {
 		out.Set(string(relation.Name), exportedRows)
 	}
 

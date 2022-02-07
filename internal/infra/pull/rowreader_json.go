@@ -29,7 +29,7 @@ import (
 type JSONRowReader struct {
 	file     io.Reader
 	fscanner *bufio.Scanner
-	err      *pull.Error
+	err      error
 	value    *pull.Row
 }
 
@@ -45,14 +45,14 @@ func (jrr *JSONRowReader) Next() bool {
 		var internalValue pull.Row
 		err := json.Unmarshal(line, &internalValue)
 		if err != nil {
-			jrr.err = &pull.Error{Description: err.Error()}
+			jrr.err = err
 			return false
 		}
 		jrr.value = &internalValue
 		return true
 	}
 	if jrr.fscanner.Err() != nil {
-		jrr.err = &pull.Error{Description: jrr.fscanner.Err().Error()}
+		jrr.err = jrr.fscanner.Err()
 	}
 	return false
 }
@@ -65,6 +65,6 @@ func (jrr *JSONRowReader) Value() pull.Row {
 	panic("Value is not valid after iterator finished")
 }
 
-func (jrr *JSONRowReader) Error() *pull.Error {
+func (jrr *JSONRowReader) Error() error {
 	return jrr.err
 }

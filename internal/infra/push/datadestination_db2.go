@@ -22,6 +22,7 @@ package push
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	// import db2 connector
 	_ "github.com/ibmdb/go_ibm_db"
@@ -75,7 +76,7 @@ func (d Db2Dialect) InsertStatement(tableName string, columns []string, values [
 }
 
 // UpdateStatement
-func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {
+func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("UPDATE "))
 	sql.Write([]byte(tableName))
@@ -91,7 +92,7 @@ func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues 
 	if len(primaryKeys) > 0 {
 		sql.Write([]byte(" WHERE "))
 	} else {
-		return "", &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
+		return "", []string{}, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
 	}
 	for index, pk := range primaryKeys {
 		sql.Write([]byte(pk))
@@ -101,7 +102,7 @@ func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues 
 			sql.Write([]byte(" AND "))
 		}
 	}
-	return sql.String(), nil
+	return sql.String(), append(columns, primaryKeys...), nil
 }
 
 // IsDuplicateError check if error is a duplicate error
@@ -112,5 +113,11 @@ func (d Db2Dialect) IsDuplicateError(err error) bool {
 
 // ConvertValue before load
 func (d Db2Dialect) ConvertValue(from push.Value) push.Value {
-	return from
+	// FIXME: Workaround to parse time from json
+	aTime, err := time.Parse("2006-01-02T15:04:05.999Z07:00", fmt.Sprintf("%v", from))
+	if err != nil {
+		return from
+	} else {
+		return aTime
+	}
 }

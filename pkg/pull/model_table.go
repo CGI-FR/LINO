@@ -18,62 +18,94 @@
 package pull
 
 import (
-	"fmt"
-	"strings"
+	"sort"
+
+	"github.com/cgi-fr/jsonline/pkg/jsonline"
+	"github.com/rs/zerolog/log"
 )
 
-type table struct {
-	name    string
-	pk      []string
-	columns ColumnList
-}
+func (t *Table) initTemplate() {
+	t.template = jsonline.NewTemplate()
 
-type columnList struct {
-	len   uint
-	slice []Column
-}
+	if len(t.Columns) > 0 {
+		for _, column := range t.Columns {
+			key := column.Name
 
-// NewTable initialize a new Table object
-func NewTable(name string, pk []string, columns ColumnList) Table {
-	return table{name: name, pk: pk, columns: columns}
-}
-
-func (t table) Name() string         { return t.name }
-func (t table) PrimaryKey() []string { return t.pk }
-func (t table) Columns() ColumnList  { return t.columns }
-func (t table) String() string       { return t.name }
-
-// NewColumnList initialize a new ColumnList object
-func NewColumnList(columns []Column) ColumnList {
-	return columnList{uint(len(columns)), columns}
-}
-
-func (l columnList) Len() uint              { return l.len }
-func (l columnList) Column(idx uint) Column { return l.slice[idx] }
-func (l columnList) String() string {
-	switch l.len {
-	case 0:
-		return ""
-	case 1:
-		return fmt.Sprint(l.slice[0])
+			switch column.Export {
+			case "string":
+				t.template.WithString(key)
+			case "numeric":
+				t.template.WithNumeric(key)
+			case "base64":
+				t.template.WithBinary(key)
+			case "datetime":
+				t.template.WithDateTime(key)
+			case "timestamp":
+				t.template.WithTimestamp(key)
+			case "no":
+				t.template.WithHidden(key)
+			default:
+				t.template.WithAuto(key)
+			}
+		}
 	}
-	sb := strings.Builder{}
-	fmt.Fprintf(&sb, "%v", l.slice[0])
-	for _, rel := range l.slice[1:] {
-		fmt.Fprintf(&sb, " -> %v", rel)
+}
+
+func (t *Table) export(row Row) ExportedRow {
+	if t.template == nil {
+		t.initTemplate()
 	}
-	return sb.String()
+
+	result := ExportedRow{t.template.CreateRowEmpty()}
+	keys := make([]string, 0, len(row))
+
+	if len(t.Columns) > 0 {
+		for _, col := range t.Columns {
+			keys = append(keys, col.Name)
+		}
+	} else {
+		for k := range row {
+			keys = append(keys, k)
+		}
+	}
+
+	sort.Strings(keys) // this is needed to have a consistent output if no columns is defined by configuration
+
+	for _, k := range keys {
+		result.Set(k, row[k])
+	}
+
+	return result
 }
 
-type column struct {
-	name   string
-	export string
+func (t Table) getKeyValues(row ExportedRow) Row {
+	result := Row{}
+	for _, key := range t.Keys {
+		result[key] = row.GetOrNil(key)
+	}
+
+	return result
 }
 
-// NewColumn initialize a new Column object
-func NewColumn(name string, export string) Column {
-	return column{name, export}
+func (t *Table) containsColumn(columnName string) bool {
+	for _, col := range t.Columns {
+		if col.Name == columnName {
+			return true
+		}
+	}
+
+	return false
 }
 
-func (c column) Name() string   { return c.name }
-func (c column) Export() string { return c.export }
+func (t *Table) addMissingColumns(columnNames ...string) {
+	for _, key := range columnNames {
+		if !t.containsColumn(key) {
+			t.Columns = append(t.Columns, Column{Name: key, Export: "no"})
+
+			log.Warn().
+				Str("key", key).
+				Interface("table", t.Name).
+				Msg("missing required key was automatically added as hidden column")
+		}
+	}
+}

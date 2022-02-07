@@ -1,0 +1,57 @@
+tables:
+  A: &A
+    name: A
+    keys: [A_ID]
+  B: &B
+    name: B
+    keys: [B_ID]
+  C: &C
+    name: C
+    keys: [C_ID]
+
+plan:
+  components:
+    A: 0
+    B: 1
+    C: 2
+  relations:
+    - name: AB
+      cardinality: true # = many
+      local:
+        table: *A
+        keys: [B_ID]
+      foreign:
+        table: *B
+        keys: [B_ID]
+    - name: BC
+      cardinality: true # = many
+      local:
+        table: *B
+        keys: [C_ID]
+      foreign:
+        table: *C
+        keys: [C_ID]
+
+dataset:
+  A:
+    - { "A_ID": 10, "B_ID": 20 }
+    - { "A_ID": 11, "B_ID": 21 }
+    - { "A_ID": 12, "B_ID": 22 }
+  B:
+    - { "B_ID": 20, "C_ID": 30 }
+    - { "B_ID": 21, "C_ID": 31 }
+    - { "B_ID": 22, "C_ID": 32 }
+  C:
+    - { "C_ID": 30 }
+    - { "C_ID": 31 }
+    - { "C_ID": 32 }
+
+executions:
+  - start: *A
+    filter:
+      limit: 2
+      values: {}
+      where: ""
+    result:
+      - '{"A_ID":10,"B_ID":20,"AB":[{"B_ID":20,"C_ID":30,"BC":[{"C_ID":30}]}]}'
+      - '{"A_ID":11,"B_ID":21,"AB":[{"B_ID":21,"C_ID":31,"BC":[{"C_ID":31}]}]}'

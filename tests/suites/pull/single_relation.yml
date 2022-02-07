@@ -17,95 +17,95 @@
 
 name: pull single relation
 testcases:
-- name: prepare test
-  steps:
-    # Clean working directory
-    - script: rm -f *
-    - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: lino relation extract source
-    - script: lino table extract source
-    - script: lino id create store
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino relation extract source
+      - script: lino table extract source
+      - script: lino id create store
 
-- name: pull child
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup staff_store_id_fkey true
-    - script: lino pull source --limit 1
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}
-        - result.systemerr ShouldBeEmpty
-    - script: lino id set-child-lookup staff_store_id_fkey false
+  - name: pull child
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup staff_store_id_fkey true
+      - script: lino pull source --limit 1
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"store_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}]}
+          - result.systemerr ShouldBeEmpty
+      - script: lino id set-child-lookup staff_store_id_fkey false
 
-- name: pull child without data
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup store_manager_staff_id_fkey true
-    - script: lino pull source --limit 1
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"store_id":1}
-        - result.systemerr ShouldBeEmpty
-
-- name: pull parent
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-parent-lookup store_address_id_fkey true
-    - script: lino pull source --limit 1
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"store_address_id_fkey":{"address":"47 MySakila Drive","address2":null,"address_id":1,"city_id":300,"district":"Alberta","last_update":"2006-02-15T09:45:30Z","phone":"","postal_code":""},"store_id":1}
-        - result.systemerr ShouldBeEmpty
-
-- name: pull parent without data
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-parent-lookup staff_store_id_fkey true
-    - script: lino pull source --limit 1
-      assertions:
+  - name: pull child without data
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup store_manager_staff_id_fkey true
+      - script: lino pull source --limit 1
+        assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"store_id":1}
           - result.systemerr ShouldBeEmpty
 
-- name: pull both
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup staff_store_id_fkey true
-    - script: lino pull source --limit 1
-      assertions:
+  - name: pull parent
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-parent-lookup store_address_id_fkey true
+      - script: lino pull source --limit 1
+        assertions:
           - result.code ShouldEqual 0
-          - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}
+          - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"store_id":1,"store_address_id_fkey":{"address":"47 MySakila Drive","address2":null,"address_id":1,"city_id":300,"district":"Alberta","last_update":"2006-02-15T09:45:30Z","phone":"","postal_code":""}}
           - result.systemerr ShouldBeEmpty
 
-- name: pull benchmark single table
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup staff_store_id_fkey true
-    - script: lino pull source --limit 500
-      assertions:
+  - name: pull parent without data
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-parent-lookup staff_store_id_fkey true
+      - script: lino pull source --limit 1
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"store_id":1}
+          - result.systemerr ShouldBeEmpty
+
+  - name: pull both
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup staff_store_id_fkey true
+      - script: lino pull source --limit 1
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"store_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}]}
+          - result.systemerr ShouldBeEmpty
+
+  - name: pull benchmark single table
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup staff_store_id_fkey true
+      - script: lino pull source --limit 500
+        assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldBeEmpty
           - result.timeseconds ShouldBeLessThan 1
 
-- name: pull benchmark two tables
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup staff_store_id_fkey true
-    - script: lino id set-parent-lookup staff_store_id_fkey true
-    - script: lino pull source --limit 500
-      assertions:
+  - name: pull benchmark two tables
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup staff_store_id_fkey true
+      - script: lino id set-parent-lookup staff_store_id_fkey true
+      - script: lino pull source --limit 500
+        assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldBeEmpty
           - result.timeseconds ShouldBeLessThan 1
 
-- name: pull round trip
-  steps:
-    - script: lino id create customer
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup customer_store_id_fkey true
-    - script: lino id set-parent-lookup customer_store_id_fkey true
-    - script: lino pull source --limit 1
-      assertions:
+  - name: pull round trip
+    steps:
+      - script: lino id create customer
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup customer_store_id_fkey true
+      - script: lino id set-parent-lookup customer_store_id_fkey true
+      - script: lino pull source --limit 1
+        assertions:
           - result.code ShouldEqual 0
           - result.systemoutjson.customer_id ShouldEqual 1
           - result.systemoutjson.customer_store_id_fkey.store_id ShouldEqual 1
@@ -113,14 +113,14 @@ testcases:
           # - result.systemoutjson.customer_store_id_fkey.customer_store_id_fkey.0 ShouldEqual 1
           - result.systemerr ShouldBeEmpty
 
-- name: pull round trip
-  steps:
-    - script: lino id create customer
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup customer_store_id_fkey true
-    - script: lino id set-parent-lookup customer_store_id_fkey true
-    - script: lino pull source --limit 1
-      assertions:
+  - name: pull round trip
+    steps:
+      - script: lino id create customer
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup customer_store_id_fkey true
+      - script: lino id set-parent-lookup customer_store_id_fkey true
+      - script: lino pull source --limit 1
+        assertions:
           - result.code ShouldEqual 0
           - result.systemoutjson.customer_id ShouldEqual 1
           - result.systemoutjson.customer_store_id_fkey.store_id ShouldEqual 1
@@ -128,65 +128,63 @@ testcases:
           #- result.systemoutjson.customer_store_id_fkey.customer_store_id_fkey.0 ShouldEqual 1
           - result.systemerr ShouldBeEmpty
 
-- name: pull multi relations
-  steps:
-    - script: lino id create store
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-parent-lookup store_manager_staff_id_fkey true
-    - script: lino pull source --limit 1
-      assertions:
+  - name: pull multi relations
+    steps:
+      - script: lino id create store
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-parent-lookup store_manager_staff_id_fkey true
+      - script: lino pull source --limit 1
+        assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldBeEmpty
           - result.systemoutjson.store_id ShouldEqual 1
           - result.systemoutjson.store_manager_staff_id_fkey.staff_id ShouldEqual 1
 
-
-- name: pull single table with no connected relations
-  steps:
-    - script: lino id create customer
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-parent-lookup store_manager_staff_id_fkey true
-    - script: lino pull source --limit 1 -f customer_id=1
-      assertions:
+  - name: pull single table with no connected relations
+    steps:
+      - script: lino id create customer
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-parent-lookup store_manager_staff_id_fkey true
+      - script: lino pull source --limit 1 -f customer_id=1
+        assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldBeEmpty
           - result.systemoutjson.customer_id ShouldEqual 1
 
-- name: pull single table with complex filter
-  steps:
-    - script: lino id create customer
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino pull source --limit 1 -f customer_id=4 -f store_id=2
-      assertions:
+  - name: pull single table with complex filter
+    steps:
+      - script: lino id create customer
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino pull source --limit 1 -f customer_id=4 -f store_id=2
+        assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldBeEmpty
           - result.systemoutjson.customer_id ShouldEqual 4
           - result.systemoutjson.store_id ShouldEqual 2
 
-- name: pull single table with other schema
+  - name: pull single table with other schema
 
-  steps:
-    - script: lino dataconnector add other --schema other postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: lino id create customer
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino -v 5 pull other --limit 1
-      assertions:
+    steps:
+      - script: lino dataconnector add other --schema other postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino id create customer
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino -v 5 pull other --limit 1
+        assertions:
           - result.code ShouldEqual 1
           - result.systemout ShouldBeEmpty
           - result.systemerr ShouldContainSubstring other.customer
 
-- name: pull single table with explicit schema
+  - name: pull single table with explicit schema
 
-  steps:
-    - script: rm -f *
-    - script: lino dataconnector add source --schema public postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: lino relation extract source
-    - script: lino table extract source
-    - script: lino id create customer
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino -v 5 pull source --limit 1
-      assertions:
+    steps:
+      - script: rm -f *
+      - script: lino dataconnector add source --schema public postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino relation extract source
+      - script: lino table extract source
+      - script: lino id create customer
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino -v 5 pull source --limit 1
+        assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
           - result.systemerr ShouldContainSubstring public.customer
-

@@ -15,24 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package pull
 
-import (
-	infra "github.com/cgi-fr/lino/internal/infra/table"
-	domain "github.com/cgi-fr/lino/pkg/table"
-)
-
-func tableStorage() domain.Storage {
-	return infra.NewYAMLStorage()
-}
-
-func tableExtractorFactory() map[string]domain.ExtractorFactory {
-	return map[string]domain.ExtractorFactory{
-		"postgres":   infra.NewPostgresExtractorFactory(),
-		"godror":     infra.NewOracleExtractorFactory(),
-		"godror-raw": infra.NewOracleExtractorFactory(),
-		"mysql":      infra.NewMariadbExtractorFactory(),
-		"db2":        infra.NewDb2ExtractorFactory(),
-		"http":       infra.NewHTTPExtractorFactory(),
+func (g Graph) addMissingColumns(t Table) Table {
+	if len(g.Relations[t.Name]) > 0 {
+		g.Cached[t.Name] = true
 	}
+
+	if len(t.Columns) > 0 {
+		for _, relation := range g.Relations[t.Name] {
+			t.addMissingColumns(relation.Local.Keys...)
+		}
+	}
+
+	return t
 }

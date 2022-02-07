@@ -15,43 +15,41 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-// +build db2
-
 package pull
 
 import (
 	"fmt"
 
-	// import db2 connector
-	_ "github.com/ibmdb/go_ibm_db"
-
 	"github.com/cgi-fr/lino/pkg/pull"
+
+	// import mariadbsql connector
+	_ "github.com/go-sql-driver/mysql"
 )
 
-// Db2DataSourceFactory exposes methods to create new Db2 pullers.
-type Db2DataSourceFactory struct{}
+// MariadbDataSourceFactory exposes methods to create new Mariadb pullers.
+type MariadbDataSourceFactory struct{}
 
-// NewDb2DataSourceFactory creates a new oracle datasource factory.
-func NewDb2DataSourceFactory() *Db2DataSourceFactory {
-	return &Db2DataSourceFactory{}
+// NewMariadbDataSourceFactory creates a new mariadb datasource factory.
+func NewMariadbDataSourceFactory() *MariadbDataSourceFactory {
+	return &MariadbDataSourceFactory{}
 }
 
-// New return a Db2 puller
-func (e *Db2DataSourceFactory) New(url string, schema string) pull.DataSource {
+// New return a Mariadb puller
+func (e *MariadbDataSourceFactory) New(url string, schema string) pull.DataSource {
 	return &SQLDataSource{
 		url:     url,
 		schema:  schema,
-		dialect: Db2Dialect{},
+		dialect: MariadbDialect{},
 	}
 }
 
-// PostgresDialect implement postgres SQL variations
-type Db2Dialect struct{}
+// MariadbDialect implement mariadb SQL variations
+type MariadbDialect struct{}
 
-func (od Db2Dialect) Placeholder(position int) string {
-	return "?"
+func (pd MariadbDialect) Placeholder(position int) string {
+	return " ?"
 }
 
-func (od Db2Dialect) Limit(limit uint) string {
-	return fmt.Sprintf(" FETCH FIRST %d ROWS ONLY", limit)
+func (pd MariadbDialect) Limit(limit uint) string {
+	return fmt.Sprintf(" LIMIT %d", limit)
 }

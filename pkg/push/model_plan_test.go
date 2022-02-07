@@ -63,7 +63,7 @@ func TestOrderTableShouldRespectChildrenFirstParentsLast2(t *testing.T) {
 
 	tables := plan.Tables()
 
-	assert.Equal(t, []push.Table{C, B, D, A}, tables)
+	assert.Contains(t, [][]push.Table{{C, B, D, A}, {C, D, B, A}}, tables)
 }
 
 func TestOrderTableShouldRespectChildrenFirstParentsLast3(t *testing.T) {

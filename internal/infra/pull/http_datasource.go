@@ -105,6 +105,7 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Filter", string(b)) // b = reqbody = filter in JSON format
 
 	if pcols := source.Columns; len(pcols) > 0 {
 		pcolsList := []string{}

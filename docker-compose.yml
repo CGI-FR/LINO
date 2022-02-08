@@ -95,7 +95,7 @@ services:
       - 8080:80
 
   httpmock:
-    image: mockserver/mockserver
+    image: mockserver/mockserver:mockserver-5.11.2
     environment:
       #MOCKSERVER_PROPERTY_FILE: /config/mockserver.properties
       MOCKSERVER_INITIALIZATION_JSON_PATH: /config/default.json

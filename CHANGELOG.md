@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [1.9.1]
+
+- `Fixed` some HTTP library doesn't support a body payload on a HTTP GET request, therefore the HTTP connector will pass the "filter" parameter through the headers in addition to the request body
+
 ## [1.9.0]
 
 - `Added` new verb to extract, to get status and to update sequences

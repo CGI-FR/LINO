@@ -36,10 +36,10 @@ func NewJSONRowExporter(file io.Writer) *JSONRowExporter {
 }
 
 // Export rows in JSON format.
-func (re *JSONRowExporter) Export(r pull.Row) *pull.Error {
+func (re *JSONRowExporter) Export(r pull.ExportedRow) error {
 	jsonString, err := json.Marshal(r)
 	if err != nil {
-		return &pull.Error{Description: err.Error()}
+		return err
 	}
 	fmt.Fprintln(re.file, string(jsonString))
 	return nil

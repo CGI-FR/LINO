@@ -15,24 +15,26 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package pull
 
-import (
-	infra "github.com/cgi-fr/lino/internal/infra/table"
-	domain "github.com/cgi-fr/lino/pkg/table"
-)
-
-func tableStorage() domain.Storage {
-	return infra.NewYAMLStorage()
+// OneOneEmptyRowReader return one empty row
+type OneEmptyRowReader struct {
+	done bool
 }
 
-func tableExtractorFactory() map[string]domain.ExtractorFactory {
-	return map[string]domain.ExtractorFactory{
-		"postgres":   infra.NewPostgresExtractorFactory(),
-		"godror":     infra.NewOracleExtractorFactory(),
-		"godror-raw": infra.NewOracleExtractorFactory(),
-		"mysql":      infra.NewMariadbExtractorFactory(),
-		"db2":        infra.NewDb2ExtractorFactory(),
-		"http":       infra.NewHTTPExtractorFactory(),
-	}
+func NewOneEmptyRowReader() *OneEmptyRowReader {
+	return &OneEmptyRowReader{false}
 }
+
+// Next is always false except for the first one
+func (r *OneEmptyRowReader) Next() bool {
+	result := !r.done
+	r.done = true
+	return result
+}
+
+// Value is always an empty row
+func (r OneEmptyRowReader) Value() Row { return Row{} }
+
+// Error return always nil
+func (r OneEmptyRowReader) Error() error { return nil }

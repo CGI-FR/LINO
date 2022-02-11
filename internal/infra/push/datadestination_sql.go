@@ -192,6 +192,13 @@ func NewSQLRowWriter(table push.Table, dd *SQLDataDestination) *SQLRowWriter {
 // open table writer
 func (rw *SQLRowWriter) open() *push.Error {
 	log.Debug().Msg(fmt.Sprintf("open table with mode %s", rw.dd.mode))
+	if rw.dd.disableConstraints {
+		err2 := rw.disableConstraints()
+		if err2 != nil {
+			return &push.Error{Description: err2.Error()}
+		}
+	}
+
 	if rw.dd.mode == push.Truncate {
 		err := rw.truncate()
 		if err != nil {
@@ -199,14 +206,7 @@ func (rw *SQLRowWriter) open() *push.Error {
 		}
 	}
 
-	if rw.dd.disableConstraints {
-		err2 := rw.disableConstraints()
-		if err2 != nil {
-			return &push.Error{Description: err2.Error()}
-		}
-	}
 	rw.duplicateKeysCache = map[push.Value]struct{}{}
-
 	return nil
 }
 
@@ -274,6 +274,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	var prepareStmt string
 	var pusherr *push.Error
 	log.Debug().Msg(fmt.Sprintf("received mode %s", rw.dd.mode))
+
 	switch {
 	case rw.dd.mode == push.Delete:
 		/* #nosec */
@@ -286,17 +287,17 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 		}
 		rw.headers = pkNames
 	case rw.dd.mode == push.Update:
-		prepareStmt, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey(), pkVar)
+		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, pkNames, pkVar)
 		if pusherr != nil {
 			return pusherr
 		}
-		rw.headers = names
+
 	default: // Insert:
 		/* #nosec */
 		prepareStmt = rw.dd.dialect.InsertStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey())
 		rw.headers = names
 	}
-	log.Debug().Msg(prepareStmt)
+	log.Debug().Strs("headers", rw.headers).Msg(prepareStmt)
 
 	stmt, err := rw.dd.tx.Prepare(prepareStmt)
 	if err != nil {
@@ -317,7 +318,7 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 	for _, h := range rw.headers {
 		values = append(values, rw.dd.dialect.ConvertValue(row[h]))
 	}
-	log.Trace().Msg(fmt.Sprint(values))
+	log.Trace().Strs("headers", rw.headers).Msg(fmt.Sprint(values))
 
 	_, err2 := rw.statement.Exec(values...)
 	if err2 != nil {
@@ -368,7 +369,7 @@ type SQLDialect interface {
 	EnableConstraintsStatement(tableName string) string
 	TruncateStatement(tableName string) string
 	InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string
-	UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error)
+	UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error)
 	IsDuplicateError(error) bool
 	ConvertValue(push.Value) push.Value
 }

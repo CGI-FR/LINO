@@ -15,24 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package pull
 
-import (
-	infra "github.com/cgi-fr/lino/internal/infra/table"
-	domain "github.com/cgi-fr/lino/pkg/table"
-)
-
-func tableStorage() domain.Storage {
-	return infra.NewYAMLStorage()
+type RowExporterCollector struct {
+	Result []ExportedRow
 }
 
-func tableExtractorFactory() map[string]domain.ExtractorFactory {
-	return map[string]domain.ExtractorFactory{
-		"postgres":   infra.NewPostgresExtractorFactory(),
-		"godror":     infra.NewOracleExtractorFactory(),
-		"godror-raw": infra.NewOracleExtractorFactory(),
-		"mysql":      infra.NewMariadbExtractorFactory(),
-		"db2":        infra.NewDb2ExtractorFactory(),
-		"http":       infra.NewHTTPExtractorFactory(),
-	}
+func NewRowExporterCollector() *RowExporterCollector {
+	return &RowExporterCollector{[]ExportedRow{}}
+}
+
+func (re *RowExporterCollector) Export(row ExportedRow) error {
+	re.Result = append(re.Result, row)
+
+	return nil
+}
+
+func (re *RowExporterCollector) Reset() {
+	re.Result = []ExportedRow{}
 }

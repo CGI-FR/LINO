@@ -19,277 +19,174 @@ package pull_test
 
 import (
 	"fmt"
-	"strings"
+	"io/ioutil"
 	"testing"
 
+	"github.com/cgi-fr/jsonline/pkg/jsonline"
 	"github.com/cgi-fr/lino/pkg/pull"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
-func makeTable(name string) pull.Table {
-	return pull.NewTable(name, []string{name + "_ID"}, nil)
+type Execution struct {
+	Start  pull.Table
+	Filter pull.Filter
+	Result []string
 }
 
-func makeRel(from, to pull.Table) pull.Relation {
-	return pull.NewRelation(from.Name()+"->"+to.Name(), from, to, []string{to.Name() + "_ID"}, []string{to.Name() + "_ID"})
+type Test struct {
+	DataSet    pull.DataSet
+	Plan       pull.Plan
+	Executions []Execution
 }
 
-/* func assertFollowedParent(t *testing.T, expected pull.Row, actual pull.Row, followed pull.Relation) []pull.Row {
-	fmt.Printf("assert %v is equal to %v after following %v\n", actual, expected, &followed)
-	cleanActual := pull.Row{}
-	for key, value := range actual {
-		if key != followed.Name && !strings.Contains(key, "->") {
-			cleanActual[key] = value
-		}
-	}
-	assert.Equal(t, expected, cleanActual)
-	assert.NotNil(t, actual[followed.Name()])
-	assert.IsType(t, []pull.Row{}, actual[followed.Name()])
-	return actual[followed.Name()].([]pull.Row)
-} */
+func ToJSON(r pull.Row) string {
+	row, _ := jsonline.NewTemplate().CreateRow(r)
 
-func assertFollowedChild(t *testing.T, expected pull.Row, actual pull.Row, followed pull.Relation) []pull.Row {
-	fmt.Printf("assert %v is equal to %v after following %v\n", actual, expected, followed)
-	cleanActual := pull.Row{}
-	for key, value := range actual {
-		if key != followed.Name() && !strings.Contains(key, "->") {
-			cleanActual[key] = value
+	return row.String()
+}
+
+func LoadTest(filename string) (*Test, error) {
+	yamlFile, err := ioutil.ReadFile("testdata/" + filename)
+	if err != nil {
+		return nil, fmt.Errorf(": %w", err)
+	}
+
+	// nolint: exhaustivestruct
+	test := &Test{}
+
+	err = yaml.Unmarshal(yamlFile, test)
+	if err != nil {
+		return nil, fmt.Errorf(": %w", err)
+	}
+
+	return test, nil
+}
+
+func RunTest(t *testing.T, test *Test) {
+	t.Helper()
+	// over.New(zerolog.New(os.Stderr))
+	collector := pull.NewRowExporterCollector()
+
+	puller := pull.NewPuller(test.Plan, pull.NewDataSourceInMemory(test.DataSet), collector, pull.NoTraceListener{})
+
+	for _, execution := range test.Executions {
+		collector.Reset()
+		assert.NoError(t, puller.Pull(execution.Start, execution.Filter, nil))
+		assert.Len(t, collector.Result, len(execution.Result))
+
+		for i := 0; i < len(execution.Result); i++ {
+			assert.Equal(t, execution.Result[i], collector.Result[i].String())
 		}
 	}
-	assert.Equal(t, expected, cleanActual)
-	assert.NotNil(t, actual[followed.Name()])
-	assert.IsType(t, []pull.Row{}, actual[followed.Name()])
-	return actual[followed.Name()].([]pull.Row)
+}
+
+func RunBench(b *testing.B, test *Test) {
+	b.Helper()
+
+	zerolog.SetGlobalLevel(zerolog.Disabled)
+
+	collector := pull.NewRowExporterCollector()
+
+	puller := pull.NewPuller(test.Plan, pull.NewDataSourceInMemory(test.DataSet), collector, pull.NoTraceListener{})
+
+	for _, execution := range test.Executions {
+		collector.Reset()
+		assert.NoError(b, puller.Pull(execution.Start, execution.Filter, nil))
+		assert.Len(b, collector.Result, len(execution.Result))
+	}
+}
+
+func LoadAndRunTest(t *testing.T, filename string) {
+	t.Helper()
+
+	test, err := LoadTest(filename)
+	assert.NoError(t, err)
+
+	RunTest(t, test)
+}
+
+func TestSimple(t *testing.T) {
+	t.Parallel()
+
+	LoadAndRunTest(t, "simple.yaml")
+}
+
+func TestSimpleWithExport(t *testing.T) {
+	t.Parallel()
+
+	LoadAndRunTest(t, "simple_export.yaml")
+}
+
+func TestCycle(t *testing.T) {
+	t.Parallel()
+
+	LoadAndRunTest(t, "cycle.yaml")
 }
 
 func TestPull1(t *testing.T) {
-	exporter := &MemoryRowExporter{[]pull.Row{}}
+	t.Parallel()
 
-	A := makeTable("A")
-	B := makeTable("B")
-	C := makeTable("C")
-
-	AB := makeRel(A, B)
-	BC := makeRel(B, C)
-
-	step3 := pull.NewStep(3, C, BC, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{}))
-	step2 := pull.NewStep(2, B, AB, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{step3}))
-	step1 := pull.NewStep(1, A, nil, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{step2}))
-
-	plan := pull.NewPlan(
-		pull.NewFilter(2, pull.Row{}, "", false),
-		pull.NewStepList([]pull.Step{step1, step2, step3}),
-	)
-
-	source := map[string][]pull.Row{
-		A.Name(): {
-			{A.PrimaryKey()[0]: 10, AB.ParentKey()[0]: 20},
-			{A.PrimaryKey()[0]: 11, AB.ParentKey()[0]: 21},
-			{A.PrimaryKey()[0]: 12, AB.ParentKey()[0]: 22},
-		},
-		B.Name(): {
-			{B.PrimaryKey()[0]: 20, BC.ParentKey()[0]: 30},
-			{B.PrimaryKey()[0]: 21, BC.ParentKey()[0]: 31},
-			{B.PrimaryKey()[0]: 22, BC.ParentKey()[0]: 32},
-		},
-		C.Name(): {
-			{C.PrimaryKey()[0]: 30},
-			{C.PrimaryKey()[0]: 31},
-			{C.PrimaryKey()[0]: 32},
-		},
-	}
-	datasource := &MemoryDataSource{source}
-
-	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{})
-
-	assert.Nil(t, err)
-	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
-
-	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
-	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
-
-	C1 := assertFollowedChild(t, source[B.Name()][0], B1[0], BC)
-	C2 := assertFollowedChild(t, source[B.Name()][1], B2[0], BC)
-
-	assert.Equal(t, source[C.Name()][0], C1[0])
-	assert.Equal(t, source[C.Name()][1], C2[0])
+	LoadAndRunTest(t, "test1.yaml")
 }
 
 func TestPull2(t *testing.T) {
-	exporter := &MemoryRowExporter{[]pull.Row{}}
+	t.Parallel()
 
-	A := makeTable("A")
-	B := makeTable("B")
-	C := makeTable("C")
-
-	AB := makeRel(A, B)
-	AC := makeRel(A, C)
-
-	step3 := pull.NewStep(3, C, AC, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{}))
-	step2 := pull.NewStep(2, B, AB, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{}))
-	step1 := pull.NewStep(1, A, nil, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{step2, step3}))
-
-	plan := pull.NewPlan(
-		pull.NewFilter(2, pull.Row{}, "", false),
-		pull.NewStepList([]pull.Step{step1, step2, step3}),
-	)
-
-	source := map[string][]pull.Row{
-		A.Name(): {
-			{A.PrimaryKey()[0]: 10, AB.ParentKey()[0]: 20, AC.ParentKey()[0]: 30},
-			{A.PrimaryKey()[0]: 11, AB.ParentKey()[0]: 21, AC.ParentKey()[0]: 31},
-			{A.PrimaryKey()[0]: 12, AB.ParentKey()[0]: 22, AC.ParentKey()[0]: 32},
-		},
-		B.Name(): {
-			{B.PrimaryKey()[0]: 20},
-			{B.PrimaryKey()[0]: 21},
-			{B.PrimaryKey()[0]: 22},
-		},
-		C.Name(): {
-			{C.PrimaryKey()[0]: 30},
-			{C.PrimaryKey()[0]: 31},
-			{C.PrimaryKey()[0]: 32},
-		},
-	}
-	datasource := &MemoryDataSource{source}
-
-	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{})
-
-	assert.Nil(t, err)
-	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
-
-	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
-	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
-
-	assert.Equal(t, source[B.Name()][0], B1[0])
-	assert.Equal(t, source[B.Name()][1], B2[0])
-
-	C1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AC)
-	C2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AC)
-
-	assert.Equal(t, source[C.Name()][0], C1[0])
-	assert.Equal(t, source[C.Name()][1], C2[0])
+	LoadAndRunTest(t, "test2.yaml")
 }
 
 func TestPull3(t *testing.T) {
-	exporter := &MemoryRowExporter{[]pull.Row{}}
+	t.Parallel()
 
-	A := makeTable("A")
-	B := makeTable("B")
-	C := makeTable("C")
-	D := makeTable("D")
-
-	AB := makeRel(A, B)
-	AC := makeRel(A, C)
-	BD := makeRel(B, D)
-	CD := makeRel(C, D)
-
-	step5 := pull.NewStep(5, D, CD, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{}))
-	step4 := pull.NewStep(4, D, BD, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{}))
-	step3 := pull.NewStep(3, C, AC, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{step5}))
-	step2 := pull.NewStep(2, B, AB, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{step4}))
-	step1 := pull.NewStep(1, A, nil, pull.NewRelationList([]pull.Relation{}), pull.NewCycleList([]pull.Cycle{}), pull.NewStepList([]pull.Step{step2, step3}))
-
-	plan := pull.NewPlan(
-		pull.NewFilter(2, pull.Row{}, "", false),
-		pull.NewStepList([]pull.Step{step1, step2, step3, step4, step5}),
-	)
-
-	source := map[string][]pull.Row{
-		A.Name(): {
-			{A.PrimaryKey()[0]: 10, AB.ParentKey()[0]: 20, AC.ParentKey()[0]: 30},
-			{A.PrimaryKey()[0]: 11, AB.ParentKey()[0]: 21, AC.ParentKey()[0]: 31},
-			{A.PrimaryKey()[0]: 12, AB.ParentKey()[0]: 22, AC.ParentKey()[0]: 32},
-		},
-		B.Name(): {
-			{B.PrimaryKey()[0]: 20, BD.ParentKey()[0]: 40},
-			{B.PrimaryKey()[0]: 21, BD.ParentKey()[0]: 41},
-			{B.PrimaryKey()[0]: 22, BD.ParentKey()[0]: 42},
-		},
-		C.Name(): {
-			{C.PrimaryKey()[0]: 30, CD.ParentKey()[0]: 40},
-			{C.PrimaryKey()[0]: 31, CD.ParentKey()[0]: 41},
-			{C.PrimaryKey()[0]: 32, CD.ParentKey()[0]: 42},
-		},
-		D.Name(): {
-			{D.PrimaryKey()[0]: 40},
-			{D.PrimaryKey()[0]: 41},
-			{D.PrimaryKey()[0]: 42},
-		},
-	}
-	datasource := &MemoryDataSource{source}
-
-	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{})
-
-	assert.Nil(t, err)
-	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
-
-	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
-	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
-
-	C1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AC)
-	C2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AC)
-
-	D1 := assertFollowedChild(t, source[B.Name()][0], B1[0], BD)
-	D2 := assertFollowedChild(t, source[B.Name()][1], B2[0], BD)
-	D3 := assertFollowedChild(t, source[C.Name()][0], C1[0], CD)
-	D4 := assertFollowedChild(t, source[C.Name()][1], C2[0], CD)
-
-	assert.Equal(t, source[D.Name()][0], D1[0])
-	assert.Equal(t, source[D.Name()][1], D2[0])
-	assert.Equal(t, source[D.Name()][0], D3[0])
-	assert.Equal(t, source[D.Name()][1], D4[0])
+	LoadAndRunTest(t, "test3.yaml")
 }
 
 func TestPull4(t *testing.T) {
-	exporter := &MemoryRowExporter{[]pull.Row{}}
+	t.Parallel()
 
-	A := makeTable("A")
-	B := makeTable("B")
+	LoadAndRunTest(t, "test4.yaml")
+}
 
-	AB := makeRel(A, B)
-	BA := makeRel(B, A)
+func TestBug1(t *testing.T) {
+	t.Parallel()
 
-	cycle1 := pull.NewRelationList([]pull.Relation{AB, BA})
-	step1 := pull.NewStep(1, A, nil, cycle1, pull.NewCycleList([]pull.Cycle{cycle1}), pull.NewStepList([]pull.Step{}))
+	LoadAndRunTest(t, "bug1.yaml")
+}
 
-	plan := pull.NewPlan(
-		pull.NewFilter(2, pull.Row{}, "", false),
-		pull.NewStepList([]pull.Step{step1}),
-	)
+func BenchmarkSimpleWithComponents(b *testing.B) {
+	test, _ := LoadTest("simple.yaml")
 
-	source := map[string][]pull.Row{
-		A.Name(): {
-			{A.PrimaryKey()[0]: 10, AB.ParentKey()[0]: 20},
-			{A.PrimaryKey()[0]: 11, AB.ParentKey()[0]: 21},
-			{A.PrimaryKey()[0]: 12, AB.ParentKey()[0]: 22},
-		},
-		B.Name(): {
-			{B.PrimaryKey()[0]: 20, BA.ParentKey()[0]: 10},
-			{B.PrimaryKey()[0]: 21, BA.ParentKey()[0]: 11},
-			{B.PrimaryKey()[0]: 22, BA.ParentKey()[0]: 12},
-		},
+	for n := 0; n < b.N; n++ {
+		RunBench(b, test)
 	}
-	datasource := &MemoryDataSource{source}
+}
 
-	err := pull.Pull(plan, pull.NewOneEmptyRowReader(), datasource, exporter, pull.NoTraceListener{})
+func BenchmarkSimpleWithoutComponents(b *testing.B) {
+	test, _ := LoadTest("simple.yaml")
+	test.Plan.Components = map[pull.TableName]uint{}
 
-	/* Expected result
-	map[
-		A_ID:10
-		B_ID:20
-		A->B:map[
-			B_ID:20
-			A_ID:10
-		]
-	] */
+	for n := 0; n < b.N; n++ {
+		RunBench(b, test)
+	}
+}
 
-	assert.Nil(t, err)
-	assert.Len(t, exporter.rows, int(plan.InitFilter().Limit()))
+func BenchmarkOverhead(b *testing.B) {
+	test, _ := LoadTest("simple.yaml")
+	test.Executions = []Execution{}
 
-	B1 := assertFollowedChild(t, source[A.Name()][0], exporter.rows[0], AB)
-	B2 := assertFollowedChild(t, source[A.Name()][1], exporter.rows[1], AB)
+	for n := 0; n < b.N; n++ {
+		RunBench(b, test)
+	}
+}
 
-	assert.Equal(t, source[B.Name()][0], B1[0])
-	assert.Equal(t, source[B.Name()][1], B2[0])
+func BenchmarkOverheadWithoutComponents(b *testing.B) {
+	test, _ := LoadTest("simple.yaml")
+	test.Executions = []Execution{}
+	test.Plan.Components = map[pull.TableName]uint{}
+
+	for n := 0; n < b.N; n++ {
+		RunBench(b, test)
+	}
 }

@@ -17,27 +17,33 @@
 
 package pull
 
-import (
-	"fmt"
-	"strings"
-)
+func (plan Plan) buildGraph() Graph {
+	relations := map[TableName]RelationSet{}
 
-type plan struct {
-	filter Filter
-	steps  StepList
-}
-
-// NewPlan initialize a new Plan object
-func NewPlan(filter Filter, steps StepList) Plan {
-	return plan{filter: filter, steps: steps}
-}
-
-func (p plan) InitFilter() Filter { return p.filter }
-func (p plan) Steps() StepList    { return p.steps }
-func (p plan) String() string {
-	sb := &strings.Builder{}
-	for i := uint(0); i < p.Steps().Len(); i++ {
-		fmt.Fprintf(sb, "%v", p.Steps().Step(i))
+	for _, relation := range plan.Relations {
+		relations[relation.Local.Table.Name] = append(relations[relation.Local.Table.Name], relation)
 	}
-	return sb.String()
+
+	relationsWithMissingColumns := map[TableName]RelationSet{}
+	cached := map[TableName]bool{}
+
+	for _, relation := range plan.Relations {
+		relation.Local.Table.addMissingColumns(relation.Local.Keys...)
+
+		cached[relation.Local.Table.Name] = true
+		if len(relations[relation.Foreign.Table.Name]) > 0 {
+			cached[relation.Foreign.Table.Name] = true
+		}
+
+		if len(relation.Foreign.Table.Columns) > 0 {
+			for _, follow := range relations[relation.Foreign.Table.Name] {
+				relation.Foreign.Table.addMissingColumns(follow.Local.Keys...)
+			}
+		}
+
+		relationsWithMissingColumns[relation.Local.Table.Name] =
+			append(relationsWithMissingColumns[relation.Local.Table.Name], relation)
+	}
+
+	return Graph{Relations: relationsWithMissingColumns, Components: plan.Components, Cached: cached}
 }

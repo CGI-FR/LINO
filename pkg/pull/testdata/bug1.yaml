@@ -1,0 +1,76 @@
+tables:
+  film: &film
+    name: film
+    keys: [film_id]
+    columns:
+      - name: title
+      - name: release_year
+  film_actor: &film_actor
+    name: film_actor
+    keys: [actor_id, film_id]
+    columns:
+      - name: actor_id
+        export: no
+      - name: film_id
+        export: no
+  actor: &actor
+    name: actor
+    keys: [actor_id]
+    columns:
+      - name: first_name
+      - name: last_name
+dataset:
+  film:
+    - { "film_id": 1, "title": "ACADEMY DINOSAUR", "release_year": 2006 }
+  film_actor:
+    - { "film_id": 1, "actor_id": 1 }
+    - { "film_id": 1, "actor_id": 10 }
+    - { "film_id": 1, "actor_id": 20 }
+    - { "film_id": 1, "actor_id": 30 }
+    - { "film_id": 1, "actor_id": 40 }
+    - { "film_id": 1, "actor_id": 53 }
+    - { "film_id": 1, "actor_id": 108 }
+    - { "film_id": 1, "actor_id": 162 }
+    - { "film_id": 1, "actor_id": 188 }
+    - { "film_id": 1, "actor_id": 198 }
+  actor:
+    - { "actor_id": 1, "first_name": "PENELOPE", "last_name": "GUINESS" }
+    - { "actor_id": 10, "first_name": "CHRISTIAN", "last_name": "GABLE" }
+    - { "actor_id": 20, "first_name": "LUCILLE", "last_name": "TRACY" }
+    - { "actor_id": 30, "first_name": "SANDRA", "last_name": "PECK" }
+    - { "actor_id": 40, "first_name": "JOHNNY", "last_name": "CAGE" }
+    - { "actor_id": 53, "first_name": "MENA", "last_name": "TEMPLE" }
+    - { "actor_id": 108, "first_name": "WARREN", "last_name": "NOLTE" }
+    - { "actor_id": 162, "first_name": "OPRAH", "last_name": "KILMER" }
+    - { "actor_id": 188, "first_name": "ROCK", "last_name": "DUKAKIS" }
+    - { "actor_id": 198, "first_name": "MARY", "last_name": "KEITEL" }
+plan:
+  components:
+    film: 0
+    film_actor: 0
+    actor: 0
+  relations:
+    - name: actors
+      cardinality: true # = many
+      local:
+        table: *film
+        keys: [film_id]
+      foreign:
+        table: *film_actor
+        keys: [film_id]
+    - name: actor
+      cardinality: false # = single
+      local:
+        table: *film_actor
+        keys: [actor_id]
+      foreign:
+        table: *actor
+        keys: [actor_id]
+executions:
+  - start: *film
+    filter:
+      limit: 1
+      values: {}
+      where: ""
+    result:
+      - '{"title":"ACADEMY DINOSAUR","release_year":2006,"actors":[{"actor":{"first_name":"PENELOPE","last_name":"GUINESS"}},{"actor":{"first_name":"CHRISTIAN","last_name":"GABLE"}},{"actor":{"first_name":"LUCILLE","last_name":"TRACY"}},{"actor":{"first_name":"SANDRA","last_name":"PECK"}},{"actor":{"first_name":"JOHNNY","last_name":"CAGE"}},{"actor":{"first_name":"MENA","last_name":"TEMPLE"}},{"actor":{"first_name":"WARREN","last_name":"NOLTE"}},{"actor":{"first_name":"OPRAH","last_name":"KILMER"}},{"actor":{"first_name":"ROCK","last_name":"DUKAKIS"}},{"actor":{"first_name":"MARY","last_name":"KEITEL"}}]}'

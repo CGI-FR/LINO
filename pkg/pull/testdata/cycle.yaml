@@ -1,0 +1,28 @@
+tables:
+  employees: &employees
+    name: employees
+    keys: [id]
+dataset:
+  # prettier-ignore
+  employees:
+    - {"id": 0, "first_name": "Harrison", "last_name": "Ford", "id_manager": 1}
+    - {"id": 1, "first_name": "Carrie", "last_name": "Fisher", "id_manager": 2}
+    - {"id": 2, "first_name": "Georges", "last_name": "Lucas", "id_manager": 0}
+plan:
+  relations:
+    - name: manager
+      cardinality: false # = single
+      local:
+        table: *employees
+        keys: [id_manager]
+      foreign:
+        table: *employees
+        keys: [id]
+executions:
+  - start: *employees
+    filter:
+      limit: 0
+      values: { "first_name": "Harrison" }
+      where: ""
+    result:
+      - '{"first_name":"Harrison","id":0,"id_manager":1,"last_name":"Ford","manager":{"first_name":"Carrie","id":1,"id_manager":2,"last_name":"Fisher","manager":{"first_name":"Georges","id":2,"id_manager":0,"last_name":"Lucas"}}}'

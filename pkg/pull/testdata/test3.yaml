@@ -1,0 +1,81 @@
+tables:
+  A: &A
+    name: A
+    keys: [A_ID]
+  B: &B
+    name: B
+    keys: [B_ID]
+  C: &C
+    name: C
+    keys: [C_ID]
+  D: &D
+    name: D
+    keys: [D_ID]
+
+plan:
+  components:
+    A: 0
+    B: 1
+    C: 2
+    D: 3
+  relations:
+    - name: AB
+      cardinality: true # = many
+      local:
+        table: *A
+        keys: [B_ID]
+      foreign:
+        table: *B
+        keys: [B_ID]
+    - name: AC
+      cardinality: true # = many
+      local:
+        table: *A
+        keys: [C_ID]
+      foreign:
+        table: *C
+        keys: [C_ID]
+    - name: BD
+      cardinality: true # = many
+      local:
+        table: *B
+        keys: [D_ID]
+      foreign:
+        table: *D
+        keys: [D_ID]
+    - name: CD
+      cardinality: true # = many
+      local:
+        table: *C
+        keys: [D_ID]
+      foreign:
+        table: *D
+        keys: [D_ID]
+
+dataset:
+  A:
+    - { "A_ID": 10, "B_ID": 20, "C_ID": 30 }
+    - { "A_ID": 11, "B_ID": 21, "C_ID": 31 }
+    - { "A_ID": 12, "B_ID": 22, "C_ID": 32 }
+  B:
+    - { "B_ID": 20, "D_ID": 40 }
+    - { "B_ID": 21, "D_ID": 41 }
+    - { "B_ID": 22, "D_ID": 42 }
+  C:
+    - { "C_ID": 30, "D_ID": 40 }
+    - { "C_ID": 31, "D_ID": 41 }
+    - { "C_ID": 32, "D_ID": 42 }
+  D:
+    - { "D_ID": 40 }
+    - { "D_ID": 41 }
+    - { "D_ID": 42 }
+
+executions:
+  - start: *A
+    filter:
+      limit: 2
+      values: {}
+      where: ""
+    result:
+      - '{"A_ID":10,"B_ID":20,"C_ID":30,"AB":[{"B_ID":20,"D_ID":40,"BD":[{"D_ID":40}]}],"AC":[{"C_ID":30,"D_ID":40,"CD":[{"D_ID":40}]}]}'
+      - '{"A_ID":11,"B_ID":21,"C_ID":31,"AB":[{"B_ID":21,"D_ID":41,"BD":[{"D_ID":41}]}],"AC":[{"C_ID":31,"D_ID":41,"CD":[{"D_ID":41}]}]}'

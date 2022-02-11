@@ -109,11 +109,13 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPullerPlan(initialFilters, limit, where, distinct, idStorageFactory(table, ingressDescriptor))
+			plan, start, e2 := getPullerPlan(idStorageFactory(table, ingressDescriptor))
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(1)
 			}
+
+			log.Debug().Interface("start", start).Msg("pull plan is complete")
 
 			var tracer pull.TraceListener
 
@@ -135,10 +137,23 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 					os.Exit(1)
 				}
 				filters = rowReaderFactory(filterReader)
+				log.Trace().Str("file", filefilter).Msg("reading file")
 			}
-			e3 := pull.Pull(plan, filters, datasource, pullExporterFactory(out), tracer)
-			if e3 != nil {
-				fmt.Fprintln(err, e3.Error())
+
+			row := pull.Row{}
+			for column, value := range initialFilters {
+				row[column] = value
+			}
+			filter := pull.Filter{
+				Limit:    limit,
+				Values:   row,
+				Where:    where,
+				Distinct: distinct,
+			}
+
+			puller := pull.NewPuller(plan, datasource, pullExporterFactory(out), tracer)
+			if e3 := puller.Pull(start, filter, filters); e3 != nil {
+				fmt.Fprintln(err, e3)
 				os.Exit(1)
 			}
 
@@ -162,247 +177,46 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	return cmd
 }
 
-func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, *pull.Error) {
+func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, error) {
 	alias, e1 := dataconnector.Get(dataconnectorStorage, dataconnectorName)
 	if e1 != nil {
-		return nil, &pull.Error{Description: e1.Error()}
+		return nil, e1
 	}
 	if alias == nil {
-		return nil, &pull.Error{Description: fmt.Sprintf("Data Connector %s not found", dataconnectorName)}
+		return nil, fmt.Errorf("Data Connector %s not found", dataconnectorName)
 	}
 
 	u := urlbuilder.BuildURL(alias, out)
 
 	datasourceFactory, ok := dataSourceFactories[u.Unaliased]
 	if !ok {
-		return nil, &pull.Error{Description: "no datasource found for database type"}
+		return nil, fmt.Errorf("no datasource found for database type")
 	}
 
 	return datasourceFactory.New(u.URL.String(), alias.Schema), nil
 }
 
-func getPullerPlan(initialFilters map[string]string, limit uint, where string, distinct bool, idStorage id.Storage) (pull.Plan, *pull.Error) {
+func getPullerPlan(idStorage id.Storage) (pull.Plan, pull.Table, error) {
 	ep, err1 := id.GetPullerPlan(idStorage)
 	if err1 != nil {
-		return nil, &pull.Error{Description: err1.Error()}
+		return pull.Plan{}, pull.Table{}, err1
 	}
 
 	relations, err2 := relStorage.List()
 	if err2 != nil {
-		return nil, &pull.Error{Description: err2.Error()}
+		return pull.Plan{}, pull.Table{}, err2
 	}
 
 	tables, err3 := tabStorage.List()
 	if err3 != nil {
-		return nil, &pull.Error{Description: err3.Error()}
+		return pull.Plan{}, pull.Table{}, err3
 	}
-	var filter pull.Filter
 
-	stepList, err4 := getStepList(ep, relations, tables)
-
+	builder := newBuilder(ep, relations, tables)
+	plan, startTable, err4 := builder.plan()
 	if err4 != nil {
-		return nil, &pull.Error{Description: err4.Error()}
+		return pull.Plan{}, pull.Table{}, err4
 	}
 
-	row := pull.Row{}
-	for column, value := range initialFilters {
-		row[column] = value
-	}
-	filter = pull.NewFilter(limit, row, where, distinct)
-
-	return pull.NewPlan(filter, stepList), nil
-}
-
-func getStepList(ep id.PullerPlan, relations []relation.Relation, tables []table.Table) (pull.StepList, error) {
-	rmap := map[string]relation.Relation{}
-	for _, relation := range relations {
-		rmap[relation.Name] = relation
-	}
-
-	tmap := map[string]table.Table{}
-	for _, table := range tables {
-		tmap[table.Name] = table
-	}
-
-	smap := []id.Step{}
-	for idx := uint(0); idx < ep.Len(); idx++ {
-		smap = append(smap, ep.Step(idx))
-	}
-
-	log.Debug().Msg(fmt.Sprintf("there is %v step(s) to build", ep.Len()))
-
-	converter := epToStepListConverter{
-		rmap:   rmap,
-		tmap:   tmap,
-		smap:   smap,
-		exrmap: map[string]pull.Relation{},
-		extmap: map[string]pull.Table{},
-		exsmap: map[uint]pull.Step{},
-	}
-	steps, err := converter.getSteps()
-	if err != nil {
-		return nil, err
-	}
-	log.Debug().Msg(fmt.Sprintf("finished building %v step(s) with success", ep.Len()))
-	return steps, nil
-}
-
-type epToStepListConverter struct {
-	rmap map[string]relation.Relation
-	tmap map[string]table.Table
-	smap []id.Step
-
-	exrmap map[string]pull.Relation
-	extmap map[string]pull.Table
-	exsmap map[uint]pull.Step
-}
-
-func (c epToStepListConverter) getTable(name string) pull.Table {
-	if extable, ok := c.extmap[name]; ok {
-		return extable
-	}
-
-	table, ok := c.tmap[name]
-	if !ok {
-		log.Warn().Msg(fmt.Sprintf("missing table %v in tables.yaml", name))
-		return pull.NewTable(name, []string{}, nil)
-	}
-
-	log.Trace().Msg(fmt.Sprintf("building table %v", table))
-
-	columns := []pull.Column{}
-	for _, col := range table.Columns {
-		columns = append(columns, pull.NewColumn(col.Name, col.Export))
-	}
-
-	return pull.NewTable(table.Name, table.Keys, pull.NewColumnList(columns))
-}
-
-func (c epToStepListConverter) getRelation(name string) (pull.Relation, error) {
-	if exrelation, ok := c.exrmap[name]; ok {
-		return exrelation, nil
-	}
-
-	if name == "" {
-		return pull.NewRelation(name, nil, nil, []string{}, []string{}), nil
-	}
-
-	relation, ok := c.rmap[name]
-	if !ok {
-		err := fmt.Errorf("missing relation '%s' in relations.yaml", name)
-		log.Error().Err(err).Msg("")
-		return nil, err
-	}
-
-	log.Trace().Msg(fmt.Sprintf("building relation %v", relation))
-
-	return pull.NewRelation(
-		relation.Name,
-		c.getTable(relation.Parent.Name),
-		c.getTable(relation.Child.Name),
-		relation.Parent.Keys,
-		relation.Child.Keys,
-	), nil
-}
-
-func (c epToStepListConverter) getRelationList(relations id.IngressRelationList) (pull.RelationList, error) {
-	exrelations := []pull.Relation{}
-	for idx := uint(0); idx < relations.Len(); idx++ {
-		rel, err := c.getRelation(relations.Relation(idx).Name())
-		if err != nil {
-			return nil, err
-		}
-		exrelations = append(exrelations, rel)
-	}
-	return pull.NewRelationList(exrelations), nil
-}
-
-func (c epToStepListConverter) getCycleList(cycles id.CycleList) (pull.CycleList, error) {
-	excycles := []pull.Cycle{}
-	for idx := uint(0); idx < cycles.Len(); idx++ {
-		rel, err := c.getRelationList(cycles.Cycle(idx))
-		if err != nil {
-			return nil, err
-		}
-		excycles = append(excycles, rel)
-	}
-	return pull.NewCycleList(excycles), nil
-}
-
-func (c epToStepListConverter) getStepList(previousStep uint) (pull.StepList, error) {
-	exsteps := []pull.Step{}
-	for _, step := range c.smap {
-		if step.PreviousStep() == previousStep {
-			step, err := c.getStep(step.Index())
-			if err != nil {
-				return nil, err
-			}
-			exsteps = append(exsteps, step)
-		}
-	}
-	return pull.NewStepList(exsteps), nil
-}
-
-func (c epToStepListConverter) getStep(idx uint) (pull.Step, error) {
-	if exstep, ok := c.exsmap[idx]; ok {
-		return exstep, nil
-	}
-
-	step := c.smap[idx-1]
-
-	log.Trace().Msg(fmt.Sprintf("building %v", step))
-
-	var exstep pull.Step
-	rel, err := c.getRelation(step.Following().Name())
-	if err != nil {
-		return nil, err
-	}
-	relList, err := c.getRelationList(step.Relations())
-	if err != nil {
-		return nil, err
-	}
-	cycleList, err := c.getCycleList(step.Cycles())
-	if err != nil {
-		return nil, err
-	}
-
-	stepList, err := c.getStepList(step.Index())
-	if err != nil {
-		return nil, err
-	}
-	if step.Index() > 1 {
-		exstep = pull.NewStep(
-			step.Index(),
-			c.getTable(step.Entry().Name()),
-			rel,
-			relList,
-			cycleList,
-			stepList,
-		)
-	} else {
-		exstep = pull.NewStep(
-			step.Index(),
-			c.getTable(step.Entry().Name()),
-			nil,
-			relList,
-			cycleList,
-			stepList,
-		)
-	}
-
-	c.exsmap[idx] = exstep
-
-	return exstep, nil
-}
-
-func (c epToStepListConverter) getSteps() (pull.StepList, error) {
-	exsteps := []pull.Step{}
-	for _, step := range c.smap {
-		step, err := c.getStep(step.Index())
-		if err != nil {
-			return nil, err
-		}
-		exsteps = append(exsteps, step)
-	}
-	return pull.NewStepList(exsteps), nil
+	return plan, startTable, nil
 }

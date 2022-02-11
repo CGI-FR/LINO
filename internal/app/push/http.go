@@ -20,6 +20,7 @@ package push
 import (
 	"fmt"
 	"html"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -93,7 +94,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode, ingressDesc
 	}
 
 	if query.Get("commitsize") != "" {
-		commitsize64, ecommitsize := strconv.ParseUint(query.Get("commitsize"), 10, 64)
+		commitsize64, ecommitsize := strconv.ParseUint(query.Get("commitsize"), 10, 32)
 		if ecommitsize != nil {
 			log.Error().Err(ecommitsize).Msg("can't parse commitsize")
 			w.WriteHeader(http.StatusBadRequest)
@@ -104,7 +105,12 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode, ingressDesc
 			}
 			return
 		}
-		commitSize = uint(commitsize64)
+		// CWE-190 CWE-681
+		if commitsize64 <= math.MaxInt32 {
+			commitSize = uint(commitsize64)
+		} else {
+			commitSize = math.MaxInt32
+		}
 	}
 
 	if query.Get("disable-constraints") != "" {

@@ -22,6 +22,10 @@ Types of changes
 - `Changed` order of keys in output JSON lines will be alphabetical when pulling (without configuration in tables.yaml).
 - `Fixed` limit keyword on DB2 dialect.
 
+## [1.9.2]
+
+- `Fixed` charset on Content-Type header when pushing to HTTP connector backend
+
 ## [1.9.1]
 
 - `Fixed` some HTTP library doesn't support a body payload on a HTTP GET request, therefore the HTTP connector will pass the "filter" parameter through the headers in addition to the request body

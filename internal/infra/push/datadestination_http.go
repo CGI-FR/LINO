@@ -117,7 +117,7 @@ func (dd *HTTPDataDestination) RowWriter(table push.Table) (push.RowWriter, *pus
 	if err != nil {
 		return nil, &push.Error{Description: err.Error()}
 	}
-	req.Header.Add("Content-Type", "application/x-ndjson")
+	req.Header.Add("Content-Type", "application/x-ndjson; charset=utf-8")
 	req.Header.Add("Primary-Keys", pkeysJSON)
 
 	rw = NewHTTPRowWriter(table, dd, req, pw)

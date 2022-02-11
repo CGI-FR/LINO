@@ -35,6 +35,7 @@ type pullerParallel struct {
 	errChan   chan error
 	outChan   chan ExportedRow
 	errors    []error
+	stats     chan stats
 }
 
 func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, diagnostic TraceListener, nbworkers uint) Puller { //nolint:lll
@@ -53,6 +54,7 @@ func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, d
 			errChan:   nil,
 			outChan:   nil,
 			errors:    nil,
+			stats:     nil,
 		}
 	}
 
@@ -67,8 +69,6 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 	}
 
 	defer p.datasource.Close()
-
-	Reset()
 
 	filters := []Filter{}
 	if filterCohort != nil {
@@ -101,6 +101,7 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 	p.errChan = make(chan error)
 	p.outChan = make(chan ExportedRow)
 	p.errors = []error{}
+	p.stats = make(chan stats, p.nbworkers)
 
 	wg := &sync.WaitGroup{}
 
@@ -111,18 +112,17 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 	}
 
 	done := make(chan struct{})
-
 	go p.collect(done)
-
+	Reset()
 	for _, f := range filters {
 		IncFiltersCount()
-
 		reader, err := p.datasource.RowReader(start, f)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
 		for reader.Next() {
+			IncLinesPerStepCount(string(start.Name))
 			p.inChan <- reader.Value()
 		}
 
@@ -133,9 +133,14 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 
 	close(p.inChan)
 
+	for idx := 0; idx < int(p.nbworkers); idx++ {
+		MutualizeStats(<-p.stats)
+	}
+
 	wg.Wait()
 	close(p.errChan)
 	close(p.outChan)
+	close(p.stats)
 
 	<-done
 
@@ -147,39 +152,39 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 }
 
 func (p *pullerParallel) worker(ctx context.Context, wg *sync.WaitGroup, id uint, start Table) {
+	Reset()
+
 	over.MDC().Set("workerid", id)
 	over.AddGlobalFields("workerid")
 	log.Debug().Msg("start worker")
-
 	defer wg.Done()
 	defer log.Debug().Msg("end worker")
 
 LOOP:
 	for p.inChan != nil {
 		log.Debug().Msg("waiting for row")
-
 		select {
 		case row, ok := <-p.inChan:
 			if !ok {
 				break LOOP
 			}
-
 			log.Debug().Msg("received row")
 
 			out := start.export(row)
-
 			err := p.pull(start, out)
 			if err != nil {
 				p.errChan <- err
 			} else {
 				p.outChan <- out
-
 				log.Debug().Msg("exported row")
 			}
+
 		case <-ctx.Done():
 			break LOOP
 		}
 	}
+
+	p.stats <- *getStats()
 }
 
 func (p *pullerParallel) collect(done chan<- struct{}) {

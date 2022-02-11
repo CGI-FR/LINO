@@ -34,7 +34,7 @@ testcases:
       - script: lino pull -v 5 source --where "address_id > 13" --log-json
         assertions:
           - result.code ShouldEqual 0
-          - result.systemerr ShouldContainSubstring {"level":"info","limit":1,"filter":{},"diagnostic":false,"distinct":false,"filter-from-file":"","table":"","where":"address_id > 13","message":"Pull mode"}
+          - result.systemerr ShouldContainSubstring {"level":"info","limit":1,"filter":{},"diagnostic":false,"distinct":false,"filter-from-file":"","table":"","where":"address_id > 13","parallel":1,"message":"Pull mode"}
 
   - name: pull with filter from file and where clause
     steps:
@@ -44,3 +44,12 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldContainSubstring {"level":"info","stats":{"linesPerStepCount":{"customer":1},"filtersCount":1},"return":0
+
+  - name: pull with json logs with 2 workers
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup payment_customer_id_fkey true
+      - script: lino pull -v info source -p 2 --log-json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldContainSubstring {"level":"info","stats":{"linesPerStepCount":{"customer":1,"payment_customer_id_fkey":32},"filtersCount":2},"return":0

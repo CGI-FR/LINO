@@ -14,14 +14,6 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
-## [2.0.0] (Ureleased)
-
-- `Added` configuration of exported columns in tables.yaml, see issue #33 for more information.
-- `Added` MariaDB/MySQL support (thanks to @joaking85).
-- `Added` auto-select columns required by a relation but not exported in tables.yaml.
-- `Changed` order of keys in output JSON lines will be alphabetical when pulling (without configuration in tables.yaml).
-- `Fixed` limit keyword on DB2 dialect.
-
 ## [1.9.2]
 
 - `Fixed` charset on Content-Type header when pushing to HTTP connector backend

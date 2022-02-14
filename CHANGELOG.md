@@ -21,6 +21,7 @@ Types of changes
 - `Added` auto-select columns required by a relation but not exported in tables.yaml.
 - `Changed` order of keys in output JSON lines will be alphabetical when pulling (without configuration in tables.yaml).
 - `Fixed` limit keyword on DB2 dialect.
+- `Fixed` Push truncate respect child/parent constraint order.
 
 ## [1.9.2]
 

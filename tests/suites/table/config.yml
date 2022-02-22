@@ -284,3 +284,61 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldBeEmpty
+
+  - name: remove column
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+              columns:
+                - name: birth_date
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                  export: string
+                - name: birth_date
+                  export: datetime
+                  import: string
+                - name: last_name
+            - name: other.table2
+              keys:
+                - id
+              columns:
+                - name: birth_date
+          EOF
+      - script: |-
+          cat  > expected.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+              columns:
+                - name: birth_date
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                  export: string
+                - name: last_name
+            - name: other.table2
+              keys:
+                - id
+              columns:
+                - name: birth_date
+          EOF
+      - script: lino table remove-column public.actor birth_date
+        assertions:
+          - result.systemout ShouldEqual "successfully removed column birth_date from public.actor table"
+          - result.code ShouldEqual 0
+      - script: diff expected.yaml tables.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty

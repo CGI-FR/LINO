@@ -49,6 +49,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Aliases: []string{"tab"},
 	}
 	cmd.AddCommand(newExtractCommand(fullName, err, out, in))
+	cmd.AddCommand(newAddColumnCommand(fullName, err, out, in))
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

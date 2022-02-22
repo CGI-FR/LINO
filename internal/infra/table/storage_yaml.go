@@ -44,8 +44,8 @@ type YAMLTable struct {
 // YAMLColumn defines how to store a column in YAML format.
 type YAMLColumn struct {
 	Name   string `yaml:"name"`
-	Export string `yaml:"export"`
-	Import string `yaml:"import"`
+	Export string `yaml:"export,omitempty"`
+	Import string `yaml:"import,omitempty"`
 }
 
 // YAMLStorage provides storage in a local YAML file

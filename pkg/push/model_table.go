@@ -19,13 +19,19 @@ package push
 
 import (
 	"fmt"
+	"os"
 	"strings"
+
+	"github.com/cgi-fr/jsonline/pkg/jsonline"
+	"github.com/rs/zerolog/log"
 )
 
 type table struct {
 	name    string
 	pk      []string
 	columns ColumnList
+
+	template jsonline.Template
 }
 
 // NewTable initialize a new Table object
@@ -77,3 +83,53 @@ func NewColumn(name string, imp string) Column {
 
 func (c column) Name() string   { return c.name }
 func (c column) Import() string { return c.imp }
+
+type ImportedRow struct {
+	jsonline.Row
+}
+
+func (t *table) initTemplate() {
+	t.template = jsonline.NewTemplate()
+
+	if t.columns == nil {
+		return
+	}
+
+	if l := int(t.columns.Len()); l > 0 {
+		for idx := 0; idx < l; idx++ {
+			col := t.columns.Column(uint(idx))
+			key := col.Name()
+
+			switch col.Import() {
+			case "string":
+				t.template.WithString(key)
+			case "numeric":
+				t.template.WithNumeric(key)
+			case "base64":
+				t.template.WithBinary(key)
+			case "datetime":
+				t.template.WithDateTime(key)
+			case "timestamp":
+				t.template.WithTimestamp(key)
+			case "no":
+				t.template.WithHidden(key)
+			default:
+				t.template.WithAuto(key)
+			}
+		}
+	}
+}
+
+func (t table) Import(row map[string]interface{}) ImportedRow {
+	if t.template == nil {
+		t.initTemplate()
+	}
+
+	result := ImportedRow{t.template.CreateRowEmpty()}
+	err := result.Import(row)
+	if err != nil {
+		log.Err(err).Msg("End pimo")
+		os.Exit(4)
+	}
+	return result
+}

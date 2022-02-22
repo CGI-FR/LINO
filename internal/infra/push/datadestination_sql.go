@@ -314,9 +314,13 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 		return err1
 	}
 
+	importedRow := rw.table.Import(row)
 	values := []interface{}{}
 	for _, h := range rw.headers {
-		values = append(values, rw.dd.dialect.ConvertValue(row[h]))
+		value := importedRow.GetOrNil(h)
+
+		v := rw.dd.dialect.ConvertValue(value)
+		values = append(values, v)
 	}
 	log.Trace().Strs("headers", rw.headers).Msg(fmt.Sprint(values))
 

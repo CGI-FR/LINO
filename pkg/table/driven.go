@@ -25,6 +25,7 @@ type ExtractorFactory interface {
 // Extractor allows to extract primary keys from a relational database.
 type Extractor interface {
 	Extract() ([]Table, *Error)
+	Count(tableName string) (int, *Error)
 }
 
 // Storage allows to store and retrieve Relations objects.

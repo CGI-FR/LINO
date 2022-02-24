@@ -77,6 +77,8 @@ func (e *HTTPExtractor) Extract() ([]table.Table, *table.Error) {
 	return container.Tables, nil
 }
 
+func (e *HTTPExtractor) Count(tableName string) (int, *table.Error) { return 1, nil }
+
 // NewHTTPExtractorFactory creates a new HTTP extractor factory.
 func NewHTTPExtractorFactory() *HTTPExtractorFactory {
 	return &HTTPExtractorFactory{}

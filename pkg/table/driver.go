@@ -32,6 +32,23 @@ func Extract(e Extractor, s Storage) *Error {
 	return nil
 }
 
+// Count ligne in table `tableName`
+func Count(s Storage, e Extractor) (map[string]int, *Error) {
+	tables, err := s.List()
+	if err != nil {
+		return nil, err
+	}
+
+	result := map[string]int{}
+	for _, table := range tables {
+		result[table.Name], err = e.Count(table.Name)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
+}
+
 // AddOrUpdateColumn will update table definitions with given export and import types, it will add the column if necessary
 func AddOrUpdateColumn(s Storage, tableName, columnName, exportType, importType string) (int, *Error) {
 	tables, err := s.List()

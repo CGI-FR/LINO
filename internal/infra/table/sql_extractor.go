@@ -92,3 +92,39 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 
 	return tables, nil
 }
+
+func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
+	db, err := dburl.Open(e.url)
+	if err != nil {
+		return 0, &table.Error{Description: err.Error()}
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		return 0, &table.Error{Description: err.Error()}
+	}
+
+	SQL := `SELECT COUNT(*) FROM ` + tableName
+
+	rows, err := db.Query(SQL)
+	if err != nil {
+		return 0, &table.Error{Description: err.Error()}
+	}
+
+	var count int
+
+	for rows.Next() {
+		err := rows.Scan(&count)
+		if err != nil {
+			return 0, &table.Error{Description: err.Error()}
+		}
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return 0, &table.Error{Description: err.Error()}
+	}
+
+	return count, nil
+}

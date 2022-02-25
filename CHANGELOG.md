@@ -21,6 +21,7 @@ Types of changes
 - `Added` MariaDB/MySQL support (thanks to @joaking85)
 - `Added` auto-select columns required by a relation but not exported in tables.yaml
 - `Added` new commands to configure tables : add-column and remove-column
+- `Added` New command to count lines in tables
 - `Fixed` limit keyword on DB2 dialect
 - `Fixed` Push truncate respect child/parent constraint order
 

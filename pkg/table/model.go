@@ -39,3 +39,9 @@ type Error struct {
 func (e *Error) Error() string {
 	return e.Description
 }
+
+// TableCount is the number of lines in a table
+type TableCount struct {
+	Table Table
+	Count int
+}

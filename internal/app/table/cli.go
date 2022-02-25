@@ -51,6 +51,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.AddCommand(newExtractCommand(fullName, err, out, in))
 	cmd.AddCommand(newAddColumnCommand(fullName, err, out, in))
 	cmd.AddCommand(newRemoveColumnCommand(fullName, err, out, in))
+	cmd.AddCommand(newCountCommand(fullName, err, out, in))
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

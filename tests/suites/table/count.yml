@@ -1,0 +1,53 @@
+# Copyright (C) 2022 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
+name: table count
+testcases:
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino table extract source
+
+  - name: count elements in source
+    steps:
+      - script: lino table count source
+        assertions:
+          - result.code ShouldEqual 0
+          - "result.systemout ShouldContainSubstring film: 1000"
+          - result.systemerr ShouldBeEmpty
+
+  - name: http connector
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: cp ../../httpmock/default.json ..
+      - script: sudo docker-compose -p lino stop httpmock
+      - script: sudo docker-compose -p lino rm -f httpmock
+      - script: sudo docker-compose -p lino up -d httpmock
+      - script: lino dataconnector add http http://httpmock:1080/api/v1
+      - script: count=0; while ! lino dc ping http; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
+      - script: lino table extract http
+
+  - name: count elements in source
+    steps:
+      - script: lino table count http
+        assertions:
+          - result.code ShouldEqual 0
+          - "result.systemout ShouldContainSubstring CATALOG: 1223"
+          - result.systemerr ShouldBeEmpty

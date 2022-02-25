@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/ibmdb/go_ibm_db v0.4.1
 	github.com/jmoiron/sqlx v1.3.4
-	github.com/lib/pq v1.10.3
+	github.com/lib/pq v1.10.4
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.25.0

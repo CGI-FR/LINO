@@ -63,11 +63,11 @@ func newCountCommand(fullName string, err *os.File, out *os.File, in *os.File) *
 
 			result, e2 := table.Count(tableStorage, extractor)
 			if e2 != nil {
-				fmt.Fprintln(err, e1.Description)
+				fmt.Fprintln(err, e2.Description)
 				os.Exit(1)
 			}
-			for tableName, lines := range result {
-				fmt.Printf("%s: %d\n", tableName, lines)
+			for _, tableCount := range result {
+				fmt.Printf("%s: %d\n", tableCount.Table.Name, tableCount.Count)
 			}
 		},
 	}

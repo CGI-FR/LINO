@@ -23,6 +23,7 @@ Types of changes
 - `Added` new commands to configure tables : add-column and remove-column.
 - `Fixed` limit keyword on DB2 dialect.
 - `Fixed` Push truncate respect child/parent constraint order.
+- `Added` New command to count lines in tables.
 
 ## [1.9.2]
 

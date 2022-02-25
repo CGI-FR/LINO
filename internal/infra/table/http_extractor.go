@@ -20,6 +20,7 @@ package table
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -77,7 +78,47 @@ func (e *HTTPExtractor) Extract() ([]table.Table, *table.Error) {
 	return container.Tables, nil
 }
 
-func (e *HTTPExtractor) Count(tableName string) (int, *table.Error) { return 1, nil }
+func (e *HTTPExtractor) Count(tableName string) (int, *table.Error) {
+	url := e.url + "/data/" + tableName + "/count"
+
+	if len(e.schema) > 0 {
+		url = url + "?schema=" + e.schema
+	}
+
+	log.Debug().Str("url", url).Msg("External connector request")
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+	if err != nil {
+		return 0, &table.Error{Description: err.Error()}
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return 0, &table.Error{Description: err.Error()}
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return 0, &table.Error{Description: fmt.Sprintf("HTTP request returned status code %d", resp.StatusCode)}
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, &table.Error{Description: err.Error()}
+	}
+
+	container := struct {
+		Version string
+		Count   int
+	}{
+		"",
+		0,
+	}
+	err = json.Unmarshal(body, &container)
+	if err != nil {
+		return 0, &table.Error{Description: err.Error()}
+	}
+	return container.Count, nil
+}
 
 // NewHTTPExtractorFactory creates a new HTTP extractor factory.
 func NewHTTPExtractorFactory() *HTTPExtractorFactory {

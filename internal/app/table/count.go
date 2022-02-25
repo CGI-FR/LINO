@@ -30,9 +30,6 @@ import (
 
 // newCountCommand implements the cli table count command
 func newCountCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
-	// local flags
-	var exportType, importType string
-
 	cmd := &cobra.Command{
 		Use:     "count [Data Connector]",
 		Short:   "Count lines in the tables using dataconnector [Data Connector]",
@@ -74,7 +71,5 @@ func newCountCommand(fullName string, err *os.File, out *os.File, in *os.File) *
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
-	cmd.Flags().StringVarP(&exportType, "export", "e", "", "export type for the column")
-	cmd.Flags().StringVarP(&importType, "import", "i", "", "import type for the column")
 	return cmd
 }

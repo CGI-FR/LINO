@@ -33,18 +33,19 @@ func Extract(e Extractor, s Storage) *Error {
 }
 
 // Count ligne in table `tableName`
-func Count(s Storage, e Extractor) (map[string]int, *Error) {
+func Count(s Storage, e Extractor) ([]TableCount, *Error) {
 	tables, err := s.List()
 	if err != nil {
 		return nil, err
 	}
 
-	result := map[string]int{}
+	result := []TableCount{}
 	for _, table := range tables {
-		result[table.Name], err = e.Count(table.Name)
+		count, err := e.Count(table.Name)
 		if err != nil {
 			return nil, err
 		}
+		result = append(result, TableCount{table, count})
 	}
 	return result, nil
 }

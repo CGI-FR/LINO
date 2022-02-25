@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/Trendyol/overlog v0.1.0
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
-	github.com/cgi-fr/jsonline v0.4.0
+	github.com/cgi-fr/jsonline v0.5.0
 	github.com/docker/docker-credential-helpers v0.6.4
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/godror/godror v0.30.2

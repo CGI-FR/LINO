@@ -16,14 +16,18 @@ Types of changes
 
 ## [2.0.0] (Ureleased)
 
-- `Changed` order of keys in output JSON lines will be alphabetical when pulling (without configuration in tables.yaml).
-- `Added` configuration of exported columns in tables.yaml, see issue #33 for more information.
-- `Added` MariaDB/MySQL support (thanks to @joaking85).
-- `Added` auto-select columns required by a relation but not exported in tables.yaml.
-- `Added` new commands to configure tables : add-column and remove-column.
-- `Fixed` limit keyword on DB2 dialect.
-- `Fixed` Push truncate respect child/parent constraint order.
-- `Added` New command to count lines in tables.
+- `Changed` order of keys in output JSON lines will be alphabetical when pulling (without configuration in tables.yaml)
+- `Added` configuration of exported columns in tables.yaml, see issue #33 for more information
+- `Added` MariaDB/MySQL support (thanks to @joaking85)
+- `Added` auto-select columns required by a relation but not exported in tables.yaml
+- `Added` new commands to configure tables : add-column and remove-column
+- `Added` New command to count lines in tables
+- `Fixed` limit keyword on DB2 dialect
+- `Fixed` Push truncate respect child/parent constraint order
+
+## [1.10.0]
+
+- `Added` HTTP connector will now close/reopen request when commit size is reached
 
 ## [1.9.2]
 

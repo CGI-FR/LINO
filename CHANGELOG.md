@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [1.10.0]
+
+- `Added` HTTP connector will now close/reopen request when commit size is reached
+
 ## [1.9.2]
 
 - `Fixed` charset on Content-Type header when pushing to HTTP connector backend

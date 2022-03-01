@@ -86,6 +86,12 @@ func (dd *HTTPDataDestination) Close() *push.Error {
 // Commit HTTP for connection
 func (dd *HTTPDataDestination) Commit() *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Msg("commit HTTP destination")
+	for tableName, writer := range dd.rowWriter {
+		if err := writer.Close(); err != nil {
+			log.Err(err).Str("table", tableName).Str("url", dd.url).Str("schema", dd.schema).Msg("error while closing HTTP connexion")
+		}
+	}
+	dd.rowWriter = make(map[string]*HTTPRowWriter, len(dd.rowWriter))
 	return nil
 }
 

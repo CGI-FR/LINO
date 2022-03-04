@@ -22,6 +22,7 @@ require (
 	github.com/xo/dburl v0.11.0
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	gopkg.in/yaml.v3 v3.0.1
+	nhooyr.io/websocket v1.8.7
 )
 
 require (
@@ -31,6 +32,7 @@ require (
 	github.com/godror/knownpb v0.1.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/klauspost/compress v1.10.3 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect

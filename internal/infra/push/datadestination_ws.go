@@ -111,24 +111,30 @@ func (dd *WebSocketDataDestination) Commit() *push.Error {
 
 // RowWriter return web socket table writer
 func (dd *WebSocketDataDestination) RowWriter(table push.Table) (push.RowWriter, *push.Error) {
-	return dd, nil
+	return &WebSocketRowWriter{dd, table}, nil
 }
 
-func (dd *WebSocketDataDestination) Write(row push.Row) *push.Error {
-	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Interface("data", row).Msg("write to web socket destination")
+// WebSocketRowWriter write data to a web socket.
+type WebSocketRowWriter struct {
+	*WebSocketDataDestination
+	table push.Table
+}
+
+func (rw *WebSocketRowWriter) Write(row push.Row) *push.Error {
+	log.Debug().Str("url", rw.url).Str("schema", rw.schema).Interface("data", row).Msg("write to web socket destination")
 
 	message := WebSocketMessage{
-		Action: dd.mode.String(),
-		Table:  "todo",
+		Action: rw.mode.String(),
+		Table:  rw.table.Name(),
 		Data:   row,
 	}
 
-	if err := wsjson.Write(context.Background(), dd.conn, message); err != nil {
-		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while sending data")
+	if err := wsjson.Write(context.Background(), rw.conn, message); err != nil {
+		log.Err(err).Str("url", rw.url).Str("schema", rw.schema).Msg("error while sending data")
 		return &push.Error{Description: err.Error()}
 	}
 
-	log.Info().Str("url", dd.url).Str("schema", dd.schema).Interface("data", row).Msg("sent data")
+	log.Info().Str("url", rw.url).Str("schema", rw.schema).Interface("data", row).Msg("sent data")
 
 	return nil
 }

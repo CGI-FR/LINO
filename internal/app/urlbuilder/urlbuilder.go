@@ -92,6 +92,16 @@ func init() {
 		Override:  "",
 	}
 	dburl.Register(httpScheme)
+
+	wsScheme := dburl.Scheme{
+		Driver:    "ws",
+		Generator: dburl.GenFromURL("ws://localhost:8080"),
+		Transport: dburl.TransportAny,
+		Opaque:    false,
+		Aliases:   []string{"wss"},
+		Override:  "",
+	}
+	dburl.Register(wsScheme)
 }
 
 func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {

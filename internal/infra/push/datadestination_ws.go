@@ -27,6 +27,12 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 
+type WebSocketMessage struct {
+	Action string   `json:"action"`
+	Table  string   `json:"table,omitempty"`
+	Data   push.Row `json:"data,omitempty"`
+}
+
 // WebSocketDataDestinationFactory exposes methods to create new websocket pusher.
 type WebSocketDataDestinationFactory struct{}
 
@@ -89,7 +95,13 @@ func (dd *WebSocketDataDestination) Close() *push.Error {
 func (dd *WebSocketDataDestination) Commit() *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Msg("commit web socket destination")
 
-	if err := wsjson.Write(context.Background(), dd.conn, "commit"); err != nil {
+	message := WebSocketMessage{
+		Action: "commit",
+		Table:  "",
+		Data:   nil,
+	}
+
+	if err := wsjson.Write(context.Background(), dd.conn, message); err != nil {
 		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while sending commit")
 		return &push.Error{Description: err.Error()}
 	}
@@ -105,12 +117,14 @@ func (dd *WebSocketDataDestination) RowWriter(table push.Table) (push.RowWriter,
 func (dd *WebSocketDataDestination) Write(row push.Row) *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Interface("data", row).Msg("write to web socket destination")
 
-	if err := wsjson.Write(context.Background(), dd.conn, row); err != nil {
-		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while sending data")
-		return &push.Error{Description: err.Error()}
+	message := WebSocketMessage{
+		Action: dd.mode.String(),
+		Table:  "todo",
+		Data:   row,
 	}
-	if err := wsjson.Write(context.Background(), dd.conn, "test"); err != nil {
-		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while sending commit")
+
+	if err := wsjson.Write(context.Background(), dd.conn, message); err != nil {
+		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while sending data")
 		return &push.Error{Description: err.Error()}
 	}
 

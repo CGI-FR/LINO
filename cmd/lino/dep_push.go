@@ -32,6 +32,7 @@ func pushDataDestinationFactory() map[string]domain.DataDestinationFactory {
 		"mysql":      infra.NewMariadbDataDestinationFactory(),
 		"db2":        infra.NewDb2DataDestinationFactory(),
 		"http":       infra.NewHTTPDataDestinationFactory(),
+		"ws":         infra.NewWebSocketDataDestinationFactory(),
 	}
 }
 

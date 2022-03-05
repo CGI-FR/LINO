@@ -138,8 +138,8 @@ github.com/go-sql-driver/mysql v1.6.0 h1:BCTh4TKNUYmOmMUcQ3IipzF5prigylS7XXjEkfC
 github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
-github.com/godror/godror v0.30.2 h1:6BrDspoU98NMznG1vSfKfDiu+sr4Z97yR6AE0H4F3Rk=
-github.com/godror/godror v0.30.2/go.mod h1:aWbwHSee9mdUziQGnwuu3jfvVF+g08/r3hMbsAAba7I=
+github.com/godror/godror v0.31.0 h1:MpH9J6wfckkf8+JraqOAB/znvtWqL3AgVzQ/hGPqi6g=
+github.com/godror/godror v0.31.0/go.mod h1:aWbwHSee9mdUziQGnwuu3jfvVF+g08/r3hMbsAAba7I=
 github.com/godror/knownpb v0.1.0 h1:dJPK8s/I3PQzGGaGcUStL2zIaaICNzKKAK8BzP1uLio=
 github.com/godror/knownpb v0.1.0/go.mod h1:4nRFbQo1dDuwKnblRXDxrfCFYeT4hjg3GjMqef58eRE=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=

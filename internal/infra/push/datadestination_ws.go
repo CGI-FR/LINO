@@ -28,9 +28,10 @@ import (
 )
 
 type WebSocketMessage struct {
-	Action string   `json:"action"`
-	Table  string   `json:"table,omitempty"`
-	Data   push.Row `json:"data,omitempty"`
+	Action      string   `json:"action"`
+	Table       string   `json:"table,omitempty"`
+	PrimaryKeys []string `json:"primaryKeys,omitempty"`
+	Data        push.Row `json:"data,omitempty"`
 }
 
 // WebSocketDataDestinationFactory exposes methods to create new websocket pusher.
@@ -53,6 +54,7 @@ type WebSocketDataDestination struct {
 	mode               push.Mode
 	disableConstraints bool
 	conn               *websocket.Conn
+	rowWriter          map[string]*WebSocketRowWriter
 }
 
 // NewWebSocketDataDestination creates a new web socket datadestination.
@@ -62,6 +64,7 @@ func NewWebSocketDataDestination(url string, schema string) *WebSocketDataDestin
 		schema:             schema,
 		mode:               push.Insert,
 		disableConstraints: false,
+		rowWriter:          map[string]*WebSocketRowWriter{},
 	}
 }
 
@@ -79,6 +82,15 @@ func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disable
 	if err != nil {
 		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while dialing connexion")
 		return &push.Error{Description: err.Error()}
+	}
+
+	for _, table := range plan.Tables() {
+		rw := NewWebSocketRowWriter(table, dd)
+		if err := rw.open(); err != nil {
+			return err
+		}
+
+		dd.rowWriter[table.Name()] = rw
 	}
 
 	return nil
@@ -111,13 +123,49 @@ func (dd *WebSocketDataDestination) Commit() *push.Error {
 
 // RowWriter return web socket table writer
 func (dd *WebSocketDataDestination) RowWriter(table push.Table) (push.RowWriter, *push.Error) {
-	return &WebSocketRowWriter{dd, table}, nil
+	rw, ok := dd.rowWriter[table.Name()]
+	if ok {
+		return rw, nil
+	}
+
+	rw = NewWebSocketRowWriter(table, dd)
+	if err := rw.open(); err != nil {
+		return nil, err
+	}
+
+	dd.rowWriter[table.Name()] = rw
+	return rw, nil
 }
 
 // WebSocketRowWriter write data to a web socket.
 type WebSocketRowWriter struct {
 	*WebSocketDataDestination
 	table push.Table
+	mode  push.Mode
+}
+
+// NewWebSocketRowWriter creates a new web socket row writer.
+func NewWebSocketRowWriter(table push.Table, dd *WebSocketDataDestination) *WebSocketRowWriter {
+	return &WebSocketRowWriter{dd, table, dd.mode}
+}
+
+// open web socket table writer
+func (rw *WebSocketRowWriter) open() *push.Error {
+	log.Debug().Str("url", rw.url).Str("schema", rw.schema).Str("table", rw.table.Name()).Stringer("mode", rw.mode).Msg("open web socket row writer")
+	if rw.mode == push.Truncate {
+		message := WebSocketMessage{
+			Action: "truncate",
+			Table:  rw.table.Name(),
+			Data:   nil,
+		}
+		if err := wsjson.Write(context.Background(), rw.conn, message); err != nil {
+			log.Err(err).Str("url", rw.url).Str("schema", rw.schema).Msg("error while sending truncate message")
+			return &push.Error{Description: err.Error()}
+		}
+		rw.mode = push.Insert
+	}
+
+	return nil
 }
 
 func (rw *WebSocketRowWriter) Write(row push.Row) *push.Error {
@@ -127,6 +175,10 @@ func (rw *WebSocketRowWriter) Write(row push.Row) *push.Error {
 		Action: rw.mode.String(),
 		Table:  rw.table.Name(),
 		Data:   row,
+	}
+
+	if rw.mode == push.Update {
+		message.PrimaryKeys = rw.table.PrimaryKey()
 	}
 
 	if err := wsjson.Write(context.Background(), rw.conn, message); err != nil {

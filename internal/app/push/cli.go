@@ -268,13 +268,21 @@ func (c idToPushConverter) getRelation(name string) push.Relation {
 	)
 }
 
-func (c idToPushConverter) getPlan(id id.IngressDescriptor) push.Plan {
+func (c idToPushConverter) getPlan(idesc id.IngressDescriptor) push.Plan {
 	relations := []push.Relation{}
 
-	for idx := uint(0); idx < id.Relations().Len(); idx++ {
-		rel := id.Relations().Relation(idx)
-		relations = append(relations, c.getRelation(rel.Name()))
+	activeTables, err := id.GetActiveTables(idesc)
+	if err != nil {
+		activeTables = id.NewTableList([]id.Table{idesc.StartTable()})
 	}
 
-	return push.NewPlan(c.getTable(id.StartTable().Name()), relations)
+	for idx := uint(0); idx < idesc.Relations().Len(); idx++ {
+		rel := idesc.Relations().Relation(idx)
+		if (activeTables.Contains(rel.Child().Name()) && rel.LookUpChild()) ||
+			(activeTables.Contains(rel.Parent().Name()) && rel.LookUpParent()) {
+			relations = append(relations, c.getRelation(rel.Name()))
+		}
+	}
+
+	return push.NewPlan(c.getTable(idesc.StartTable().Name()), relations)
 }

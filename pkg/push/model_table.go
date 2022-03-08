@@ -73,15 +73,17 @@ func (l columnList) String() string {
 
 type column struct {
 	name string
+	exp  string
 	imp  string
 }
 
 // NewColumn initialize a new Column object
-func NewColumn(name string, imp string) Column {
-	return column{name, imp}
+func NewColumn(name string, exp string, imp string) Column {
+	return column{name, exp, imp}
 }
 
 func (c column) Name() string   { return c.name }
+func (c column) Export() string { return c.exp }
 func (c column) Import() string { return c.imp }
 
 type ImportedRow struct {
@@ -100,7 +102,7 @@ func (t *table) initTemplate() {
 			col := t.columns.Column(uint(idx))
 			key := col.Name()
 
-			switch col.Import() {
+			switch col.Export() {
 			case "string":
 				t.template.WithString(key)
 			case "numeric":

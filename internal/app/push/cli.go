@@ -242,7 +242,7 @@ func (c idToPushConverter) getTable(name string) push.Table {
 
 	columns := []push.Column{}
 	for _, col := range table.Columns {
-		columns = append(columns, push.NewColumn(col.Name, col.Import))
+		columns = append(columns, push.NewColumn(col.Name, col.Export, col.Import))
 	}
 
 	return push.NewTable(table.Name, table.Keys, push.NewColumnList(columns))

@@ -1,0 +1,47 @@
+# Copyright (C) 2021 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
+name: import different types
+testcases:
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dataconnector add --read-only source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
+      - script: lino dataconnector add dest 'postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable'
+      - script: lino relation extract source
+
+  - name: export then import binary value
+    steps:
+      - script: |-
+          cat  > tables.yml.yml <<EOF
+          version: v1
+          tables:
+            - name: "staff"
+              keys:
+                - "staff_id"
+              columns:
+                - name: "staff_id"
+                - name: "picture"
+                  export: "base64"
+          EOF
+      - script: lino pull source --filter staff_id=1 --table staff | lino push update dest --table staff
+      - script: lino pull dest --filter staff_id=1 --table staff
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"staff_id":1,"picture":"iVBORw0KWgo="}
+          - result.systemerr ShouldBeEmpty

@@ -29,6 +29,7 @@ type Table interface {
 	Name() string
 	PrimaryKey() []string
 	Columns() ColumnList
+	Import(map[string]interface{}) (ImportedRow, *Error)
 }
 
 // ColumnList is a list of columns.
@@ -40,6 +41,7 @@ type ColumnList interface {
 // Column of a table.
 type Column interface {
 	Name() string
+	Export() string
 	Import() string
 }
 
@@ -62,7 +64,7 @@ type Relation interface {
 type Value interface{}
 
 // Row of data.
-type Row map[string]Value
+type Row map[string]interface{}
 
 // Error is the error type returned by the domain
 type Error struct {

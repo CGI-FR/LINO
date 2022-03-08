@@ -99,7 +99,19 @@ func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disable
 // Close web socket connection
 func (dd *WebSocketDataDestination) Close() *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Msg("close web socket destination")
-	dd.conn.Close(websocket.StatusNormalClosure, "")
+
+	defer dd.conn.Close(websocket.StatusInternalError, "Failed to close properly")
+
+	for _, rw := range dd.rowWriter {
+		if err := rw.close(); err != nil {
+			return err
+		}
+	}
+
+	if err := dd.conn.Close(websocket.StatusNormalClosure, ""); err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+
 	return nil
 }
 
@@ -152,6 +164,19 @@ func NewWebSocketRowWriter(table push.Table, dd *WebSocketDataDestination) *WebS
 // open web socket table writer
 func (rw *WebSocketRowWriter) open() *push.Error {
 	log.Debug().Str("url", rw.url).Str("schema", rw.schema).Str("table", rw.table.Name()).Stringer("mode", rw.mode).Msg("open web socket row writer")
+
+	if rw.disableConstraints {
+		message := WebSocketMessage{
+			Action: "disableConstraints",
+			Table:  rw.table.Name(),
+			Data:   nil,
+		}
+		if err := wsjson.Write(context.Background(), rw.conn, message); err != nil {
+			log.Err(err).Str("url", rw.url).Str("schema", rw.schema).Msg("error while sending disableConstraints message")
+			return &push.Error{Description: err.Error()}
+		}
+	}
+
 	if rw.mode == push.Truncate {
 		message := WebSocketMessage{
 			Action: "truncate",
@@ -163,6 +188,25 @@ func (rw *WebSocketRowWriter) open() *push.Error {
 			return &push.Error{Description: err.Error()}
 		}
 		rw.mode = push.Insert
+	}
+
+	return nil
+}
+
+// close web socket table writer
+func (rw *WebSocketRowWriter) close() *push.Error {
+	log.Debug().Str("url", rw.url).Str("schema", rw.schema).Str("table", rw.table.Name()).Stringer("mode", rw.mode).Msg("open web socket row writer")
+
+	if rw.disableConstraints {
+		message := WebSocketMessage{
+			Action: "enableConstraints",
+			Table:  rw.table.Name(),
+			Data:   nil,
+		}
+		if err := wsjson.Write(context.Background(), rw.conn, message); err != nil {
+			log.Err(err).Str("url", rw.url).Str("schema", rw.schema).Msg("error while sending enableConstraints message")
+			return &push.Error{Description: err.Error()}
+		}
 	}
 
 	return nil

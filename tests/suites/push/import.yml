@@ -45,3 +45,25 @@ testcases:
           - result.systemerr ShouldBeEmpty
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"staff_id":1,"picture":"iVBORw0KWgo="}
+
+  - name: export to different format than stored in datasource
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: customer
+              keys:
+                - customer_id
+              columns:
+                - name: "customer_id"
+                - name: "create_date"
+                  export: "timestamp"
+                  import: "time.Time"
+          EOF
+      - script: lino pull source --table customer --filter customer_id=1 | lino push update dest --table customer
+      - script: lino pull dest --table customer --filter customer_id=1
+        assertions:
+          - result.systemerr ShouldBeEmpty
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"customer_id":1,"create_date":1139875200}

@@ -104,19 +104,19 @@ func (t *table) initTemplate() {
 
 			switch col.Export() {
 			case "string":
-				t.template.WithMappedString(key, parseExportType(col.Export()))
+				t.template.WithMappedString(key, parseImportType(col.Import()))
 			case "numeric":
-				t.template.WithMappedNumeric(key, parseExportType(col.Export()))
+				t.template.WithMappedNumeric(key, parseImportType(col.Import()))
 			case "base64", "binary":
-				t.template.WithMappedBinary(key, parseExportType(col.Export()))
+				t.template.WithMappedBinary(key, parseImportType(col.Import()))
 			case "datetime":
-				t.template.WithMappedDateTime(key, parseExportType(col.Export()))
+				t.template.WithMappedDateTime(key, parseImportType(col.Import()))
 			case "timestamp":
-				t.template.WithMappedTimestamp(key, parseExportType(col.Export()))
+				t.template.WithMappedTimestamp(key, parseImportType(col.Import()))
 			case "no":
 				t.template.WithHidden(key)
 			default:
-				t.template.WithMappedAuto(key, parseExportType(col.Export()))
+				t.template.WithMappedAuto(key, parseImportType(col.Import()))
 			}
 		}
 	}
@@ -135,7 +135,7 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 	return result, nil
 }
 
-func parseExportType(exp string) jsonline.RawType {
+func parseImportType(exp string) jsonline.RawType {
 	switch exp {
 	case "int":
 		return int(0)

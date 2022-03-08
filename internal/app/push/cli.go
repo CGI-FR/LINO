@@ -273,7 +273,9 @@ func (c idToPushConverter) getPlan(id id.IngressDescriptor) push.Plan {
 
 	for idx := uint(0); idx < id.Relations().Len(); idx++ {
 		rel := id.Relations().Relation(idx)
-		relations = append(relations, c.getRelation(rel.Name()))
+		if rel.LookUpChild() || rel.LookUpParent() {
+			relations = append(relations, c.getRelation(rel.Name()))
+		}
 	}
 
 	return push.NewPlan(c.getTable(id.StartTable().Name()), relations)

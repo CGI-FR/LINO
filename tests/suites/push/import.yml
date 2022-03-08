@@ -28,7 +28,7 @@ testcases:
   - name: export then import binary value
     steps:
       - script: |-
-          cat  > tables.yml <<EOF
+          cat  > tables.yaml <<EOF
           version: v1
           tables:
             - name: "staff"

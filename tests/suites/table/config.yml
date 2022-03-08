@@ -1,0 +1,344 @@
+# Copyright (C) 2021 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
+name: table configuration
+testcases:
+  - name: add single column on empty columns list
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: |-
+          cat  > expected.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: lino table add-column public.actor first_name
+        assertions:
+          - result.systemout ShouldEqual "successfully added column first_name to public.actor table"
+          - result.code ShouldEqual 0
+      - script: diff expected.yaml tables.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+
+  - name: add second column on columns list
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: |-
+          cat  > expected.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                - name: last_name
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: lino table add-column public.actor last_name
+        assertions:
+          - result.systemout ShouldEqual "successfully added column last_name to public.actor table"
+          - result.code ShouldEqual 0
+      - script: diff expected.yaml tables.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+
+  - name: add already added column on columns list
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                - name: last_name
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: |-
+          cat  > expected.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                - name: last_name
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: lino table add-column public.actor last_name
+        assertions:
+          - result.systemout ShouldEqual "successfully added column last_name to public.actor table"
+          - result.code ShouldEqual 0
+      - script: diff expected.yaml tables.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+
+  - name: add single column on empty columns list with export type
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: |-
+          cat  > expected.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                  export: string
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: lino table add-column public.actor first_name --export string
+        assertions:
+          - result.systemout ShouldEqual "successfully added column first_name to public.actor table"
+          - result.code ShouldEqual 0
+      - script: diff expected.yaml tables.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+
+  - name: add already added column on columns list with export type
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                - name: last_name
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: |-
+          cat  > expected.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                - name: last_name
+                  export: string
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: lino table add-column public.actor last_name --export string
+        assertions:
+          - result.systemout ShouldEqual "successfully added column last_name to public.actor table"
+          - result.code ShouldEqual 0
+      - script: diff expected.yaml tables.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+
+  - name: add column on columns list with export and import type
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                  export: string
+                - name: last_name
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: |-
+          cat  > expected.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                  export: string
+                - name: last_name
+                - name: birth_date
+                  export: datetime
+                  import: string
+            - name: other.table2
+              keys:
+                - id
+          EOF
+      - script: lino table add-column public.actor birth_date --export datetime --import string
+        assertions:
+          - result.systemout ShouldEqual "successfully added column birth_date to public.actor table"
+          - result.code ShouldEqual 0
+      - script: diff expected.yaml tables.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+
+  - name: remove column
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+              columns:
+                - name: birth_date
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                  export: string
+                - name: birth_date
+                  export: datetime
+                  import: string
+                - name: last_name
+            - name: other.table2
+              keys:
+                - id
+              columns:
+                - name: birth_date
+          EOF
+      - script: |-
+          cat  > expected.yaml <<EOF
+          version: v1
+          tables:
+            - name: other.table1
+              keys:
+                - id
+              columns:
+                - name: birth_date
+            - name: public.actor
+              keys:
+                - actor_id
+              columns:
+                - name: first_name
+                  export: string
+                - name: last_name
+            - name: other.table2
+              keys:
+                - id
+              columns:
+                - name: birth_date
+          EOF
+      - script: lino table remove-column public.actor birth_date
+        assertions:
+          - result.systemout ShouldEqual "successfully removed column birth_date from public.actor table"
+          - result.code ShouldEqual 0
+      - script: diff expected.yaml tables.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty

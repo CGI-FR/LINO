@@ -222,3 +222,9 @@ func Export(storage Storage, exporter Exporter) *Error {
 
 	return nil
 }
+
+// GetActiveTables returns list of tables that are activated (part of the connected graph)
+func GetActiveTables(id IngressDescriptor) (TableList, *Error) {
+	g := newGraph(id.Relations())
+	return g.findConnectedTables(id.StartTable().Name())
+}

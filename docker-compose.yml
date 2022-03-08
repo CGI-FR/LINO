@@ -69,6 +69,17 @@ services:
     volumes:
       - ./test/data/db2:/var/custom
 
+  http-connector:
+    image: ghcr.io/cgi-fr/lino-connector:main
+    expose:
+      - 8080
+    ports:
+      - "8080:8080"
+    command:
+      - --spring.datasource.url=jdbc:postgresql://source:5432/postgres
+      - --spring.datasource.username=postgres
+      - --spring.datasource.password=sakila
+
   lino:
     build:
       context: .

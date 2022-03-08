@@ -122,14 +122,17 @@ func (t *table) initTemplate() {
 	}
 }
 
-func (t table) Import(row map[string]interface{}) ImportedRow {
+func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 	if t.template == nil {
 		t.initTemplate()
 	}
 
 	result := ImportedRow{t.template.CreateRowEmpty()}
-	_ = result.Import(row)
-	return result
+	if err := result.Import(row); err != nil {
+		return ImportedRow{}, &Error{Description: err.Error()}
+	}
+
+	return result, nil
 }
 
 func parseExportType(exp string) jsonline.RawType {

@@ -29,7 +29,7 @@ type Table interface {
 	Name() string
 	PrimaryKey() []string
 	Columns() ColumnList
-	Import(map[string]interface{}) ImportedRow
+	Import(map[string]interface{}) (ImportedRow, *Error)
 }
 
 // ColumnList is a list of columns.

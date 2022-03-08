@@ -18,12 +18,12 @@
 package push
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
+	"time"
 
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
-	"github.com/rs/zerolog/log"
 )
 
 type table struct {
@@ -104,19 +104,19 @@ func (t *table) initTemplate() {
 
 			switch col.Export() {
 			case "string":
-				t.template.WithString(key)
+				t.template.WithMappedString(key, parseExportType(col.Export()))
 			case "numeric":
-				t.template.WithNumeric(key)
-			case "base64":
-				t.template.WithBinary(key)
+				t.template.WithMappedNumeric(key, parseExportType(col.Export()))
+			case "base64", "binary":
+				t.template.WithMappedBinary(key, parseExportType(col.Export()))
 			case "datetime":
-				t.template.WithDateTime(key)
+				t.template.WithMappedDateTime(key, parseExportType(col.Export()))
 			case "timestamp":
-				t.template.WithTimestamp(key)
+				t.template.WithMappedTimestamp(key, parseExportType(col.Export()))
 			case "no":
 				t.template.WithHidden(key)
 			default:
-				t.template.WithAuto(key)
+				t.template.WithMappedAuto(key, parseExportType(col.Export()))
 			}
 		}
 	}
@@ -128,10 +128,51 @@ func (t table) Import(row map[string]interface{}) ImportedRow {
 	}
 
 	result := ImportedRow{t.template.CreateRowEmpty()}
-	err := result.Import(row)
-	if err != nil {
-		log.Err(err).Msg("End pimo")
-		os.Exit(4)
-	}
+	_ = result.Import(row)
 	return result
+}
+
+func parseExportType(exp string) jsonline.RawType {
+	switch exp {
+	case "int":
+		return int(0)
+	case "int64":
+		return int64(0)
+	case "int32":
+		return int32(0)
+	case "int16":
+		return int16(0)
+	case "int8":
+		return int8(0)
+	case "uint":
+		return uint(0)
+	case "uint64":
+		return uint64(0)
+	case "uint32":
+		return uint32(0)
+	case "uint16":
+		return uint16(0)
+	case "uint8":
+		return uint8(0)
+	case "float64":
+		return float64(0)
+	case "float32":
+		return float32(0)
+	case "bool":
+		return false
+	case "byte":
+		return byte(0)
+	case "rune":
+		return rune(' ')
+	case "string":
+		return ""
+	case "[]byte":
+		return []byte{}
+	case "time.Time":
+		return time.Time{}
+	case "json.Number":
+		return json.Number("")
+	default:
+		return nil
+	}
 }

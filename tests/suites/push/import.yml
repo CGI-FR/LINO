@@ -28,7 +28,7 @@ testcases:
   - name: export then import binary value
     steps:
       - script: |-
-          cat  > tables.yml.yml <<EOF
+          cat  > tables.yml <<EOF
           version: v1
           tables:
             - name: "staff"
@@ -42,6 +42,6 @@ testcases:
       - script: lino pull source --filter staff_id=1 --table staff | lino push update dest --table staff
       - script: lino pull dest --filter staff_id=1 --table staff
         assertions:
+          - result.systemerr ShouldBeEmpty
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"staff_id":1,"picture":"iVBORw0KWgo="}
-          - result.systemerr ShouldBeEmpty

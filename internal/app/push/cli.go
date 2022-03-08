@@ -216,7 +216,12 @@ func getPlan(idStorage id.Storage) (push.Plan, *push.Error) {
 		pushtmap: map[string]push.Table{},
 	}
 
-	return converter.getPlan(id), nil
+	plan, err4 := converter.getPlan(id)
+	if err4 != nil {
+		return nil, &push.Error{Description: err4.Error()}
+	}
+
+	return plan, nil
 }
 
 type idToPushConverter struct {
@@ -268,15 +273,21 @@ func (c idToPushConverter) getRelation(name string) push.Relation {
 	)
 }
 
-func (c idToPushConverter) getPlan(id id.IngressDescriptor) push.Plan {
+func (c idToPushConverter) getPlan(idesc id.IngressDescriptor) (push.Plan, *push.Error) {
 	relations := []push.Relation{}
 
-	for idx := uint(0); idx < id.Relations().Len(); idx++ {
-		rel := id.Relations().Relation(idx)
-		if rel.LookUpChild() || rel.LookUpParent() {
+	activeTables, err := id.GetActiveTables(idesc)
+	if err != nil {
+		return nil, &push.Error{Description: err.Description}
+	}
+
+	for idx := uint(0); idx < idesc.Relations().Len(); idx++ {
+		rel := idesc.Relations().Relation(idx)
+		if (activeTables.Contains(rel.Child().Name()) && rel.LookUpChild()) ||
+			(activeTables.Contains(rel.Parent().Name()) && rel.LookUpParent()) {
 			relations = append(relations, c.getRelation(rel.Name()))
 		}
 	}
 
-	return push.NewPlan(c.getTable(id.StartTable().Name()), relations)
+	return push.NewPlan(c.getTable(idesc.StartTable().Name()), relations), nil
 }

@@ -24,6 +24,7 @@ Types of changes
 - `Added` New command to count lines in tables
 - `Fixed` limit keyword on DB2 dialect
 - `Fixed` Push truncate respect child/parent constraint order
+- `Fixed` Push truncate will trigger only for attainable tables in the ingress descriptor - tables that are cut out will not be truncated
 
 ## [1.10.0]
 

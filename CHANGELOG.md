@@ -25,6 +25,8 @@ Types of changes
 - `Fixed` limit keyword on DB2 dialect
 - `Fixed` Push truncate respect child/parent constraint order
 - `Fixed` Push truncate will trigger only for attainable tables in the ingress descriptor - tables that are cut out will not be truncated
+- `Fixed` push insert with mysql/mariadb connector now works properly with MySQL database
+- `Fixed` push insert with mysql/mariadb connector will not update record if it exists
 
 ## [1.10.0]
 

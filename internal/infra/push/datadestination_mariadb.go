@@ -65,16 +65,10 @@ func (d MariadbDialect) TruncateStatement(tableName string) string {
 func (d MariadbDialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
 	protectedColumns := []string{}
 	for _, c := range columns {
-		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c))
+		protectedColumns = append(protectedColumns, fmt.Sprintf("`%s`", c))
 	}
 	if len(primaryKeys) > 0 {
-		sql := fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s) ON DUPLICATE KEY UPDATE ", tableName, strings.Join(protectedColumns, ","), strings.Join(values, ","))
-		for _, column := range columns {
-			sql += column
-			sql += " = VALUES("
-			sql += column
-			sql += "),"
-		}
+		sql := fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(protectedColumns, ","), strings.Join(values, ","))
 		ret := strings.TrimSuffix(sql, ",")
 		return ret
 	}

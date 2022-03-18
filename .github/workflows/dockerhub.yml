@@ -50,6 +50,6 @@ jobs:
             -u vscode \
             -e PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/home/vscode/go/bin:/workspace/bin \
             vscode \
-            neon -props "{tag: ${{ github.event.inputs.tag }}, MODULE: github.com/${CI_REPOSITORY,,}, BY: ${CI_ACTOR}, latest: true}" test-int docker-push
+            neon -props "{snapshot: true, tag: ${{ github.event.inputs.tag }}, MODULE: github.com/${CI_REPOSITORY,,}, BY: ${CI_ACTOR}, latest: true}" publish docker-push
       - name: Test version
         run: docker-compose exec -T -u vscode vscode /workspace/dist/lino_linux_amd64/lino --version

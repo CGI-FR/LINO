@@ -6,6 +6,11 @@ name: DockerHub
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Override tag with a custom value'     
+        required: false
+        default: ''
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -45,6 +50,6 @@ jobs:
             -u vscode \
             -e PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/home/vscode/go/bin:/workspace/bin \
             vscode \
-            neon -props "{tag: ${CI_ACTION_REF_NAME}, MODULE: github.com/${CI_REPOSITORY,,}, BY: ${CI_ACTOR}, latest: true}" test-int docker-push
+            neon -props "{tag: ${{ github.event.inputs.tag }}, MODULE: github.com/${CI_REPOSITORY,,}, BY: ${CI_ACTOR}, latest: true}" test-int docker-push
       - name: Test version
         run: docker-compose exec -T -u vscode vscode /workspace/dist/lino_linux_amd64/lino --version

@@ -8,7 +8,7 @@ require (
 	github.com/cgi-fr/jsonline v0.5.0
 	github.com/docker/docker-credential-helpers v0.6.4
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/godror/godror v0.32.1
+	github.com/godror/godror v0.33.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ibmdb/go_ibm_db v0.4.1
@@ -27,6 +27,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/godror/knownpb v0.1.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect

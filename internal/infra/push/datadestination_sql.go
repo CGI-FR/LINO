@@ -327,6 +327,7 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 
 	_, err2 := rw.statement.Exec(values...)
 	if err2 != nil {
+		rw.statement = nil // reset statement after error
 		if rw.dd.dialect.IsDuplicateError(err2) {
 			log.Trace().Msg(fmt.Sprintf("duplicate key %v (%s) for %s", row, rw.table.PrimaryKey(), rw.table.Name()))
 		} else {

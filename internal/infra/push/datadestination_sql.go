@@ -323,11 +323,14 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 	for _, h := range rw.headers {
 		values = append(values, rw.dd.dialect.ConvertValue(importedRow.GetOrNil(h)))
 	}
-	log.Trace().Strs("headers", rw.headers).Msg(fmt.Sprint(values))
+	log.Trace().Strs("headers", rw.headers).Str("table", rw.table.Name()).Msg(fmt.Sprint(values))
 
 	_, err2 := rw.statement.Exec(values...)
 	if err2 != nil {
-		rw.statement = nil // reset statement after error
+		// reset statement after error
+		if err := rw.commit(); err != nil {
+			return &push.Error{Description: err.Error() + "\noriginal error :\n" + err2.Error()}
+		}
 		if rw.dd.dialect.IsDuplicateError(err2) {
 			log.Trace().Msg(fmt.Sprintf("duplicate key %v (%s) for %s", row, rw.table.PrimaryKey(), rw.table.Name()))
 		} else {

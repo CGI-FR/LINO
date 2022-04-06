@@ -368,6 +368,16 @@ func (rw *SQLRowWriter) enableConstraints() *push.Error {
 	return nil
 }
 
+// isAPrimaryKey return true if columnName is in pknames
+func isAPrimaryKey(columnName string, pkNames []string) bool {
+	for _, pkName := range pkNames {
+		if pkName == columnName {
+			return true
+		}
+	}
+	return false
+}
+
 // SQLDialect is an interface to inject SQL variations
 type SQLDialect interface {
 	Placeholder(int) string

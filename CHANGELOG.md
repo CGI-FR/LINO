@@ -16,6 +16,7 @@ Types of changes
 
 ## [2.0.1]
 
+- `Fixed` bad SQL update statement for oracle
 - `Fixed` reset statement after error during push #54
 
 ## [2.0.0]

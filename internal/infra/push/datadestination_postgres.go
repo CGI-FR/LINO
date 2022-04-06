@@ -73,16 +73,6 @@ func (d PostgresDialect) InsertStatement(tableName string, columns []string, val
 	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(protectedColumns, ","), strings.Join(values, ","))
 }
 
-// isAPrimaryKey return true if columnName is in pknames
-func isAPrimaryKey(columnName string, pkNames []string) bool {
-	for _, pkName := range pkNames {
-		if pkName == columnName {
-			return true
-		}
-	}
-	return false
-}
-
 func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error) {
 	sql := &strings.Builder{}
 	sql.Write([]byte("UPDATE "))

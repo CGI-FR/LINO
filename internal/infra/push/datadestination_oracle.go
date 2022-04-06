@@ -133,7 +133,15 @@ func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValu
 	sql.Write([]byte("UPDATE "))
 	sql.Write([]byte(tableName))
 	sql.Write([]byte(" SET "))
+	headers := []string{}
+
 	for index, column := range columns {
+		// don't update primary key
+		if isAPrimaryKey(column, primaryKeys) {
+			continue
+		}
+		headers = append(headers, column)
+
 		sql.Write([]byte(column))
 		fmt.Fprint(sql, "=")
 		fmt.Fprint(sql, uValues[index])
@@ -147,6 +155,8 @@ func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValu
 		return "", []string{}, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
 	}
 	for index, pk := range primaryKeys {
+		headers = append(headers, pk)
+
 		sql.Write([]byte(pk))
 		fmt.Fprint(sql, "=")
 		fmt.Fprint(sql, pValues[index])
@@ -154,7 +164,7 @@ func (d OracleDialect) UpdateStatement(tableName string, columns []string, uValu
 			sql.Write([]byte(" AND "))
 		}
 	}
-	return sql.String(), append(columns, primaryKeys...), nil
+	return sql.String(), headers, nil
 }
 
 // IsDuplicateError check if error is a duplicate error

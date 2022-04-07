@@ -52,29 +52,41 @@ func NewSQLDataDestination(url string, schema string, dialect SQLDialect) *SQLDa
 
 // Close SQL connections
 func (dd *SQLDataDestination) Close() *push.Error {
+	errors := []*push.Error{}
+
 	for _, rw := range dd.rowWriter {
 		err := rw.commit()
 		if err != nil {
-			return &push.Error{Description: err.Error()}
+			errors = append(errors, err)
 		}
 	}
 
 	err := dd.tx.Commit()
 	if err != nil {
-		return &push.Error{Description: err.Error()}
+		errors = append(errors, &push.Error{Description: err.Error()})
+	} else {
+		log.Debug().Msg("transaction committed")
 	}
-	log.Debug().Msg("transaction committed")
 
 	for _, rw := range dd.rowWriter {
 		err := rw.close()
 		if err != nil {
-			return err
+			log.Warn().Str("table", rw.table.Name()).AnErr("error", err).Msg("Error during row writer closing")
+			errors = append(errors, err)
 		}
 	}
 
-	err2 := dd.db.Close()
-	if err2 != nil {
-		return &push.Error{Description: err2.Error()}
+	if err2 := dd.db.Close(); err2 != nil {
+		log.Warn().AnErr("error", err2).Msg("Error during db closing")
+		errors = append(errors, &push.Error{Description: err2.Error()})
+	}
+
+	if len(errors) > 0 {
+		allErrors := &push.Error{}
+		for _, err := range errors {
+			allErrors.Description += "\n" + err.Description
+		}
+		return allErrors
 	}
 
 	return nil

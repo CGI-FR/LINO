@@ -16,8 +16,9 @@ Types of changes
 
 ## [2.0.1]
 
-- `Fixed` bad SQL update statement for oracle
-- `Fixed` reset statement after error during push #54
+- `Fixed` Bad SQL update statement for oracle
+- `Fixed` Reset statement after error during push #54
+- `Fixed` Continue to close others row writers after error
 
 ## [2.0.0]
 

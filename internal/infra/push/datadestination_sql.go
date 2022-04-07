@@ -55,8 +55,9 @@ func (dd *SQLDataDestination) Close() *push.Error {
 	errors := []*push.Error{}
 
 	for _, rw := range dd.rowWriter {
-		err := rw.commit()
+		err := rw.close()
 		if err != nil {
+			log.Warn().Str("table", rw.table.Name()).AnErr("error", err).Msg("Error during row writer closing")
 			errors = append(errors, err)
 		}
 	}
@@ -68,11 +69,13 @@ func (dd *SQLDataDestination) Close() *push.Error {
 		log.Debug().Msg("transaction committed")
 	}
 
-	for _, rw := range dd.rowWriter {
-		err := rw.close()
-		if err != nil {
-			log.Warn().Str("table", rw.table.Name()).AnErr("error", err).Msg("Error during row writer closing")
-			errors = append(errors, err)
+	if dd.disableConstraints {
+		for _, rw := range dd.rowWriter {
+			err := rw.enableConstraints()
+			if err != nil {
+				log.Warn().Str("table", rw.table.Name()).AnErr("error", err).Msg("Error during constraints restore")
+				errors = append(errors, err)
+			}
 		}
 	}
 
@@ -95,7 +98,7 @@ func (dd *SQLDataDestination) Close() *push.Error {
 // Commit SQL for connection
 func (dd *SQLDataDestination) Commit() *push.Error {
 	for _, rw := range dd.rowWriter {
-		err := rw.commit()
+		err := rw.close()
 		if err != nil {
 			return &push.Error{Description: err.Error()}
 		}
@@ -106,13 +109,6 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 		return &push.Error{Description: err.Error()}
 	}
 	log.Debug().Msg("transaction committed")
-
-	for _, rw := range dd.rowWriter {
-		err := rw.commit()
-		if err != nil {
-			return &push.Error{Description: err.Error()}
-		}
-	}
 
 	tx, err := dd.db.Begin()
 	if err != nil {
@@ -222,18 +218,6 @@ func (rw *SQLRowWriter) open() *push.Error {
 	return nil
 }
 
-func (rw *SQLRowWriter) commit() *push.Error {
-	if rw.statement != nil {
-		err := rw.statement.Close()
-		if err != nil {
-			return &push.Error{Description: err.Error()}
-		}
-		rw.statement = nil
-		log.Debug().Msg(fmt.Sprintf("close statement %s", rw.dd.mode))
-	}
-	return nil
-}
-
 // close table writer
 func (rw *SQLRowWriter) close() *push.Error {
 	if rw.statement != nil {
@@ -241,10 +225,8 @@ func (rw *SQLRowWriter) close() *push.Error {
 		if err != nil {
 			return &push.Error{Description: err.Error()}
 		}
-	}
-
-	if rw.dd.disableConstraints {
-		return rw.enableConstraints()
+		rw.statement = nil
+		log.Debug().Msg(fmt.Sprintf("close statement %s", rw.dd.mode))
 	}
 	return nil
 }
@@ -265,26 +247,11 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 		return nil
 	}
 
-	names := []string{}
-	valuesVar := []string{}
-	pkNames := []string{}
-	pkVar := []string{}
-
-	i := 1
-	for k := range row {
-		names = append(names, k)
-		valuesVar = append(valuesVar, rw.dd.dialect.Placeholder(i))
-		for _, pk := range rw.table.PrimaryKey() {
-			if pk == k {
-				pkNames = append(pkNames, k)
-				pkVar = append(pkVar, rw.dd.dialect.Placeholder(i))
-			}
-		}
-		i++
-	}
+	names, valuesVar, pkNames, pkVar := rw.tableInformations(row)
 
 	var prepareStmt string
 	var pusherr *push.Error
+
 	log.Debug().Msg(fmt.Sprintf("received mode %s", rw.dd.mode))
 
 	switch {
@@ -319,6 +286,28 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	return nil
 }
 
+// tableInformations compute place holder, pk names and columns headers
+func (rw *SQLRowWriter) tableInformations(row push.Row) ([]string, []string, []string, []string) {
+	names := []string{}
+	valuesVar := []string{}
+	pkNames := []string{}
+	pkVar := []string{}
+
+	i := 1
+	for k := range row {
+		names = append(names, k)
+		valuesVar = append(valuesVar, rw.dd.dialect.Placeholder(i))
+		for _, pk := range rw.table.PrimaryKey() {
+			if pk == k {
+				pkNames = append(pkNames, k)
+				pkVar = append(pkVar, rw.dd.dialect.Placeholder(i))
+			}
+		}
+		i++
+	}
+	return names, valuesVar, pkNames, pkVar
+}
+
 // Write
 func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 	err1 := rw.createStatement(row)
@@ -340,7 +329,7 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 	_, err2 := rw.statement.Exec(values...)
 	if err2 != nil {
 		// reset statement after error
-		if err := rw.commit(); err != nil {
+		if err := rw.close(); err != nil {
 			return &push.Error{Description: err.Error() + "\noriginal error :\n" + err2.Error()}
 		}
 		if rw.dd.dialect.IsDuplicateError(err2) {
@@ -356,8 +345,8 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 func (rw *SQLRowWriter) truncate() *push.Error {
 	stm := rw.dd.dialect.TruncateStatement(rw.tableName())
 	log.Debug().Msg(stm)
-	_, err := rw.dd.db.Exec(stm)
-	if err != nil {
+
+	if _, err := rw.dd.db.Exec(stm); err != nil {
 		return &push.Error{Description: err.Error()}
 	}
 	return nil
@@ -366,8 +355,8 @@ func (rw *SQLRowWriter) truncate() *push.Error {
 func (rw *SQLRowWriter) disableConstraints() *push.Error {
 	stm := rw.dd.dialect.DisableConstraintsStatement(rw.tableName())
 	log.Debug().Msg(stm)
-	_, err := rw.dd.db.Exec(stm)
-	if err != nil {
+
+	if _, err := rw.dd.db.Exec(stm); err != nil {
 		return &push.Error{Description: err.Error()}
 	}
 	return nil
@@ -376,8 +365,8 @@ func (rw *SQLRowWriter) disableConstraints() *push.Error {
 func (rw *SQLRowWriter) enableConstraints() *push.Error {
 	stm := rw.dd.dialect.EnableConstraintsStatement(rw.tableName())
 	log.Debug().Msg(stm)
-	_, err := rw.dd.db.Exec(stm)
-	if err != nil {
+
+	if _, err := rw.dd.db.Exec(stm); err != nil {
 		return &push.Error{Description: err.Error()}
 	}
 	return nil

@@ -24,11 +24,19 @@ type Column struct {
 	Import string
 }
 
+type ExportMode byte
+
+const (
+	ExportModeOnly ExportMode = iota
+	ExportModeAll
+)
+
 // Table holds a name (table name) and a list of keys (table columns).
 type Table struct {
-	Name    string
-	Keys    []string
-	Columns []Column
+	Name       string
+	Keys       []string
+	Columns    []Column
+	ExportMode ExportMode
 }
 
 // Error is the error type returned by the domain

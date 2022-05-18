@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.1.0]
+
+- `Added` export mode all in `tables.yaml` to export all columns even if some columns are defined in the columns property
+
 ## [2.0.1]
 
 - `Fixed` Bad SQL update statement for oracle

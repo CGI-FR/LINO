@@ -55,6 +55,24 @@ testcases:
         assertions:
           - result.systemout ShouldEqual {"film_id":1,"title":"ACADEMY DINOSAUR"}
 
+  - name: using export mode all
+    steps:
+      - script: |-
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: film
+              keys:
+                - film_id
+              columns:
+                - name: film_id
+                - name: title
+              export: all
+          EOF
+      - script: lino pull source --table film
+        assertions:
+          - result.systemout ShouldEqual {"film_id":"AQAAAAAAAAA=","title":"ACADEMY DINOSAUR","description":"A Epic Drama of a Feminist And a Mad Scientist who must Battle a Teacher in The Canadian Rockies","fulltext":"J2FjYWRlbWknOjEgJ2JhdHRsJzoxNSAnY2FuYWRpYW4nOjIwICdkaW5vc2F1cic6MiAnZHJhbWEnOjUgJ2VwaWMnOjQgJ2ZlbWluaXN0Jzo4ICdtYWQnOjExICdtdXN0JzoxNCAncm9ja2knOjIxICdzY2llbnRpc3QnOjEyICd0ZWFjaGVyJzoxNw==","language_id":1,"last_update":"2007-09-10T17:46:03.905795Z","length":86,"original_language_id":null,"rating":"UEc=","release_year":2006,"rental_duration":6,"rental_rate":"MC45OQ==","replacement_cost":"MjAuOTk=","special_features":"eyJEZWxldGVkIFNjZW5lcyIsIkJlaGluZCB0aGUgU2NlbmVzIn0="}
+
   # OBSOLETE : lino v2 will remove unecessary keys from select clause
   # - name: not selecting primary key will select and hide it in output
   #   steps:

@@ -161,9 +161,10 @@ func (b builder) getTable(name string) pull.Table {
 		if !ok {
 			log.Warn().Str("name", name).Msg("missing table in tables.yaml file")
 			extable = pull.Table{
-				Name:    pull.TableName(name),
-				Keys:    []string{},
-				Columns: []pull.Column{},
+				Name:       pull.TableName(name),
+				Keys:       []string{},
+				Columns:    []pull.Column{},
+				ExportMode: pull.ExportModeOnly,
 			}
 		} else {
 			columns := []pull.Column{}
@@ -174,9 +175,10 @@ func (b builder) getTable(name string) pull.Table {
 				})
 			}
 			extable = pull.Table{
-				Name:    pull.TableName(table.Name),
-				Keys:    table.Keys,
-				Columns: columns,
+				Name:       pull.TableName(table.Name),
+				Keys:       table.Keys,
+				Columns:    columns,
+				ExportMode: pull.ExportMode(table.ExportMode),
 			}
 		}
 		b.extmap[name] = extable

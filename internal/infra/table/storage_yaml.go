@@ -36,9 +36,10 @@ type YAMLStructure struct {
 
 // YAMLTable defines how to store a table in YAML format.
 type YAMLTable struct {
-	Name    string       `yaml:"name"`
-	Keys    []string     `yaml:"keys"`
-	Columns []YAMLColumn `yaml:"columns,omitempty"`
+	Name       string       `yaml:"name"`
+	Keys       []string     `yaml:"keys"`
+	Columns    []YAMLColumn `yaml:"columns,omitempty"`
+	ExportMode string       `yaml:"export,omitempty"`
 }
 
 // YAMLColumn defines how to store a column in YAML format.
@@ -65,14 +66,21 @@ func (s YAMLStorage) List() ([]table.Table, *table.Error) {
 	result := []table.Table{}
 
 	for _, ym := range list.Tables {
-		col := []table.Column{}
+		cols := []table.Column{}
 		for _, ymc := range ym.Columns {
-			col = append(col, table.Column{Name: ymc.Name, Export: ymc.Export, Import: ymc.Import})
+			cols = append(cols, table.Column{Name: ymc.Name, Export: ymc.Export, Import: ymc.Import})
 		}
+
+		exportMode := table.ExportModeOnly
+		if ym.ExportMode == "all" {
+			exportMode = table.ExportModeAll
+		}
+
 		m := table.Table{
-			Name:    ym.Name,
-			Keys:    ym.Keys,
-			Columns: col,
+			Name:       ym.Name,
+			Keys:       ym.Keys,
+			Columns:    cols,
+			ExportMode: exportMode,
 		}
 		result = append(result, m)
 	}
@@ -138,7 +146,7 @@ func writeFile(list *YAMLStructure) *table.Error {
 		return &table.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("tables.yaml", out.Bytes(), 0600)
+	err = ioutil.WriteFile("tables.yaml", out.Bytes(), 0o600)
 	if err != nil {
 		return &table.Error{Description: err.Error()}
 	}

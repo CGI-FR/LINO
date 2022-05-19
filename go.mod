@@ -8,7 +8,7 @@ require (
 	github.com/cgi-fr/jsonline v0.5.0
 	github.com/docker/docker-credential-helpers v0.6.4
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/godror/godror v0.33.0
+	github.com/godror/godror v0.33.1
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ibmdb/go_ibm_db v0.4.1

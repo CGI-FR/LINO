@@ -75,6 +75,24 @@ func (t *Table) export(row Row) ExportedRow {
 		result.Set(k, row[k])
 	}
 
+	keys = keys[:0] // reset slice without unallocating memory
+
+	switch t.ExportMode {
+	case ExportModeAll:
+		for k := range row {
+			if result.GetOrNil(k) == nil {
+				keys = append(keys, k)
+			}
+		}
+	case ExportModeOnly: // nothing
+	}
+
+	sort.Strings(keys) // this is needed to have a consistent output if no columns is defined by configuration
+
+	for _, k := range keys {
+		result.Set(k, row[k])
+	}
+
 	return result
 }
 

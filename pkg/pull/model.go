@@ -42,10 +42,18 @@ type Column struct {
 	Export string
 }
 
+type ExportMode byte
+
+const (
+	ExportModeOnly ExportMode = iota
+	ExportModeAll
+)
+
 type Table struct {
-	Name    TableName
-	Keys    []string
-	Columns []Column
+	Name       TableName
+	Keys       []string
+	Columns    []Column
+	ExportMode ExportMode
 
 	template jsonline.Template
 }

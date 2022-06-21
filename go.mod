@@ -18,7 +18,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.5.0
-	github.com/stretchr/testify v1.7.3
+	github.com/stretchr/testify v1.7.4
 	github.com/xo/dburl v0.11.0
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	gopkg.in/yaml.v3 v3.0.1

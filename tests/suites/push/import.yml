@@ -69,3 +69,45 @@ testcases:
           - result.systemerr ShouldBeEmpty
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"customer_id":1,"create_date":1139875200}
+
+  - name: import with binary format
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: "staff"
+              keys:
+                - "staff_id"
+              columns:
+                - name: "staff_id"
+                - name: "picture"
+                  import: "base64"
+          EOF
+      - script: cat '{"staff_id":3,"picture":"SGVsbG8gd29ybGQ="}' | lino push update dest --table staff
+      - script: lino pull dest --filter staff_id=3 --table staff
+        assertions:
+          - result.systemerr ShouldBeEmpty
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"staff_id":1,"picture":"Hello world"}
+
+  - name: import with binary format and specify data type
+    steps:
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: "staff"
+              keys:
+                - "staff_id"
+              columns:
+                - name: "staff_id"
+                - name: "picture"
+                  import: "binary(string)"
+          EOF
+      - script: cat '{"staff_id":3,"picture":"SGVsbG8gd29ybGQ="}' | lino push update dest --table staff
+      - script: lino pull dest --filter staff_id=3 --table staff
+        assertions:
+          - result.systemerr ShouldBeEmpty
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"staff_id":1,"picture":"Hello world"}

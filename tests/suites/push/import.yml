@@ -83,9 +83,10 @@ testcases:
                 - name: "staff_id"
                 - name: "picture"
                   import: "base64"
+                  export: "string"
           EOF
-      - script: cat '{"staff_id":3,"picture":"SGVsbG8gd29ybGQ="}' | lino push update dest --table staff
-      - script: lino pull dest --filter staff_id=3 --table staff
+      - script: echo '{"staff_id":1,"picture":"SGVsbG8gd29ybGQ="}' | lino push update dest --table staff
+      - script: lino pull dest --filter staff_id=1 --table staff
         assertions:
           - result.systemerr ShouldBeEmpty
           - result.code ShouldEqual 0
@@ -104,10 +105,11 @@ testcases:
                 - name: "staff_id"
                 - name: "picture"
                   import: "binary(string)"
+                  export: "string"
           EOF
-      - script: cat '{"staff_id":3,"picture":"SGVsbG8gd29ybGQ="}' | lino push update dest --table staff
-      - script: lino pull dest --filter staff_id=3 --table staff
+      - script: echo '{"staff_id":2,"picture":"SGVsbG8gd29ybGQ="}' | lino push update dest --table staff
+      - script: lino pull dest --filter staff_id=2 --table staff
         assertions:
           - result.systemerr ShouldBeEmpty
           - result.code ShouldEqual 0
-          - result.systemout ShouldEqual {"staff_id":1,"picture":"Hello world"}
+          - result.systemout ShouldEqual {"staff_id":2,"picture":"Hello world"}

@@ -14,6 +14,11 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.2.0]
+
+- `Added` import property in `tables.yaml` allow to specify format of data to read from JSON stream (`string` (default), `numeric`, `binary` or `base64` (same), `datetime`, `timestamp`) therefore `import` and `export` now mirror each other (`import` is used at push and `export` at pull) but `import` still allow to specify the data type to pass to database driver (backward compatibility)
+- `Added` import property in `tables.yaml` allow to specify a format AND a type at the same time with the `format(type)` syntax (e.g. `import: binary(int64)`)
+
 ## [2.1.0]
 
 - `Added` export mode all in `tables.yaml` to export all columns even if some columns are defined in the columns property

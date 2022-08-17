@@ -1,0 +1,26 @@
+tables:
+  films: &films
+    name: films
+    keys: [id]
+dataset:
+  films:
+    - { "id": 0, "title": "Star Wars: Episode IV – A New Hope" }
+    - { "id": 1, "title": "Star Wars : Episode V – The Empire Strikes Back" }
+    - { "id": 2, "title": "Indiana Jones and the Temple of Doom" }
+plan:
+  components:
+    films: 0
+  relations: []
+scan: true
+executions:
+  - start: *films
+    filter:
+      limit: 0
+      values: {}
+      where: ""
+    cohort:
+      - { "id": 2 }
+      - { "id": 4 }
+      - { "id": 5 }
+    result:
+      - '{"id":2,"title":"Indiana Jones and the Temple of Doom"}'

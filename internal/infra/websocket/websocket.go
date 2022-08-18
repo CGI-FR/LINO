@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cgi-fr/lino/pkg/relation"
 	"github.com/cgi-fr/lino/pkg/table"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
@@ -111,6 +112,41 @@ func (c *Client) ExtractTables(schema string) ([]table.Table, error) {
 	}
 
 	tables := []table.Table{}
+
+	if err := json.Unmarshal(result.Payload, &tables); err != nil {
+		return nil, err
+	}
+
+	return tables, nil
+}
+
+func (c *Client) ExtractRelations(schema string) ([]relation.Relation, error) {
+	if err := c.Dial(); err != nil {
+		return nil, err
+	}
+
+	defer c.Close()
+
+	payload, err := json.Marshal(map[string]string{"shema": schema})
+	if err != nil {
+		return nil, err
+	}
+	command := CommandMessage{Action: ExtractRelations, Payload: payload}
+
+	if err := c.SendMessage(command); err != nil {
+		return nil, err
+	}
+
+	result, err := c.ReadResult()
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Error != "" {
+		return nil, fmt.Errorf(result.Error)
+	}
+
+	tables := []relation.Relation{}
 
 	if err := json.Unmarshal(result.Payload, &tables); err != nil {
 		return nil, err

@@ -122,6 +122,7 @@ func lino(ctx context.Context, c *websocket.Conn) error {
 	switch v["action"] {
 	case "ping":
 		err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
+
 	case "extract_tables":
 		err = wsjson.Write(ctx, c, map[string]interface{}{
 			"id":    v["id"],
@@ -220,7 +221,197 @@ func lino(ctx context.Context, c *websocket.Conn) error {
 			},
 		},
 		)
-	}
+	case "extract_relations":
+		err = wsjson.Write(ctx, c, map[string]interface{}{
+			"id":    v["id"],
+			"error": nil,
+			"next":  false,
+			"payload": []map[string]interface{}{
 
+				{
+					"name": "FK_EMP_PHOTO",
+					"parent": map[string]interface{}{
+						"name": "EMP_PHOTO",
+						"keys": []string{
+							"EMPNO",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "EMPLOYEE",
+						"keys": []string{
+							"PK_EMPLOYEE",
+						},
+					},
+				},
+
+				{
+					"name": "FK_EMP_RESUME",
+					"parent": map[string]interface{}{
+						"name": "EMP_RESUME",
+						"keys": []string{
+							"EMPNO",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "EMPLOYEE",
+						"keys": []string{
+							"PK_EMPLOYEE",
+						},
+					},
+				},
+				{
+					"name": "FK_PO_CUST",
+					"parent": map[string]interface{}{
+						"name": "PURCHASEORDER",
+						"keys": []string{
+							"CUSTID",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "CUSTOMER",
+						"keys": []string{
+							"PK_CUSTOMER",
+						},
+					},
+				},
+				{
+					"name": "FK_PROJECT_1",
+					"parent": map[string]interface{}{
+						"name": "PROJECT",
+						"keys": []string{
+							"DEPTNO",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "DEPARTMENT",
+						"keys": []string{
+							"PK_DEPARTMENT",
+						},
+					},
+				},
+				{
+					"name": "FK_PROJECT_2",
+					"parent": map[string]interface{}{
+						"name": "PROJECT",
+						"keys": []string{
+							"RESPEMP",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "EMPLOYEE",
+						"keys": []string{
+							"PK_EMPLOYEE",
+						},
+					},
+				},
+				{
+					"name": "RDE",
+					"parent": map[string]interface{}{
+						"name": "DEPARTMENT",
+						"keys": []string{
+							"MGRNO",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "EMPLOYEE",
+						"keys": []string{
+							"PK_EMPLOYEE",
+						},
+					},
+				},
+				{
+					"name": "RED",
+					"parent": map[string]interface{}{
+						"name": "EMPLOYEE",
+						"keys": []string{
+							"WORKDEPT",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "DEPARTMENT",
+						"keys": []string{
+							"PK_DEPARTMENT",
+						},
+					},
+				},
+				{
+					"name": "REPAPA",
+					"parent": map[string]interface{}{
+						"name": "EMPPROJACT",
+						"keys": []string{
+							"PROJNO,ACTNO,EMSTDATE",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "PROJACT",
+						"keys": []string{
+							"PK_PROJACT",
+						},
+					},
+				},
+				{
+					"name": "ROD",
+					"parent": map[string]interface{}{
+						"name": "DEPARTMENT",
+						"keys": []string{
+							"ADMRDEPT",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "DEPARTMENT",
+						"keys": []string{
+							"PK_DEPARTMENT",
+						},
+					},
+				},
+				{
+					"name": "RPAA",
+					"parent": map[string]interface{}{
+						"name": "ACT",
+						"keys": []string{
+							"ACTNO",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "ACT",
+						"keys": []string{
+							"PK_ACT",
+						},
+					},
+				},
+				{
+					"name": "RPAP",
+					"parent": map[string]interface{}{
+						"name": "PROJACT",
+						"keys": []string{
+							"PROJNO",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "PROJECT",
+						"keys": []string{
+							"PK_PROJECT",
+						},
+					},
+				},
+				{
+					"name": "RPP",
+					"parent": map[string]interface{}{
+						"name": "PROJECT",
+						"keys": []string{
+							"MAJPROJ",
+						},
+					},
+					"child": map[string]interface{}{
+						"name": "PROJECT",
+						"keys": []string{
+							"PK_PROJECT",
+						},
+					},
+				},
+			},
+		},
+		)
+	}
 	return err
 }

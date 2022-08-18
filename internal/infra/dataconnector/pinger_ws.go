@@ -15,25 +15,37 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package dataconnector
 
 import (
-	infra "github.com/cgi-fr/lino/internal/infra/dataconnector"
-	domain "github.com/cgi-fr/lino/pkg/dataconnector"
+	"github.com/cgi-fr/lino/internal/infra/websocket"
+	"github.com/cgi-fr/lino/pkg/dataconnector"
 )
 
-func dataconnectorStorage() domain.Storage {
-	return infra.NewYAMLStorage()
+type WSDataPingerFactory struct{}
+
+// NewWSDataPinger creates a new HTTP pinger.
+func NewWSDataPingerFactory() *WSDataPingerFactory {
+	return &WSDataPingerFactory{}
 }
 
-func dataPingerFactory() map[string]domain.DataPingerFactory {
-	return map[string]domain.DataPingerFactory{
-		"postgres":   infra.NewSQLDataPingerFactory(),
-		"godror":     infra.NewSQLDataPingerFactory(),
-		"godror-raw": infra.NewSQLDataPingerFactory(),
-		"mysql":      infra.NewSQLDataPingerFactory(),
-		"db2":        infra.NewSQLDataPingerFactory(),
-		"http":       infra.NewHTTPDataPingerFactory(),
-		"ws":         infra.NewWSDataPingerFactory(),
+func (pdpf WSDataPingerFactory) New(url string) dataconnector.DataPinger {
+	return NewWSDataPinger(url)
+}
+
+func NewWSDataPinger(url string) WSDataPinger {
+	return WSDataPinger{url}
+}
+
+type WSDataPinger struct {
+	url string
+}
+
+func (pdp WSDataPinger) Ping() *dataconnector.Error {
+	client := websocket.New(pdp.url)
+
+	if err := client.Ping(); err != nil {
+		return &dataconnector.Error{Description: err.Error()}
 	}
+	return nil
 }

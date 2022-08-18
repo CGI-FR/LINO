@@ -113,5 +113,12 @@ services:
     volumes:
       - testdata:/config
 
+  wsmock:
+    build:
+      context: .
+      dockerfile: tests/suites/wsmock/Dockerfile
+    command: 0.0.0.0:1080
+    expose:
+      - 1080
 volumes:
   testdata:

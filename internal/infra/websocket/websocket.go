@@ -19,9 +19,11 @@ package websocket
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/cgi-fr/lino/pkg/table"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
@@ -37,15 +39,16 @@ const (
 )
 
 type CommandMessage struct {
-	Id      string      `json:"id"`
-	Action  action      `json:"action"`
-	Payload interface{} `json:"payload"`
+	Id      string          `json:"id"`
+	Action  action          `json:"action"`
+	Payload json.RawMessage `json:"payload"`
 }
 
 type ResultMessage struct {
-	Id      string      `json:"id"`
-	Error   string      `json:"error"`
-	Payload interface{} `json:"payload"`
+	Id      string          `json:"id"`
+	Error   string          `json:"error"`
+	Next    bool            `json:"next"`
+	Payload json.RawMessage `json:"payload"`
 }
 
 func New(url string) Client {
@@ -63,6 +66,8 @@ func (c *Client) Ping() error {
 		return err
 	}
 
+	defer c.Close()
+
 	if err := c.SendMessage(CommandMessage{Action: Ping}); err != nil {
 		return err
 	}
@@ -77,6 +82,41 @@ func (c *Client) Ping() error {
 	}
 
 	return nil
+}
+
+func (c *Client) ExtractTables(schema string) ([]table.Table, error) {
+	if err := c.Dial(); err != nil {
+		return nil, err
+	}
+
+	defer c.Close()
+
+	payload, err := json.Marshal(map[string]string{"shema": schema})
+	if err != nil {
+		return nil, err
+	}
+	command := CommandMessage{Action: ExtractTables, Payload: payload}
+
+	if err := c.SendMessage(command); err != nil {
+		return nil, err
+	}
+
+	result, err := c.ReadResult()
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Error != "" {
+		return nil, fmt.Errorf(result.Error)
+	}
+
+	tables := []table.Table{}
+
+	if err := json.Unmarshal(result.Payload, &tables); err != nil {
+		return nil, err
+	}
+
+	return tables, nil
 }
 
 func (c *Client) SendMessage(msg CommandMessage) error {
@@ -107,6 +147,12 @@ func (c *Client) Dial() error {
 		Subprotocols: []string{"lino"},
 	})
 	return err
+}
+
+func (c *Client) Close() {
+	if c.conn != nil {
+		c.conn.Close(websocket.StatusNormalClosure, "")
+	}
 }
 
 type Protocol struct{}

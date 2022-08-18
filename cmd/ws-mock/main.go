@@ -117,7 +117,110 @@ func lino(ctx context.Context, c *websocket.Conn) error {
 
 	log.Printf("receive message  %v", v)
 
-	err := wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
+	var err error
+
+	switch v["action"] {
+	case "ping":
+		err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
+	case "extract_tables":
+		err = wsjson.Write(ctx, c, map[string]interface{}{
+			"id":    v["id"],
+			"error": nil,
+			"next":  false,
+			"payload": []map[string]interface{}{
+				{
+					"name": "ACT",
+					"keys": []string{
+						"ACTNO",
+					},
+				},
+				{
+					"name": "CATALOG",
+					"keys": []string{
+						"NAME",
+					},
+				},
+				{
+					"name": "CUSTOMER",
+					"keys": []string{
+						"CID",
+					},
+				},
+				{
+					"name": "DEPARTMENT",
+					"keys": []string{
+						"DEPTNO",
+					},
+				},
+				{
+					"name": "EMPLOYEE",
+					"keys": []string{
+						"EMPNO",
+					},
+				},
+				{
+					"name": "EMP_PHOTO",
+					"keys": []string{
+						"EMPNO",
+						"PHOTO_FORMAT",
+					},
+				},
+				{
+					"name": "EMP_RESUME",
+					"keys": []string{
+						"EMPNO",
+						"RESUME_FORMAT",
+					},
+				},
+				{
+					"name": "INVENTORY",
+					"keys": []string{
+						"PID",
+					},
+				},
+				{
+					"name": "PRODUCT",
+					"keys": []string{
+						"PID",
+					},
+				},
+				{
+					"name": "PRODUCTSUPPLIER",
+					"keys": []string{
+						"PID",
+						"SID",
+					},
+				},
+				{
+					"name": "PROJACT",
+					"keys": []string{
+						"ACSTDATE",
+						"ACTNO",
+						"PROJNO",
+					},
+				},
+				{
+					"name": "PROJECT",
+					"keys": []string{
+						"PROJNO",
+					},
+				},
+				{
+					"name": "PURCHASEORDER",
+					"keys": []string{
+						"POID",
+					},
+				},
+				{
+					"name": "SUPPLIERS",
+					"keys": []string{
+						"SID",
+					},
+				},
+			},
+		},
+		)
+	}
 
 	return err
 }

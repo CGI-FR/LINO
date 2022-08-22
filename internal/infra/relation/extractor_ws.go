@@ -18,14 +18,41 @@
 package relation
 
 import (
-	"github.com/cgi-fr/lino/internal/infra/websocket"
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+
 	"github.com/cgi-fr/lino/pkg/relation"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
+
+type action string
+
+const (
+	ExtractTables action = "extract_relations"
+)
+
+type CommandMessage struct {
+	Id      string          `json:"id"`
+	Action  action          `json:"action"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+type ResultMessage struct {
+	Id      string          `json:"id"`
+	Error   string          `json:"error"`
+	Next    bool            `json:"next"`
+	Payload json.RawMessage `json:"payload"`
+}
 
 // WSExtractor provides table extraction logic from an WS Rest Endpoint.
 type WSExtractor struct {
-	url    string
-	schema string
+	url      string
+	schema   string
+	conn     *websocket.Conn
+	sequence int
 }
 
 // NewWSExtractor creates a new WS extractor.
@@ -38,14 +65,74 @@ func NewWSExtractor(url string, schema string) *WSExtractor {
 
 // Extract relation from the database.
 func (e *WSExtractor) Extract() ([]relation.Relation, *relation.Error) {
-	client := websocket.New(e.url)
+	if err := e.Dial(); err != nil {
+		return nil, &relation.Error{Description: err.Error()}
+	}
 
-	relations, err := client.ExtractRelations(e.schema)
+	defer e.Close()
+
+	payload, err := json.Marshal(map[string]string{"shema": e.schema})
+	if err != nil {
+		return nil, &relation.Error{Description: err.Error()}
+	}
+	command := CommandMessage{Action: ExtractTables, Payload: payload}
+
+	if err := e.SendMessage(command); err != nil {
+		return nil, &relation.Error{Description: err.Error()}
+	}
+
+	result, err := e.ReadResult()
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}
 	}
 
+	if result.Error != "" {
+		return nil, &relation.Error{Description: result.Error}
+	}
+
+	relations := []relation.Relation{}
+
+	if err := json.Unmarshal(result.Payload, &relations); err != nil {
+		return nil, &relation.Error{Description: err.Error()}
+	}
+
 	return relations, nil
+}
+
+func (e *WSExtractor) Dial() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	var err error
+	e.conn, _, err = websocket.Dial(ctx, e.url, &websocket.DialOptions{
+		Subprotocols: []string{"lino"},
+	})
+	return err
+}
+
+func (e *WSExtractor) SendMessage(msg CommandMessage) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+	defer cancel()
+	msg.Id = fmt.Sprintf("%d", e.sequence)
+	e.sequence++
+	return wsjson.Write(ctx, e.conn, msg)
+}
+
+func (e *WSExtractor) ReadResult() (ResultMessage, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+	defer cancel()
+
+	result := ResultMessage{}
+	err := wsjson.Read(ctx, e.conn, &result)
+	return result, err
+}
+
+func (e *WSExtractor) Close() {
+	if e.conn != nil {
+		e.conn.Close(websocket.StatusNormalClosure, "")
+	}
 }
 
 // NewWSExtractorFactory creates a new WS extractor factory.

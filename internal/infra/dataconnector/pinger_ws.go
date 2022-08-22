@@ -18,9 +18,34 @@
 package dataconnector
 
 import (
-	"github.com/cgi-fr/lino/internal/infra/websocket"
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+
 	"github.com/cgi-fr/lino/pkg/dataconnector"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
+
+type action string
+
+const (
+	ExtractTables action = "ping"
+)
+
+type CommandMessage struct {
+	Id      string          `json:"id"`
+	Action  action          `json:"action"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+type ResultMessage struct {
+	Id      string          `json:"id"`
+	Error   string          `json:"error"`
+	Next    bool            `json:"next"`
+	Payload json.RawMessage `json:"payload"`
+}
 
 type WSDataPingerFactory struct{}
 
@@ -34,18 +59,72 @@ func (pdpf WSDataPingerFactory) New(url string) dataconnector.DataPinger {
 }
 
 func NewWSDataPinger(url string) WSDataPinger {
-	return WSDataPinger{url}
+	return WSDataPinger{url: url}
 }
 
 type WSDataPinger struct {
-	url string
+	url      string
+	conn     *websocket.Conn
+	sequence int
 }
 
-func (pdp WSDataPinger) Ping() *dataconnector.Error {
-	client := websocket.New(pdp.url)
-
-	if err := client.Ping(); err != nil {
+func (e WSDataPinger) Ping() *dataconnector.Error {
+	if err := e.Dial(); err != nil {
 		return &dataconnector.Error{Description: err.Error()}
 	}
+
+	defer e.Close()
+
+	command := CommandMessage{Action: ExtractTables}
+
+	if err := e.SendMessage(command); err != nil {
+		return &dataconnector.Error{Description: err.Error()}
+	}
+
+	result, err := e.ReadResult()
+	if err != nil {
+		return &dataconnector.Error{Description: err.Error()}
+	}
+
+	if result.Error != "" {
+		return &dataconnector.Error{Description: result.Error}
+	}
+
 	return nil
+}
+
+func (e *WSDataPinger) Dial() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	var err error
+	e.conn, _, err = websocket.Dial(ctx, e.url, &websocket.DialOptions{
+		Subprotocols: []string{"lino"},
+	})
+	return err
+}
+
+func (e *WSDataPinger) SendMessage(msg CommandMessage) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+	defer cancel()
+	msg.Id = fmt.Sprintf("%d", e.sequence)
+	e.sequence++
+	return wsjson.Write(ctx, e.conn, msg)
+}
+
+func (e *WSDataPinger) ReadResult() (ResultMessage, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+	defer cancel()
+
+	result := ResultMessage{}
+	err := wsjson.Read(ctx, e.conn, &result)
+	return result, err
+}
+
+func (e *WSDataPinger) Close() {
+	if e.conn != nil {
+		e.conn.Close(websocket.StatusNormalClosure, "")
+	}
 }

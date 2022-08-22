@@ -18,14 +18,41 @@
 package table
 
 import (
-	"github.com/cgi-fr/lino/internal/infra/websocket"
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+
 	"github.com/cgi-fr/lino/pkg/table"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
+
+type action string
+
+const (
+	ExtractTables action = "extract_tables"
+)
+
+type CommandMessage struct {
+	Id      string          `json:"id"`
+	Action  action          `json:"action"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+type ResultMessage struct {
+	Id      string          `json:"id"`
+	Error   string          `json:"error"`
+	Next    bool            `json:"next"`
+	Payload json.RawMessage `json:"payload"`
+}
 
 // WSExtractor provides table extraction logic from an WS Rest Endpoint.
 type WSExtractor struct {
-	url    string
-	schema string
+	url      string
+	schema   string
+	conn     *websocket.Conn
+	sequence int
 }
 
 // NewWSExtractor creates a new WS extractor.
@@ -38,14 +65,74 @@ func NewWSExtractor(url string, schema string) *WSExtractor {
 
 // Extract tables from the database.
 func (e *WSExtractor) Extract() ([]table.Table, *table.Error) {
-	client := websocket.New(e.url)
+	if err := e.Dial(); err != nil {
+		return nil, &table.Error{Description: err.Error()}
+	}
 
-	tables, err := client.ExtractTables(e.schema)
+	defer e.Close()
+
+	payload, err := json.Marshal(map[string]string{"shema": e.schema})
+	if err != nil {
+		return nil, &table.Error{Description: err.Error()}
+	}
+	command := CommandMessage{Action: ExtractTables, Payload: payload}
+
+	if err := e.SendMessage(command); err != nil {
+		return nil, &table.Error{Description: err.Error()}
+	}
+
+	result, err := e.ReadResult()
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
 
+	if result.Error != "" {
+		return nil, &table.Error{Description: result.Error}
+	}
+
+	tables := []table.Table{}
+
+	if err := json.Unmarshal(result.Payload, &tables); err != nil {
+		return nil, &table.Error{Description: err.Error()}
+	}
+
 	return tables, nil
+}
+
+func (e *WSExtractor) Dial() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	var err error
+	e.conn, _, err = websocket.Dial(ctx, e.url, &websocket.DialOptions{
+		Subprotocols: []string{"lino"},
+	})
+	return err
+}
+
+func (e *WSExtractor) SendMessage(msg CommandMessage) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+	defer cancel()
+	msg.Id = fmt.Sprintf("%d", e.sequence)
+	e.sequence++
+	return wsjson.Write(ctx, e.conn, msg)
+}
+
+func (e *WSExtractor) ReadResult() (ResultMessage, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+	defer cancel()
+
+	result := ResultMessage{}
+	err := wsjson.Read(ctx, e.conn, &result)
+	return result, err
+}
+
+func (e *WSExtractor) Close() {
+	if e.conn != nil {
+		e.conn.Close(websocket.StatusNormalClosure, "")
+	}
 }
 
 func (e *WSExtractor) Count(tableName string) (int, *table.Error) {

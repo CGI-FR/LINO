@@ -217,7 +217,6 @@ func (ds *WSDataSource) Close() error {
 		log.Trace().Msg("Close WS")
 
 		ds.conn.Close(websocket.StatusNormalClosure, "")
-
 	}
 
 	return nil

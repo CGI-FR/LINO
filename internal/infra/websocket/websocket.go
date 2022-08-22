@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cgi-fr/lino/pkg/pull"
 	"github.com/cgi-fr/lino/pkg/relation"
 	"github.com/cgi-fr/lino/pkg/table"
 	"nhooyr.io/websocket"
@@ -52,8 +53,8 @@ type ResultMessage struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
-func New(url string) Client {
-	return Client{url: url}
+func New(url string) *Client {
+	return &Client{url: url}
 }
 
 type Client struct {
@@ -155,6 +156,27 @@ func (c *Client) ExtractRelations(schema string) ([]relation.Relation, error) {
 	return tables, nil
 }
 
+func (c *Client) Pull(table string, schema string, filter pull.Filter, pcolsList []string) (pull.RowReader, error) {
+	if err := c.Dial(); err != nil {
+		return nil, err
+	}
+
+	defer c.Close()
+
+	payload, err := json.Marshal(map[string]string{"shema": schema})
+	if err != nil {
+		return nil, err
+	}
+	command := CommandMessage{Action: PullOpen, Payload: payload}
+
+	result, err := c.SendMessageAndReadResultStream(command)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
 func (c *Client) SendMessage(msg CommandMessage) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
@@ -174,6 +196,35 @@ func (c *Client) ReadResult() (ResultMessage, error) {
 	return result, err
 }
 
+func (c *Client) SendMessageAndReadResultStream(msg CommandMessage) (ResultStream, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+	defer cancel()
+
+	resultChan := make(chan *ResultMessage)
+	stream := ResultStream{resultChan, nil, nil, nil}
+
+	msg.Id = fmt.Sprintf("%d", c.sequence)
+	c.sequence++
+	if err := wsjson.Write(ctx, c.conn, msg); err != nil {
+		return stream, err
+	}
+
+	go func() {
+		for {
+			result := ResultMessage{}
+			err := wsjson.Read(ctx, c.conn, &result)
+			if err != nil {
+				close(resultChan)
+				return
+			}
+			resultChan <- &ResultMessage{}
+		}
+	}()
+
+	return stream, nil
+}
+
 func (c *Client) Dial() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -191,4 +242,38 @@ func (c *Client) Close() {
 	}
 }
 
-type Protocol struct{}
+type ResultStream struct {
+	payloadStream chan *ResultMessage
+	lastMessage   *ResultMessage
+	lastRow       pull.Row
+	err           error
+}
+
+// Next return true if Next Value is present
+func (rs *ResultStream) Next() bool {
+	rs.lastMessage = <-rs.payloadStream
+	if rs.lastMessage == nil {
+		return false
+	}
+	if rs.lastMessage.Error != "" {
+		rs.err = fmt.Errorf(rs.lastMessage.Error)
+		return false
+	}
+	if err := json.Unmarshal(rs.lastMessage.Payload, &rs.lastRow); err != nil {
+		rs.err = err
+		return false
+	}
+	return rs.lastMessage.Next
+}
+
+// Value return the current Row
+func (rs *ResultStream) Value() pull.Row {
+	if rs.lastMessage != nil {
+		return rs.lastRow
+	}
+	panic("Value is not valid before call Next")
+}
+
+func (rs *ResultStream) Error() error {
+	return rs.err
+}

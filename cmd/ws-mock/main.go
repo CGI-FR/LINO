@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -106,7 +108,7 @@ func (s echoServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // the received message back to it.
 // The entire function has 10s to complete.
 func lino(ctx context.Context, c *websocket.Conn) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	v := map[string]interface{}{}
@@ -405,11 +407,49 @@ func lino(ctx context.Context, c *websocket.Conn) error {
 					"child": map[string]interface{}{
 						"name": "PROJECT",
 						"keys": []string{
-							"PK_PROJECT",
+							"PROJNO",
 						},
 					},
 				},
 			},
+		},
+		)
+	case "pull_open":
+
+		switch v["payload"].(map[string]interface{})["table"] {
+		case "PROJECT":
+
+			for i := 0; i < 1000; i++ {
+				err = wsjson.Write(ctx, c, map[string]interface{}{
+					"id":    v["id"],
+					"error": nil,
+					"next":  true,
+					"payload": json.RawMessage(
+						[]byte(fmt.Sprintf("{\"PROJNO\": %d, \"MAJPROJ\":2, \"DEPTNO\":1}", i)),
+					),
+				},
+				)
+			}
+		case "DEPARTMENT":
+			err = wsjson.Write(ctx, c, map[string]interface{}{
+				"id":    v["id"],
+				"error": nil,
+				"next":  true,
+				"payload": json.RawMessage(
+					[]byte("{\"DEPTNO\": 1}"),
+				),
+			},
+			)
+		}
+
+		if err != nil {
+			return err
+		}
+
+		err = wsjson.Write(ctx, c, map[string]interface{}{
+			"id":    v["id"],
+			"error": nil,
+			"next":  false,
 		},
 		)
 	}

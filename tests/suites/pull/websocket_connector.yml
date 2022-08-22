@@ -34,7 +34,7 @@ testcases:
 
   - name: pull all
     steps:
-      - script: lino pull --table customer --limit 0 ws
+      - script: lino pull --limit 0 ws
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldContainSubstring "PROJNO":1

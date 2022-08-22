@@ -25,17 +25,18 @@ testcases:
       - script: sudo docker-compose -p lino rm -f wsmock
       - script: sudo docker-compose -p lino up -d wsmock
       - script: lino dataconnector add ws ws://wsmock:1080/
-      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-      - script: lino id set-child-lookup FK_PROJECT_1 true
       - script: count=0; while ! lino dc ping ws; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
       - script: lino table extract ws
       - script: lino relation extract ws
+      - script: lino id create PROJECT
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup FK_PROJECT_1 true
 
   - name: pull all
     steps:
       - script: lino pull --table customer --limit 0 ws
         assertions:
           - result.code ShouldEqual 0
-          - result.systemout ShouldContainSubstring "customer_id":1
-          - result.systemout ShouldContainSubstring "customer_id":2
+          - result.systemout ShouldContainSubstring "PROJNO":1
+          - result.systemout ShouldContainSubstring "PROJNO":999
           - result.systemerr ShouldBeEmpty

@@ -107,7 +107,7 @@ func (ds *WSDataSource) Open() error {
 			result := ResultMessage{}
 			err := wsjson.Read(ctx, ds.conn, &result)
 			if err != nil {
-				log.Error().AnErr("error", err).Msg("Error reading result")
+				log.Info().AnErr("error", err).Msg("Error reading result stop consuming messages")
 				break
 			}
 			log.Trace().Str("id", result.Id).Msg("receive message")

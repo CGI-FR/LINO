@@ -90,10 +90,10 @@ type RowSet []Row
 type DataSet map[TableName]RowSet
 
 type Filter struct {
-	Limit    uint
-	Values   Row
-	Where    string
-	Distinct bool
+	Limit    uint   `json:"limit"`
+	Values   Row    `json:"values"`
+	Where    string `json:"where"`
+	Distinct bool   `json:"distinct"`
 }
 
 // ExportedRow is a row but with keys ordered and values in export format for jsonline.

@@ -155,7 +155,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			puller := pull.NewPullerParallel(plan, datasource, pullExporterFactory(out), tracer, parallel)
 			if e3 := puller.Pull(start, filter, filters); e3 != nil {
-				fmt.Fprintln(err, e3)
+				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the pull command")
 				os.Exit(1)
 			}
 

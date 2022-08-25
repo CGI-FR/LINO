@@ -44,10 +44,10 @@ type CommandMessage struct {
 }
 
 type PullPayload struct {
-	Schema string      `json:"schema"`
-	Table  string      `json:"table"`
-	Colums []string    `json:"colums"`
-	Filter pull.Filter `json:"filter"`
+	Schema  string      `json:"schema"`
+	Table   string      `json:"table"`
+	Columns []string    `json:"columns"`
+	Filter  pull.Filter `json:"filter"`
 }
 
 type ResultMessage struct {
@@ -110,10 +110,11 @@ func (ds *WSDataSource) Open() error {
 				log.Info().AnErr("error", err).Msg("Error reading result stop consuming messages")
 				break
 			}
-			log.Trace().Str("id", result.Id).Msg("receive message")
+			log.Trace().Str("Error", result.Error).Str("id", result.Id).Msg("receive message")
 
 			ds.Lock()
 			resultChan := ds.results[result.Id]
+			resultChan <- result
 			if !result.Next {
 				close(resultChan)
 				delete(ds.results, result.Id)
@@ -121,7 +122,6 @@ func (ds *WSDataSource) Open() error {
 				continue
 			}
 			ds.Unlock()
-			resultChan <- result
 		}
 	}()
 
@@ -233,11 +233,16 @@ type ResultStream struct {
 func (rs *ResultStream) Next() bool {
 	lastMessage := <-rs.payloadStream
 
-	if lastMessage.Error != "" {
-		rs.err = fmt.Errorf(lastMessage.Error)
+	if lastMessage.Error == "Error" {
+		rs.err = fmt.Errorf("Receive error from web socket server : %s ", string(lastMessage.Payload))
 		return false
 	}
 	if lastMessage.Id == "" {
+		return false
+	}
+
+	if !lastMessage.Next {
+		log.Trace().Str("Id", lastMessage.Id).Msg("End of web socket stream")
 		return false
 	}
 
@@ -248,7 +253,6 @@ func (rs *ResultStream) Next() bool {
 		return false
 	}
 	rs.lastMessage = lastMessage
-	log.Trace().Bool("next", rs.lastMessage.Next).Msg("new row")
 	return true
 }
 

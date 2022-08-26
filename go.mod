@@ -19,7 +19,7 @@ require (
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0
-	github.com/xo/dburl v0.11.0
+	github.com/xo/dburl v0.11.1
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	gopkg.in/yaml.v3 v3.0.1
 )

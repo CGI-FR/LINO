@@ -71,7 +71,7 @@ func (e *WSExtractor) Extract() ([]table.Table, *table.Error) {
 
 	defer e.Close()
 
-	payload, err := json.Marshal(map[string]string{"shema": e.schema})
+	payload, err := json.Marshal(map[string]string{"schema": e.schema})
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}

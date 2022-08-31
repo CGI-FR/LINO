@@ -87,7 +87,7 @@ func (e WSDataPinger) Ping() *dataconnector.Error {
 	}
 
 	if result.Error != "" {
-		return &dataconnector.Error{Description: result.Error}
+		return &dataconnector.Error{Description: "Error from server : " + string(result.Payload)}
 	}
 
 	return nil

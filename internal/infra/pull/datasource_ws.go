@@ -110,7 +110,7 @@ func (ds *WSDataSource) Open() error {
 				log.Info().AnErr("error", err).Msg("Error reading result stop consuming messages")
 				break
 			}
-			log.Trace().Str("Error", result.Error).Str("id", result.Id).Msg("receive message")
+			log.Trace().Str("Error", result.Error).Str("id", result.Id).Str("payload", string(result.Payload)).Msg("receive message")
 
 			ds.Lock()
 			resultChan := ds.results[result.Id]

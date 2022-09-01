@@ -224,234 +224,273 @@ func lino(ctx context.Context, c *websocket.Conn) error {
 		},
 		)
 	case "extract_relations":
-		err = wsjson.Write(ctx, c, map[string]interface{}{
-			"id":    v["id"],
-			"error": nil,
-			"next":  false,
-			"payload": []map[string]interface{}{
+		err = relations(err, ctx, c, v)
+	case "pull_open":
+		var shouldReturn bool
+		var returnValue error
+		err, shouldReturn, returnValue = pull(v, err, ctx, c)
+		if shouldReturn {
+			return returnValue
+		}
 
-				{
-					"name": "FK_EMP_PHOTO",
-					"parent": map[string]interface{}{
-						"name": "EMP_PHOTO",
-						"keys": []string{
-							"EMPNO",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "EMPLOYEE",
-						"keys": []string{
-							"PK_EMPLOYEE",
-						},
-					},
-				},
+	case "push_open":
+		tables := v["payload"].(map[string]interface{})["tables"].([]string)
+		mode := v["payload"].(map[string]interface{})["mode"]
+		disableConstraints := v["payload"].(map[string]interface{})["disable_constraints"].(bool)
+		log.Printf("mode  %v", mode)
+		log.Printf("disableConstraints  %v", disableConstraints)
+		if disableConstraints {
+			err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
+		} else {
+			for table := range tables {
+				log.Printf("table  %v", table)
+			}
+			err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
+		}
 
-				{
-					"name": "FK_EMP_RESUME",
-					"parent": map[string]interface{}{
-						"name": "EMP_RESUME",
-						"keys": []string{
-							"EMPNO",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "EMPLOYEE",
-						"keys": []string{
-							"PK_EMPLOYEE",
-						},
-					},
-				},
-				{
-					"name": "FK_PO_CUST",
-					"parent": map[string]interface{}{
-						"name": "PURCHASEORDER",
-						"keys": []string{
-							"CUSTID",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "CUSTOMER",
-						"keys": []string{
-							"PK_CUSTOMER",
-						},
+	case "push_data":
+		table := v["payload"].(map[string]interface{})["table"].(string)
+		row := v["payload"].(map[string]interface{})["row"].([]interface{})
+		log.Printf("insert %v in table  %s", row, table)
+		err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
+	case "push_commit":
+		err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
+	case "push_close":
+		err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
+	}
+	return err
+}
+
+func relations(err error, ctx context.Context, c *websocket.Conn, v map[string]interface{}) error {
+	err = wsjson.Write(ctx, c, map[string]interface{}{
+		"id":    v["id"],
+		"error": nil,
+		"next":  false,
+		"payload": []map[string]interface{}{
+
+			{
+				"name": "FK_EMP_PHOTO",
+				"parent": map[string]interface{}{
+					"name": "EMP_PHOTO",
+					"keys": []string{
+						"EMPNO",
 					},
 				},
-				{
-					"name": "FK_PROJECT_1",
-					"parent": map[string]interface{}{
-						"name": "PROJECT",
-						"keys": []string{
-							"DEPTNO",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "DEPARTMENT",
-						"keys": []string{
-							"PK_DEPARTMENT",
-						},
+				"child": map[string]interface{}{
+					"name": "EMPLOYEE",
+					"keys": []string{
+						"PK_EMPLOYEE",
 					},
 				},
-				{
-					"name": "FK_PROJECT_2",
-					"parent": map[string]interface{}{
-						"name": "PROJECT",
-						"keys": []string{
-							"RESPEMP",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "EMPLOYEE",
-						"keys": []string{
-							"PK_EMPLOYEE",
-						},
+			},
+
+			{
+				"name": "FK_EMP_RESUME",
+				"parent": map[string]interface{}{
+					"name": "EMP_RESUME",
+					"keys": []string{
+						"EMPNO",
 					},
 				},
-				{
-					"name": "RDE",
-					"parent": map[string]interface{}{
-						"name": "DEPARTMENT",
-						"keys": []string{
-							"MGRNO",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "EMPLOYEE",
-						"keys": []string{
-							"PK_EMPLOYEE",
-						},
+				"child": map[string]interface{}{
+					"name": "EMPLOYEE",
+					"keys": []string{
+						"PK_EMPLOYEE",
 					},
 				},
-				{
-					"name": "RED",
-					"parent": map[string]interface{}{
-						"name": "EMPLOYEE",
-						"keys": []string{
-							"WORKDEPT",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "DEPARTMENT",
-						"keys": []string{
-							"PK_DEPARTMENT",
-						},
+			},
+			{
+				"name": "FK_PO_CUST",
+				"parent": map[string]interface{}{
+					"name": "PURCHASEORDER",
+					"keys": []string{
+						"CUSTID",
 					},
 				},
-				{
-					"name": "REPAPA",
-					"parent": map[string]interface{}{
-						"name": "EMPPROJACT",
-						"keys": []string{
-							"PROJNO,ACTNO,EMSTDATE",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "PROJACT",
-						"keys": []string{
-							"PK_PROJACT",
-						},
+				"child": map[string]interface{}{
+					"name": "CUSTOMER",
+					"keys": []string{
+						"PK_CUSTOMER",
 					},
 				},
-				{
-					"name": "ROD",
-					"parent": map[string]interface{}{
-						"name": "DEPARTMENT",
-						"keys": []string{
-							"ADMRDEPT",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "DEPARTMENT",
-						"keys": []string{
-							"PK_DEPARTMENT",
-						},
+			},
+			{
+				"name": "FK_PROJECT_1",
+				"parent": map[string]interface{}{
+					"name": "PROJECT",
+					"keys": []string{
+						"DEPTNO",
 					},
 				},
-				{
-					"name": "RPAA",
-					"parent": map[string]interface{}{
-						"name": "ACT",
-						"keys": []string{
-							"ACTNO",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "ACT",
-						"keys": []string{
-							"PK_ACT",
-						},
+				"child": map[string]interface{}{
+					"name": "DEPARTMENT",
+					"keys": []string{
+						"PK_DEPARTMENT",
 					},
 				},
-				{
-					"name": "RPAP",
-					"parent": map[string]interface{}{
-						"name": "PROJACT",
-						"keys": []string{
-							"PROJNO",
-						},
-					},
-					"child": map[string]interface{}{
-						"name": "PROJECT",
-						"keys": []string{
-							"PK_PROJECT",
-						},
+			},
+			{
+				"name": "FK_PROJECT_2",
+				"parent": map[string]interface{}{
+					"name": "PROJECT",
+					"keys": []string{
+						"RESPEMP",
 					},
 				},
-				{
-					"name": "RPP",
-					"parent": map[string]interface{}{
-						"name": "PROJECT",
-						"keys": []string{
-							"MAJPROJ",
-						},
+				"child": map[string]interface{}{
+					"name": "EMPLOYEE",
+					"keys": []string{
+						"PK_EMPLOYEE",
 					},
-					"child": map[string]interface{}{
-						"name": "PROJECT",
-						"keys": []string{
-							"PROJNO",
-						},
+				},
+			},
+			{
+				"name": "RDE",
+				"parent": map[string]interface{}{
+					"name": "DEPARTMENT",
+					"keys": []string{
+						"MGRNO",
+					},
+				},
+				"child": map[string]interface{}{
+					"name": "EMPLOYEE",
+					"keys": []string{
+						"PK_EMPLOYEE",
+					},
+				},
+			},
+			{
+				"name": "RED",
+				"parent": map[string]interface{}{
+					"name": "EMPLOYEE",
+					"keys": []string{
+						"WORKDEPT",
+					},
+				},
+				"child": map[string]interface{}{
+					"name": "DEPARTMENT",
+					"keys": []string{
+						"PK_DEPARTMENT",
+					},
+				},
+			},
+			{
+				"name": "REPAPA",
+				"parent": map[string]interface{}{
+					"name": "EMPPROJACT",
+					"keys": []string{
+						"PROJNO,ACTNO,EMSTDATE",
+					},
+				},
+				"child": map[string]interface{}{
+					"name": "PROJACT",
+					"keys": []string{
+						"PK_PROJACT",
+					},
+				},
+			},
+			{
+				"name": "ROD",
+				"parent": map[string]interface{}{
+					"name": "DEPARTMENT",
+					"keys": []string{
+						"ADMRDEPT",
+					},
+				},
+				"child": map[string]interface{}{
+					"name": "DEPARTMENT",
+					"keys": []string{
+						"PK_DEPARTMENT",
+					},
+				},
+			},
+			{
+				"name": "RPAA",
+				"parent": map[string]interface{}{
+					"name": "ACT",
+					"keys": []string{
+						"ACTNO",
+					},
+				},
+				"child": map[string]interface{}{
+					"name": "ACT",
+					"keys": []string{
+						"PK_ACT",
+					},
+				},
+			},
+			{
+				"name": "RPAP",
+				"parent": map[string]interface{}{
+					"name": "PROJACT",
+					"keys": []string{
+						"PROJNO",
+					},
+				},
+				"child": map[string]interface{}{
+					"name": "PROJECT",
+					"keys": []string{
+						"PK_PROJECT",
+					},
+				},
+			},
+			{
+				"name": "RPP",
+				"parent": map[string]interface{}{
+					"name": "PROJECT",
+					"keys": []string{
+						"MAJPROJ",
+					},
+				},
+				"child": map[string]interface{}{
+					"name": "PROJECT",
+					"keys": []string{
+						"PROJNO",
 					},
 				},
 			},
 		},
-		)
-	case "pull_open":
+	},
+	)
+	return err
+}
 
-		switch v["payload"].(map[string]interface{})["table"] {
-		case "PROJECT":
+func pull(v map[string]interface{}, err error, ctx context.Context, c *websocket.Conn) (error, bool, error) {
+	switch v["payload"].(map[string]interface{})["table"] {
+	case "PROJECT":
 
-			for i := 0; i < 1000; i++ {
-				err = wsjson.Write(ctx, c, map[string]interface{}{
-					"id":    v["id"],
-					"error": nil,
-					"next":  true,
-					"payload": json.RawMessage(
-						[]byte(fmt.Sprintf("{\"PROJNO\": %d, \"MAJPROJ\":2, \"DEPTNO\":1}", i)),
-					),
-				},
-				)
-			}
-		case "DEPARTMENT":
+		for i := 0; i < 1000; i++ {
 			err = wsjson.Write(ctx, c, map[string]interface{}{
 				"id":    v["id"],
 				"error": nil,
 				"next":  true,
 				"payload": json.RawMessage(
-					[]byte("{\"DEPTNO\": 1}"),
+					[]byte(fmt.Sprintf("{\"PROJNO\": %d, \"MAJPROJ\":2, \"DEPTNO\":1}", i)),
 				),
 			},
 			)
 		}
-
-		if err != nil {
-			return err
-		}
-
+	case "DEPARTMENT":
 		err = wsjson.Write(ctx, c, map[string]interface{}{
 			"id":    v["id"],
 			"error": nil,
-			"next":  false,
+			"next":  true,
+			"payload": json.RawMessage(
+				[]byte("{\"DEPTNO\": 1}"),
+			),
 		},
 		)
 	}
-	return err
+
+	if err != nil {
+		return nil, true, err
+	}
+
+	err = wsjson.Write(ctx, c, map[string]interface{}{
+		"id":    v["id"],
+		"error": nil,
+		"next":  false,
+	},
+	)
+	return err, false, nil
 }

@@ -224,7 +224,7 @@ func lino(ctx context.Context, c *websocket.Conn) error {
 		},
 		)
 	case "extract_relations":
-		err = relations(err, ctx, c, v)
+		err = relations(ctx, c, v)
 	case "pull_open":
 		var shouldReturn bool
 		var returnValue error
@@ -234,15 +234,15 @@ func lino(ctx context.Context, c *websocket.Conn) error {
 		}
 
 	case "push_open":
-		tables := v["payload"].(map[string]interface{})["tables"].([]string)
+		tables := v["payload"].(map[string]interface{})["tables"].([]interface{})
 		mode := v["payload"].(map[string]interface{})["mode"]
 		disableConstraints := v["payload"].(map[string]interface{})["disable_constraints"].(bool)
 		log.Printf("mode  %v", mode)
 		log.Printf("disableConstraints  %v", disableConstraints)
 		if disableConstraints {
-			err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
+			err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": "constraint is locked", "next": false})
 		} else {
-			for table := range tables {
+			for _, table := range tables {
 				log.Printf("table  %v", table)
 			}
 			err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
@@ -250,7 +250,7 @@ func lino(ctx context.Context, c *websocket.Conn) error {
 
 	case "push_data":
 		table := v["payload"].(map[string]interface{})["table"].(string)
-		row := v["payload"].(map[string]interface{})["row"].([]interface{})
+		row := v["payload"].(map[string]interface{})["row"].(map[string]interface{})
 		log.Printf("insert %v in table  %s", row, table)
 		err = wsjson.Write(ctx, c, map[string]interface{}{"id": v["id"], "error": nil, "next": false})
 	case "push_commit":
@@ -261,8 +261,8 @@ func lino(ctx context.Context, c *websocket.Conn) error {
 	return err
 }
 
-func relations(err error, ctx context.Context, c *websocket.Conn, v map[string]interface{}) error {
-	err = wsjson.Write(ctx, c, map[string]interface{}{
+func relations(ctx context.Context, c *websocket.Conn, v map[string]interface{}) error {
+	err := wsjson.Write(ctx, c, map[string]interface{}{
 		"id":    v["id"],
 		"error": nil,
 		"next":  false,

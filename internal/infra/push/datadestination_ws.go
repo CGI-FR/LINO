@@ -19,6 +19,8 @@ package push
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/cgi-fr/lino/pkg/push"
@@ -26,6 +28,40 @@ import (
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
+
+type Action string
+
+//  "pull_open", "push_open", "push_data", "push_commit", "push_close"
+const (
+	PushOpen   Action = "push_open"
+	PushData   Action = "push_data"
+	PushCommit Action = "push_commit"
+	PushClose  Action = "push_close"
+)
+
+type CommandMessage struct {
+	Id      string          `json:"id"`
+	Action  Action          `json:"action"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+type WritePayload struct {
+	Table string   `json:"table"`
+	Row   push.Row `json:"row"`
+}
+
+type OpenPayload struct {
+	Tables             []string `json:"tables"`
+	Mode               string   `json:"mode"`
+	DisableConstraints bool     `json:"disable_constraints"`
+}
+
+type ResultMessage struct {
+	Id      string          `json:"id"`
+	Error   string          `json:"error"`
+	Next    bool            `json:"next"`
+	Payload json.RawMessage `json:"payload"`
+}
 
 // WebSocketDataDestinationFactory exposes methods to create new websocket pusher.
 type WebSocketDataDestinationFactory struct{}
@@ -47,6 +83,7 @@ type WebSocketDataDestination struct {
 	mode               push.Mode
 	disableConstraints bool
 	conn               *websocket.Conn
+	sequence           uint
 }
 
 // NewWebSocketDataDestination creates a new web socket datadestination.
@@ -59,20 +96,62 @@ func NewWebSocketDataDestination(url string, schema string) *WebSocketDataDestin
 	}
 }
 
+func (dd *WebSocketDataDestination) SendMessageAndReadResult(msg CommandMessage) *push.Error {
+	ctx := context.Background()
+
+	msg.Id = fmt.Sprintf("%d", dd.sequence)
+	dd.sequence++
+
+	if err := wsjson.Write(ctx, dd.conn, msg); err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+
+	result := ResultMessage{}
+	if err := wsjson.Read(ctx, dd.conn, &result); err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+	if result.Id != msg.Id {
+		return &push.Error{Description: fmt.Sprintf("server send a response with different ID want=%s, receive=%s", msg.Id, result.Id)}
+	}
+
+	if result.Error != "" {
+		return &push.Error{Description: result.Error}
+	}
+
+	return nil
+}
+
 // Open web socket connection
 func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Str("mode", mode.String()).Bool("disableConstraints", disableConstraints).Msg("open web socket destination")
 	dd.mode = mode
 	dd.disableConstraints = disableConstraints
 
+	payload := OpenPayload{Tables: []string{}, Mode: mode.String(), DisableConstraints: disableConstraints}
+
+	for _, table := range plan.Tables() {
+		payload.Tables = append(payload.Tables, table.Name())
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return &push.Error{Description: err.Error()}
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var err error
-	dd.conn, _, err = websocket.Dial(ctx, dd.url, nil)
-	if err != nil {
-		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while dialing connexion")
-		return &push.Error{Description: err.Error()}
+	var errDial error
+	dd.conn, _, errDial = websocket.Dial(ctx, dd.url, nil)
+	if errDial != nil {
+		log.Err(errDial).Str("url", dd.url).Str("schema", dd.schema).Msg("error while dialing connexion")
+		return &push.Error{Description: errDial.Error()}
+	}
+
+	msg := CommandMessage{Action: PushOpen, Payload: data}
+	if err := dd.SendMessageAndReadResult(msg); err != nil {
+		dd.Close()
+		return err
 	}
 
 	return nil
@@ -81,17 +160,22 @@ func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disable
 // Close web socket connection
 func (dd *WebSocketDataDestination) Close() *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Msg("close web socket destination")
-	dd.conn.Close(websocket.StatusNormalClosure, "")
+	defer dd.conn.Close(websocket.StatusNormalClosure, "")
+	msg := CommandMessage{Action: PushClose}
+	if err := dd.SendMessageAndReadResult(msg); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // Commit web socket for connection
 func (dd *WebSocketDataDestination) Commit() *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Msg("commit web socket destination")
+	msg := CommandMessage{Action: PushCommit}
 
-	if err := wsjson.Write(context.Background(), dd.conn, "commit"); err != nil {
-		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while sending commit")
-		return &push.Error{Description: err.Error()}
+	if err := dd.SendMessageAndReadResult(msg); err != nil {
+		return err
 	}
 
 	return nil
@@ -99,22 +183,25 @@ func (dd *WebSocketDataDestination) Commit() *push.Error {
 
 // RowWriter return web socket table writer
 func (dd *WebSocketDataDestination) RowWriter(table push.Table) (push.RowWriter, *push.Error) {
-	return dd, nil
+	return &WebSocketRowWriter{dd, table}, nil
 }
 
-func (dd *WebSocketDataDestination) Write(row push.Row) *push.Error {
-	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Interface("data", row).Msg("write to web socket destination")
+type WebSocketRowWriter struct {
+	dd    *WebSocketDataDestination
+	table push.Table
+}
 
-	if err := wsjson.Write(context.Background(), dd.conn, row); err != nil {
-		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while sending data")
+func (rw *WebSocketRowWriter) Write(row push.Row) *push.Error {
+	payload := WritePayload{Table: rw.table.Name(), Row: row}
+	data, err := json.Marshal(payload)
+	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}
-	if err := wsjson.Write(context.Background(), dd.conn, "test"); err != nil {
-		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while sending commit")
-		return &push.Error{Description: err.Error()}
-	}
+	msg := CommandMessage{Action: PushData, Payload: data}
 
-	log.Info().Str("url", dd.url).Str("schema", dd.schema).Interface("data", row).Msg("sent data")
+	if err := rw.dd.SendMessageAndReadResult(msg); err != nil {
+		return err
+	}
 
 	return nil
 }

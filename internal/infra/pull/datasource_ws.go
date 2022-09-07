@@ -119,6 +119,7 @@ func (ds *WSDataSource) Open() error {
 				close(resultChan)
 				delete(ds.results, result.Id)
 				ds.Unlock()
+
 				continue
 			}
 			ds.Unlock()

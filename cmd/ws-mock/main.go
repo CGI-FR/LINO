@@ -234,9 +234,11 @@ func lino(ctx context.Context, c *websocket.Conn) error {
 		}
 
 	case "push_open":
+		schema := v["payload"].(map[string]interface{})["schema"]
 		tables := v["payload"].(map[string]interface{})["tables"].([]interface{})
 		mode := v["payload"].(map[string]interface{})["mode"]
 		disableConstraints := v["payload"].(map[string]interface{})["disable_constraints"].(bool)
+		log.Printf("schema  %v", schema)
 		log.Printf("mode  %v", mode)
 		log.Printf("disableConstraints  %v", disableConstraints)
 		if disableConstraints {

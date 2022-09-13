@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
 
-name: pull from WS connector
+name: push to WS connector
 testcases:
   - name: prepare test
     steps:
       # Clean working directory
-      - script: rm -f *
+      - script: rm -f *yaml
       - script: sudo docker-compose -p lino stop wsmock
       - script: sudo docker-compose -p lino rm -f wsmock
       - script: sudo docker-compose -p lino up -d wsmock
@@ -31,10 +31,12 @@ testcases:
       - script: lino id create PROJECT
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
       - script: lino id set-child-lookup FK_PROJECT_1 true
-      - script: lino pull source --limit 0  > projects.jsonl
+      - script: lino pull ws --limit 0  > projects.jsonl
 
   - name: push all
     steps:
       - script: lino push -c 10 ws < projects.jsonl
         assertions:
           - result.code ShouldEqual 0
+          - result.stderr ShouldBeEmpty
+          - result.stdout ShouldBeEmpty

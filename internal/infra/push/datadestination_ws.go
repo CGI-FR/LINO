@@ -46,11 +46,13 @@ type CommandMessage struct {
 }
 
 type WritePayload struct {
-	Table string   `json:"table"`
-	Row   push.Row `json:"row"`
+	Table      string   `json:"table"`
+	Row        push.Row `json:"row"`
+	Conditions push.Row `json:"conditions"`
 }
 
 type OpenPayload struct {
+	Schema             string
 	Tables             []string `json:"tables"`
 	Mode               string   `json:"mode"`
 	DisableConstraints bool     `json:"disable_constraints"`
@@ -127,7 +129,12 @@ func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disable
 	dd.mode = mode
 	dd.disableConstraints = disableConstraints
 
-	payload := OpenPayload{Tables: []string{}, Mode: mode.String(), DisableConstraints: disableConstraints}
+	payload := OpenPayload{
+		Schema:             dd.schema,
+		Tables:             []string{},
+		Mode:               mode.String(),
+		DisableConstraints: disableConstraints,
+	}
 
 	for _, table := range plan.Tables() {
 		payload.Tables = append(payload.Tables, table.Name())
@@ -192,7 +199,23 @@ type WebSocketRowWriter struct {
 }
 
 func (rw *WebSocketRowWriter) Write(row push.Row) *push.Error {
-	payload := WritePayload{Table: rw.table.Name(), Row: row}
+	conditions := push.Row{}
+	if rw.dd.mode == push.Update || rw.dd.mode == push.Delete {
+		for _, pk := range rw.table.PrimaryKey() {
+			var find bool
+			conditions[pk], find = row[pk]
+			if !find {
+				return &push.Error{Description: fmt.Sprintf("Expected primary key %s in row %v", pk, row)}
+			}
+			delete(row, pk)
+		}
+	}
+
+	payload := WritePayload{
+		Table:      rw.table.Name(),
+		Row:        row,
+		Conditions: conditions,
+	}
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return &push.Error{Description: err.Error()}

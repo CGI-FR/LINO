@@ -52,7 +52,7 @@ type WritePayload struct {
 }
 
 type OpenPayload struct {
-	Schema             string
+	Schema             string   `json:"schema"`
 	Tables             []string `json:"tables"`
 	Mode               string   `json:"mode"`
 	DisableConstraints bool     `json:"disable_constraints"`

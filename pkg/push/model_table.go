@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
+	"github.com/rs/zerolog/log"
 )
 
 type table struct {
@@ -102,21 +103,34 @@ func (t *table) initTemplate() {
 			col := t.columns.Column(uint(idx))
 			key := col.Name()
 
-			switch col.Export() {
+			format, typ := parseFormatWithType(col.Import())
+
+			if len(format) == 0 {
+				log.Debug().Str("column", key).Msg("using value from export property for backward compatibility")
+				format = col.Export() // backward compatibility with lino v2.1.0 and below
+			}
+			log.Debug().Str("column", key).Str("format", format).Str("typ", typ).Msg("parseFormatWithType")
+
+			switch format {
 			case "string":
-				t.template.WithMappedString(key, parseImportType(col.Import()))
+				t.template.WithMappedString(key, parseImportType(typ))
 			case "numeric":
-				t.template.WithMappedNumeric(key, parseImportType(col.Import()))
+				t.template.WithMappedNumeric(key, parseImportType(typ))
 			case "base64", "binary":
-				t.template.WithMappedBinary(key, parseImportType(col.Import()))
+				t.template.WithMappedBinary(key, parseImportType(typ))
 			case "datetime":
-				t.template.WithMappedDateTime(key, parseImportType(col.Import()))
+				t.template.WithMappedDateTime(key, parseImportType(typ))
 			case "timestamp":
-				t.template.WithMappedTimestamp(key, parseImportType(col.Import()))
+				t.template.WithMappedTimestamp(key, parseImportType(typ))
 			case "no":
 				t.template.WithHidden(key)
 			default:
-				t.template.WithMappedAuto(key, parseImportType(col.Import()))
+				if len(typ) > 0 {
+					t.template.WithMappedAuto(key, parseImportType(typ))
+				} else {
+					log.Debug().Str("column", key).Str("typ", format).Msg("using value from import property as data type for backward compatibility")
+					t.template.WithMappedAuto(key, parseImportType(format)) // backward compatibility with lino v2.1.0 and below
+				}
 			}
 		}
 	}
@@ -178,4 +192,12 @@ func parseImportType(exp string) jsonline.RawType {
 	default:
 		return nil
 	}
+}
+
+func parseFormatWithType(option string) (string, string) {
+	parts := strings.Split(option, "(")
+	if len(parts) != 2 {
+		return option, ""
+	}
+	return parts[0], strings.Trim(parts[1], ")")
 }

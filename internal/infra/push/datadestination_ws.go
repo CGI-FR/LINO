@@ -103,6 +103,7 @@ func (dd *WebSocketDataDestination) SendMessageAndReadResult(msg CommandMessage)
 
 	msg.Id = fmt.Sprintf("%d", dd.sequence)
 	dd.sequence++
+	log.Trace().RawJSON("payload", msg.Payload).Str("id", msg.Id).Str("action", string(msg.Action)).Msg("send message to server")
 
 	if err := wsjson.Write(ctx, dd.conn, msg); err != nil {
 		return &push.Error{Description: err.Error()}
@@ -112,6 +113,7 @@ func (dd *WebSocketDataDestination) SendMessageAndReadResult(msg CommandMessage)
 	if err := wsjson.Read(ctx, dd.conn, &result); err != nil {
 		return &push.Error{Description: err.Error()}
 	}
+	log.Trace().RawJSON("payload", result.Payload).Str("id", result.Id).Str("error", result.Error).Msg("receive message from server")
 	if result.Id != msg.Id {
 		return &push.Error{Description: fmt.Sprintf("server send a response with different ID want=%s, receive=%s", msg.Id, result.Id)}
 	}

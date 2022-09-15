@@ -17,22 +17,36 @@
 
 name: push table
 testcases:
-- name: prepare test
-  steps:
-    # Clean working directory
-    - script: rm -f *
-    - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: lino relation extract source
-    - script: lino table extract source
-    - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
-    - script: lino pull -t customer source > customer.json
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *yaml
+      - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino relation extract source
+      - script: lino table extract source
+      - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
+      - script: lino pull -t customer source > customer.json
 
-- name: push insert to table
-  steps:
-    - script: lino push -d truncate -t customer  dest < customer.json
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
-    - script: lino pull -t customer  dest > customer2.json
-    - script: diff customer.json customer2.json
+  - name: push insert to table
+    steps:
+      - script: lino push -d truncate -t customer  dest < customer.json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: lino pull -t customer  dest > customer2.json
+      - script: diff customer.json customer2.json
+
+  - name: push truncate to table
+    steps:
+      - script: lino push -d truncate -t customer  dest < /dev/null
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: lino pull -t customer  dest > customer_empty.json
+      - script: wc -l customer_empty.json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemoutjson ShouldEqual 0
+          - result.systemerr ShouldBeEmpty

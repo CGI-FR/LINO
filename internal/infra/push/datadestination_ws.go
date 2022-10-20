@@ -103,7 +103,7 @@ func (dd *WebSocketDataDestination) SendMessageAndReadResult(msg CommandMessage)
 
 	msg.Id = fmt.Sprintf("%d", dd.sequence)
 	dd.sequence++
-	log.Trace().RawJSON("payload", msg.Payload).Str("id", msg.Id).Str("action", string(msg.Action)).Msg("send message to server")
+	log.Trace().RawJSON("payload", msg.Payload).Str("id", msg.Id).Str("action_msg", string(msg.Action)).Msg("send message to server")
 
 	if err := wsjson.Write(ctx, dd.conn, msg); err != nil {
 		return &push.Error{Description: err.Error()}
@@ -119,7 +119,7 @@ func (dd *WebSocketDataDestination) SendMessageAndReadResult(msg CommandMessage)
 	}
 
 	if result.Error != "" {
-		return &push.Error{Description: result.Error}
+		return &push.Error{Description: string(result.Payload)}
 	}
 
 	return nil
@@ -170,7 +170,7 @@ func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disable
 func (dd *WebSocketDataDestination) Close() *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Msg("close web socket destination")
 	defer dd.conn.Close(websocket.StatusNormalClosure, "")
-	msg := CommandMessage{Action: PushClose}
+	msg := CommandMessage{Action: PushClose, Payload: json.RawMessage([]byte("{}"))}
 	if err := dd.SendMessageAndReadResult(msg); err != nil {
 		return err
 	}

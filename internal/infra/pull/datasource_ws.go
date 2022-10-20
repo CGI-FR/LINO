@@ -83,6 +83,7 @@ type WSDataSource struct {
 	cancels  []context.CancelFunc
 	results  map[string]chan ResultMessage
 	stop     chan bool
+	localDS  *WSDataSource
 }
 
 // Open a connection to the WS DB
@@ -172,20 +173,24 @@ func (ds *WSDataSource) SharedRowReader(source pull.Table, filter pull.Filter) (
 
 // RowReader iterate over rows in table with filter using a dedicated ws
 func (ds *WSDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, error) {
+	if ds.localDS != nil {
+		return ds.localDS.SharedRowReader(source, filter)
+	}
+
 	log.Trace().Str("table", string(source.Name)).Msg("new ws for read table")
 
-	localDS := WSDataSource{url: ds.url, schema: ds.schema}
+	ds.localDS = &WSDataSource{url: ds.url, schema: ds.schema}
 
 	go func() {
 		<-ds.stop
-		localDS.Close()
+		ds.localDS.Close()
 	}()
 
-	if err := localDS.Open(); err != nil {
+	if err := ds.localDS.Open(); err != nil {
 		return nil, err
 	}
 
-	return localDS.SharedRowReader(source, filter)
+	return ds.localDS.SharedRowReader(source, filter)
 }
 
 func (ds *WSDataSource) SendMessageAndReadResultStream(msg CommandMessage) (ResultStream, error) {

@@ -1,3 +1,11 @@
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/CGI-FR/LINO/CI)
+ [![Go Report Card](https://goreportcard.com/badge/github.com/cgi-fr/pimo)](https://goreportcard.com/report/github.com/cgi-fr/lino)
+ ![GitHub all releases](https://img.shields.io/github/downloads/CGI-FR/LINO/total)
+ ![GitHub](https://img.shields.io/github/license/CGI-FR/LINO)
+ ![GitHub Repo stars](https://img.shields.io/github/stars/CGI-FR/LINO)
+ ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/CGI-FR/LINO)
+ ![GitHub release (latest by date)](https://img.shields.io/github/v/release/CGI-FR/LINO)
+
 # LINO : Large Input, Narrow Output
 
 LINO is a simple ETL (Extract Transform Load) tools to manage tests datas.

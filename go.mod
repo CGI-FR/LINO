@@ -8,7 +8,7 @@ require (
 	github.com/cgi-fr/jsonline v0.5.0
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/godror/godror v0.34.0
+	github.com/godror/godror v0.35.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ibmdb/go_ibm_db v0.4.1
@@ -38,6 +38,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
 	golang.org/x/sys v0.0.0-20220825204002-c680a09ffe64 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

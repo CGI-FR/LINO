@@ -20,7 +20,7 @@ package push
 import (
 	"encoding/json"
 
-	over "github.com/Trendyol/overlog"
+	over "github.com/adrienaury/zeromdc"
 	"github.com/rs/zerolog/log"
 )
 

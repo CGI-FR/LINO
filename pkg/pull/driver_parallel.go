@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"sync"
 
-	over "github.com/Trendyol/overlog"
+	over "github.com/adrienaury/zeromdc"
 	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
 )

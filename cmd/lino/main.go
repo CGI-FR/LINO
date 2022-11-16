@@ -23,7 +23,7 @@ import (
 	"runtime"
 	"strings"
 
-	over "github.com/Trendyol/overlog"
+	over "github.com/adrienaury/zeromdc"
 	"github.com/cgi-fr/lino/internal/app/dataconnector"
 	"github.com/cgi-fr/lino/internal/app/http"
 	"github.com/cgi-fr/lino/internal/app/id"

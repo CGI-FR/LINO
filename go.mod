@@ -3,7 +3,7 @@ module github.com/cgi-fr/lino
 go 1.17
 
 require (
-	github.com/Trendyol/overlog v0.1.1
+	github.com/adrienaury/zeromdc v0.0.0-20221116212822-6a366c26ee61
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/cgi-fr/jsonline v0.5.0
 	github.com/docker/docker-credential-helpers v0.7.0
@@ -16,7 +16,7 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/mattn/go-isatty v0.0.16
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/rs/zerolog v1.27.0
+	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
 	github.com/xo/dburl v0.12.4

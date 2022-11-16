@@ -23,7 +23,7 @@ import (
 	"os"
 	"time"
 
-	over "github.com/Trendyol/overlog"
+	over "github.com/adrienaury/zeromdc"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 

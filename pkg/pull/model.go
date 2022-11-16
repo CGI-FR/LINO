@@ -169,11 +169,3 @@ func Compute() ExecutionStats {
 func Reset() {
 	over.MDC().Set("stats", &stats{FiltersCount: 0, LinesPerStepCount: map[string]int{}})
 }
-
-func MutualizeStats(s stats) {
-	stats := getStats()
-	stats.FiltersCount += s.FiltersCount
-	for key, value := range s.LinesPerStepCount {
-		stats.LinesPerStepCount[key] += value
-	}
-}

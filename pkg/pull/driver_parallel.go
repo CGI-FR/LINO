@@ -35,7 +35,6 @@ type pullerParallel struct {
 	errChan   chan error
 	outChan   chan ExportedRow
 	errors    []error
-	stats     chan stats
 }
 
 func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, diagnostic TraceListener, nbworkers uint) Puller { //nolint:lll
@@ -54,7 +53,6 @@ func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, d
 			errChan:   nil,
 			outChan:   nil,
 			errors:    nil,
-			stats:     nil,
 		}
 	}
 
@@ -101,7 +99,6 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 	p.errChan = make(chan error)
 	p.outChan = make(chan ExportedRow)
 	p.errors = []error{}
-	p.stats = make(chan stats, p.nbworkers)
 
 	wg := &sync.WaitGroup{}
 
@@ -133,14 +130,9 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 
 	close(p.inChan)
 
-	for idx := 0; idx < int(p.nbworkers); idx++ {
-		MutualizeStats(<-p.stats)
-	}
-
 	wg.Wait()
 	close(p.errChan)
 	close(p.outChan)
-	close(p.stats)
 
 	<-done
 
@@ -183,8 +175,6 @@ LOOP:
 			break LOOP
 		}
 	}
-
-	p.stats <- *getStats()
 }
 
 func (p *pullerParallel) collect(done chan<- struct{}) {

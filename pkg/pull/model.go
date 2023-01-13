@@ -19,6 +19,8 @@ package pull
 
 import (
 	"encoding/json"
+	"sync"
+	"sync/atomic"
 
 	over "github.com/adrienaury/zeromdc"
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
@@ -108,15 +110,16 @@ func (er ExportedRow) GetOrNil(key string) interface{} {
 }
 
 type ExecutionStats interface {
-	GetLinesPerStepCount() map[string]int
+	GetLinesPerStepCount() map[string]int64
 	GetFiltersCount() int
 
 	ToJSON() []byte
 }
 
 type stats struct {
-	LinesPerStepCount map[string]int `json:"linesPerStepCount"`
-	FiltersCount      int            `json:"filtersCount"`
+	mut               *sync.Mutex
+	LinesPerStepCount map[string]int64 `json:"linesPerStepCount"`
+	FiltersCount      int              `json:"filtersCount"`
 }
 
 func (s *stats) ToJSON() []byte {
@@ -127,7 +130,7 @@ func (s *stats) ToJSON() []byte {
 	return b
 }
 
-func (s *stats) GetLinesPerStepCount() map[string]int {
+func (s *stats) GetLinesPerStepCount() map[string]int64 {
 	return s.LinesPerStepCount
 }
 
@@ -137,7 +140,11 @@ func (s *stats) GetFiltersCount() int {
 
 func IncLinesPerStepCount(step string) {
 	stats := getStats()
-	stats.LinesPerStepCount[step]++
+	stats.mut.Lock()
+	value := stats.LinesPerStepCount[step]
+	atomic.AddInt64(&value, 1)
+	stats.LinesPerStepCount[step] = value
+	stats.mut.Unlock()
 }
 
 func IncFiltersCount() {
@@ -152,8 +159,9 @@ func getStats() *stats {
 	}
 	log.Warn().Msg("Statistics uncorrectly initialized")
 	return &stats{
-		LinesPerStepCount: map[string]int{},
+		LinesPerStepCount: map[string]int64{},
 		FiltersCount:      0,
+		mut:               &sync.Mutex{},
 	}
 }
 
@@ -163,9 +171,9 @@ func Compute() ExecutionStats {
 		return stats
 	}
 	log.Warn().Msg("Unable to compute statistics")
-	return &stats{}
+	return &stats{mut: &sync.Mutex{}}
 }
 
 func Reset() {
-	over.MDC().Set("stats", &stats{FiltersCount: 0, LinesPerStepCount: map[string]int{}})
+	over.MDC().Set("stats", &stats{FiltersCount: 0, LinesPerStepCount: map[string]int64{}, mut: &sync.Mutex{}})
 }

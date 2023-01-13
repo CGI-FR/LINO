@@ -24,7 +24,7 @@ testcases:
       - script: sudo docker-compose -p lino stop wsmock
       - script: sudo docker-compose -p lino rm -f wsmock
       - script: sudo docker-compose -p lino up -d wsmock
-      - script: lino dataconnector add ws ws://wsmock:1080/
+      - script: lino dataconnector add ws ws://user:password@wsmock:1080/
       - script: count=0; while ! lino dc ping ws; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
       - script: lino table extract ws
       - script: lino relation extract ws

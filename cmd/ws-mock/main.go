@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"nhooyr.io/websocket"
@@ -75,6 +77,25 @@ type echoServer struct {
 }
 
 func (s echoServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	auth := r.Header.Get("Authorization")
+	if len(auth) > 0 {
+		log.Printf("receive header auth  %v", auth)
+		if userpass, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(auth, "Basic ")); err != nil {
+			s.logf("failed to decode basic auth %s %v", r.RemoteAddr, err)
+			return
+		} else {
+			creds := strings.Split(string(userpass), ":")
+			if creds[0] != "user" {
+				s.logf("invalid user %s %s", creds[0], r.RemoteAddr)
+				return
+			}
+			if creds[1] != "password" {
+				s.logf("invalid password %s %s", creds[1], r.RemoteAddr)
+				return
+			}
+		}
+	}
+
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		Subprotocols: []string{"echo"},
 	})

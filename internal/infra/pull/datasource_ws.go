@@ -19,8 +19,11 @@ package pull
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -91,9 +94,21 @@ func (ds *WSDataSource) Open() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var err error
+	u, err := url.Parse(ds.url)
+	if err != nil {
+		return fmt.Errorf("failed to parse url: %w", err)
+	}
+
+	handShakeHeaders := http.Header{}
+	if password, ok := u.User.Password(); ok {
+		auth := u.User.Username() + ":" + password
+		authbase64 := base64.StdEncoding.EncodeToString([]byte(auth))
+		handShakeHeaders.Add("Authorization", "Basic "+authbase64)
+	}
+
 	ds.conn, _, err = websocket.Dial(ctx, ds.url, &websocket.DialOptions{
 		Subprotocols: []string{"lino"},
+		HTTPHeader:   handShakeHeaders,
 	})
 	log.Trace().Msg("connected to ws")
 
@@ -109,6 +124,7 @@ func (ds *WSDataSource) Open() error {
 			err := wsjson.Read(ctx, ds.conn, &result)
 			if err != nil {
 				log.Info().AnErr("error", err).Msg("Error reading result stop consuming messages")
+
 				break
 			}
 			log.Trace().Str("Error", result.Error).Str("id", result.Id).Str("payload", string(result.Payload)).Msg("receive message")

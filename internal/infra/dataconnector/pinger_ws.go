@@ -19,8 +19,11 @@ package dataconnector
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/cgi-fr/lino/pkg/dataconnector"
@@ -97,10 +100,23 @@ func (e *WSDataPinger) Dial() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var err error
+	u, err := url.Parse(e.url)
+	if err != nil {
+		return fmt.Errorf("failed to parse url: %w", err)
+	}
+
+	handShakeHeaders := http.Header{}
+	if password, ok := u.User.Password(); ok {
+		auth := u.User.Username() + ":" + password
+		authbase64 := base64.StdEncoding.EncodeToString([]byte(auth))
+		handShakeHeaders.Add("Authorization", "Basic "+authbase64)
+	}
+
 	e.conn, _, err = websocket.Dial(ctx, e.url, &websocket.DialOptions{
 		Subprotocols: []string{"lino"},
+		HTTPHeader:   handShakeHeaders,
 	})
+
 	return err
 }
 

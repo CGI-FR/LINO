@@ -19,8 +19,11 @@ package push
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/cgi-fr/lino/pkg/push"
@@ -150,11 +153,25 @@ func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disable
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var errDial error
-	dd.conn, _, errDial = websocket.Dial(ctx, dd.url, nil)
-	if errDial != nil {
-		log.Err(errDial).Str("url", dd.url).Str("schema", dd.schema).Msg("error while dialing connexion")
-		return &push.Error{Description: errDial.Error()}
+	u, err := url.Parse(dd.url)
+	if err != nil {
+		return &push.Error{Description: fmt.Sprintf("failed to parse url: %s", err.Error())}
+	}
+
+	handShakeHeaders := http.Header{}
+	if password, ok := u.User.Password(); ok {
+		auth := u.User.Username() + ":" + password
+		authbase64 := base64.StdEncoding.EncodeToString([]byte(auth))
+		handShakeHeaders.Add("Authorization", "Basic "+authbase64)
+	}
+
+	dd.conn, _, err = websocket.Dial(ctx, dd.url, &websocket.DialOptions{
+		Subprotocols: []string{"lino"},
+		HTTPHeader:   handShakeHeaders,
+	})
+	if err != nil {
+		log.Err(err).Str("url", dd.url).Str("schema", dd.schema).Msg("error while dialing connexion")
+		return &push.Error{Description: err.Error()}
 	}
 
 	msg := CommandMessage{Action: PushOpen, Payload: data}

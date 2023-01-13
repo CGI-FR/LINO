@@ -21,27 +21,16 @@ testcases:
     steps:
       # Clean working directory
       - script: rm -f *
-        info: ["1"]
       - script: sudo docker-compose -p lino stop wsmock
-        info: ["2"]
       - script: sudo docker-compose -p lino rm -f wsmock
-        info: ["3"]
       - script: sudo docker-compose -p lino up -d wsmock
-        info: ["4"]
       - script: lino dataconnector add --password-from-env PASSWORD ws 'ws://user@wsmock:1080/'
-        info: ["5"]
-      # - script: count=0; while ! lino dc ping ws; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
-      #   info: ["6"]
+      - script: count=0; while ! lino dc ping ws; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
       - script: lino table extract ws
-        info: ["7"]
       - script: lino relation extract ws
-        info: ["8"]
       - script: lino id create PROJECT
-        info: ["9"]
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-        info: ["10"]
       - script: lino id set-child-lookup FK_PROJECT_1 true
-        info: ["11"]
 
   - name: pull all
     steps:

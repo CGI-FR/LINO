@@ -19,6 +19,7 @@ package pull
 
 import (
 	"encoding/json"
+	"time"
 
 	over "github.com/adrienaury/zeromdc"
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
@@ -110,6 +111,7 @@ func (er ExportedRow) GetOrNil(key string) interface{} {
 type ExecutionStats interface {
 	GetLinesPerStepCount() map[string]int
 	GetFiltersCount() int
+	GetDuration() time.Duration
 
 	ToJSON() []byte
 }
@@ -117,6 +119,7 @@ type ExecutionStats interface {
 type stats struct {
 	LinesPerStepCount map[string]int `json:"linesPerStepCount"`
 	FiltersCount      int            `json:"filtersCount"`
+	Duration          time.Duration  `json:"duration"`
 }
 
 func (s *stats) ToJSON() []byte {
@@ -135,6 +138,10 @@ func (s *stats) GetFiltersCount() int {
 	return s.FiltersCount
 }
 
+func (s *stats) GetDuration() time.Duration {
+	return s.Duration
+}
+
 func IncLinesPerStepCount(step string) {
 	stats := getStats()
 	stats.LinesPerStepCount[step]++
@@ -143,6 +150,11 @@ func IncLinesPerStepCount(step string) {
 func IncFiltersCount() {
 	stats := getStats()
 	stats.FiltersCount++
+}
+
+func SetDuration(duration time.Duration) {
+	stats := getStats()
+	stats.Duration = duration
 }
 
 func getStats() *stats {

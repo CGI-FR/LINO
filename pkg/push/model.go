@@ -19,6 +19,7 @@ package push
 
 import (
 	"encoding/json"
+	"time"
 
 	over "github.com/adrienaury/zeromdc"
 	"github.com/rs/zerolog/log"
@@ -84,6 +85,7 @@ type ExecutionStats interface {
 	GetCreatedLinesCount() map[string]int
 	GetDeletedLinesCount() map[string]int
 	GetCommitsCount() int
+	GetDuration() time.Duration
 
 	ToJSON() []byte
 }
@@ -93,6 +95,7 @@ type stats struct {
 	CreatedLinesCount map[string]int `json:"createdLinesCount"`
 	DeletedLinesCount map[string]int `json:"deletedLinesCount"`
 	CommitsCount      int            `json:"commitsCount"`
+	Duration          time.Duration  `json:"duration"`
 }
 
 // Reset all statistics to zero
@@ -134,6 +137,10 @@ func (s *stats) GetCommitsCount() int {
 	return s.CommitsCount
 }
 
+func (s *stats) GetDuration() time.Duration {
+	return s.Duration
+}
+
 func IncCreatedLinesCount(table string) {
 	stats := getStats()
 	stats.CreatedLinesCount[table]++
@@ -152,6 +159,11 @@ func IncCommitsCount() {
 func IncDeletedLinesCount(table string) {
 	stats := getStats()
 	stats.DeletedLinesCount[table]++
+}
+
+func SetDuration(duration time.Duration) {
+	stats := getStats()
+	stats.Duration = duration
 }
 
 func getStats() *stats {

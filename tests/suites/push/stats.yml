@@ -58,12 +58,12 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldBeEmpty
-          - result.systemerr ShouldContainSubstring {"level":"info","stats":{"inputLinesCount":1,"createdLinesCount":{},"deletedLinesCount":{"staff":1,"store":1},"commitsCount":0},"return":0
+          - result.systemerr ShouldContainSubstring {"level":"info","stats":{"inputLinesCount":1,"createdLinesCount":{},"deletedLinesCount":{"staff":1,"store":1},"commitsCount":0,"duration":
+          - result.systemerr ShouldContainSubstring },"return":0
 
       - script: cat lino-push-delete-stats.json
         assertions:
-          - result.systemout ShouldContainSubstring {"inputLinesCount":1,"createdLinesCount":{},"deletedLinesCount":{"staff":1,"store":1},"commitsCount":0}
-          - result.systemout ShouldContainSubstring duration
+          - result.systemout ShouldContainSubstring {"inputLinesCount":1,"createdLinesCount":{},"deletedLinesCount":{"staff":1,"store":1},"commitsCount":0,"duration":
 
   - name: restore with stats
     steps:

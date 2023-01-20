@@ -53,3 +53,12 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldContainSubstring {"level":"info","stats":{"linesPerStepCount":{"customer":1,"payment_customer_id_fkey":32},"filtersCount":1},"return":0
+
+  - name: pull greater than filter with json dump file
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino pull source --where "address_id > 13" --stats lino-pull-adress-13-stats.json
+        assertions:
+          - result.code ShouldEqual 0
+      - script: cat lino-pull-adress-13-stats.json
+          - result.systemout ShouldContainSubstring duration

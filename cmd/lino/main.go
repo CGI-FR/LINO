@@ -51,6 +51,7 @@ var (
 	jsonlog   bool
 	debug     bool
 	colormode string
+	statsFile string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -84,7 +85,21 @@ There is NO WARRANTY, to the extent permitted by law.`, version, commit, buildDa
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		stats, ok := over.MDC().Get("stats")
 		if ok {
-			log.Info().RawJSON("stats", stats.([]byte)).Int("return", 0).Msg("End LINO")
+			statsByte := stats.([]byte)
+			log.Info().RawJSON("stats", statsByte).Int("return", 0).Msg("End LINO")
+			if statsFile != "" {
+				file, err := os.Create(statsFile)
+				if err != nil {
+					log.Error().Err(err).Msg("Error generating statistics dump file")
+				}
+				defer file.Close()
+
+				_, err = file.Write(statsByte)
+				if err != nil {
+					log.Error().Err(err).Msg("Error writing statistics to dump file")
+				}
+				log.Info().Msgf("Statistics exported to file %s", file.Name())
+			}
 		} else {
 			log.Info().Int("return", 0).Msg("End LINO")
 		}
@@ -112,6 +127,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&jsonlog, "log-json", false, "output logs in JSON format")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "add debug information to logs (very slow)")
 	rootCmd.PersistentFlags().StringVar(&colormode, "color", "auto", "use colors in log outputs : yes, no or auto")
+	rootCmd.PersistentFlags().StringVarP(&statsFile, "stats", "S", "", "file to output statistics to")
 	rootCmd.AddCommand(dataconnector.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(table.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(sequence.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))

@@ -61,4 +61,5 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
       - script: cat lino-pull-adress-13-stats.json
+        assertions:
           - result.systemout ShouldContainSubstring duration

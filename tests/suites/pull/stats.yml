@@ -43,8 +43,7 @@ testcases:
       - script: lino pull -v 5 source --filter-from-file customer_filter.jsonl --where "email like 'LISA%'" --log-json
         assertions:
           - result.code ShouldEqual 0
-          - result.systemerr ShouldContainSubstring {"level":"info","stats":{"linesPerStepCount":{"customer":1},"filtersCount":1},"return":0
-          - result.systemout ShouldContainSubstring duration
+          - result.systemerr ShouldContainSubstring {"level":"info","stats":{"linesPerStepCount":{"customer":1},"filtersCount":1,"duration":
 
   # - name: pull with json logs with 2 workers
   #   steps:

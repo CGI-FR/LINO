@@ -90,37 +90,36 @@ There is NO WARRANTY, to the extent permitted by law.`, version, commit, buildDa
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		stats, ok := over.MDC().Get("stats")
-		if !ok {
-			log.Info().Int("return", 0).Msg("End LINO")
+		if ok {
+			statsByte := stats.([]byte)
+			log.Info().RawJSON("stats", statsByte).Int("return", 0).Msg("End LINO")
+	
+			if statsTemplate != "" {
+				tmplBytes, err := os.ReadFile(statsTemplate)
+				if err != nil {
+					log.Error().Err(err).Msg("Error opening the statistics template file")
+				}
+				tmpl, err := template.New("template").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{}).Parse(string(tmplBytes))
+				if err != nil {
+					log.Error().Err(err).Msg(("Error loading statistics template"))
+				}
+				var output bytes.Buffer
+				err = tmpl.Execute(&output, statsByte)
+				if err != nil {
+					log.Error().Err(err).Msg("Error adding stats to template")
+				}
+				statsByte = output.Bytes()
+			}
+	
+			if statsDestination != "" {
+				if strings.HasPrefix(statsDestination, "http") {
+					sendMetrics(statsDestination, statsByte)
+				} else {
+					writeMetricsToFile(statsDestination, statsByte)
+				}
+			}	
 		}
-
-		statsByte := stats.([]byte)
-		log.Info().RawJSON("stats", statsByte).Int("return", 0).Msg("End LINO")
-
-		if statsTemplate != "" {
-			tmplBytes, err := os.ReadFile(statsTemplate)
-			if err != nil {
-				log.Error().Err(err).Msg("Error opening the statistics template file")
-			}
-			tmpl, err := template.New("template").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{}).Parse(string(tmplBytes))
-			if err != nil {
-				log.Error().Err(err).Msg(("Error loading statistics template"))
-			}
-			var output bytes.Buffer
-			err = tmpl.Execute(&output, statsByte)
-			if err != nil {
-				log.Error().Err(err).Msg("Error adding stats to template")
-			}
-			statsByte = output.Bytes()
-		}
-
-		if statsDestination != "" {
-			if strings.HasPrefix(statsDestination, "http") {
-				sendMetrics(statsDestination, statsByte)
-			} else {
-				writeMetricsToFile(statsDestination, statsByte)
-			}
-		}
+		log.Info().Int("return", 0).Msg("End LINO")
 	},
 }
 

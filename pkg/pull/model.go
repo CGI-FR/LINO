@@ -166,6 +166,7 @@ func getStats() *stats {
 	return &stats{
 		LinesPerStepCount: map[string]int{},
 		FiltersCount:      0,
+		Duration:          0,
 	}
 }
 

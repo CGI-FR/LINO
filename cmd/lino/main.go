@@ -18,11 +18,16 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	netHttp "net/http"
 	"os"
 	"runtime"
 	"strings"
+	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	over "github.com/adrienaury/zeromdc"
 	"github.com/cgi-fr/lino/internal/app/dataconnector"
 	"github.com/cgi-fr/lino/internal/app/http"
@@ -47,11 +52,12 @@ var (
 	builtBy   string
 
 	// global flags
-	loglevel  string
-	jsonlog   bool
-	debug     bool
-	colormode string
-	statsFile string
+	loglevel         string
+	jsonlog          bool
+	debug            bool
+	colormode        string
+	statsDestination string
+	statsTemplate    string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -84,24 +90,36 @@ There is NO WARRANTY, to the extent permitted by law.`, version, commit, buildDa
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		stats, ok := over.MDC().Get("stats")
-		if ok {
-			statsByte := stats.([]byte)
-			log.Info().RawJSON("stats", statsByte).Int("return", 0).Msg("End LINO")
-			if statsFile != "" {
-				file, err := os.Create(statsFile)
-				if err != nil {
-					log.Error().Err(err).Msg("Error generating statistics dump file")
-				}
-				defer file.Close()
-
-				_, err = file.Write(statsByte)
-				if err != nil {
-					log.Error().Err(err).Msg("Error writing statistics to dump file")
-				}
-				log.Info().Msgf("Statistics exported to file %s", file.Name())
-			}
-		} else {
+		if !ok {
 			log.Info().Int("return", 0).Msg("End LINO")
+		}
+
+		statsByte := stats.([]byte)
+		log.Info().RawJSON("stats", statsByte).Int("return", 0).Msg("End LINO")
+
+		if statsTemplate != "" {
+			tmplBytes, err := os.ReadFile(statsTemplate)
+			if err != nil {
+				log.Error().Err(err).Msg("Error opening the statistics template file")
+			}
+			tmpl, err := template.New("template").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{}).Parse(string(tmplBytes))
+			if err != nil {
+				log.Error().Err(err).Msg(("Error loading statistics template"))
+			}
+			var output bytes.Buffer
+			err = tmpl.Execute(&output, statsByte)
+			if err != nil {
+				log.Error().Err(err).Msg("Error adding stats to template")
+			}
+			statsByte = output.Bytes()
+		}
+
+		if statsDestination != "" {
+			if strings.HasPrefix(statsDestination, "http") {
+				sendMetrics(statsDestination, statsByte)
+			} else {
+				writeMetricsToFile(statsDestination, statsByte)
+			}
 		}
 	},
 }
@@ -127,7 +145,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&jsonlog, "log-json", false, "output logs in JSON format")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "add debug information to logs (very slow)")
 	rootCmd.PersistentFlags().StringVar(&colormode, "color", "auto", "use colors in log outputs : yes, no or auto")
-	rootCmd.PersistentFlags().StringVarP(&statsFile, "stats", "S", "", "file to output statistics to")
+	rootCmd.PersistentFlags().StringVarP(&statsDestination, "stats", "S", "", "file to output statistics to")
+	rootCmd.PersistentFlags().StringVar(&statsTemplate, "statsTemplate", "", "template file to add stats to")
 	rootCmd.AddCommand(dataconnector.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(table.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(sequence.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
@@ -187,4 +206,28 @@ func initConfig() {
 	id.Inject(idStorageFile, relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
 	pull.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pullDataSourceFactory(), pullRowExporterFactory(), pullRowReaderFactory(), traceListner(os.Stderr))
 	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pushDataDestinationFactory(), pushRowIteratorFactory(), pushRowExporterFactory())
+}
+
+func writeMetricsToFile(statsFile string, statsByte []byte) {
+	file, err := os.Create(statsFile)
+	if err != nil {
+		log.Error().Err(err).Msg("Error generating statistics dump file")
+	}
+	defer file.Close()
+
+	_, err = file.Write(statsByte)
+	if err != nil {
+		log.Error().Err(err).Msg("Error writing statistics to dump file")
+	}
+	log.Info().Msgf("Statistics exported to file %s", file.Name())
+}
+
+func sendMetrics(statsDestination string, statsByte []byte) {
+	postBody, _ := json.Marshal(string(statsByte))
+	responseBody := bytes.NewBuffer(postBody)
+	// nolint: gosec
+	_, err := netHttp.Post(statsDestination, "application/json", responseBody)
+	if err != nil {
+		log.Error().Err(err).Msgf("An error occurred trying to send metrics to %s", statsDestination)
+	}
 }

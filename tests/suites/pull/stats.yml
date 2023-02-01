@@ -70,13 +70,7 @@ testcases:
     steps:
       - script: rm -f lino-pull-template.json
       - script: rm -f stats-template.json
-      - script: |-
-          cat > stats-template.json << EOF
-          {
-            "software": "LINO",
-            "stats": {{ .stats }}
-          }
-          EOF
+      - script: echo '{"software":"LINO","stats":{{ .Stats }}}' > stats-template.json
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
       - script: lino pull source --where "address_id > 13" --stats lino-pull-template.json --statsTemplate stats-template.json -v 5
         assertions:

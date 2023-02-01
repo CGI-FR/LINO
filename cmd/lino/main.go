@@ -93,35 +93,31 @@ There is NO WARRANTY, to the extent permitted by law.`, version, commit, buildDa
 		if ok {
 			statsByte := stats.([]byte)
 			log.Info().RawJSON("stats", statsByte).Int("return", 0).Msg("End LINO")
-	
+
 			statsToWrite := statsByte
 			if statsTemplate != "" {
-				tmpl, err := template.New("template").ParseFiles(statsTemplate)
+				tmpl, err := template.New("").ParseFiles(statsTemplate)
 				if err != nil {
 					log.Error().Err(err).Msg(("Error loading statistics template"))
 				}
-				log.Debug().Msg("Template loaded")
-				statsValue := Stats{Stats: stats}
 				var output bytes.Buffer
-				err = tmpl.Execute(&output, statsValue)
+				err = tmpl.ExecuteTemplate(&output, statsTemplate, Stats{Stats: string(statsByte)})
 				if err != nil {
 					log.Error().Err(err).Msg("Error adding stats to template")
 				}
-				log.Debug().Msg("Template Executed")
 				statsToWrite = output.Bytes()
-				log.Debug().Msgf("statsTemplate value : %s", string(statsToWrite))
-				log.Debug().RawJSON("statsTemplate", statsToWrite).Msg("Stats after templatization")
 			}
-	
+
 			if statsDestination != "" {
 				if strings.HasPrefix(statsDestination, "http") {
 					sendMetrics(statsDestination, statsToWrite)
 				} else {
 					writeMetricsToFile(statsDestination, statsToWrite)
 				}
-			}	
+			}
+		} else {
+			log.Info().Int("return", 0).Msg("End LINO")
 		}
-		log.Info().Int("return", 0).Msg("End LINO")
 	},
 }
 
@@ -231,8 +227,9 @@ func sendMetrics(statsDestination string, statsByte []byte) {
 	if err != nil {
 		log.Error().Err(err).Msgf("An error occurred trying to send metrics to %s", statsDestination)
 	}
+	log.Info().Msgf("Statistics sent to %s", statsDestination)
 }
 
 type Stats struct {
-	Stats	interface{}	`json:"stats"`
+	Stats interface{} `json:"stats"`
 }

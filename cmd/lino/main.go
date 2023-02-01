@@ -27,7 +27,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
+	// "github.com/Masterminds/sprig/v3"
 	over "github.com/adrienaury/zeromdc"
 	"github.com/cgi-fr/lino/internal/app/dataconnector"
 	"github.com/cgi-fr/lino/internal/app/http"
@@ -94,28 +94,30 @@ There is NO WARRANTY, to the extent permitted by law.`, version, commit, buildDa
 			statsByte := stats.([]byte)
 			log.Info().RawJSON("stats", statsByte).Int("return", 0).Msg("End LINO")
 	
+			statsToWrite := statsByte
 			if statsTemplate != "" {
-				tmplBytes, err := os.ReadFile(statsTemplate)
-				if err != nil {
-					log.Error().Err(err).Msg("Error opening the statistics template file")
-				}
-				tmpl, err := template.New("template").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{}).Parse(string(tmplBytes))
+				tmpl, err := template.New("template").ParseFiles(statsTemplate)
 				if err != nil {
 					log.Error().Err(err).Msg(("Error loading statistics template"))
 				}
+				log.Debug().Msg("Template loaded")
+				statsValue := Stats{Stats: stats}
 				var output bytes.Buffer
-				err = tmpl.Execute(&output, statsByte)
+				err = tmpl.Execute(&output, statsValue)
 				if err != nil {
 					log.Error().Err(err).Msg("Error adding stats to template")
 				}
-				statsByte = output.Bytes()
+				log.Debug().Msg("Template Executed")
+				statsToWrite = output.Bytes()
+				log.Debug().Msgf("statsTemplate value : %s", string(statsToWrite))
+				log.Debug().RawJSON("statsTemplate", statsToWrite).Msg("Stats after templatization")
 			}
 	
 			if statsDestination != "" {
 				if strings.HasPrefix(statsDestination, "http") {
-					sendMetrics(statsDestination, statsByte)
+					sendMetrics(statsDestination, statsToWrite)
 				} else {
-					writeMetricsToFile(statsDestination, statsByte)
+					writeMetricsToFile(statsDestination, statsToWrite)
 				}
 			}	
 		}
@@ -229,4 +231,8 @@ func sendMetrics(statsDestination string, statsByte []byte) {
 	if err != nil {
 		log.Error().Err(err).Msgf("An error occurred trying to send metrics to %s", statsDestination)
 	}
+}
+
+type Stats struct {
+	Stats	interface{}	`json:"stats"`
 }

@@ -68,12 +68,20 @@ testcases:
 
   - name: stats with template
     steps:
-      - script: rm -f lino-pull-adress-13-stats.json
+      - script: rm -f lino-pull-template.json
+      - script: rm -f stats-template.json
+      - script: |-
+          cat > stats-template.json << EOF
+          {
+            "software": "LINO",
+            "stats": {{ .stats }}
+          }
+          EOF
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-      - script: lino pull source --where "address_id > 13" --stats lino-pull-adress-13-stats.json --statsTemplate stats-template.json
+      - script: lino pull source --where "address_id > 13" --stats lino-pull-template.json --statsTemplate stats-template.json -v 5
         assertions:
           - result.code ShouldEqual 0
-      - script: cat lino-pull-adress-13-stats.json
+      - script: cat lino-pull-template.json
         assertions:
           - result.systemout ShouldContainSubstring "linesPerStepCount":{"customer":1},"filtersCount":1
           - result.systemout ShouldContainSubstring duration

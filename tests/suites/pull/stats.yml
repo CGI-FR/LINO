@@ -79,3 +79,16 @@ testcases:
         assertions:
           - result.systemout ShouldContainSubstring "linesPerStepCount":{"customer":1},"filtersCount":1
           - result.systemout ShouldContainSubstring duration
+
+  - name: stats with template over http
+    steps:
+      - script: cp ../../httpmock/default.json ..
+      - script: sudo docker-compose -p lino stop httpmock
+      - script: sudo docker-compose -p lino rm -f httpmock
+      - script: sudo docker-compose -p lino up -d httpmock
+      - script: rm -f stats-template.json
+      - script: echo '{"software":"LINO","stats":{{ .Stats }}}' > stats-template.json
+      - script: lino pull source --where "address_id > 13" --stats http://httpmock:1080/api/v1/stats --statsTemplate stats-template.json -v 5
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldContainSubstring Statistics sent to http://httpmock:1080/api/v1/stats

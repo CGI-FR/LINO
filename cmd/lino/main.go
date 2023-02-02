@@ -27,7 +27,6 @@ import (
 	"strings"
 	"text/template"
 
-	// "github.com/Masterminds/sprig/v3"
 	over "github.com/adrienaury/zeromdc"
 	"github.com/cgi-fr/lino/internal/app/dataconnector"
 	"github.com/cgi-fr/lino/internal/app/http"

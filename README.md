@@ -15,6 +15,15 @@ The `lino` command line tool pull test data from a relational database to create
 
 `lino` command line work in relative project's directory, like `git` or `docker`
 
+The following flags can be used:
+
+* `--verbosity <level>` or `-v<level>` This flag increase verbosity on the stderr output, possible values: none (0), error (1), warn (2), info (3), debug (4), trace (5).
+* `--debug` This flag complete the logs with debug information.
+* `--log-json` Set this flag to produce JSON formatted logs goes deeper into logging and structured logging)
+* `color` This flag allows to add color to console logs
+* `--stats <filename | url>` or `-S <filename | url>` This flag either outputs run statistics to the specified file or send them to specified url (has to start with `http` or `https`).
+* `--statsTemplate <filename>` This flag will have PIMO use the file as a template to generate statistics. Please use go templating format to include statistics. To include them you have to specify them as `{{ .Stats }}`.
+
 ## Create a new LINO project
 
 ```

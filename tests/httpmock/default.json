@@ -313,20 +313,18 @@
     },
     {
         "httpRequest": {
-            "method": "POST",
-            "path": "/api/v1/stats",
-            "body": {
-                "type": "JSON",
-                "json": {
-                    "software": "LINO"
-                }
-            }
+            "path": "/api/v1/stats-pull"
         },
         "httpResponse": {
             "statusCode": 200
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/api/v1/stats-push"
         },
-        "times": {
-            "atLeast": 2
+        "httpResponse": {
+            "statusCode": 200
         }
     }
 ]

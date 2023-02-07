@@ -21,7 +21,7 @@ The following flags can be used:
 * `--debug` This flag complete the logs with debug information.
 * `--log-json` Set this flag to produce JSON formatted logs goes deeper into logging and structured logging)
 * `color` This flag allows to add color to console logs
-* `--stats <filename | url>` or `-S <filename | url>` This flag either outputs run statistics to the specified file or send them to specified url (has to start with `http` or `https`).
+* `--stats <filename | url>` This flag either outputs run statistics to the specified file or send them to specified url (has to start with `http` or `https`).
 * `--statsTemplate <string>` This flag will have LINO use the value as a template to generate statistics. Please use go templating format to include statistics. To include them you have to specify them as `{{ .Stats }}`. (i.e. `{"software":"LINO","stats":{{ .Stats }}}`
 
 ## Create a new LINO project

@@ -19,7 +19,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	netHttp "net/http"
 	"os"
@@ -98,11 +97,13 @@ There is NO WARRANTY, to the extent permitted by law.`, version, commit, buildDa
 				tmpl, err := template.New("statsTemplate").Parse(statsTemplate)
 				if err != nil {
 					log.Error().Err(err).Msg(("Error parsing statistics template"))
+					os.Exit(1)
 				}
 				var output bytes.Buffer
 				err = tmpl.ExecuteTemplate(&output, "statsTemplate", Stats{Stats: string(statsByte)})
 				if err != nil {
 					log.Error().Err(err).Msg("Error adding stats to template")
+					os.Exit(1)
 				}
 				statsToWrite = output.Bytes()
 			}
@@ -208,6 +209,7 @@ func writeMetricsToFile(statsFile string, statsByte []byte) {
 	file, err := os.Create(statsFile)
 	if err != nil {
 		log.Error().Err(err).Msg("Error generating statistics dump file")
+		os.Exit(1)
 	}
 	defer file.Close()
 
@@ -219,10 +221,9 @@ func writeMetricsToFile(statsFile string, statsByte []byte) {
 }
 
 func sendMetrics(statsDestination string, statsByte []byte) {
-	postBody, _ := json.Marshal(string(statsByte))
-	responseBody := bytes.NewBuffer(postBody)
+	requestBody := bytes.NewBuffer(statsByte)
 	// nolint: gosec
-	_, err := netHttp.Post(statsDestination, "application/json", responseBody)
+	_, err := netHttp.Post(statsDestination, "application/json", requestBody)
 	if err != nil {
 		log.Error().Err(err).Msgf("An error occurred trying to send metrics to %s", statsDestination)
 	}

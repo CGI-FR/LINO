@@ -95,12 +95,12 @@ There is NO WARRANTY, to the extent permitted by law.`, version, commit, buildDa
 
 			statsToWrite := statsByte
 			if statsTemplate != "" {
-				tmpl, err := template.New("").ParseFiles(statsTemplate)
+				tmpl, err := template.New("statsTemplate").Parse(statsTemplate)
 				if err != nil {
-					log.Error().Err(err).Msg(("Error loading statistics template"))
+					log.Error().Err(err).Msg(("Error parsing statistics template"))
 				}
 				var output bytes.Buffer
-				err = tmpl.ExecuteTemplate(&output, statsTemplate, Stats{Stats: string(statsByte)})
+				err = tmpl.ExecuteTemplate(&output, "statsTemplate", Stats{Stats: string(statsByte)})
 				if err != nil {
 					log.Error().Err(err).Msg("Error adding stats to template")
 				}
@@ -142,7 +142,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "add debug information to logs (very slow)")
 	rootCmd.PersistentFlags().StringVar(&colormode, "color", "auto", "use colors in log outputs : yes, no or auto")
 	rootCmd.PersistentFlags().StringVarP(&statsDestination, "stats", "S", "", "file to output statistics to")
-	rootCmd.PersistentFlags().StringVar(&statsTemplate, "statsTemplate", "", "template file to add stats to")
+	rootCmd.PersistentFlags().StringVar(&statsTemplate, "statsTemplate", "", "template string to format stats (to include them you have to specify them as `{{ .Stats }}` like `{\"software\":\"LINO\",\"stats\":{{ .Stats }}}`)")
 	rootCmd.AddCommand(dataconnector.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(table.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(sequence.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))

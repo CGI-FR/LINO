@@ -272,7 +272,7 @@ targets:
       - copy: "**/*.yml"
         dir: "tests/suites"
         todir: =TEST_WS_DIR
-      - $: export COMPOSE_PROJECT_NAME=lino; venom run --stop-on-failure ={TEST_WS_DIR}/*/*.yml -vv
+      - $: export COMPOSE_PROJECT_NAME=lino; venom run --stop-on-failure ={TEST_WS_DIR}/*/*.yml
 
   # run "neon -props '{testmod: table}' test-int-dev
   test-int-dev:

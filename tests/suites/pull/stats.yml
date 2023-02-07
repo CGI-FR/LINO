@@ -73,10 +73,8 @@ testcases:
   - name: stats with template
     steps:
       - script: rm -f lino-pull-template.json
-      - script: rm -f stats-template.json
-      - script: echo '{"software":"LINO","stats":{{ .Stats }}}' > stats-template.json
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-      - script: lino pull source --where "address_id > 13" --stats lino-pull-template.json --statsTemplate stats-template.json -v 5
+      - script: lino pull source --where "address_id > 13" --stats lino-pull-template.json --statsTemplate '{"software":"LINO","stats":{{ .Stats }}}' -v 5
         assertions:
           - result.code ShouldEqual 0
       - script: cat lino-pull-template.json
@@ -86,9 +84,7 @@ testcases:
 
   - name: stats with template over http
     steps:
-      - script: rm -f stats-template.json
-      - script: echo '{"software":"LINO","stats":{{ .Stats }}}' > stats-template.json
-      - script: lino pull source --where "address_id > 13" --stats http://httpmock:1080/api/v1/stats-pull --statsTemplate stats-template.json -v 5
+      - script: lino pull source --where "address_id > 13" --stats http://httpmock:1080/api/v1/stats-pull --statsTemplate '{"software":"LINO","stats":{{ .Stats }}}' -v 5
         assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldContainSubstring Statistics sent to http://httpmock:1080/api/v1/stats-pull

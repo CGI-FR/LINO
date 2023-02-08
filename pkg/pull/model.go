@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	over "github.com/adrienaury/zeromdc"
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
@@ -112,6 +113,7 @@ func (er ExportedRow) GetOrNil(key string) interface{} {
 type ExecutionStats interface {
 	GetLinesPerStepCount() map[string]int64
 	GetFiltersCount() int
+	GetDuration() time.Duration
 
 	ToJSON() []byte
 }
@@ -120,6 +122,7 @@ type stats struct {
 	mut               *sync.Mutex
 	LinesPerStepCount map[string]int64 `json:"linesPerStepCount"`
 	FiltersCount      int              `json:"filtersCount"`
+	Duration          time.Duration    `json:"duration"`
 }
 
 func (s *stats) ToJSON() []byte {
@@ -138,6 +141,10 @@ func (s *stats) GetFiltersCount() int {
 	return s.FiltersCount
 }
 
+func (s *stats) GetDuration() time.Duration {
+	return s.Duration
+}
+
 func IncLinesPerStepCount(step string) {
 	stats := getStats()
 	stats.mut.Lock()
@@ -152,6 +159,11 @@ func IncFiltersCount() {
 	stats.FiltersCount++
 }
 
+func SetDuration(duration time.Duration) {
+	stats := getStats()
+	stats.Duration = duration
+}
+
 func getStats() *stats {
 	value, exists := over.MDC().Get("stats")
 	if stats, ok := value.(*stats); exists && ok {
@@ -162,6 +174,7 @@ func getStats() *stats {
 		LinesPerStepCount: map[string]int64{},
 		FiltersCount:      0,
 		mut:               &sync.Mutex{},
+		Duration:          0,
 	}
 }
 

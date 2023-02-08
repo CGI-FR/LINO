@@ -310,5 +310,21 @@
         "httpResponse": {
             "body": "{\"active\":1,\"activebool\":true,\"address_id\":5,\"create_date\":\"2006-02-14T00:00:00Z\",\"customer_id\":1,\"email\":\"MARY.SMITH@sakilacustomer.org\",\"first_name\":\"MARY\",\"last_name\":\"SMITH\",\"last_update\":\"2006-02-15T09:57:20Z\",\"store_id\":1}\n{\"active\":1,\"activebool\":true,\"address_id\":6,\"create_date\":\"2006-02-14T00:00:00Z\",\"customer_id\":2,\"email\":\"PATRICIA.JOHNSON@sakilacustomer.org\",\"first_name\":\"PATRICIA\",\"last_name\":\"JOHNSON\",\"last_update\":\"2006-02-15T09:57:20Z\",\"store_id\":1}"
         }
+    },
+    {
+        "httpRequest": {
+            "path": "/api/v1/stats-pull"
+        },
+        "httpResponse": {
+            "statusCode": 200
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/api/v1/stats-push"
+        },
+        "httpResponse": {
+            "statusCode": 200
+        }
     }
 ]

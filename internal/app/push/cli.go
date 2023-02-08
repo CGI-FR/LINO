@@ -147,6 +147,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			duration := time.Since(startTime)
 			over.MDC().Set("duration", duration)
 			stats := push.Compute()
+			push.SetDuration(duration)
 			over.MDC().Set("stats", stats.ToJSON())
 		},
 	}

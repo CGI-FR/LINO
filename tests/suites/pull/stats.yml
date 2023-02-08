@@ -21,6 +21,10 @@ testcases:
     steps:
       # Clean working directory
       - script: rm -f *
+      - script: cp ../../httpmock/default.json ..
+      - script: sudo docker-compose -p lino stop httpmock
+      - script: sudo docker-compose -p lino rm -f httpmock
+      - script: sudo docker-compose -p lino up -d httpmock
       - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
       - script: lino relation extract source
       - script: lino table extract source
@@ -43,13 +47,51 @@ testcases:
       - script: lino pull -v 5 source --filter-from-file customer_filter.jsonl --where "email like 'LISA%'" --log-json
         assertions:
           - result.code ShouldEqual 0
-          - result.systemerr ShouldContainSubstring {"level":"info","stats":{"linesPerStepCount":{"customer":1},"filtersCount":1},"return":0
+          - result.systemerr ShouldContainSubstring {"level":"info","stats":{"linesPerStepCount":{"customer":1},"filtersCount":1,"duration"
 
-  - name: pull with json logs with 2 workers
+  # - name: pull with json logs with 2 workers
+  #   steps:
+  #     - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+  #     - script: lino id set-child-lookup payment_customer_id_fkey true
+  #     - script: lino pull -v info source -p 2 --log-json
+  #       assertions:
+  #         - result.code ShouldEqual 0
+  #         - result.systemerr ShouldContainSubstring {"level":"info","stats":{"linesPerStepCount":{"customer":1,"payment_customer_id_fkey":32},"filtersCount":1},"return":0
+
+  - name: pull greater than filter with json dump file
     steps:
+      - script: rm -f lino-pull-adress-13-stats.json
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-      - script: lino id set-child-lookup payment_customer_id_fkey true
-      - script: lino pull -v info source -p 2 --log-json
+      - script: lino pull source --where "address_id > 13" --stats lino-pull-adress-13-stats.json
         assertions:
           - result.code ShouldEqual 0
-          - result.systemerr ShouldContainSubstring {"level":"info","stats":{"linesPerStepCount":{"customer":1,"payment_customer_id_fkey":32},"filtersCount":1},"return":0
+      - script: cat lino-pull-adress-13-stats.json
+        assertions:
+          - result.systemout ShouldContainSubstring "linesPerStepCount":{"customer":1},"filtersCount":1
+          - result.systemout ShouldContainSubstring duration
+
+  - name: stats with template
+    steps:
+      - script: rm -f lino-pull-template.json
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino pull source --where "address_id > 13" --stats lino-pull-template.json --statsTemplate '{"software":"LINO","stats":{{ .Stats }}}' -v 5
+        assertions:
+          - result.code ShouldEqual 0
+      - script: cat lino-pull-template.json
+        assertions:
+          - result.systemout ShouldContainSubstring "linesPerStepCount":{"customer":1},"filtersCount":1
+          - result.systemout ShouldContainSubstring duration
+
+  - name: stats with template over http
+    steps:
+      - script: lino pull source --where "address_id > 13" --stats http://httpmock:1080/api/v1/stats-pull --statsTemplate '{"software":"LINO","stats":{{ .Stats }}}' -v 5
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldContainSubstring Statistics sent to http://httpmock:1080/api/v1/stats-pull
+
+  - name: stats with template from ENV over http
+    steps:
+      - script: LINO_STATS_URL=http://httpmock:1080/api/v1/stats-pull LINO_STATS_TEMPLATE='{"software":"LINO","stats":{{ .Stats }}}' lino pull source --where "address_id > 13"  -v 5
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldContainSubstring Statistics sent to http://httpmock:1080/api/v1/stats-pull

@@ -20,6 +20,7 @@ Types of changes
 - `Added` import property in `tables.yaml` allow to specify a format AND a type at the same time with the `format(type)` syntax (e.g. `import: binary(int64)`)
 - `Added` flag `--stats` to generate a stat file or HTTP POST
 - `Added` flag `--statsTemplate` to control the format of generated stats
+- `Fixed` `lino push truncate` with `--table` option doesn't truncate table #123
 
 ## [2.1.0]
 

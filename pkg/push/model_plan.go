@@ -43,6 +43,10 @@ func (p plan) RelationsFromTable(table Table) map[string]Relation {
 }
 
 func (p plan) Tables() []Table {
+	if len(p.relations) == 0 {
+		return []Table{p.firstTable}
+	}
+
 	tableOrder := map[string]int{}
 
 	name2Table := map[string]Table{}

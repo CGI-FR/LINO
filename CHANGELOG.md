@@ -21,6 +21,7 @@ Types of changes
 - `Added` websocket connector with basic auth, supported schemes : ws, wss (BETA)
 - `Added` flag `--stats` to generate a stat file or HTTP POST
 - `Added` flag `--statsTemplate` to control the format of generated stats
+- `Fixed` `lino push truncate` with `--table` option doesn't truncate table #123
 
 ## [2.1.0]
 

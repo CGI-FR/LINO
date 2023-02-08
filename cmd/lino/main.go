@@ -50,19 +50,25 @@ var (
 	builtBy   string
 
 	// global flags
-	loglevel         string
-	jsonlog          bool
-	debug            bool
-	colormode        string
-	statsDestination string
-	statsTemplate    string
+	loglevel            string
+	jsonlog             bool
+	debug               bool
+	colormode           string
+	statsDestination    string
+	statsTemplate       string
+	statsDestinationEnv = os.Getenv("LINO_STATS_URL")
+	statsTemplateEnv    = os.Getenv("LINO_STATS_TEMPLATE")
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "lino [action]",
 	Short: "Command line tools for managing tests data",
-	Long:  `Lino is a simple ETL (Extract Transform Load) tools to manage tests datas. The lino command line tool pull test data from a relational database to create a smallest production-like database.`,
+	Long: `Lino is a simple ETL (Extract Transform Load) tools to manage tests datas. The lino command line tool pull test data from a relational database to create a smallest production-like database.
+
+Environment Variables:
+  LINO_STATS_URL      The URL where statistics will be sent
+  LINO_STATS_TEMPLATE The template string to format statistics`,
 	Example: `  lino dataconnector add source --read-only postgresql://postgres@localhost:5432/postgres?sslmode=disable
   lino dc add target postgresql://postgres@localhost:5433/postgres?sslmode=disable
   lino dc list
@@ -142,8 +148,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&jsonlog, "log-json", false, "output logs in JSON format")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "add debug information to logs (very slow)")
 	rootCmd.PersistentFlags().StringVar(&colormode, "color", "auto", "use colors in log outputs : yes, no or auto")
-	rootCmd.PersistentFlags().StringVar(&statsDestination, "stats", "", "file to output statistics to")
-	rootCmd.PersistentFlags().StringVar(&statsTemplate, "statsTemplate", "", "template string to format stats (to include them you have to specify them as `{{ .Stats }}` like `{\"software\":\"LINO\",\"stats\":{{ .Stats }}}`)")
+	rootCmd.PersistentFlags().StringVar(&statsDestination, "stats", statsDestinationEnv, "file to output statistics to")
+	rootCmd.PersistentFlags().StringVar(&statsTemplate, "statsTemplate", statsTemplateEnv, "template string to format stats (to include them you have to specify them as `{{ .Stats }}` like `{\"software\":\"LINO\",\"stats\":{{ .Stats }}}`)")
 	rootCmd.AddCommand(dataconnector.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(table.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(sequence.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))

@@ -88,3 +88,10 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldContainSubstring Statistics sent to http://httpmock:1080/api/v1/stats-pull
+
+  - name: stats with template from ENV over http
+    steps:
+      - script: LINO_STATS_URL=http://httpmock:1080/api/v1/stats-pull LINO_STATS_TEMPLATE='{"software":"LINO","stats":{{ .Stats }}}' lino pull source --where "address_id > 13"  -v 5
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldContainSubstring Statistics sent to http://httpmock:1080/api/v1/stats-pull

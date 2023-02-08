@@ -19,6 +19,8 @@ package pull
 
 import (
 	"encoding/json"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	over "github.com/adrienaury/zeromdc"
@@ -91,10 +93,10 @@ type RowSet []Row
 type DataSet map[TableName]RowSet
 
 type Filter struct {
-	Limit    uint
-	Values   Row
-	Where    string
-	Distinct bool
+	Limit    uint   `json:"limit"`
+	Values   Row    `json:"values"`
+	Where    string `json:"where"`
+	Distinct bool   `json:"distinct"`
 }
 
 // ExportedRow is a row but with keys ordered and values in export format for jsonline.
@@ -109,7 +111,7 @@ func (er ExportedRow) GetOrNil(key string) interface{} {
 }
 
 type ExecutionStats interface {
-	GetLinesPerStepCount() map[string]int
+	GetLinesPerStepCount() map[string]int64
 	GetFiltersCount() int
 	GetDuration() time.Duration
 
@@ -117,9 +119,10 @@ type ExecutionStats interface {
 }
 
 type stats struct {
-	LinesPerStepCount map[string]int `json:"linesPerStepCount"`
-	FiltersCount      int            `json:"filtersCount"`
-	Duration          time.Duration  `json:"duration"`
+	mut               *sync.Mutex
+	LinesPerStepCount map[string]int64 `json:"linesPerStepCount"`
+	FiltersCount      int              `json:"filtersCount"`
+	Duration          time.Duration    `json:"duration"`
 }
 
 func (s *stats) ToJSON() []byte {
@@ -130,7 +133,7 @@ func (s *stats) ToJSON() []byte {
 	return b
 }
 
-func (s *stats) GetLinesPerStepCount() map[string]int {
+func (s *stats) GetLinesPerStepCount() map[string]int64 {
 	return s.LinesPerStepCount
 }
 
@@ -144,7 +147,11 @@ func (s *stats) GetDuration() time.Duration {
 
 func IncLinesPerStepCount(step string) {
 	stats := getStats()
-	stats.LinesPerStepCount[step]++
+	stats.mut.Lock()
+	value := stats.LinesPerStepCount[step]
+	atomic.AddInt64(&value, 1)
+	stats.LinesPerStepCount[step] = value
+	stats.mut.Unlock()
 }
 
 func IncFiltersCount() {
@@ -164,8 +171,9 @@ func getStats() *stats {
 	}
 	log.Warn().Msg("Statistics uncorrectly initialized")
 	return &stats{
-		LinesPerStepCount: map[string]int{},
+		LinesPerStepCount: map[string]int64{},
 		FiltersCount:      0,
+		mut:               &sync.Mutex{},
 		Duration:          0,
 	}
 }
@@ -176,9 +184,9 @@ func Compute() ExecutionStats {
 		return stats
 	}
 	log.Warn().Msg("Unable to compute statistics")
-	return &stats{}
+	return &stats{mut: &sync.Mutex{}}
 }
 
 func Reset() {
-	over.MDC().Set("stats", &stats{FiltersCount: 0, LinesPerStepCount: map[string]int{}})
+	over.MDC().Set("stats", &stats{FiltersCount: 0, LinesPerStepCount: map[string]int64{}, mut: &sync.Mutex{}})
 }

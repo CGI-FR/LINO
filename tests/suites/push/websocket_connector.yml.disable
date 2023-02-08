@@ -1,0 +1,42 @@
+# Copyright (C) 2021 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
+name: push to WS connector
+testcases:
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *yaml
+      - script: sudo docker-compose -p lino stop wsmock
+      - script: sudo docker-compose -p lino rm -f wsmock
+      - script: sudo docker-compose -p lino up -d wsmock
+      - script: lino dataconnector add ws 'ws://wsmock:1080/'
+      - script: count=0; while ! lino dc ping ws; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
+      - script: lino table extract ws
+      - script: lino relation extract ws
+      - script: lino id create PROJECT
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup FK_PROJECT_1 true
+      - script: lino pull ws --limit 0  > projects.jsonl
+
+  - name: push all
+    steps:
+      - script: lino push -c 10 ws < projects.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.stderr ShouldBeEmpty
+          - result.stdout ShouldBeEmpty

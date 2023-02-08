@@ -33,6 +33,7 @@ func pullDataSourceFactory() map[string]domain.DataSourceFactory {
 		"mysql":      infra.NewMariadbDataSourceFactory(),
 		"db2":        infra.NewDb2DataSourceFactory(),
 		"http":       infra.NewHTTPDataSourceFactory(),
+		"ws":         infra.NewWSDataSourceFactory(),
 	}
 }
 

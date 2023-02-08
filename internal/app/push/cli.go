@@ -140,7 +140,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			}
 			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter)
 			if e3 != nil {
-				fmt.Fprintln(err, e3.Error())
+				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)
 			}
 

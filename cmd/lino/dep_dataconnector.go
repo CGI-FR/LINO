@@ -34,5 +34,6 @@ func dataPingerFactory() map[string]domain.DataPingerFactory {
 		"mysql":      infra.NewSQLDataPingerFactory(),
 		"db2":        infra.NewSQLDataPingerFactory(),
 		"http":       infra.NewHTTPDataPingerFactory(),
+		"ws":         infra.NewWSDataPingerFactory(),
 	}
 }

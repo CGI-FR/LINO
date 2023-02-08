@@ -34,5 +34,6 @@ func relationExtractorFactory() map[string]domain.ExtractorFactory {
 		"mysql":      infra.NewMariadbExtractorFactory(),
 		"db2":        infra.NewDb2ExtractorFactory(),
 		"http":       infra.NewHTTPExtractorFactory(),
+		"ws":         &infra.WSExtractorFactory{},
 	}
 }

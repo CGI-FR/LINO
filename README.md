@@ -1,3 +1,11 @@
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CGI-FR/LINO/ci.yml?branch=main)
+ [![Go Report Card](https://goreportcard.com/badge/github.com/cgi-fr/pimo)](https://goreportcard.com/report/github.com/cgi-fr/lino)
+ ![GitHub all releases](https://img.shields.io/github/downloads/CGI-FR/LINO/total)
+ ![GitHub](https://img.shields.io/github/license/CGI-FR/LINO)
+ ![GitHub Repo stars](https://img.shields.io/github/stars/CGI-FR/LINO)
+ ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/CGI-FR/LINO)
+ ![GitHub release (latest by date)](https://img.shields.io/github/v/release/CGI-FR/LINO)
+
 # LINO : Large Input, Narrow Output
 
 LINO is a simple ETL (Extract Transform Load) tools to manage tests datas.
@@ -6,6 +14,15 @@ The `lino` command line tool pull test data from a relational database to create
 ## Usage
 
 `lino` command line work in relative project's directory, like `git` or `docker`
+
+The following flags can be used:
+
+* `--verbosity <level>` or `-v<level>` This flag increase verbosity on the stderr output, possible values: none (0), error (1), warn (2), info (3), debug (4), trace (5).
+* `--debug` This flag complete the logs with debug information.
+* `--log-json` Set this flag to produce JSON formatted logs goes deeper into logging and structured logging)
+* `color` This flag allows to add color to console logs
+* `--stats <filename | url>` This flag either outputs run statistics to the specified file or send them to specified url (has to start with `http` or `https`).
+* `--statsTemplate <string>` This flag will have LINO use the value as a template to generate statistics. Please use go templating format to include statistics. To include them you have to specify them as `{{ .Stats }}`. (i.e. `{"software":"LINO","stats":{{ .Stats }}}`
 
 ## Create a new LINO project
 

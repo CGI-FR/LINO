@@ -23,7 +23,7 @@ import (
 	"os"
 	"time"
 
-	over "github.com/Trendyol/overlog"
+	over "github.com/adrienaury/zeromdc"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -162,6 +162,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			duration := time.Since(startTime)
 			over.MDC().Set("duration", duration)
 			stats := pull.Compute()
+			pull.SetDuration(duration)
 			over.MDC().Set("stats", stats.ToJSON())
 		},
 	}

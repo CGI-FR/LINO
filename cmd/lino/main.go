@@ -18,12 +18,15 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	netHttp "net/http"
 	"os"
 	"runtime"
 	"strings"
+	"text/template"
 
-	over "github.com/Trendyol/overlog"
+	over "github.com/adrienaury/zeromdc"
 	"github.com/cgi-fr/lino/internal/app/dataconnector"
 	"github.com/cgi-fr/lino/internal/app/http"
 	"github.com/cgi-fr/lino/internal/app/id"
@@ -47,17 +50,25 @@ var (
 	builtBy   string
 
 	// global flags
-	loglevel  string
-	jsonlog   bool
-	debug     bool
-	colormode string
+	loglevel            string
+	jsonlog             bool
+	debug               bool
+	colormode           string
+	statsDestination    string
+	statsTemplate       string
+	statsDestinationEnv = os.Getenv("LINO_STATS_URL")
+	statsTemplateEnv    = os.Getenv("LINO_STATS_TEMPLATE")
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "lino [action]",
 	Short: "Command line tools for managing tests data",
-	Long:  `Lino is a simple ETL (Extract Transform Load) tools to manage tests datas. The lino command line tool pull test data from a relational database to create a smallest production-like database.`,
+	Long: `Lino is a simple ETL (Extract Transform Load) tools to manage tests datas. The lino command line tool pull test data from a relational database to create a smallest production-like database.
+
+Environment Variables:
+  LINO_STATS_URL      The URL where statistics will be sent
+  LINO_STATS_TEMPLATE The template string to format statistics`,
 	Example: `  lino dataconnector add source --read-only postgresql://postgres@localhost:5432/postgres?sslmode=disable
   lino dc add target postgresql://postgres@localhost:5433/postgres?sslmode=disable
   lino dc list
@@ -84,7 +95,32 @@ There is NO WARRANTY, to the extent permitted by law.`, version, commit, buildDa
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		stats, ok := over.MDC().Get("stats")
 		if ok {
-			log.Info().RawJSON("stats", stats.([]byte)).Int("return", 0).Msg("End LINO")
+			statsByte := stats.([]byte)
+			log.Info().RawJSON("stats", statsByte).Int("return", 0).Msg("End LINO")
+
+			statsToWrite := statsByte
+			if statsTemplate != "" {
+				tmpl, err := template.New("statsTemplate").Parse(statsTemplate)
+				if err != nil {
+					log.Error().Err(err).Msg(("Error parsing statistics template"))
+					os.Exit(1)
+				}
+				var output bytes.Buffer
+				err = tmpl.ExecuteTemplate(&output, "statsTemplate", Stats{Stats: string(statsByte)})
+				if err != nil {
+					log.Error().Err(err).Msg("Error adding stats to template")
+					os.Exit(1)
+				}
+				statsToWrite = output.Bytes()
+			}
+
+			if statsDestination != "" {
+				if strings.HasPrefix(statsDestination, "http") {
+					sendMetrics(statsDestination, statsToWrite)
+				} else {
+					writeMetricsToFile(statsDestination, statsToWrite)
+				}
+			}
 		} else {
 			log.Info().Int("return", 0).Msg("End LINO")
 		}
@@ -112,6 +148,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&jsonlog, "log-json", false, "output logs in JSON format")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "add debug information to logs (very slow)")
 	rootCmd.PersistentFlags().StringVar(&colormode, "color", "auto", "use colors in log outputs : yes, no or auto")
+	rootCmd.PersistentFlags().StringVar(&statsDestination, "stats", statsDestinationEnv, "file to output statistics to")
+	rootCmd.PersistentFlags().StringVar(&statsTemplate, "statsTemplate", statsTemplateEnv, "template string to format stats (to include them you have to specify them as `{{ .Stats }}` like `{\"software\":\"LINO\",\"stats\":{{ .Stats }}}`)")
 	rootCmd.AddCommand(dataconnector.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(table.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(sequence.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
@@ -171,4 +209,33 @@ func initConfig() {
 	id.Inject(idStorageFile, relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
 	pull.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pullDataSourceFactory(), pullRowExporterFactory(), pullRowReaderFactory(), traceListner(os.Stderr))
 	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pushDataDestinationFactory(), pushRowIteratorFactory(), pushRowExporterFactory())
+}
+
+func writeMetricsToFile(statsFile string, statsByte []byte) {
+	file, err := os.Create(statsFile)
+	if err != nil {
+		log.Error().Err(err).Msg("Error generating statistics dump file")
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	_, err = file.Write(statsByte)
+	if err != nil {
+		log.Error().Err(err).Msg("Error writing statistics to dump file")
+	}
+	log.Info().Msgf("Statistics exported to file %s", file.Name())
+}
+
+func sendMetrics(statsDestination string, statsByte []byte) {
+	requestBody := bytes.NewBuffer(statsByte)
+	// nolint: gosec
+	_, err := netHttp.Post(statsDestination, "application/json", requestBody)
+	if err != nil {
+		log.Error().Err(err).Msgf("An error occurred trying to send metrics to %s", statsDestination)
+	}
+	log.Info().Msgf("Statistics sent to %s", statsDestination)
+}
+
+type Stats struct {
+	Stats interface{} `json:"stats"`
 }

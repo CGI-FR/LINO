@@ -18,6 +18,8 @@ Types of changes
 
 - `Added` import property in `tables.yaml` allow to specify format of data to read from JSON stream (`string` (default), `numeric`, `binary` or `base64` (same), `datetime`, `timestamp`) therefore `import` and `export` now mirror each other (`import` is used at push and `export` at pull) but `import` still allow to specify the data type to pass to database driver (backward compatibility)
 - `Added` import property in `tables.yaml` allow to specify a format AND a type at the same time with the `format(type)` syntax (e.g. `import: binary(int64)`)
+- `Added` flag `--stats` to generate a stat file or HTTP POST
+- `Added` flag `--statsTemplate` to control the format of generated stats
 
 ## [2.1.0]
 

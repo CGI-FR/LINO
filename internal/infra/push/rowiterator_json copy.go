@@ -35,7 +35,7 @@ func NewJSONRowWriter(file io.Writer) push.RowWriter {
 }
 
 // NextRow convert next line to Row
-func (rw *JSONRowWriter) Write(row push.Row) *push.Error {
+func (rw *JSONRowWriter) Write(row push.Row, translatedKeys push.Cache) *push.Error {
 	err := rw.encoder.Encode(row)
 	if err != nil {
 		return &push.Error{Description: err.Error()}

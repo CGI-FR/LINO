@@ -80,7 +80,7 @@ type rowWriter struct {
 	rows []push.Row
 }
 
-func (rw *rowWriter) Write(row push.Row) *push.Error {
+func (rw *rowWriter) Write(row push.Row, translatedKeys push.Cache) *push.Error {
 	log.Trace().Msg(fmt.Sprintf("append row %s to %s", row, rw.rows))
 	rw.rows = append(rw.rows, row)
 	return nil

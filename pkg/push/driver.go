@@ -54,7 +54,7 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 
 		err2 := pushRow(*row, destination, plan.FirstTable(), plan, mode)
 		if err2 != nil {
-			err4 := catchError.Write(*row)
+			err4 := catchError.Write(*row, nil)
 			if err4 != nil {
 				return &Error{Description: fmt.Sprintf("%s (%s)", err2.Error(), err4.Error())}
 			}
@@ -154,7 +154,7 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode) *Er
 		}
 
 		// Current table
-		err3 := rw.Write(frow)
+		err3 := rw.Write(frow, nil) // TODO : translatedKeys
 
 		IncDeletedLinesCount(table.Name())
 
@@ -181,7 +181,7 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode) *Er
 		}
 
 		// current
-		err3 := rw.Write(frow)
+		err3 := rw.Write(frow, nil) // TODO : translatedKeys
 
 		IncCreatedLinesCount(table.Name())
 

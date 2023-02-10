@@ -32,12 +32,12 @@ type DataDestination interface {
 
 // RowWriter write row to destination table
 type RowWriter interface {
-	Write(row Row) *Error
+	Write(row Row, translatedKeys Cache) *Error
 }
 
 type NoErrorCaptureRowWriter struct{}
 
-func (necrw NoErrorCaptureRowWriter) Write(row Row) *Error {
+func (necrw NoErrorCaptureRowWriter) Write(row Row, translatedKeys Cache) *Error {
 	return &Error{"No error capture configured"}
 }
 

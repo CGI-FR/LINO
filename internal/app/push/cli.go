@@ -138,7 +138,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			} else {
 				rowExporter = push.NoErrorCaptureRowWriter{}
 			}
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter)
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, nil) // TODO : read --pk-translation flag
 			if e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)

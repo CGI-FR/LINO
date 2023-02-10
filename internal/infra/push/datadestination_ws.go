@@ -217,7 +217,7 @@ type WebSocketRowWriter struct {
 	table push.Table
 }
 
-func (rw *WebSocketRowWriter) Write(row push.Row, translatedKeys push.Cache) *push.Error {
+func (rw *WebSocketRowWriter) Write(row push.Row, where push.Row) *push.Error {
 	conditions := push.Row{}
 	if rw.dd.mode == push.Update || rw.dd.mode == push.Delete {
 		for _, pk := range rw.table.PrimaryKey() {

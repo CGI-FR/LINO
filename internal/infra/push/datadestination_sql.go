@@ -242,7 +242,7 @@ func (rw *SQLRowWriter) tableName() string {
 	return rw.dd.schema + "." + rw.table.Name()
 }
 
-func (rw *SQLRowWriter) createStatement(row push.Row, translatedKeys push.Cache) *push.Error {
+func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Error {
 	if rw.statement != nil {
 		return nil
 	}
@@ -309,8 +309,8 @@ func (rw *SQLRowWriter) tableInformations(row push.Row) ([]string, []string, []s
 }
 
 // Write
-func (rw *SQLRowWriter) Write(row push.Row, translatedKeys push.Cache) *push.Error {
-	err1 := rw.createStatement(row, translatedKeys)
+func (rw *SQLRowWriter) Write(row push.Row, where push.Row) *push.Error {
+	err1 := rw.createStatement(row, where)
 	if err1 != nil {
 		return err1
 	}

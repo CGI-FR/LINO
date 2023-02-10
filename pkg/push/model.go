@@ -67,9 +67,6 @@ type Value interface{}
 // Row of data.
 type Row map[string]interface{}
 
-// Cache is a dictionary for values.
-type Cache map[Value]Value
-
 // Error is the error type returned by the domain
 type Error struct {
 	Description string

@@ -49,3 +49,7 @@ type RowIterator interface {
 	Error() *Error
 	Close() *Error
 }
+
+type Translator interface {
+	FindValue(table string, column string, value Value) Value
+}

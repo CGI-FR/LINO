@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	over "github.com/adrienaury/zeromdc"
@@ -28,6 +29,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cgi-fr/lino/internal/app/urlbuilder"
+	pushinfra "github.com/cgi-fr/lino/internal/infra/push"
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/cgi-fr/lino/pkg/id"
 	"github.com/cgi-fr/lino/pkg/push"
@@ -73,6 +75,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		table              string
 		ingressDescriptor  string
 		rowExporter        push.RowWriter
+		pkTranslations     map[string]string
 	)
 
 	cmd := &cobra.Command{
@@ -138,7 +141,10 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			} else {
 				rowExporter = push.NoErrorCaptureRowWriter{}
 			}
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, nil) // TODO : read --pk-translation flag
+
+			translator := loadTranslator(pkTranslations)
+
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator)
 			if e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)
@@ -156,10 +162,22 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVarP(&catchErrors, "catch-errors", "e", "", "Catch errors and write line in file")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "Table to writes json")
 	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "Ingress descriptor filename")
+	cmd.Flags().StringToStringVar(&pkTranslations, "pk-translation", map[string]string{}, "list of dictionaries old value / new value for primary key update")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
 	return cmd
+}
+
+func loadTranslator(pkTranslations map[string]string) push.Translator {
+	translator := pushinfra.NewFileTranslator()
+
+	for key, file := range pkTranslations {
+		tableAndColumn := strings.SplitN(key, ".", 2)
+		translator.LoadFile(file, tableAndColumn[0], tableAndColumn[1])
+	}
+
+	return translator
 }
 
 func getDataDestination(dataconnectorName string) (push.DataDestination, *push.Error) {

@@ -264,7 +264,9 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 				prepareStmt += " and "
 			}
 		}
-		rw.headers = pkNames
+		for _, pkName := range pkNames {
+			rw.headers = append(rw.headers, pkName+"__where")
+		}
 	case rw.dd.mode == push.Update:
 		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, pkNames, pkVar)
 		if pusherr != nil {
@@ -322,7 +324,16 @@ func (rw *SQLRowWriter) Write(row push.Row, where push.Row) *push.Error {
 
 	values := []interface{}{}
 	for _, h := range rw.headers {
-		values = append(values, rw.dd.dialect.ConvertValue(importedRow.GetOrNil(h)))
+		inWhere := false
+		if strings.HasSuffix(h, "__where") {
+			inWhere = true
+			h = strings.TrimSuffix(h, "__where")
+		}
+		if oldvalue, exists := where[h]; exists && inWhere {
+			values = append(values, rw.dd.dialect.ConvertValue(oldvalue))
+		} else {
+			values = append(values, rw.dd.dialect.ConvertValue(importedRow.GetOrNil(h)))
+		}
 	}
 	log.Trace().Strs("headers", rw.headers).Str("table", rw.table.Name()).Msg(fmt.Sprint(values))
 

@@ -188,6 +188,7 @@ func loadTranslator(pkTranslations map[string]string) error {
 		rowIterator := rowIteratorFactory(file)
 		defer rowIterator.Close()
 
+		log.Debug().Str("table", tableAndColumn[0]).Str("column", tableAndColumn[1]).Str("file", filename).Msg("loading key translation cache")
 		if err := translator.Load(tableAndColumn[0], tableAndColumn[1], rowIterator); err != nil {
 			return err
 		}

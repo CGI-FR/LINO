@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
+//go:build !db2
 // +build !db2
 
 package push
@@ -67,7 +68,7 @@ func (d Db2Dialect) InsertStatement(tableName string, columns []string, values [
 }
 
 // UpdateStatement
-func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error) {
+func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string, where push.Row) (string, []string, *push.Error) {
 	panic(fmt.Errorf("Not implemented"))
 }
 

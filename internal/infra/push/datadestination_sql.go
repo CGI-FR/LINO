@@ -268,7 +268,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 			rw.headers = append(rw.headers, pkName+"__where")
 		}
 	case rw.dd.mode == push.Update:
-		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, pkNames, pkVar)
+		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, pkNames, pkVar, where)
 		if pusherr != nil {
 			return pusherr
 		}
@@ -400,7 +400,7 @@ type SQLDialect interface {
 	EnableConstraintsStatement(tableName string) string
 	TruncateStatement(tableName string) string
 	InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string
-	UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error)
+	UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string, where push.Row) (string, []string, *push.Error)
 	IsDuplicateError(error) bool
 	ConvertValue(push.Value) push.Value
 }

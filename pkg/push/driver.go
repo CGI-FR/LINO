@@ -210,5 +210,13 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, tra
 }
 
 func computeTranslatedKeys(row Row, table Table, translator Translator) Row {
-	panic("unimplemented")
+	where := Row{}
+
+	for _, pkname := range table.PrimaryKey() {
+		newvalue := row[pkname]
+		oldvalue := translator.FindValue(table.Name(), pkname, newvalue)
+		where[pkname] = oldvalue
+	}
+
+	return where
 }

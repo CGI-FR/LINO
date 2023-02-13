@@ -186,7 +186,7 @@ type SQLRowWriter struct {
 	dd                 *SQLDataDestination
 	duplicateKeysCache map[push.Value]struct{}
 	statement          *sql.Stmt
-	headers            []ValueDescriptor
+	headers            ValueHeaders
 }
 
 // NewSQLRowWriter creates a new SQL row writer.
@@ -276,7 +276,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 		prepareStmt, rw.headers = rw.dd.dialect.InsertStatement(rw.tableName(), selectValues, rw.table.PrimaryKey())
 	}
 
-	log.Debug().Interface("headers", rw.headers).Msg(prepareStmt)
+	log.Debug().Stringer("headers", rw.headers).Msg(prepareStmt)
 
 	stmt, err := rw.dd.tx.Prepare(prepareStmt)
 	if err != nil {
@@ -289,6 +289,21 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 type ValueDescriptor struct {
 	name     string
 	override bool // value in row is overridden (used for key translations)
+}
+
+type ValueHeaders []ValueDescriptor
+
+func (vh ValueHeaders) String() string {
+	sb := &strings.Builder{}
+	sb.WriteString("[")
+	for i, vd := range vh {
+		sb.WriteString(vd.name)
+		if i+1 < len(vh) {
+			sb.WriteString(", ")
+		}
+	}
+	sb.WriteString("]")
+	return sb.String()
 }
 
 func (rw *SQLRowWriter) computeStatementInfos(row push.Row, where push.Row) (selectValues []ValueDescriptor, whereValues []ValueDescriptor) {
@@ -327,7 +342,7 @@ func (rw *SQLRowWriter) Write(row push.Row, where push.Row) *push.Error {
 			values = append(values, rw.dd.dialect.ConvertValue(importedRow.GetOrNil(h.name)))
 		}
 	}
-	log.Trace().Interface("headers", rw.headers).Str("table", rw.table.Name()).Msg(fmt.Sprint(values))
+	log.Trace().Stringer("headers", rw.headers).Str("table", rw.table.Name()).Msg(fmt.Sprint(values))
 
 	_, err2 := rw.statement.Exec(values...)
 	if err2 != nil {

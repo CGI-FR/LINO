@@ -130,9 +130,12 @@ func (d OracleDialect) InsertStatement(tableName string, selectValues []ValueDes
 	sql.WriteString(tableName)
 	sql.WriteString("(")
 	sql.WriteString(strings.Join(protectedColumns, ","))
-	sql.WriteString(" VALUES(")
+	sql.WriteString(") VALUES (")
 	for i := 1; i <= len(selectValues); i++ {
 		sql.WriteString(d.Placeholder(i))
+		if i < len(selectValues) {
+			sql.WriteString(", ")
+		}
 	}
 	sql.WriteString(")")
 

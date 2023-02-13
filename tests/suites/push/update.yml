@@ -87,15 +87,15 @@ testcases:
       - script: lino table extract source
       - script: |-
           cat > cache.jsonl <<EOF
-          {"key": 1, "value": 99}
-          {"key": 2, "value": 98}
+          {"key": 1, "value": 999}
+          {"key": 2, "value": 998}
           EOF
       - script: |-
           cat > actor.jsonl <<EOF
-          {"actor_id":99,"last_name":"UPDATE"}
+          {"actor_id":999,"last_name":"UPDATE"}
           EOF
       - script: lino push update source --table actor --pk-translation actor.actor_id=cache.jsonl < actor.jsonl
-      - script: lino pull source --filter actor_id=99
+      - script: lino pull source --table actor --filter actor_id=999
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldContainSubstring "actor_id":99

@@ -70,8 +70,8 @@ func (d Db2Dialect) TruncateStatement(tableName string) string {
 // InsertStatement generate insert statement
 func (d Db2Dialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
 	protectedColumns := []string{}
-	for _, c := range columns {
-		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c))
+	for _, c := range selectValues {
+		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c.name))
 	}
 
 	sql := &strings.Builder{}

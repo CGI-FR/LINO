@@ -179,11 +179,11 @@ func loadTranslator(pkTranslations map[string]string) error {
 		tableAndColumn := strings.SplitN(key, ".", 2)
 
 		file, err := os.Open(filename)
-		defer file.Close()
-
 		if err != nil {
 			return err
 		}
+
+		defer file.Close()
 
 		rowIterator := rowIteratorFactory(file)
 		defer rowIterator.Close()

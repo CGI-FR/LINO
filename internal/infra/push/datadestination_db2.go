@@ -89,7 +89,7 @@ func (d Db2Dialect) InsertStatement(tableName string, selectValues []ValueDescri
 }
 
 // UpdateStatement
-func (d Db2Dialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor) (statement string, headers []ValueDescriptor, err *push.Error)
+func (d Db2Dialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")
 	sql.WriteString(tableName)

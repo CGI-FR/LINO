@@ -65,7 +65,7 @@ func (d PostgresDialect) TruncateStatement(tableName string) string {
 func (d PostgresDialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
 	protectedColumns := []string{}
 	for _, c := range selectValues {
-		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c))
+		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c.name))
 	}
 
 	sql := &strings.Builder{}

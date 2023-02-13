@@ -292,7 +292,6 @@ type ValueDescriptor struct {
 }
 
 func (rw *SQLRowWriter) computeStatementInfos(row push.Row, where push.Row) (selectValues []ValueDescriptor, whereValues []ValueDescriptor) {
-
 	for _, pk := range rw.table.PrimaryKey() {
 		if _, ok := where[pk]; ok {
 			whereValues = append(whereValues, ValueDescriptor{pk, true})
@@ -306,37 +305,6 @@ func (rw *SQLRowWriter) computeStatementInfos(row push.Row, where push.Row) (sel
 	}
 
 	return
-}
-
-// tableInformations compute place holder, pk names and columns headers
-func (rw *SQLRowWriter) tableInformations(row push.Row, where push.Row) ([]string, []string, []string, []string, []string, []string) {
-	names := []string{}
-	valuesVar := []string{}
-	pkNames := []string{}
-	pkVar := []string{}
-	addNames := []string{}
-	addVar := []string{}
-
-	i := 1
-	for k := range row {
-		names = append(names, k)
-		valuesVar = append(valuesVar, rw.dd.dialect.Placeholder(i))
-		for _, pk := range rw.table.PrimaryKey() {
-			if pk == k {
-				pkNames = append(pkNames, k)
-				pkVar = append(pkVar, rw.dd.dialect.Placeholder(i))
-			}
-		}
-		i++
-	}
-
-	for k := range where {
-		addNames = append(addNames, k)
-		addVar = append(addVar, rw.dd.dialect.Placeholder(i))
-		i++
-	}
-
-	return names, valuesVar, pkNames, pkVar, addNames, addVar
 }
 
 // Write
@@ -408,14 +376,14 @@ func (rw *SQLRowWriter) enableConstraints() *push.Error {
 }
 
 // isAPrimaryKey return true if columnName is in pknames
-func isAPrimaryKey(columnName string, pkNames []string) bool {
-	for _, pkName := range pkNames {
-		if pkName == columnName {
-			return true
-		}
-	}
-	return false
-}
+// func isAPrimaryKey(columnName string, pkNames []string) bool {
+// 	for _, pkName := range pkNames {
+// 		if pkName == columnName {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
 // SQLDialect is an interface to inject SQL variations
 type SQLDialect interface {

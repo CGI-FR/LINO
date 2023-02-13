@@ -68,42 +68,59 @@ func (d Db2Dialect) TruncateStatement(tableName string) string {
 }
 
 // InsertStatement generate insert statement
-func (d Db2Dialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
+func (d Db2Dialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
 	protectedColumns := []string{}
 	for _, c := range columns {
 		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c))
 	}
-	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(protectedColumns, ","), strings.Join(values, ","))
+
+	sql := &strings.Builder{}
+	sql.WriteString("INSERT INTO ")
+	sql.WriteString(tableName)
+	sql.WriteString("(")
+	sql.WriteString(strings.Join(protectedColumns, ","))
+	sql.WriteString(" VALUES(")
+	for i := 1; i <= len(selectValues); i++ {
+		sql.WriteString(d.Placeholder(i))
+	}
+	sql.WriteString(")")
+
+	return sql.String(), selectValues
 }
 
 // UpdateStatement
-func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string, where push.Row) (string, []string, *push.Error) {
+func (d Db2Dialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor) (statement string, headers []ValueDescriptor, err *push.Error)
 	sql := &strings.Builder{}
-	sql.Write([]byte("UPDATE "))
-	sql.Write([]byte(tableName))
-	sql.Write([]byte(" SET "))
-	for index, column := range columns {
-		sql.Write([]byte(column))
-		fmt.Fprint(sql, "=")
-		fmt.Fprint(sql, uValues[index])
-		if index+1 < len(columns) {
-			sql.Write([]byte(", "))
+	sql.WriteString("UPDATE ")
+	sql.WriteString(tableName)
+	sql.WriteString(" SET ")
+
+	for index, column := range selectValues {
+		headers = append(headers, column)
+
+		sql.WriteString(column.name)
+		sql.WriteString("=")
+		sql.WriteString(d.Placeholder(index + 1))
+		if index+1 < len(selectValues) {
+			sql.WriteString(", ")
 		}
 	}
-	if len(primaryKeys) > 0 {
-		sql.Write([]byte(" WHERE "))
+	if len(whereValues) > 0 {
+		sql.WriteString(" WHERE ")
 	} else {
-		return "", []string{}, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
+		return "", nil, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
 	}
-	for index, pk := range primaryKeys {
-		sql.Write([]byte(pk))
-		fmt.Fprint(sql, "=")
-		fmt.Fprint(sql, pValues[index])
-		if index+1 < len(primaryKeys) {
+	for index, pk := range whereValues {
+		headers = append(headers, pk)
+
+		sql.WriteString(pk.name)
+		sql.WriteString("=")
+		sql.WriteString(d.Placeholder(len(selectValues) + index + 1))
+		if index+1 < len(whereValues) {
 			sql.Write([]byte(" AND "))
 		}
 	}
-	return sql.String(), append(columns, primaryKeys...), nil
+	return sql.String(), headers, nil
 }
 
 // IsDuplicateError check if error is a duplicate error

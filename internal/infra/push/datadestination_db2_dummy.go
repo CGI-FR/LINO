@@ -63,12 +63,12 @@ func (d Db2Dialect) TruncateStatement(tableName string) string {
 }
 
 // InsertStatement generate insert statement
-func (d Db2Dialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
+func (d Db2Dialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
 	panic(fmt.Errorf("Not implemented"))
 }
 
 // UpdateStatement
-func (d Db2Dialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string, where push.Row) (string, []string, *push.Error) {
+func (d Db2Dialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor) (statement string, headers []ValueDescriptor, err *push.Error) {
 	panic(fmt.Errorf("Not implemented"))
 }
 

@@ -52,4 +52,5 @@ type RowIterator interface {
 
 type Translator interface {
 	FindValue(table string, column string, value Value) Value
+	Load(table string, column string, rows RowIterator) *Error
 }

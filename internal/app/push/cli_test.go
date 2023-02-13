@@ -42,6 +42,7 @@ func Test_getDataDestination(t *testing.T) {
 		map[string]push.DataDestinationFactory{},
 		func(io.ReadCloser) push.RowIterator { return &push.MockRowIterator{} },
 		func(io.Writer) push.RowWriter { return &push.MockRowWriter{} },
+		push.NewMockTranslator(),
 	)
 
 	type args struct {

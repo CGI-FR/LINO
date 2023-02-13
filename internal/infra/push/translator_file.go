@@ -18,10 +18,6 @@
 package push
 
 import (
-	"bufio"
-	"encoding/json"
-	"os"
-
 	"github.com/cgi-fr/lino/pkg/push"
 )
 
@@ -33,37 +29,16 @@ func NewFileTranslator() *FileTranslator {
 	return &FileTranslator{caches: map[string]push.Cache{}}
 }
 
-func (ft *FileTranslator) LoadFile(filename string, tableName string, columnName string) error {
-	file, err := os.Open(filename)
-	defer file.Close()
-
-	if err != nil {
-		return err
-	}
-
+func (ft *FileTranslator) Load(tableName string, columnName string, rows push.RowIterator) *push.Error {
 	cache := push.Cache{}
 	ft.caches[tableName+"___"+columnName] = cache
 
-	scanner := bufio.NewScanner(file)
-	buf := make([]byte, 0, 64*1024)
-	scanner.Buffer(buf, 10*1024*1024)
-
-	for scanner.Scan() {
-		if scanner.Err() != nil {
-			return scanner.Err()
-		}
-		line := scanner.Bytes()
-
-		var row push.Row
-
-		if err := json.Unmarshal(line, &row); err != nil {
-			return err
-		}
-
+	for rows.Next() {
+		row := *rows.Value()
 		cache[row["value"]] = row["key"]
 	}
 
-	return nil
+	return rows.Error()
 }
 
 func (ft *FileTranslator) FindValue(tableName string, columnName string, value push.Value) push.Value {

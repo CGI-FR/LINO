@@ -29,7 +29,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cgi-fr/lino/internal/app/urlbuilder"
-	pushinfra "github.com/cgi-fr/lino/internal/infra/push"
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/cgi-fr/lino/pkg/id"
 	"github.com/cgi-fr/lino/pkg/push"
@@ -45,6 +44,7 @@ var (
 	datadestinationFactories map[string]push.DataDestinationFactory
 	rowIteratorFactory       func(io.ReadCloser) push.RowIterator
 	rowExporterFactory       func(io.Writer) push.RowWriter
+	translator               push.Translator
 )
 
 // Inject dependencies
@@ -56,6 +56,7 @@ func Inject(
 	dsfmap map[string]push.DataDestinationFactory,
 	rif func(io.ReadCloser) push.RowIterator,
 	ref func(io.Writer) push.RowWriter,
+	trnsltor push.Translator,
 ) {
 	dataconnectorStorage = dbas
 	relStorage = rs
@@ -64,6 +65,7 @@ func Inject(
 	datadestinationFactories = dsfmap
 	rowIteratorFactory = rif
 	rowExporterFactory = ref
+	translator = trnsltor
 }
 
 // NewCommand implements the cli pull command
@@ -142,7 +144,10 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				rowExporter = push.NoErrorCaptureRowWriter{}
 			}
 
-			translator := loadTranslator(pkTranslations)
+			if err := loadTranslator(pkTranslations); err != nil {
+				log.Fatal().AnErr("error", err).Msg("Fatal error stop the push command")
+				os.Exit(1)
+			}
 
 			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator)
 			if e3 != nil {
@@ -169,15 +174,26 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	return cmd
 }
 
-func loadTranslator(pkTranslations map[string]string) push.Translator {
-	translator := pushinfra.NewFileTranslator()
-
-	for key, file := range pkTranslations {
+func loadTranslator(pkTranslations map[string]string) error {
+	for key, filename := range pkTranslations {
 		tableAndColumn := strings.SplitN(key, ".", 2)
-		translator.LoadFile(file, tableAndColumn[0], tableAndColumn[1])
+
+		file, err := os.Open(filename)
+		defer file.Close()
+
+		if err != nil {
+			return err
+		}
+
+		rowIterator := rowIteratorFactory(file)
+		defer rowIterator.Close()
+
+		if err := translator.Load(tableAndColumn[0], tableAndColumn[1], rowIterator); err != nil {
+			return err
+		}
 	}
 
-	return translator
+	return nil
 }
 
 func getDataDestination(dataconnectorName string) (push.DataDestination, *push.Error) {

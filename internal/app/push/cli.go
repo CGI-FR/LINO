@@ -180,10 +180,11 @@ func loadTranslator(pkTranslations map[string]string) error {
 
 	for key, filename := range pkTranslations {
 		tableAndColumn := strings.SplitN(key, ".", 2)
-		key := push.Key{tableAndColumn[0], tableAndColumn[1]}
+		key := push.Key{TableName: tableAndColumn[0], ColumnName: tableAndColumn[1]}
 
 		if keys, exists := fileToKeys[filename]; exists {
 			keys = append(keys, key)
+			fileToKeys[filename] = keys
 			continue
 		}
 

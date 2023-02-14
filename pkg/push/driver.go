@@ -146,8 +146,8 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, tra
 		where = computeTranslatedKeys(row, table, translator)
 	}
 
-	if mode == Delete {
-		// remove children first
+	if mode == Delete || mode == Update {
+		// children first
 		for relName, subArray := range fInverseRel {
 			for _, subRow := range subArray {
 				rel := plan.RelationsFromTable(table)[relName]
@@ -175,8 +175,8 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, tra
 				return err4
 			}
 		}
-	} else {
-		// insert parent first
+	} else { // Insert, Truncate
+		// parent first
 		for relName, subRow := range frel {
 			rel := plan.RelationsFromTable(table)[relName]
 			err4 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode, translator)

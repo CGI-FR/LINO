@@ -267,7 +267,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 		rw.headers = whereValues
 
 	case rw.dd.mode == push.Update:
-		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), selectValues, whereValues)
+		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), selectValues, whereValues, rw.table.PrimaryKey())
 		if pusherr != nil {
 			return pusherr
 		}
@@ -391,14 +391,14 @@ func (rw *SQLRowWriter) enableConstraints() *push.Error {
 }
 
 // isAPrimaryKey return true if columnName is in pknames
-// func isAPrimaryKey(columnName string, pkNames []string) bool {
-// 	for _, pkName := range pkNames {
-// 		if pkName == columnName {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
+func isAPrimaryKey(columnName string, pkNames []string) bool {
+	for _, pkName := range pkNames {
+		if pkName == columnName {
+			return true
+		}
+	}
+	return false
+}
 
 // SQLDialect is an interface to inject SQL variations
 type SQLDialect interface {
@@ -407,7 +407,7 @@ type SQLDialect interface {
 	EnableConstraintsStatement(tableName string) string
 	TruncateStatement(tableName string) string
 	InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor)
-	UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor) (statement string, headers []ValueDescriptor, err *push.Error)
+	UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error)
 	IsDuplicateError(error) bool
 	ConvertValue(push.Value) push.Value
 }

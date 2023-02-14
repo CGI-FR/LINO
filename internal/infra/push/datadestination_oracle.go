@@ -143,13 +143,27 @@ func (d OracleDialect) InsertStatement(tableName string, selectValues []ValueDes
 }
 
 // UpdateStatement
-func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor) (statement string, headers []ValueDescriptor, err *push.Error) {
+func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")
 	sql.WriteString(tableName)
 	sql.WriteString(" SET ")
 
 	for index, column := range selectValues {
+		// don't update primary key, except if it's in whereValues
+		if isAPrimaryKey(column.name, primaryKeys) {
+			isInWhere := false
+			for _, pk := range whereValues {
+				if column.name == pk.name {
+					isInWhere = true
+					break
+				}
+			}
+			if !isInWhere {
+				continue
+			}
+		}
+
 		headers = append(headers, column)
 
 		sql.WriteString(column.name)
@@ -174,6 +188,7 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 			sql.Write([]byte(" AND "))
 		}
 	}
+
 	return sql.String(), headers, nil
 }
 

@@ -89,12 +89,29 @@ func (d MariadbDialect) InsertStatement(tableName string, selectValues []ValueDe
 	return sql.String(), selectValues
 }
 
-func (d MariadbDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor) (statement string, headers []ValueDescriptor, err *push.Error) {
+func (d MariadbDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")
 	sql.WriteString(tableName)
 	sql.WriteString(" SET ")
+
 	for index, column := range selectValues {
+		// don't update primary key, except if it's in whereValues
+		if isAPrimaryKey(column.name, primaryKeys) {
+			isInWhere := false
+			for _, pk := range whereValues {
+				if column.name == pk.name {
+					isInWhere = true
+					break
+				}
+			}
+			if !isInWhere {
+				continue
+			}
+		}
+
+		headers = append(headers, column)
+
 		sql.WriteString(column.name)
 		sql.WriteString("=")
 		sql.WriteString(d.Placeholder(index + 1))
@@ -108,6 +125,8 @@ func (d MariadbDialect) UpdateStatement(tableName string, selectValues []ValueDe
 		return "", nil, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
 	}
 	for index, pk := range whereValues {
+		headers = append(headers, pk)
+
 		sql.WriteString(pk.name)
 		sql.WriteString("=")
 		sql.WriteString(d.Placeholder(len(selectValues) + index + 1))
@@ -115,7 +134,8 @@ func (d MariadbDialect) UpdateStatement(tableName string, selectValues []ValueDe
 			sql.WriteString(" AND ")
 		}
 	}
-	return sql.String(), append(selectValues, whereValues...), nil
+
+	return sql.String(), headers, nil
 }
 
 // IsDuplicateError check if error is a duplicate error

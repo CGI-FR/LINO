@@ -24,10 +24,10 @@ func NewMockTranslator() *MockTranslator {
 	return &MockTranslator{}
 }
 
-func (mt *MockTranslator) FindValue(tableName string, columnName string, value Value) Value {
+func (mt *MockTranslator) FindValue(key Key, value Value) Value {
 	return value
 }
 
-func (mt *MockTranslator) Load(table string, column string, rows RowIterator) *Error {
+func (mt *MockTranslator) Load(keys []Key, rows RowIterator) *Error {
 	return nil
 }

@@ -215,7 +215,7 @@ func computeTranslatedKeys(row Row, table Table, translator Translator) Row {
 	if translator != nil {
 		for _, pkname := range table.PrimaryKey() {
 			newvalue := row[pkname]
-			oldvalue := translator.FindValue(table.Name(), pkname, newvalue)
+			oldvalue := translator.FindValue(Key{table.Name(), pkname}, newvalue)
 			where[pkname] = oldvalue
 		}
 	}

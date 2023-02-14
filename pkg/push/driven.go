@@ -50,7 +50,12 @@ type RowIterator interface {
 	Close() *Error
 }
 
+type Key struct {
+	TableName  string
+	ColumnName string
+}
+
 type Translator interface {
-	FindValue(table string, column string, value Value) Value
-	Load(table string, column string, rows RowIterator) *Error
+	FindValue(key Key, value Value) Value
+	Load(keys []Key, rows RowIterator) *Error
 }

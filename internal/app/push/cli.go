@@ -175,8 +175,19 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 }
 
 func loadTranslator(pkTranslations map[string]string) error {
+	fileToKeys := map[string][]push.Key{}
+	fileToRows := map[string]push.RowIterator{}
+
 	for key, filename := range pkTranslations {
 		tableAndColumn := strings.SplitN(key, ".", 2)
+		key := push.Key{tableAndColumn[0], tableAndColumn[1]}
+
+		if keys, exists := fileToKeys[filename]; exists {
+			keys = append(keys, key)
+			continue
+		}
+
+		fileToKeys[filename] = []push.Key{key}
 
 		file, err := os.Open(filename)
 		if err != nil {
@@ -188,8 +199,14 @@ func loadTranslator(pkTranslations map[string]string) error {
 		rowIterator := rowIteratorFactory(file)
 		defer rowIterator.Close()
 
-		log.Debug().Str("table", tableAndColumn[0]).Str("column", tableAndColumn[1]).Str("file", filename).Msg("loading key translation cache")
-		if err := translator.Load(tableAndColumn[0], tableAndColumn[1], rowIterator); err != nil {
+		fileToRows[filename] = rowIterator
+
+		log.Debug().Str("table", tableAndColumn[0]).Str("column", tableAndColumn[1]).Str("file", filename).Msg("enabling key translation on primary key")
+	}
+
+	for filename, rowIterator := range fileToRows {
+		log.Debug().Str("file", filename).Msg("loading key translation cache from file")
+		if err := translator.Load(fileToKeys[filename], rowIterator); err != nil {
 			return err
 		}
 	}

@@ -22,16 +22,19 @@ import (
 )
 
 type FileTranslator struct {
-	caches map[string]push.Cache
+	caches map[push.Key]push.Cache
 }
 
 func NewFileTranslator() *FileTranslator {
-	return &FileTranslator{caches: map[string]push.Cache{}}
+	return &FileTranslator{caches: map[push.Key]push.Cache{}}
 }
 
-func (ft *FileTranslator) Load(tableName string, columnName string, rows push.RowIterator) *push.Error {
+func (ft *FileTranslator) Load(keys []push.Key, rows push.RowIterator) *push.Error {
 	cache := push.Cache{}
-	ft.caches[tableName+"___"+columnName] = cache
+
+	for _, key := range keys {
+		ft.caches[key] = cache
+	}
 
 	for rows.Next() {
 		row := *rows.Value()
@@ -41,8 +44,8 @@ func (ft *FileTranslator) Load(tableName string, columnName string, rows push.Ro
 	return rows.Error()
 }
 
-func (ft *FileTranslator) FindValue(tableName string, columnName string, value push.Value) push.Value {
-	if cache, exists := ft.caches[tableName+"___"+columnName]; exists {
+func (ft *FileTranslator) FindValue(key push.Key, value push.Value) push.Value {
+	if cache, exists := ft.caches[key]; exists {
 		if oldvalue, exists := cache[value]; exists {
 			return oldvalue
 		}

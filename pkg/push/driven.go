@@ -32,12 +32,13 @@ type DataDestination interface {
 
 // RowWriter write row to destination table
 type RowWriter interface {
-	Write(row Row) *Error
+	// Write row in external datasource. where is optional and can contains additional key=value to use in the where clause.
+	Write(row Row, where Row) *Error
 }
 
 type NoErrorCaptureRowWriter struct{}
 
-func (necrw NoErrorCaptureRowWriter) Write(row Row) *Error {
+func (necrw NoErrorCaptureRowWriter) Write(row Row, where Row) *Error {
 	return &Error{"No error capture configured"}
 }
 
@@ -47,4 +48,14 @@ type RowIterator interface {
 	Value() *Row
 	Error() *Error
 	Close() *Error
+}
+
+type Key struct {
+	TableName  string
+	ColumnName string
+}
+
+type Translator interface {
+	FindValue(key Key, value Value) Value
+	Load(keys []Key, rows RowIterator) *Error
 }

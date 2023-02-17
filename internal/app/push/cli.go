@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	over "github.com/adrienaury/zeromdc"
@@ -43,6 +44,7 @@ var (
 	datadestinationFactories map[string]push.DataDestinationFactory
 	rowIteratorFactory       func(io.ReadCloser) push.RowIterator
 	rowExporterFactory       func(io.Writer) push.RowWriter
+	translator               push.Translator
 )
 
 // Inject dependencies
@@ -54,6 +56,7 @@ func Inject(
 	dsfmap map[string]push.DataDestinationFactory,
 	rif func(io.ReadCloser) push.RowIterator,
 	ref func(io.Writer) push.RowWriter,
+	trnsltor push.Translator,
 ) {
 	dataconnectorStorage = dbas
 	relStorage = rs
@@ -62,6 +65,7 @@ func Inject(
 	datadestinationFactories = dsfmap
 	rowIteratorFactory = rif
 	rowExporterFactory = ref
+	translator = trnsltor
 }
 
 // NewCommand implements the cli pull command
@@ -73,6 +77,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		table              string
 		ingressDescriptor  string
 		rowExporter        push.RowWriter
+		pkTranslations     map[string]string
 	)
 
 	cmd := &cobra.Command{
@@ -138,7 +143,13 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			} else {
 				rowExporter = push.NoErrorCaptureRowWriter{}
 			}
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter)
+
+			if err := loadTranslator(pkTranslations); err != nil {
+				log.Fatal().AnErr("error", err).Msg("Fatal error stop the push command")
+				os.Exit(1)
+			}
+
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator)
 			if e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)
@@ -156,10 +167,52 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVarP(&catchErrors, "catch-errors", "e", "", "Catch errors and write line in file")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "Table to writes json")
 	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "Ingress descriptor filename")
+	cmd.Flags().StringToStringVar(&pkTranslations, "pk-translation", map[string]string{}, "list of dictionaries old value / new value for primary key update")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
 	return cmd
+}
+
+func loadTranslator(pkTranslations map[string]string) error {
+	fileToKeys := map[string][]push.Key{}
+	fileToRows := map[string]push.RowIterator{}
+
+	for key, filename := range pkTranslations {
+		tableAndColumn := strings.SplitN(key, ".", 2)
+		key := push.Key{TableName: tableAndColumn[0], ColumnName: tableAndColumn[1]}
+
+		if keys, exists := fileToKeys[filename]; exists {
+			keys = append(keys, key)
+			fileToKeys[filename] = keys
+			continue
+		}
+
+		fileToKeys[filename] = []push.Key{key}
+
+		file, err := os.Open(filename)
+		if err != nil {
+			return err
+		}
+
+		defer file.Close()
+
+		rowIterator := rowIteratorFactory(file)
+		defer rowIterator.Close()
+
+		fileToRows[filename] = rowIterator
+
+		log.Debug().Str("table", tableAndColumn[0]).Str("column", tableAndColumn[1]).Str("file", filename).Msg("enabling key translation on primary key")
+	}
+
+	for filename, rowIterator := range fileToRows {
+		log.Debug().Str("file", filename).Msg("loading key translation cache from file")
+		if err := translator.Load(fileToKeys[filename], rowIterator); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func getDataDestination(dataconnectorName string) (push.DataDestination, *push.Error) {

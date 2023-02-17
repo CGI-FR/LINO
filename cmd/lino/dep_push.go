@@ -43,3 +43,7 @@ func pushRowIteratorFactory() func(io.ReadCloser) domain.RowIterator {
 func pushRowExporterFactory() func(io.Writer) domain.RowWriter {
 	return infra.NewJSONRowWriter
 }
+
+func pushTranslator() domain.Translator {
+	return infra.NewFileTranslator()
+}

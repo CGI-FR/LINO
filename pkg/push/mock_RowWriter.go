@@ -10,7 +10,7 @@ type MockRowWriter struct {
 }
 
 // Write provides a mock function with given fields: row
-func (_m *MockRowWriter) Write(row Row) *Error {
+func (_m *MockRowWriter) Write(row Row, where Row) *Error {
 	ret := _m.Called(row)
 
 	var r0 *Error

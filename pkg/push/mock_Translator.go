@@ -1,4 +1,4 @@
-// Copyright (C) 2021 CGI France
+// Copyright (C) 2023 CGI France
 //
 // This file is part of LINO.
 //
@@ -17,28 +17,17 @@
 
 package push
 
-import (
-	"encoding/json"
-	"io"
-
-	"github.com/cgi-fr/lino/pkg/push"
-)
-
-// JSONRowWriter export rows to JSON format.
-type JSONRowWriter struct {
-	encoder *json.Encoder
+type MockTranslator struct {
 }
 
-// NewJSONRowWriter creates a new JSONRowWriter.
-func NewJSONRowWriter(file io.Writer) push.RowWriter {
-	return &JSONRowWriter{json.NewEncoder(file)}
+func NewMockTranslator() *MockTranslator {
+	return &MockTranslator{}
 }
 
-// NextRow convert next line to Row
-func (rw *JSONRowWriter) Write(row push.Row, where push.Row) *push.Error {
-	err := rw.encoder.Encode(row)
-	if err != nil {
-		return &push.Error{Description: err.Error()}
-	}
+func (mt *MockTranslator) FindValue(key Key, value Value) Value {
+	return value
+}
+
+func (mt *MockTranslator) Load(keys []Key, rows RowIterator) *Error {
 	return nil
 }

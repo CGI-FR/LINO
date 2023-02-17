@@ -208,7 +208,7 @@ func initConfig() {
 	sequence.Inject(dataconnectorStorage(), tableStorage(), sequenceStorage(), sequenceUpdatorFactory())
 	id.Inject(idStorageFile, relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
 	pull.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pullDataSourceFactory(), pullRowExporterFactory(), pullRowReaderFactory(), traceListner(os.Stderr))
-	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pushDataDestinationFactory(), pushRowIteratorFactory(), pushRowExporterFactory())
+	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pushDataDestinationFactory(), pushRowIteratorFactory(), pushRowExporterFactory(), pushTranslator())
 }
 
 func writeMetricsToFile(statsFile string, statsByte []byte) {

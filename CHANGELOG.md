@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.3.0] Not released yet
+
+- `Added` flag `--pk-translation` allow update of primary keys, by giving a cache.jsonl file containing old and new values for a specific key
+
 ## [2.2.0]
 
 - `Added` import property in `tables.yaml` allow to specify format of data to read from JSON stream (`string` (default), `numeric`, `binary` or `base64` (same), `datetime`, `timestamp`) therefore `import` and `export` now mirror each other (`import` is used at push and `export` at pull) but `import` still allow to specify the data type to pass to database driver (backward compatibility)

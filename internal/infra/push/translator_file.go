@@ -1,4 +1,4 @@
-// Copyright (C) 2021 CGI France
+// Copyright (C) 2023 CGI France
 //
 // This file is part of LINO.
 //
@@ -18,27 +18,37 @@
 package push
 
 import (
-	"encoding/json"
-	"io"
-
 	"github.com/cgi-fr/lino/pkg/push"
 )
 
-// JSONRowWriter export rows to JSON format.
-type JSONRowWriter struct {
-	encoder *json.Encoder
+type FileTranslator struct {
+	caches map[push.Key]push.Cache
 }
 
-// NewJSONRowWriter creates a new JSONRowWriter.
-func NewJSONRowWriter(file io.Writer) push.RowWriter {
-	return &JSONRowWriter{json.NewEncoder(file)}
+func NewFileTranslator() *FileTranslator {
+	return &FileTranslator{caches: map[push.Key]push.Cache{}}
 }
 
-// NextRow convert next line to Row
-func (rw *JSONRowWriter) Write(row push.Row, where push.Row) *push.Error {
-	err := rw.encoder.Encode(row)
-	if err != nil {
-		return &push.Error{Description: err.Error()}
+func (ft *FileTranslator) Load(keys []push.Key, rows push.RowIterator) *push.Error {
+	cache := push.Cache{}
+
+	for _, key := range keys {
+		ft.caches[key] = cache
 	}
-	return nil
+
+	for rows.Next() {
+		row := *rows.Value()
+		cache[row["value"]] = row["key"]
+	}
+
+	return rows.Error()
+}
+
+func (ft *FileTranslator) FindValue(key push.Key, value push.Value) push.Value {
+	if cache, exists := ft.caches[key]; exists {
+		if oldvalue, exists := cache[value]; exists {
+			return oldvalue
+		}
+	}
+	return value
 }

@@ -62,51 +62,82 @@ func (d PostgresDialect) TruncateStatement(tableName string) string {
 }
 
 // InsertStatement  generate insert statement
-func (d PostgresDialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
+func (d PostgresDialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
 	protectedColumns := []string{}
-	for _, c := range columns {
-		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c))
+	for _, c := range selectValues {
+		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c.name))
+	}
+
+	sql := &strings.Builder{}
+	sql.WriteString("INSERT INTO ")
+	sql.WriteString(tableName)
+	sql.WriteString("(")
+	sql.WriteString(strings.Join(protectedColumns, ","))
+	sql.WriteString(") VALUES (")
+	for i := 1; i <= len(selectValues); i++ {
+		sql.WriteString(d.Placeholder(i))
+		if i < len(selectValues) {
+			sql.WriteString(", ")
+		}
 	}
 	if len(primaryKeys) > 0 {
-		return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s) ON CONFLICT (%s) DO NOTHING", tableName, strings.Join(protectedColumns, ","), strings.Join(values, ","), strings.Join(primaryKeys, ","))
+		sql.WriteString(") ON CONFLICT (")
+		sql.WriteString(strings.Join(primaryKeys, ","))
+		sql.WriteString(") DO NOTHING")
+	} else {
+		sql.WriteString(")")
 	}
-	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", tableName, strings.Join(protectedColumns, ","), strings.Join(values, ","))
+
+	return sql.String(), selectValues
 }
 
-func (d PostgresDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error) {
+func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}
-	sql.Write([]byte("UPDATE "))
-	sql.Write([]byte(tableName))
-	sql.Write([]byte(" SET "))
-	firstColumn := true
-	for index, column := range columns {
-		// don't update primary key
-		if isAPrimaryKey(column, primaryKeys) {
-			continue
+	sql.WriteString("UPDATE ")
+	sql.WriteString(tableName)
+	sql.WriteString(" SET ")
+
+	for index, column := range selectValues {
+		// don't update primary key, except if it's in whereValues
+		if isAPrimaryKey(column.name, primaryKeys) {
+			isInWhere := false
+			for _, pk := range whereValues {
+				if column.name == pk.name {
+					isInWhere = true
+					break
+				}
+			}
+			if !isInWhere {
+				continue
+			}
 		}
-		if !firstColumn {
-			sql.Write([]byte(", "))
-		} else {
-			firstColumn = false
+
+		headers = append(headers, column)
+
+		sql.WriteString(column.name)
+		sql.WriteString("=")
+		sql.WriteString(d.Placeholder(index + 1))
+		if index+1 < len(selectValues) {
+			sql.WriteString(", ")
 		}
-		sql.Write([]byte(column))
-		fmt.Fprint(sql, "=")
-		fmt.Fprint(sql, uValues[index])
 	}
-	if len(primaryKeys) > 0 {
-		sql.Write([]byte(" WHERE "))
+	if len(whereValues) > 0 {
+		sql.WriteString(" WHERE ")
 	} else {
-		return "", []string{}, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
+		return "", nil, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
 	}
-	for index, pk := range primaryKeys {
-		sql.Write([]byte(pk))
-		fmt.Fprint(sql, "=")
-		fmt.Fprint(sql, pValues[index])
-		if index+1 < len(primaryKeys) {
+	for index, pk := range whereValues {
+		headers = append(headers, pk)
+
+		sql.WriteString(pk.name)
+		sql.WriteString("=")
+		sql.WriteString(d.Placeholder(len(selectValues) + index + 1))
+		if index+1 < len(whereValues) {
 			sql.Write([]byte(" AND "))
 		}
 	}
-	return sql.String(), columns, nil
+
+	return sql.String(), headers, nil
 }
 
 // IsDuplicateError check if error is a duplicate error

@@ -166,7 +166,7 @@ func (rw *HTTPRowWriter) Request() {
 }
 
 // Write
-func (rw *HTTPRowWriter) Write(row push.Row) *push.Error {
+func (rw *HTTPRowWriter) Write(row push.Row, where push.Row) *push.Error {
 	jsonline, _ := export(row)
 	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).RawJSON("data", jsonline).Msg("write")
 	_, err := rw.buf.Write(jsonline)

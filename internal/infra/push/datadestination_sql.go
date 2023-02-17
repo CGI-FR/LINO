@@ -186,7 +186,7 @@ type SQLRowWriter struct {
 	dd                 *SQLDataDestination
 	duplicateKeysCache map[push.Value]struct{}
 	statement          *sql.Stmt
-	headers            []string
+	headers            ValueHeaders
 }
 
 // NewSQLRowWriter creates a new SQL row writer.
@@ -242,12 +242,12 @@ func (rw *SQLRowWriter) tableName() string {
 	return rw.dd.schema + "." + rw.table.Name()
 }
 
-func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
+func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Error {
 	if rw.statement != nil {
 		return nil
 	}
 
-	names, valuesVar, pkNames, pkVar := rw.tableInformations(row)
+	selectValues, whereValues := rw.computeStatementInfos(row, where)
 
 	var prepareStmt string
 	var pusherr *push.Error
@@ -258,25 +258,25 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	case rw.dd.mode == push.Delete:
 		/* #nosec */
 		prepareStmt = "DELETE FROM " + rw.tableName() + " WHERE "
-		for i := 0; i < len(pkNames); i++ {
-			prepareStmt += pkNames[i] + "=" + rw.dd.dialect.Placeholder(i+1)
-			if i < len(pkNames)-1 {
+		for i := 0; i < len(whereValues); i++ {
+			prepareStmt += whereValues[i].name + "=" + rw.dd.dialect.Placeholder(i+1)
+			if i < len(whereValues)-1 {
 				prepareStmt += " and "
 			}
 		}
-		rw.headers = pkNames
+		rw.headers = whereValues
+
 	case rw.dd.mode == push.Update:
-		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), names, valuesVar, pkNames, pkVar)
+		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), selectValues, whereValues, rw.table.PrimaryKey())
 		if pusherr != nil {
 			return pusherr
 		}
 
 	default: // Insert:
-		/* #nosec */
-		prepareStmt = rw.dd.dialect.InsertStatement(rw.tableName(), names, valuesVar, rw.table.PrimaryKey())
-		rw.headers = names
+		prepareStmt, rw.headers = rw.dd.dialect.InsertStatement(rw.tableName(), selectValues, rw.table.PrimaryKey())
 	}
-	log.Debug().Strs("headers", rw.headers).Msg(prepareStmt)
+
+	log.Debug().Stringer("headers", rw.headers).Msg(prepareStmt)
 
 	stmt, err := rw.dd.tx.Prepare(prepareStmt)
 	if err != nil {
@@ -286,31 +286,45 @@ func (rw *SQLRowWriter) createStatement(row push.Row) *push.Error {
 	return nil
 }
 
-// tableInformations compute place holder, pk names and columns headers
-func (rw *SQLRowWriter) tableInformations(row push.Row) ([]string, []string, []string, []string) {
-	names := []string{}
-	valuesVar := []string{}
-	pkNames := []string{}
-	pkVar := []string{}
+type ValueDescriptor struct {
+	name     string
+	override bool // value in row is overridden (used for key translations)
+}
 
-	i := 1
-	for k := range row {
-		names = append(names, k)
-		valuesVar = append(valuesVar, rw.dd.dialect.Placeholder(i))
-		for _, pk := range rw.table.PrimaryKey() {
-			if pk == k {
-				pkNames = append(pkNames, k)
-				pkVar = append(pkVar, rw.dd.dialect.Placeholder(i))
-			}
+type ValueHeaders []ValueDescriptor
+
+func (vh ValueHeaders) String() string {
+	sb := &strings.Builder{}
+	sb.WriteString("[")
+	for i, vd := range vh {
+		sb.WriteString(vd.name)
+		if i+1 < len(vh) {
+			sb.WriteString(", ")
 		}
-		i++
 	}
-	return names, valuesVar, pkNames, pkVar
+	sb.WriteString("]")
+	return sb.String()
+}
+
+func (rw *SQLRowWriter) computeStatementInfos(row push.Row, where push.Row) (selectValues []ValueDescriptor, whereValues []ValueDescriptor) {
+	for _, pk := range rw.table.PrimaryKey() {
+		if _, ok := where[pk]; ok {
+			whereValues = append(whereValues, ValueDescriptor{pk, true})
+		} else {
+			whereValues = append(whereValues, ValueDescriptor{pk, false})
+		}
+	}
+
+	for k := range row {
+		selectValues = append(selectValues, ValueDescriptor{k, false})
+	}
+
+	return
 }
 
 // Write
-func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
-	err1 := rw.createStatement(row)
+func (rw *SQLRowWriter) Write(row push.Row, where push.Row) *push.Error {
+	err1 := rw.createStatement(row, where)
 	if err1 != nil {
 		return err1
 	}
@@ -322,9 +336,13 @@ func (rw *SQLRowWriter) Write(row push.Row) *push.Error {
 
 	values := []interface{}{}
 	for _, h := range rw.headers {
-		values = append(values, rw.dd.dialect.ConvertValue(importedRow.GetOrNil(h)))
+		if oldvalue, exists := where[h.name]; exists && h.override {
+			values = append(values, rw.dd.dialect.ConvertValue(oldvalue))
+		} else {
+			values = append(values, rw.dd.dialect.ConvertValue(importedRow.GetOrNil(h.name)))
+		}
 	}
-	log.Trace().Strs("headers", rw.headers).Str("table", rw.table.Name()).Msg(fmt.Sprint(values))
+	log.Trace().Stringer("headers", rw.headers).Str("table", rw.table.Name()).Msg(fmt.Sprint(values))
 
 	_, err2 := rw.statement.Exec(values...)
 	if err2 != nil {
@@ -388,8 +406,8 @@ type SQLDialect interface {
 	DisableConstraintsStatement(tableName string) string
 	EnableConstraintsStatement(tableName string) string
 	TruncateStatement(tableName string) string
-	InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string
-	UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, []string, *push.Error)
+	InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor)
+	UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error)
 	IsDuplicateError(error) bool
 	ConvertValue(push.Value) push.Value
 }

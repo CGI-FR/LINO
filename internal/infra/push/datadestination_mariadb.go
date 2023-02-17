@@ -157,7 +157,7 @@ func (d MariadbDialect) ReadConstraintsStatement(tableName string) string {
 	panic(fmt.Errorf("Not implemented"))
 }
 
-func (d MariadbDialect) DisableContraintStatement(tableName string, constraintName string) string {
+func (d MariadbDialect) DisableConstraintStatement(tableName string, constraintName string) string {
 	panic(fmt.Errorf("Not implemented"))
 }
 

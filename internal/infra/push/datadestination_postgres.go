@@ -159,7 +159,7 @@ func (d PostgresDialect) ReadConstraintsStatement(tableName string) string {
 	panic(fmt.Errorf("Not implemented"))
 }
 
-func (d PostgresDialect) DisableContraintStatement(tableName string, constraintName string) string {
+func (d PostgresDialect) DisableConstraintStatement(tableName string, constraintName string) string {
 	panic(fmt.Errorf("Not implemented"))
 }
 

@@ -218,7 +218,7 @@ func (d OracleDialect) ReadConstraintsStatement(tableName string) string {
 	return sql.String()
 }
 
-func (d OracleDialect) DisableContraintStatement(tableName string, constraintName string) string {
+func (d OracleDialect) DisableConstraintStatement(tableName string, constraintName string) string {
 	sql := &strings.Builder{}
 	sql.WriteString("ALTER TABLE ")
 	sql.WriteString(tableName)

@@ -182,20 +182,20 @@ func (dd *SQLDataDestination) RowWriter(table push.Table) (push.RowWriter, *push
 
 // SQLRowWriter write data to a SQL table.
 type SQLRowWriter struct {
-	table              push.Table
-	dd                 *SQLDataDestination
-	duplicateKeysCache map[push.Value]struct{}
-	statement          *sql.Stmt
-	headers            ValueHeaders
-	disabledContraints []SQLConstraint
+	table               push.Table
+	dd                  *SQLDataDestination
+	duplicateKeysCache  map[push.Value]struct{}
+	statement           *sql.Stmt
+	headers             ValueHeaders
+	disabledConstraints []SQLConstraint
 }
 
 // NewSQLRowWriter creates a new SQL row writer.
 func NewSQLRowWriter(table push.Table, dd *SQLDataDestination) *SQLRowWriter {
 	return &SQLRowWriter{
-		table:              table,
-		dd:                 dd,
-		disabledContraints: []SQLConstraint{},
+		table:               table,
+		dd:                  dd,
+		disabledConstraints: []SQLConstraint{},
 	}
 }
 
@@ -392,14 +392,14 @@ func (rw *SQLRowWriter) disableConstraints() *push.Error {
 			}
 
 			log.Info().Str("table", tableName).Str("constraint", constraintName).Msg("disabling constraint")
-			stm := rw.dd.dialect.DisableContraintStatement(tableName, constraintName)
+			stm := rw.dd.dialect.DisableConstraintStatement(tableName, constraintName)
 			log.Debug().Msg(stm)
 
 			if _, err := rw.dd.db.Exec(stm); err != nil {
 				return &push.Error{Description: err.Error()}
 			}
 
-			rw.disabledContraints = append(rw.disabledContraints, SQLConstraint{tableName, constraintName})
+			rw.disabledConstraints = append(rw.disabledConstraints, SQLConstraint{tableName, constraintName})
 		}
 	} else {
 		stm := rw.dd.dialect.DisableConstraintsStatement(rw.tableName())
@@ -414,7 +414,7 @@ func (rw *SQLRowWriter) disableConstraints() *push.Error {
 
 func (rw *SQLRowWriter) enableConstraints() *push.Error {
 	if rw.dd.dialect.CanDisableIndividualConstraints() {
-		for _, constraint := range rw.disabledContraints {
+		for _, constraint := range rw.disabledConstraints {
 			log.Info().Str("table", constraint.tableName).Str("constraint", constraint.constraintName).Msg("enabling constraint")
 
 			stm := rw.dd.dialect.EnableConstraintStatement(constraint.tableName, constraint.constraintName)
@@ -424,7 +424,7 @@ func (rw *SQLRowWriter) enableConstraints() *push.Error {
 				return &push.Error{Description: err.Error()}
 			}
 		}
-		rw.disabledContraints = []SQLConstraint{}
+		rw.disabledConstraints = []SQLConstraint{}
 	} else {
 		stm := rw.dd.dialect.EnableConstraintsStatement(rw.tableName())
 		log.Debug().Msg(stm)
@@ -461,7 +461,7 @@ type SQLDialect interface {
 
 	// ReadConstraintsStatement create a query that returns tableName and constraintName
 	ReadConstraintsStatement(tableName string) string
-	DisableContraintStatement(tableName string, constraintName string) string
+	DisableConstraintStatement(tableName string, constraintName string) string
 	EnableConstraintStatement(tableName string, constraintName string) string
 }
 

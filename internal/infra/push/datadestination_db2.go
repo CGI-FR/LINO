@@ -165,7 +165,7 @@ func (d Db2Dialect) ReadConstraintsStatement(tableName string) string {
 	panic(fmt.Errorf("Not implemented"))
 }
 
-func (d Db2Dialect) DisableContraintStatement(tableName string) string {
+func (d Db2Dialect) DisableConstraintStatement(tableName string) string {
 	panic(fmt.Errorf("Not implemented"))
 }
 

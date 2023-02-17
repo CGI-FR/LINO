@@ -45,7 +45,6 @@ func (d OracleDialect) EnableConstraintsStatement(tableName string) string {
 	 AND c.owner = sys_context( 'userenv', 'current_schema' )
 	 AND c.table_name = '%s'
 	 AND c.status = 'DISABLED'
-	 AND c.constraint_type = 'R'
 	 ORDER BY c.constraint_type)
 	LOOP
 	  dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" enable constraint ' || c.constraint_name);
@@ -62,7 +61,6 @@ func (d OracleDialect) EnableConstraintsStatement(tableName string) string {
 		 AND c.owner = '%s'
 		 AND c.table_name = '%s'
 		 AND c.status = 'DISABLED'
-		 AND c.constraint_type = 'R'
 		 ORDER BY c.constraint_type)
 		LOOP
 		  dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" enable constraint ' || c.constraint_name);
@@ -87,7 +85,7 @@ func (d OracleDialect) DisableConstraintsStatement(tableName string) string {
 		AND c.owner = sys_context( 'userenv', 'current_schema' )
 		AND c.table_name = '%s'
 		AND c.status = 'ENABLED'
-		AND c.constraint_type = 'R'
+		AND NOT (t.iot_type IS NOT NULL AND c.constraint_type = 'P')
 		ORDER BY c.constraint_type DESC)
 	LOOP
 		dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" disable constraint ' || c.constraint_name);
@@ -103,7 +101,7 @@ func (d OracleDialect) DisableConstraintsStatement(tableName string) string {
 		AND c.owner = '%s'
 		AND c.table_name = '%s'
 		AND c.status = 'ENABLED'
-		AND c.constraint_type = 'R'
+		AND NOT (t.iot_type IS NOT NULL AND c.constraint_type = 'P')
 		ORDER BY c.constraint_type DESC)
 	LOOP
 		dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" disable constraint ' || c.constraint_name);

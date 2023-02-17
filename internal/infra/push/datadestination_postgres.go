@@ -150,3 +150,19 @@ func (d PostgresDialect) IsDuplicateError(err error) bool {
 func (d PostgresDialect) ConvertValue(from push.Value) push.Value {
 	return from
 }
+
+func (d PostgresDialect) CanDisableIndividualConstraints() bool {
+	return false
+}
+
+func (d PostgresDialect) ReadConstraintsStatement(tableName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d PostgresDialect) DisableContraintStatement(tableName string, constraintName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d PostgresDialect) EnableConstraintStatement(tableName string, constraintName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}

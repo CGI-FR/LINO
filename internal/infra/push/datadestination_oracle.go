@@ -189,3 +189,49 @@ func (d OracleDialect) ConvertValue(from push.Value) push.Value {
 		return aTime
 	}
 }
+
+func (d OracleDialect) CanDisableIndividualConstraints() bool {
+	return true
+}
+
+func (d OracleDialect) ReadConstraintsStatement(tableName string) string {
+	schemaAndTable := strings.Split(tableName, ".")
+	sql := &strings.Builder{}
+	sql.WriteString(
+		`SELECT c.owner || '.' || c.table_name table_name, c.constraint_name
+		 FROM user_constraints c
+		 CONNECT BY PRIOR c.constraint_name = c.r_constraint_name
+		 START WITH c.constraint_name IN (
+			SELECT c.constraint_name
+			FROM user_constraints c
+		 	WHERE c.status = 'ENABLED' AND c.table_name = '`)
+	if len(schemaAndTable) == 2 {
+		sql.WriteString(schemaAndTable[1])
+		sql.WriteString("' AND c.owner = '")
+		sql.WriteString(schemaAndTable[0])
+		sql.WriteString("'")
+	} else {
+		sql.WriteString(schemaAndTable[0])
+		sql.WriteString("' AND c.owner = sys_context( 'userenv', 'current_schema' )")
+	}
+	sql.WriteString(")")
+	return sql.String()
+}
+
+func (d OracleDialect) DisableContraintStatement(tableName string, constraintName string) string {
+	sql := &strings.Builder{}
+	sql.WriteString("ALTER TABLE ")
+	sql.WriteString(tableName)
+	sql.WriteString(" DISABLE CONSTRAINT ")
+	sql.WriteString(constraintName)
+	return sql.String()
+}
+
+func (d OracleDialect) EnableConstraintStatement(tableName string, constraintName string) string {
+	sql := &strings.Builder{}
+	sql.WriteString("ALTER TABLE ")
+	sql.WriteString(tableName)
+	sql.WriteString(" ENABLE CONSTRAINT ")
+	sql.WriteString(constraintName)
+	return sql.String()
+}

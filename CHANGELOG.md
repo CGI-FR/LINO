@@ -17,6 +17,7 @@ Types of changes
 ## [2.3.0] Not released yet
 
 - `Added` flag `--pk-translation` allow update of primary keys, by giving a cache.jsonl file containing old and new values for a specific key
+- `Fixed` oracle connector disable/enable contraints cascade
 
 ## [2.2.0]
 

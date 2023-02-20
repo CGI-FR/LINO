@@ -182,9 +182,11 @@ func loadTranslator(pkTranslations map[string]string) error {
 		tableAndColumn := strings.SplitN(key, ".", 2)
 		key := push.Key{TableName: tableAndColumn[0], ColumnName: tableAndColumn[1]}
 
+		log.Debug().Str("table", tableAndColumn[0]).Str("column", tableAndColumn[1]).Str("file", filename).Msg("enabling key translation on primary key")
+
 		if keys, exists := fileToKeys[filename]; exists {
-			keys = append(keys, key)
-			fileToKeys[filename] = keys
+			fileToKeys[filename] = append(keys, key)
+
 			continue
 		}
 
@@ -201,8 +203,6 @@ func loadTranslator(pkTranslations map[string]string) error {
 		defer rowIterator.Close()
 
 		fileToRows[filename] = rowIterator
-
-		log.Debug().Str("table", tableAndColumn[0]).Str("column", tableAndColumn[1]).Str("file", filename).Msg("enabling key translation on primary key")
 	}
 
 	for filename, rowIterator := range fileToRows {

@@ -30,16 +30,17 @@ func TestTranslator(t *testing.T) {
 
 	cache := NewMemoryCache(`{"key":"key","value":"value"}`)
 
-	translator.Load([]driver.Key{
-		{"table1", "column1"},
-		{"table1", "column2"},
-		{"table2", "column1"},
-		{"table2", "column2"},
+	error := translator.Load([]driver.Key{
+		{TableName: "table1", ColumnName: "column1"},
+		{TableName: "table1", ColumnName: "column2"},
+		{TableName: "table2", ColumnName: "column1"},
+		{TableName: "table2", ColumnName: "column2"},
 	}, push.NewJSONRowIterator(cache))
 
-	assert.Equal(t, "key", translator.FindValue(driver.Key{"table1", "column1"}, "value"))
-	assert.Equal(t, "key", translator.FindValue(driver.Key{"table1", "column2"}, "value"))
-	assert.Equal(t, "key", translator.FindValue(driver.Key{"table2", "column1"}, "value"))
-	assert.Equal(t, "key", translator.FindValue(driver.Key{"table2", "column2"}, "value"))
-	assert.Equal(t, "value", translator.FindValue(driver.Key{"table3", "column1"}, "value"))
+	assert.Nil(t, error)
+	assert.Equal(t, "key", translator.FindValue(driver.Key{TableName: "table1", ColumnName: "column1"}, "value"))
+	assert.Equal(t, "key", translator.FindValue(driver.Key{TableName: "table1", ColumnName: "column2"}, "value"))
+	assert.Equal(t, "key", translator.FindValue(driver.Key{TableName: "table2", ColumnName: "column1"}, "value"))
+	assert.Equal(t, "key", translator.FindValue(driver.Key{TableName: "table2", ColumnName: "column2"}, "value"))
+	assert.Equal(t, "value", translator.FindValue(driver.Key{TableName: "table3", ColumnName: "column1"}, "value"))
 }

@@ -414,7 +414,8 @@ func (rw *SQLRowWriter) disableConstraints() *push.Error {
 
 func (rw *SQLRowWriter) enableConstraints() *push.Error {
 	if rw.dd.dialect.CanDisableIndividualConstraints() {
-		for _, constraint := range rw.disabledConstraints {
+		for i := len(rw.disabledConstraints) - 1; i >= 0; i-- {
+			constraint := rw.disabledConstraints[i]
 			log.Info().Str("table", constraint.tableName).Str("constraint", constraint.constraintName).Msg("enabling constraint")
 
 			stm := rw.dd.dialect.EnableConstraintStatement(constraint.tableName, constraint.constraintName)

@@ -214,7 +214,7 @@ func (d OracleDialect) ReadConstraintsStatement(tableName string) string {
 		sql.WriteString(schemaAndTable[0])
 		sql.WriteString("' AND c.owner = sys_context( 'userenv', 'current_schema' )")
 	}
-	sql.WriteString(")")
+	sql.WriteString(") ORDER BY c.constraint_type DESC") // disable FK then PK then others
 	return sql.String()
 }
 

@@ -102,3 +102,26 @@ testcases:
           - result.systemout ShouldContainSubstring "first_name":"PENELOPE"
           - result.systemout ShouldContainSubstring "last_name":"UPDATE"
           - result.systemerr ShouldBeEmpty
+
+  - name: push update with filter from data
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      # Set up data connector
+      - script: lino dataconnector add source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
+      # Wait for database available (10 retries)
+      - script: count=0; while ! lino dc ping source; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
+      - script: lino relation extract source
+      - script: lino table extract source
+      - script: |-
+          cat > actor.jsonl <<EOF
+          {"actor_id":998,"last_name":"UPDATE","__where__":{"actor_id":2}}
+          EOF
+      - script: lino push update source --table actor < actor.jsonl
+      - script: lino pull source --table actor --filter actor_id=998
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring "actor_id":998
+          - result.systemout ShouldContainSubstring "first_name":"PENELOPE"
+          - result.systemout ShouldContainSubstring "last_name":"UPDATE"
+          - result.systemerr ShouldBeEmpty

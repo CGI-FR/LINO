@@ -122,6 +122,6 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldContainSubstring "actor_id":998
-          - result.systemout ShouldContainSubstring "first_name":"PENELOPE"
+          - result.systemout ShouldContainSubstring "first_name":"NICK"
           - result.systemout ShouldContainSubstring "last_name":"UPDATE"
           - result.systemerr ShouldBeEmpty

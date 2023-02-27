@@ -81,8 +81,9 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 }
 
 // FilterRelation split values and relations to follow
-func FilterRelation(row Row, relations map[string]Relation) (Row, map[string]Row, map[string][]Row, *Error) {
+func FilterRelation(row Row, relations map[string]Relation) (Row, Row, map[string]Row, map[string][]Row, *Error) {
 	frow := Row{}
+	fwhere := Row{}
 	frel := map[string]Row{}
 	fInverseRel := map[string][]Row{}
 
@@ -101,7 +102,7 @@ func FilterRelation(row Row, relations map[string]Relation) (Row, map[string]Row
 				for _, srValue := range tv {
 					var srMap map[string]interface{}
 					if srMap, ok = srValue.(map[string]interface{}); !ok {
-						return frow, frel, fInverseRel, &Error{Description: fmt.Sprintf("%v is not a map", val)}
+						return frow, fwhere, frel, fInverseRel, &Error{Description: fmt.Sprintf("%v is not a map", val)}
 					}
 					sr := Row{}
 					for k, v := range srMap {
@@ -119,18 +120,24 @@ func FilterRelation(row Row, relations map[string]Relation) (Row, map[string]Row
 				log.Error().Msg(fmt.Sprintf("type = %T", val))
 				log.Error().Msg(fmt.Sprintf("val = %s", val))
 
-				return frow, frel, fInverseRel, &Error{Description: fmt.Sprintf("%v is not a array", val)}
+				return frow, fwhere, frel, fInverseRel, &Error{Description: fmt.Sprintf("%v is not a array", val)}
 			}
 		} else {
-			frow[name] = val
+			if name != "__where__" {
+				frow[name] = val
+			} else if tv, ok := val.(map[string]interface{}); ok {
+				for k, v := range tv {
+					fwhere[k] = v
+				}
+			}
 		}
 	}
-	return frow, frel, fInverseRel, nil
+	return frow, fwhere, frel, fInverseRel, nil
 }
 
 // pushRow push a row in a specific table
 func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, translator Translator) *Error {
-	frow, frel, fInverseRel, err1 := FilterRelation(row, plan.RelationsFromTable(table))
+	frow, fwhere, frel, fInverseRel, err1 := FilterRelation(row, plan.RelationsFromTable(table))
 
 	if err1 != nil {
 		return err1
@@ -144,6 +151,10 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, tra
 	var where Row
 	if mode == Delete || mode == Update {
 		where = computeTranslatedKeys(row, table, translator)
+
+		for key, val := range fwhere {
+			where[key] = val
+		}
 	}
 
 	if mode == Delete || mode == Update {

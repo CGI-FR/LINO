@@ -148,3 +148,19 @@ func (d MariadbDialect) IsDuplicateError(err error) bool {
 func (d MariadbDialect) ConvertValue(from push.Value) push.Value {
 	return from
 }
+
+func (d MariadbDialect) CanDisableIndividualConstraints() bool {
+	return false
+}
+
+func (d MariadbDialect) ReadConstraintsStatement(tableName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d MariadbDialect) DisableConstraintStatement(tableName string, constraintName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d MariadbDialect) EnableConstraintStatement(tableName string, constraintName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}

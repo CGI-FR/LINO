@@ -182,18 +182,20 @@ func (dd *SQLDataDestination) RowWriter(table push.Table) (push.RowWriter, *push
 
 // SQLRowWriter write data to a SQL table.
 type SQLRowWriter struct {
-	table              push.Table
-	dd                 *SQLDataDestination
-	duplicateKeysCache map[push.Value]struct{}
-	statement          *sql.Stmt
-	headers            ValueHeaders
+	table               push.Table
+	dd                  *SQLDataDestination
+	duplicateKeysCache  map[push.Value]struct{}
+	statement           *sql.Stmt
+	headers             ValueHeaders
+	disabledConstraints []SQLConstraint
 }
 
 // NewSQLRowWriter creates a new SQL row writer.
 func NewSQLRowWriter(table push.Table, dd *SQLDataDestination) *SQLRowWriter {
 	return &SQLRowWriter{
-		table: table,
-		dd:    dd,
+		table:               table,
+		dd:                  dd,
+		disabledConstraints: []SQLConstraint{},
 	}
 }
 
@@ -371,21 +373,66 @@ func (rw *SQLRowWriter) truncate() *push.Error {
 }
 
 func (rw *SQLRowWriter) disableConstraints() *push.Error {
-	stm := rw.dd.dialect.DisableConstraintsStatement(rw.tableName())
-	log.Debug().Msg(stm)
+	if rw.dd.dialect.CanDisableIndividualConstraints() {
+		readStm := rw.dd.dialect.ReadConstraintsStatement(rw.tableName())
+		log.Debug().Msg(readStm)
 
-	if _, err := rw.dd.db.Exec(stm); err != nil {
-		return &push.Error{Description: err.Error()}
+		result, err := rw.dd.db.Query(readStm)
+		if err != nil {
+			return &push.Error{Description: err.Error()}
+		}
+
+		defer result.Close()
+
+		var tableName, constraintName string
+		for result.Next() {
+			err := result.Scan(&tableName, &constraintName)
+			if err != nil {
+				return &push.Error{Description: err.Error()}
+			}
+
+			log.Info().Str("table", tableName).Str("constraint", constraintName).Msg("disabling constraint")
+			stm := rw.dd.dialect.DisableConstraintStatement(tableName, constraintName)
+			log.Debug().Msg(stm)
+
+			if _, err := rw.dd.db.Exec(stm); err != nil {
+				return &push.Error{Description: err.Error()}
+			}
+
+			rw.disabledConstraints = append(rw.disabledConstraints, SQLConstraint{tableName, constraintName})
+		}
+	} else {
+		stm := rw.dd.dialect.DisableConstraintsStatement(rw.tableName())
+		log.Debug().Msg(stm)
+
+		if _, err := rw.dd.db.Exec(stm); err != nil {
+			return &push.Error{Description: err.Error()}
+		}
 	}
 	return nil
 }
 
 func (rw *SQLRowWriter) enableConstraints() *push.Error {
-	stm := rw.dd.dialect.EnableConstraintsStatement(rw.tableName())
-	log.Debug().Msg(stm)
+	if rw.dd.dialect.CanDisableIndividualConstraints() {
+		for i := len(rw.disabledConstraints) - 1; i >= 0; i-- {
+			constraint := rw.disabledConstraints[i]
+			log.Info().Str("table", constraint.tableName).Str("constraint", constraint.constraintName).Msg("enabling constraint")
 
-	if _, err := rw.dd.db.Exec(stm); err != nil {
-		return &push.Error{Description: err.Error()}
+			stm := rw.dd.dialect.EnableConstraintStatement(constraint.tableName, constraint.constraintName)
+			log.Debug().Msg(stm)
+
+			if _, err := rw.dd.db.Exec(stm); err != nil {
+				return &push.Error{Description: err.Error()}
+			}
+		}
+		rw.disabledConstraints = []SQLConstraint{}
+	} else {
+		stm := rw.dd.dialect.EnableConstraintsStatement(rw.tableName())
+		log.Debug().Msg(stm)
+
+		if _, err := rw.dd.db.Exec(stm); err != nil {
+			return &push.Error{Description: err.Error()}
+		}
 	}
 	return nil
 }
@@ -410,4 +457,16 @@ type SQLDialect interface {
 	UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error)
 	IsDuplicateError(error) bool
 	ConvertValue(push.Value) push.Value
+
+	CanDisableIndividualConstraints() bool
+
+	// ReadConstraintsStatement create a query that returns tableName and constraintName
+	ReadConstraintsStatement(tableName string) string
+	DisableConstraintStatement(tableName string, constraintName string) string
+	EnableConstraintStatement(tableName string, constraintName string) string
+}
+
+type SQLConstraint struct {
+	tableName      string
+	constraintName string
 }

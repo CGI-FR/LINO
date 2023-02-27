@@ -156,3 +156,19 @@ func (d Db2Dialect) ConvertValue(from push.Value) push.Value {
 		return aTime
 	}
 }
+
+func (d Db2Dialect) CanDisableIndividualConstraints() bool {
+	return false
+}
+
+func (d Db2Dialect) ReadConstraintsStatement(tableName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d Db2Dialect) DisableConstraintStatement(tableName string, constraintName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d Db2Dialect) EnableConstraintStatement(tableName string, constraintName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}

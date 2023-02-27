@@ -81,3 +81,19 @@ func (d Db2Dialect) IsDuplicateError(err error) bool {
 func (d Db2Dialect) ConvertValue(from push.Value) push.Value {
 	panic(fmt.Errorf("Not implemented"))
 }
+
+func (d Db2Dialect) CanDisableIndividualConstraints() bool {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d Db2Dialect) ReadConstraintsStatement(tableName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d Db2Dialect) DisableConstraintStatement(tableName string, constraintName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d Db2Dialect) EnableConstraintStatement(tableName string, constraintName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}

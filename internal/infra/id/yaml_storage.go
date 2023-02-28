@@ -42,13 +42,13 @@ type YAMLRelation struct {
 	Name   string    `yaml:"name"`
 	Parent YAMLTable `yaml:"parent"`
 	Child  YAMLTable `yaml:"child"`
-	Where  string    `yaml:"where,omitempty"`
 }
 
 // YAMLTable defines how to store a table in YAML format.
 type YAMLTable struct {
 	Name   string `yaml:"name"`
 	Lookup bool   `yaml:"lookup"`
+	Where  string `yaml:"where,omitempty"`
 }
 
 // YAMLStorage provides storage in a local YAML file
@@ -107,7 +107,7 @@ func (s *YAMLStorage) Read() (id.IngressDescriptor, *id.Error) {
 					id.NewTable(relation.Child.Name),
 				),
 				relation.Parent.Lookup, relation.Child.Lookup,
-				relation.Where),
+				relation.Parent.Where, relation.Child.Where),
 		)
 	}
 

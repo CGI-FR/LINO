@@ -26,11 +26,12 @@ type idrelation struct {
 	Relation
 	lookUpParent bool
 	lookUpChild  bool
+	where        string
 }
 
 // NewIngressRelation initialize a new IngressRelation object
-func NewIngressRelation(rel Relation, lookUpParent bool, lookUpChild bool) IngressRelation {
-	return idrelation{Relation: rel, lookUpParent: lookUpParent, lookUpChild: lookUpChild}
+func NewIngressRelation(rel Relation, lookUpParent bool, lookUpChild bool, where string) IngressRelation {
+	return idrelation{Relation: rel, lookUpParent: lookUpParent, lookUpChild: lookUpChild, where: where}
 }
 
 func (r idrelation) Name() string       { return r.Relation.Name() }
@@ -38,6 +39,7 @@ func (r idrelation) Parent() Table      { return r.Relation.Parent() }
 func (r idrelation) Child() Table       { return r.Relation.Child() }
 func (r idrelation) LookUpParent() bool { return r.lookUpParent }
 func (r idrelation) LookUpChild() bool  { return r.lookUpChild }
+func (r idrelation) Where() string      { return r.where }
 func (r idrelation) String() string {
 	switch {
 	case r.LookUpChild() && r.LookUpParent():

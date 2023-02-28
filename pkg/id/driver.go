@@ -33,7 +33,7 @@ func Create(startTable string, relReader RelationReader, storage Storage) *Error
 	ingressRels := []IngressRelation{}
 	for i := uint(0); i < relations.Len(); i++ {
 		rel := relations.Relation(i)
-		ingressRels = append(ingressRels, NewIngressRelation(rel, false, false))
+		ingressRels = append(ingressRels, NewIngressRelation(rel, false, false, ""))
 	}
 
 	fullGraph := newGraph(NewIngressRelationList(ingressRels))
@@ -57,9 +57,9 @@ func Create(startTable string, relReader RelationReader, storage Storage) *Error
 	for i := uint(0); i < connectedGraph.relations.Len(); i++ {
 		rel := connectedGraph.relations.Relation(i)
 		if setLookUpChild.contains(rel.Name()) {
-			adrelations = append(adrelations, NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), false, true))
+			adrelations = append(adrelations, NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), false, true, rel.Where()))
 		} else {
-			adrelations = append(adrelations, NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), false, false))
+			adrelations = append(adrelations, NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), false, false, rel.Where()))
 		}
 	}
 
@@ -114,7 +114,7 @@ func SetChildLookup(relation string, flag bool, storage Storage) *Error {
 	for i := uint(0); i < id.Relations().Len(); i++ {
 		rel := id.Relations().Relation(i)
 		if rel.Name() == relation {
-			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), flag)
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), flag, rel.Where())
 		}
 		relations[i] = rel
 	}
@@ -144,7 +144,7 @@ func SetParentLookup(relation string, flag bool, storage Storage) *Error {
 	for i := uint(0); i < id.Relations().Len(); i++ {
 		rel := id.Relations().Relation(i)
 		if rel.Name() == relation {
-			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), flag, rel.LookUpChild())
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), flag, rel.LookUpChild(), rel.Where())
 		}
 		relations[i] = rel
 	}
@@ -189,7 +189,7 @@ func GetPullerPlan(storage Storage) (PullerPlan, *Error) {
 		startRelationsList = sg.relations
 	}
 	steps := []Step{
-		NewStep(1, id.StartTable(), NewIngressRelation(NewRelation("", nil, nil), false, false), startRelationsList, startTableList, startCycles, 0),
+		NewStep(1, id.StartTable(), NewIngressRelation(NewRelation("", nil, nil), false, false, ""), startRelationsList, startTableList, startCycles, 0),
 	}
 	log.Debug().Msg(fmt.Sprintf("%v", steps[0]))
 

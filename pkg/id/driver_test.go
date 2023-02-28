@@ -65,7 +65,7 @@ func relationString(relation string) id.Relation {
 
 // relation help to create id.Relation object from a string representation `parent -> child`.
 func adRelationString(relation string, lookupParent bool, lookupChild bool) id.IngressRelation {
-	return id.NewIngressRelation(relationString(relation), lookupParent, lookupChild)
+	return id.NewIngressRelation(relationString(relation), lookupParent, lookupChild, "")
 }
 
 var adCreateTests = []struct {
@@ -155,7 +155,7 @@ func newInitialStep(tableName string) id.Step {
 	return id.NewStep(
 		1,
 		table,
-		id.NewIngressRelation(id.NewRelation("", nil, nil), false, false),
+		id.NewIngressRelation(id.NewRelation("", nil, nil), false, false, ""),
 		id.NewIngressRelationList([]id.IngressRelation{}),
 		id.NewTableList([]id.Table{table}),
 		id.NewCycleList([]id.IngressRelationList{}),

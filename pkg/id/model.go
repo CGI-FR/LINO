@@ -52,6 +52,7 @@ type IngressRelation interface {
 	Relation
 	LookUpChild() bool
 	LookUpParent() bool
+	Where() string
 }
 
 // IngressRelationList involved in an puller plan.

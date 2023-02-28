@@ -158,6 +158,66 @@ func SetParentLookup(relation string, flag bool, storage Storage) *Error {
 	return nil
 }
 
+// SetChildWhere update child where relation's parameter in ingress descriptor
+func SetChildWhere(relation string, where string, storage Storage) *Error {
+	id, err := storage.Read()
+	if err != nil {
+		return err
+	}
+
+	if !id.Relations().Contains(relation) {
+		return &Error{Description: fmt.Sprintf("Relation %s doesn't exist", relation)}
+	}
+
+	relations := make([]IngressRelation, id.Relations().Len())
+
+	for i := uint(0); i < id.Relations().Len(); i++ {
+		rel := id.Relations().Relation(i)
+		if rel.Name() == relation {
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), rel.WhereParent(), where)
+		}
+		relations[i] = rel
+	}
+
+	updatedID := NewIngressDescriptor(id.StartTable(), NewIngressRelationList(relations))
+
+	err = storage.Store(updatedID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// SetParentWhere update parent where relation's parameter in ingress descriptor
+func SetParentWhere(relation string, where string, storage Storage) *Error {
+	id, err := storage.Read()
+	if err != nil {
+		return err
+	}
+
+	if !id.Relations().Contains(relation) {
+		return &Error{Description: fmt.Sprintf("Relation %s doesn't exist", relation)}
+	}
+
+	relations := make([]IngressRelation, id.Relations().Len())
+
+	for i := uint(0); i < id.Relations().Len(); i++ {
+		rel := id.Relations().Relation(i)
+		if rel.Name() == relation {
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), where, rel.WhereChild())
+		}
+		relations[i] = rel
+	}
+
+	updatedID := NewIngressDescriptor(id.StartTable(), NewIngressRelationList(relations))
+
+	err = storage.Store(updatedID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetPullerPlan returns the calculated puller plan.
 func GetPullerPlan(storage Storage) (PullerPlan, *Error) {
 	id, err := storage.Read()

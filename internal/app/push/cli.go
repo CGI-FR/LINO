@@ -78,6 +78,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		ingressDescriptor  string
 		rowExporter        push.RowWriter
 		pkTranslations     map[string]string
+		whereField         string
 	)
 
 	cmd := &cobra.Command{
@@ -149,7 +150,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator)
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator, whereField)
 			if e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)
@@ -168,6 +169,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVarP(&table, "table", "t", "", "Table to writes json")
 	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "Ingress descriptor filename")
 	cmd.Flags().StringToStringVar(&pkTranslations, "pk-translation", map[string]string{}, "list of dictionaries old value / new value for primary key update")
+	cmd.Flags().StringVar(&whereField, "where-field", "__where__", "Name of the data field that can be used to filter update/delete queries")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

@@ -24,7 +24,7 @@ import (
 )
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator) (err *Error) {
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string) (err *Error) {
 	err1 := destination.Open(plan, mode, disableConstraints)
 	if err1 != nil {
 		return err1
@@ -52,7 +52,7 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 	for ri.Next() {
 		row := ri.Value()
 
-		err2 := pushRow(*row, destination, plan.FirstTable(), plan, mode, translator)
+		err2 := pushRow(*row, destination, plan.FirstTable(), plan, mode, translator, whereField)
 		if err2 != nil {
 			err4 := catchError.Write(*row, nil)
 			if err4 != nil {
@@ -81,7 +81,7 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 }
 
 // FilterRelation split values and relations to follow
-func FilterRelation(row Row, relations map[string]Relation) (Row, Row, map[string]Row, map[string][]Row, *Error) {
+func FilterRelation(row Row, relations map[string]Relation, whereField string) (Row, Row, map[string]Row, map[string][]Row, *Error) {
 	frow := Row{}
 	fwhere := Row{}
 	frel := map[string]Row{}
@@ -123,7 +123,7 @@ func FilterRelation(row Row, relations map[string]Relation) (Row, Row, map[strin
 				return frow, fwhere, frel, fInverseRel, &Error{Description: fmt.Sprintf("%v is not a array", val)}
 			}
 		} else {
-			if name != "__where__" {
+			if name != whereField {
 				frow[name] = val
 			} else if tv, ok := val.(map[string]interface{}); ok {
 				for k, v := range tv {
@@ -136,8 +136,8 @@ func FilterRelation(row Row, relations map[string]Relation) (Row, Row, map[strin
 }
 
 // pushRow push a row in a specific table
-func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, translator Translator) *Error {
-	frow, fwhere, frel, fInverseRel, err1 := FilterRelation(row, plan.RelationsFromTable(table))
+func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, translator Translator, whereField string) *Error {
+	frow, fwhere, frel, fInverseRel, err1 := FilterRelation(row, plan.RelationsFromTable(table), whereField)
 
 	if err1 != nil {
 		return err1
@@ -162,7 +162,7 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, tra
 		for relName, subArray := range fInverseRel {
 			for _, subRow := range subArray {
 				rel := plan.RelationsFromTable(table)[relName]
-				err5 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode, translator)
+				err5 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode, translator, whereField)
 				if err5 != nil {
 					return err5
 				}
@@ -181,7 +181,7 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, tra
 		// and parents
 		for relName, subRow := range frel {
 			rel := plan.RelationsFromTable(table)[relName]
-			err4 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode, translator)
+			err4 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode, translator, whereField)
 			if err4 != nil {
 				return err4
 			}
@@ -190,7 +190,7 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, tra
 		// parent first
 		for relName, subRow := range frel {
 			rel := plan.RelationsFromTable(table)[relName]
-			err4 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode, translator)
+			err4 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode, translator, whereField)
 			if err4 != nil {
 				return err4
 			}
@@ -209,7 +209,7 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, tra
 		for relName, subArray := range fInverseRel {
 			for _, subRow := range subArray {
 				rel := plan.RelationsFromTable(table)[relName]
-				err5 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode, translator)
+				err5 := pushRow(subRow, ds, rel.OppositeOf(table), plan, mode, translator, whereField)
 				if err5 != nil {
 					return err5
 				}

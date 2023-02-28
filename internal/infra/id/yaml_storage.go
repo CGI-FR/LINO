@@ -73,8 +73,8 @@ func (s *YAMLStorage) Store(id id.IngressDescriptor) *id.Error {
 		relation := list.Relation(i)
 		relations = append(relations, YAMLRelation{
 			Name:   relation.Name(),
-			Parent: YAMLTable{Name: relation.Parent().Name(), Lookup: relation.LookUpParent()},
-			Child:  YAMLTable{Name: relation.Child().Name(), Lookup: relation.LookUpChild()},
+			Parent: YAMLTable{Name: relation.Parent().Name(), Lookup: relation.LookUpParent(), Where: relation.WhereParent()},
+			Child:  YAMLTable{Name: relation.Child().Name(), Lookup: relation.LookUpChild(), Where: relation.WhereChild()},
 		})
 	}
 

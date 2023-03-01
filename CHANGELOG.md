@@ -17,7 +17,7 @@ Types of changes
 ## [2.3.0] Not released yet
 
 - `Added` flag `--pk-translation` allow update of primary keys, by giving a cache.jsonl file containing old and new values for a specific key
-- `Added` if a JSON object contains a `__where__` with a dictionary of key/values, it will be used by the push command to filter the target table (push update and delete only)
+- `Added` if a JSON object contains a `__usingpk__` with a dictionary of key/values, it will be used by the push command to select the target record to update (push update only)
 - `Fixed` oracle connector disable/enable contraints cascade
 
 ## [2.2.0]

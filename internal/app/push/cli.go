@@ -169,7 +169,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVarP(&table, "table", "t", "", "Table to writes json")
 	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "Ingress descriptor filename")
 	cmd.Flags().StringToStringVar(&pkTranslations, "pk-translation", map[string]string{}, "list of dictionaries old value / new value for primary key update")
-	cmd.Flags().StringVar(&whereField, "where-field", "__where__", "Name of the data field that can be used to filter update/delete queries")
+	cmd.Flags().StringVar(&whereField, "using-pk-field", "__usingpk__", "Name of the data field that can be used as pk for update queries")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

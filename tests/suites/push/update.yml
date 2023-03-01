@@ -115,7 +115,7 @@ testcases:
       - script: lino table extract source
       - script: |-
           cat > actor.jsonl <<EOF
-          {"actor_id":998,"last_name":"UPDATE","__where__":{"actor_id":2}}
+          {"actor_id":998,"last_name":"UPDATE","__usingpk__":{"actor_id":2}}
           EOF
       - script: lino push update source --table actor < actor.jsonl
       - script: lino pull source --table actor --filter actor_id=998

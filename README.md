@@ -257,6 +257,34 @@ Each line is a filter and `lino` apply it to the start table to extract data.
 
 The `push` sub-command import a **json** line stream (jsonline format http://jsonlines.org/) in each table, following the ingress descriptor defined in current directory.
 
+### How to update primary key
+
+Let's say you have this record in database :
+
+```json
+{"actor_id":2,"last_name":"CHASE"}
+```
+
+And you want to change the primary key of this record to 998 :
+
+```json
+{"actor_id":998,"last_name":"CHASE"}
+```
+
+LINO will need the current key `2` to find the record in database, and the new key `998` to update the value. This can be done with the special field `__usingpk__` :
+
+```json
+{"actor_id":998,"last_name":"CHASE","__usingpk__":{"actor_id":2}}
+```
+
+The push update command will used the pk value inside `__usingpk__` to find the record, and the pk value from the actor object to update the record.
+
+```console
+lino push update source --table actor <<<'{"actor_id":998,"last_name":"CHASE","__usingpk__":{"actor_id":2}}'
+```
+
+The `__usingpk__` field can also be used with an ingress descriptor at any level in the data. The name of this field can be changed to another value with the `--using-pk-field` flag.
+
 ### Interaction with other tools
 
 **LINO** respect the UNIX philosophy and use standards input an output to share data with others tools.

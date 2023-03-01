@@ -58,6 +58,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.AddCommand(newSetStartTableCommand(fullName, err, out, in))
 	cmd.AddCommand(newSetChildLookupCommand(fullName, err, out, in))
 	cmd.AddCommand(newSetParentLookupCommand(fullName, err, out, in))
+	cmd.AddCommand(newSetChildWhereCommand(fullName, err, out, in))
+	cmd.AddCommand(newSetParentWhereCommand(fullName, err, out, in))
 	cmd.PersistentFlags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "Ingress descriptor filename")
 	cmd.SetOut(out)
 	cmd.SetErr(err)

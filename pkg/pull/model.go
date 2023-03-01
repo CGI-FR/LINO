@@ -71,6 +71,7 @@ type Relation struct {
 	Cardinality Cardinality
 	Local       RelationTip
 	Foreign     RelationTip
+	Where       string
 }
 
 type RelationSet []Relation

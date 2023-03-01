@@ -152,6 +152,42 @@ IngressDescriptor:
             lookup: false
         child:
             name: public.language
+            lookup: true
+```
+
+Customize the extraction plan of the ingress descriptor by editing the `ingress-descriptor.yml` file or by using the dedicated commands.
+
+For example, this version of the `ingress-descriptor.yml` will filter out language objects created before 01/01/2023 :
+
+```yaml
+version: v1
+IngressDescriptor:
+    startTable: public.customer
+    relations:
+      - name: film_original_language_id_fkey
+        parent:
+            name: public.film
+            lookup: false
+        child:
+            name: public.language
+            lookup: true
+            where: "creation_date >= '01/01/2023'"
+```
+
+The `where` property can be set on the `child` or the `parent` object. When used on the parent object, extracted data will contains a null parent object if the parent is filtered by the where clause. When used on chlid object, the resulting child list will be filtered (if all children are filtered, the list will be empty).
+
+To modify the `ingress-descriptor.yml`, some commands can be used instead of editing directly the file :
+- `lino id set-child-lookup <relation name> <true or false>` : modify the `lookup` property of the child object
+- `lino id set-parent-lookup <relation name> <true or false>` : modify the `lookup` property of the parent object
+- `lino id set-child-where <relation name> <where clause>` : modify the `where` property of the child object
+- `lino id set-parent-where <relation name> <where clause>` : modify the `where` property of the parent object
+- `lino id set-start-table <table name>` : modify the `startTable` property of the ingress descriptor
+
+Example:
+
+```console
+$ lino id set-child-where film_original_language_id_fkey "creation_date >= '01/01/2023'"
+successfully update relation film_original_language_id_fkey in ingress descriptor
 ```
 
 ### `--ingress-descriptor` argument

@@ -48,6 +48,7 @@ type YAMLRelation struct {
 type YAMLTable struct {
 	Name   string `yaml:"name"`
 	Lookup bool   `yaml:"lookup"`
+	Where  string `yaml:"where,omitempty"`
 }
 
 // YAMLStorage provides storage in a local YAML file
@@ -72,8 +73,8 @@ func (s *YAMLStorage) Store(id id.IngressDescriptor) *id.Error {
 		relation := list.Relation(i)
 		relations = append(relations, YAMLRelation{
 			Name:   relation.Name(),
-			Parent: YAMLTable{Name: relation.Parent().Name(), Lookup: relation.LookUpParent()},
-			Child:  YAMLTable{Name: relation.Child().Name(), Lookup: relation.LookUpChild()},
+			Parent: YAMLTable{Name: relation.Parent().Name(), Lookup: relation.LookUpParent(), Where: relation.WhereParent()},
+			Child:  YAMLTable{Name: relation.Child().Name(), Lookup: relation.LookUpChild(), Where: relation.WhereChild()},
 		})
 	}
 
@@ -105,7 +106,8 @@ func (s *YAMLStorage) Read() (id.IngressDescriptor, *id.Error) {
 					id.NewTable(relation.Parent.Name),
 					id.NewTable(relation.Child.Name),
 				),
-				relation.Parent.Lookup, relation.Child.Lookup),
+				relation.Parent.Lookup, relation.Child.Lookup,
+				relation.Parent.Where, relation.Child.Where),
 		)
 	}
 

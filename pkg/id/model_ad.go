@@ -26,18 +26,22 @@ type idrelation struct {
 	Relation
 	lookUpParent bool
 	lookUpChild  bool
+	whereParent  string
+	whereChild   string
 }
 
 // NewIngressRelation initialize a new IngressRelation object
-func NewIngressRelation(rel Relation, lookUpParent bool, lookUpChild bool) IngressRelation {
-	return idrelation{Relation: rel, lookUpParent: lookUpParent, lookUpChild: lookUpChild}
+func NewIngressRelation(rel Relation, lookUpParent bool, lookUpChild bool, whereParent string, whereChild string) IngressRelation {
+	return idrelation{Relation: rel, lookUpParent: lookUpParent, lookUpChild: lookUpChild, whereParent: whereParent, whereChild: whereChild}
 }
 
-func (r idrelation) Name() string       { return r.Relation.Name() }
-func (r idrelation) Parent() Table      { return r.Relation.Parent() }
-func (r idrelation) Child() Table       { return r.Relation.Child() }
-func (r idrelation) LookUpParent() bool { return r.lookUpParent }
-func (r idrelation) LookUpChild() bool  { return r.lookUpChild }
+func (r idrelation) Name() string        { return r.Relation.Name() }
+func (r idrelation) Parent() Table       { return r.Relation.Parent() }
+func (r idrelation) Child() Table        { return r.Relation.Child() }
+func (r idrelation) LookUpParent() bool  { return r.lookUpParent }
+func (r idrelation) LookUpChild() bool   { return r.lookUpChild }
+func (r idrelation) WhereParent() string { return r.whereParent }
+func (r idrelation) WhereChild() string  { return r.whereChild }
 func (r idrelation) String() string {
 	switch {
 	case r.LookUpChild() && r.LookUpParent():

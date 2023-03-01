@@ -212,7 +212,7 @@ func (s *Step) follow(relation Relation, out ExportedRow, currentStep uint) erro
 
 	filter := createFilter(relation, out)
 
-	rows, err := s.p.datasource.Read(relation.Foreign.Table, Filter{Limit: 0, Values: filter, Where: ""})
+	rows, err := s.p.datasource.Read(relation.Foreign.Table, Filter{Limit: 0, Values: filter, Where: relation.Where})
 	IncFiltersCount()
 
 	if err != nil {

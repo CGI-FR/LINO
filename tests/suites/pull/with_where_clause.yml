@@ -21,7 +21,7 @@ testcases:
     steps:
       # Clean working directory
       - script: rm -f *
-      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino dataconnector add source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
       - script: lino relation extract source
       - script: lino table extract source
       - script: lino id create customer
@@ -110,3 +110,13 @@ testcases:
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
           - result.systemerr ShouldContainSubstring 'SELECT * FROM customer WHERE  1=1  LIMIT 1'
+
+  - name: pull with where in ingress descriptor
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup payment_customer_id_fkey true
+      - script: lino id set-child-where payment_customer_id_fkey "payment_id >= 29000"
+      - script: lino pull source
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1,"payment_customer_id_fkey":[{"amount":"NC45OQ==","customer_id":1,"payment_date":"2007-04-28T14:46:49.996577Z","payment_id":29000,"rental_id":8033,"staff_id":2},{"amount":"MC45OQ==","customer_id":1,"payment_date":"2007-04-28T16:02:05.996577Z","payment_id":29001,"rental_id":8074,"staff_id":1},{"amount":"MC45OQ==","customer_id":1,"payment_date":"2007-04-28T17:48:33.996577Z","payment_id":29002,"rental_id":8116,"staff_id":2},{"amount":"Mi45OQ==","customer_id":1,"payment_date":"2007-04-29T02:27:15.996577Z","payment_id":29003,"rental_id":8326,"staff_id":2},{"amount":"Mi45OQ==","customer_id":1,"payment_date":"2007-04-30T01:10:44.996577Z","payment_id":29004,"rental_id":9571,"staff_id":2}]}

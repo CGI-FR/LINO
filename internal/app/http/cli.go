@@ -69,7 +69,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			http.Handle("/", r)
 			bind := fmt.Sprintf(":%d", port)
-			e1 := http.ListenAndServe(bind, nil)
+			e1 := http.ListenAndServe(bind, nil) //nolint:gosec
 
 			if err != nil {
 				fmt.Fprintln(err, e1.Error())

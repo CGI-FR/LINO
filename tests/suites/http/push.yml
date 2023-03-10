@@ -42,7 +42,8 @@ testcases:
         bodyFile: dataset.jsonl
         assertions:
           - result.statuscode ShouldEqual 200
-          - result.bodyjson.error ShouldEqual ""
+          - |
+            result.body ShouldEqual '{"error": ""}'
       - script: PASSWORD=sakila lino pull dest --limit 1 -f store_id=2
         assertions:
           - result.systemout ShouldBeEmpty

@@ -88,7 +88,8 @@ testcases:
         url: http://lino:8000/api/v1/data/source?filter=address_id
         assertions:
           - result.statuscode ShouldEqual 400
-          - result.bodyjson.error  ShouldEqual "param filter must be a string map (key1:value1,key2:value2)"
+          - |
+            result.body ShouldContainSubstring '{"error": "param filter must be a string map (key1:value1,key2:value2)"}'
 
   - name: pull table content
     steps:

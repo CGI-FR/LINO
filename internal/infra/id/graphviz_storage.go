@@ -18,7 +18,7 @@
 package id
 
 import (
-	"io/ioutil"
+	"os"
 	"strconv"
 
 	"github.com/awalterschulze/gographviz"
@@ -69,7 +69,7 @@ func (s *DOTStorage) Store(idef id.IngressDescriptor) *id.Error {
 		}
 	}
 
-	err = ioutil.WriteFile("ingress-descriptor.dot", []byte(graph.String()), 0600)
+	err = os.WriteFile("ingress-descriptor.dot", []byte(graph.String()), 0o600)
 	if err != nil {
 		return &id.Error{Description: err.Error()}
 	}

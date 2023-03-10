@@ -19,7 +19,7 @@ package id
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 
 	"github.com/cgi-fr/lino/pkg/id"
 	"gopkg.in/yaml.v3"
@@ -124,7 +124,7 @@ func writeFile(structure *YAMLStructure, filename string) *id.Error {
 		return &id.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile(filename, out.Bytes(), 0600)
+	err = os.WriteFile(filename, out.Bytes(), 0o600)
 	if err != nil {
 		return &id.Error{Description: err.Error()}
 	}
@@ -137,7 +137,7 @@ func readFile(filename string) (*YAMLStructure, *id.Error) {
 		Version: Version,
 	}
 
-	dat, err := ioutil.ReadFile(filename)
+	dat, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, &id.Error{Description: err.Error()}
 	}

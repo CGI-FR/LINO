@@ -1,6 +1,6 @@
 module github.com/cgi-fr/lino
 
-go 1.17
+go 1.20
 
 require (
 	github.com/adrienaury/zeromdc v0.0.0-20221116212822-6a366c26ee61

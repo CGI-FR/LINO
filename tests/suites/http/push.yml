@@ -85,7 +85,8 @@ testcases:
         bodyFile: store_3.jsonl
         assertions:
           - result.statuscode ShouldEqual 200
-          - result.bodyjson.error ShouldEqual ""
+          - |
+            result.body ShouldContainSubstring '{"error": ""}'
       - script: PASSWORD=sakila lino pull dest --limit 1 -f store_id=2
         assertions:
           - result.systemout ShouldEqual {"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"store_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}]}
@@ -103,7 +104,8 @@ testcases:
         bodyFile: store_3.jsonl
         assertions:
           - result.statuscode ShouldEqual 200
-          - result.bodyjson.error ShouldEqual ""
+          - |
+            result.body ShouldContainSubstring '{"error": ""}'
       - script: PASSWORD=sakila lino pull dest --limit 1 -f store_id=2
         assertions:
           - result.systemout ShouldEqual {"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"store_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}]}
@@ -117,7 +119,8 @@ testcases:
         bodyFile: store_1_truncate.jsonl
         assertions:
           - result.statuscode ShouldEqual 200
-          - result.bodyjson.error ShouldEqual ""
+          - |
+            result.body ShouldContainSubstring '{"error": ""}'
       - script: PASSWORD=sakila lino pull dest --limit 1 -f store_id=1
         assertions:
           # FIXME : blob objects are not decoded from base 64 encoding
@@ -135,7 +138,8 @@ testcases:
         bodyFile: store_1_truncate.jsonl
         assertions:
           - result.statuscode ShouldEqual 200
-          - result.bodyjson.error ShouldEqual ""
+          - |
+            result.body ShouldContainSubstring '{"error": ""}'
       - script: PASSWORD=sakila lino pull dest --limit 1 -f store_id=1
         assertions:
           # FIXME : blob objects are not decoded from base 64 encoding

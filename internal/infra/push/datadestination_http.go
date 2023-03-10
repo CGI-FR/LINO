@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -119,7 +118,7 @@ func (dd *HTTPDataDestination) RowWriter(table push.Table) (push.RowWriter, *pus
 
 	pr, pw := io.Pipe()
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, ioutil.NopCloser(pr))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, io.NopCloser(pr))
 	if err != nil {
 		return nil, &push.Error{Description: err.Error()}
 	}

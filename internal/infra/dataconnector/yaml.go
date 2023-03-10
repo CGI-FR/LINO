@@ -19,7 +19,6 @@ package dataconnector
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -146,7 +145,7 @@ func readFile() (*YAMLStructure, *dataconnector.Error) {
 		return list, nil
 	}
 
-	dat, err := ioutil.ReadFile("dataconnector.yaml")
+	dat, err := os.ReadFile("dataconnector.yaml")
 	if err != nil {
 		return nil, &dataconnector.Error{Description: err.Error()}
 	}
@@ -173,7 +172,7 @@ func writeFile(list *YAMLStructure) *dataconnector.Error {
 		return &dataconnector.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("dataconnector.yaml", out.Bytes(), 0600)
+	err = os.WriteFile("dataconnector.yaml", out.Bytes(), 0o600)
 	if err != nil {
 		return &dataconnector.Error{Description: err.Error()}
 	}

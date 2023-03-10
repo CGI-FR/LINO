@@ -19,7 +19,7 @@ package sequence
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 
 	"github.com/cgi-fr/lino/pkg/sequence"
 	"gopkg.in/yaml.v3"
@@ -97,7 +97,7 @@ func readFile() (*YAMLStructure, *sequence.Error) {
 		Version: Version,
 	}
 
-	dat, err := ioutil.ReadFile("sequences.yaml")
+	dat, err := os.ReadFile("sequences.yaml")
 	if err != nil {
 		return nil, &sequence.Error{Description: err.Error()}
 	}
@@ -124,7 +124,7 @@ func writeFile(list *YAMLStructure) *sequence.Error {
 		return &sequence.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("sequences.yaml", out.Bytes(), 0600)
+	err = os.WriteFile("sequences.yaml", out.Bytes(), 0o600)
 	if err != nil {
 		return &sequence.Error{Description: err.Error()}
 	}

@@ -19,7 +19,7 @@ package relation
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 
 	"github.com/cgi-fr/lino/pkg/relation"
 	"gopkg.in/yaml.v3"
@@ -115,7 +115,7 @@ func readFile() (*YAMLStructure, *relation.Error) {
 		Version: Version,
 	}
 
-	dat, err := ioutil.ReadFile("relations.yaml")
+	dat, err := os.ReadFile("relations.yaml")
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}
 	}
@@ -142,7 +142,7 @@ func writeFile(list *YAMLStructure) *relation.Error {
 		return &relation.Error{Description: err.Error()}
 	}
 
-	err = ioutil.WriteFile("relations.yaml", out.Bytes(), 0600)
+	err = os.WriteFile("relations.yaml", out.Bytes(), 0o600)
 	if err != nil {
 		return &relation.Error{Description: err.Error()}
 	}

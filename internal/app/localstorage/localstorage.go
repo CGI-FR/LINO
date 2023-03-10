@@ -20,7 +20,6 @@ package localstorage
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -176,7 +175,7 @@ func readFile() (*YAMLCredentialsStore, error) {
 		return store, nil
 	}
 
-	dat, err := ioutil.ReadFile(storeFile)
+	dat, err := os.ReadFile(storeFile)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +219,7 @@ func writeFile(list *YAMLCredentialsStore) error {
 
 	storeFile := path.Join(storeDir, FileName)
 
-	err = ioutil.WriteFile(storeFile, out.Bytes(), 0600)
+	err = os.WriteFile(storeFile, out.Bytes(), 0600)
 	if err != nil {
 		return err
 	}

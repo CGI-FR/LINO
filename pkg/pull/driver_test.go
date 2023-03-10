@@ -19,7 +19,7 @@ package pull_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
@@ -48,7 +48,7 @@ func ToJSON(r pull.Row) string {
 }
 
 func LoadTest(filename string) (*Test, error) {
-	yamlFile, err := ioutil.ReadFile("testdata/" + filename)
+	yamlFile, err := os.ReadFile("testdata/" + filename)
 	if err != nil {
 		return nil, fmt.Errorf(": %w", err)
 	}

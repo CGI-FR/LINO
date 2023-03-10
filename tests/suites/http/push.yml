@@ -62,7 +62,8 @@ testcases:
         bodyFile: store_1_bis.jsonl
         assertions:
           - result.statuscode ShouldEqual 200
-          - result.bodyjson.error ShouldEqual ""
+          - |
+            result.body ShouldEqual '{"error": ""}'
       - script: PASSWORD=sakila lino pull dest --limit 1 -f store_id=1
         assertions:
           # push has no effect in insert mode

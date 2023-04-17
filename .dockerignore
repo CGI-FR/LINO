@@ -2,4 +2,4 @@
 
 !bin/lino
 !bin/ws-mock
-!/dist/lino-db2_linux_amd64/lino-db2
+!/dist/lino-db2_linux_amd64_v1/lino-db2

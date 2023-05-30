@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	// import Oracle connector
-	_ "github.com/godror/godror"
+	_ "github.com/sijms/go-ora/v2"
 
 	"github.com/cgi-fr/lino/pkg/sequence"
 )

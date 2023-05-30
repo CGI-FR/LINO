@@ -8,7 +8,6 @@ require (
 	github.com/cgi-fr/jsonline v0.5.0
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/godror/godror v0.37.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ibmdb/go_ibm_db v0.4.3
@@ -17,6 +16,7 @@ require (
 	github.com/mattn/go-isatty v0.0.18
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.29.1
+	github.com/sijms/go-ora/v2 v2.7.6
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.2
 	github.com/xo/dburl v0.14.2
@@ -25,13 +25,9 @@ require (
 	nhooyr.io/websocket v1.8.7
 )
 
-require golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-logfmt/logfmt v0.6.0 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
-	github.com/godror/knownpb v0.1.1 // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect

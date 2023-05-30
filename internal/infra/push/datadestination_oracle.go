@@ -8,7 +8,7 @@ import (
 	"github.com/cgi-fr/lino/pkg/push"
 
 	// import Oracle connector
-	_ "github.com/godror/godror"
+	_ "github.com/sijms/go-ora/v2"
 )
 
 // OracleDataDestinationFactory exposes methods to create new Oracle extractors.

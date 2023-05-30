@@ -6,7 +6,7 @@ import (
 	"github.com/cgi-fr/lino/pkg/relation"
 
 	// import Oracle connector
-	_ "github.com/godror/godror"
+	_ "github.com/sijms/go-ora/v2"
 )
 
 // NewOracleExtractorFactory creates a new oracle extractor factory.

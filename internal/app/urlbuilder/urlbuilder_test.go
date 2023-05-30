@@ -16,7 +16,7 @@ func TestBuildOracleURL(t *testing.T) {
 		{
 			"oracle-raw",
 			"oracle-raw://user:pwd@dbhost:1521/orclpdb1/?connect_timeout=2",
-			`oracle://user:pwd@dbhost:1521/orclpdb1/`,
+			`oracle://user:pwd@dbhost:1521/orclpdb1/?connect_timeout="2"`,
 		},
 		{
 			"oracle-raw",

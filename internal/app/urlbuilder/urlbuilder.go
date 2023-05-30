@@ -55,7 +55,12 @@ func GenOracleRaw(u *dburl.URL) (string, error) {
 		dsn += "@"
 	}
 
-	dsn += fmt.Sprintf("%s%s", u.Host, u.Path)
+	dsn += fmt.Sprintf("%s%s?", u.Host, u.Path)
+
+	for value := range u.Query() {
+		dsn += fmt.Sprintf("%s=\"%s\"", value, u.Query().Get(value))
+	}
+
 	return dsn, nil
 }
 

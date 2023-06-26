@@ -29,7 +29,7 @@
     "workspaceFolder": "/workspace",
     "remoteEnv": {
         "PATH": "${containerEnv:PATH}:/workspace/bin/",
-        "CGO_ENABLED": "1",
+        "CGO_ENABLED": "0",
     },
     "extensions": [
         "golang.Go",

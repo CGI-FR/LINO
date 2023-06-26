@@ -32,7 +32,7 @@ services:
       - testdata:/workspace/tests/workspace
     environment:
       - TZ=Europe/Paris
-      - CGO_ENABLED=1
+      - CGO_ENABLED=0
       - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
     cap_add:
       - SYS_PTRACE
@@ -89,7 +89,7 @@ services:
         no_proxy: ${no_proxy}
     environment:
       - PASSWORD=sakila
-      - CGO_ENABLED=1
+      - CGO_ENABLED=0
     command: http
     expose:
       - 8000

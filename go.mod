@@ -13,7 +13,7 @@ require (
 	github.com/ibmdb/go_ibm_db v0.4.3
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.9
-	github.com/mattn/go-isatty v0.0.18
+	github.com/mattn/go-isatty v0.0.19
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.29.1
 	github.com/sijms/go-ora/v2 v2.7.6

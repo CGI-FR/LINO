@@ -28,33 +28,56 @@ import (
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/docker/docker-credential-helpers/client"
 	"github.com/docker/docker-credential-helpers/credentials"
+	go_ora "github.com/sijms/go-ora/v2"
 	"github.com/xo/dburl"
 )
 
 // GenOracleRaw generates a Go Driver for Oracle (godror) DSN from the passed URL.
 func GenOracleRaw(u *dburl.URL) (string, error) {
 	// example of DSN generated :
-	//   `user="login" password="password" connectString="host:port/service_name" sysdba=true`
+	//   `oracle://proxy_user:proxy_password@host:port/service?proxy client name=schema_owner`
 
-	connectionString := strings.TrimSuffix(u.Host+u.Path, "/")
+	dsn := "oracle://"
 
-	dsn := fmt.Sprintf("connectString=\"%s\"", connectionString)
-
-	for value := range u.Query() {
-		dsn += fmt.Sprintf(" %s=\"%s\"", value, u.Query().Get(value))
+	if strings.HasPrefix(u.Hostname(), "(") {
+		// build user/pass
+		return genJDBCOracle(u)
 	}
 
 	// build user/pass
 	if u.User != nil {
 		if un := u.User.Username(); len(un) > 0 {
-			dsn += fmt.Sprintf(" user=\"%s\"", un)
+			dsn += un
 			if up, ok := u.User.Password(); ok {
-				dsn += fmt.Sprintf(" password=\"%s\"", up)
+				dsn += fmt.Sprintf(":%s", up)
 			}
 		}
+		dsn += "@"
+	}
+
+	dsn += fmt.Sprintf("%s%s?", u.Host, u.Path)
+
+	for value := range u.Query() {
+		dsn += fmt.Sprintf("%s=\"%s\"", value, u.Query().Get(value))
 	}
 
 	return dsn, nil
+}
+
+func genJDBCOracle(u *dburl.URL) (string, error) {
+	if u.User == nil {
+		return go_ora.BuildJDBC("", "", u.Host, map[string]string{}), nil
+	}
+
+	if un := u.User.Username(); len(un) > 0 {
+		if up, ok := u.User.Password(); ok {
+			return go_ora.BuildJDBC(u.User.Username(), up, u.Host, map[string]string{}), nil
+		} else {
+			return go_ora.BuildJDBC(u.User.Username(), "", u.Host, map[string]string{}), nil
+		}
+	}
+
+	return go_ora.BuildJDBC("", "", u.Host, map[string]string{}), nil
 }
 
 func init() {
@@ -64,7 +87,7 @@ func init() {
 		Transport: dburl.TransportAny,
 		Opaque:    false,
 		Aliases:   []string{"oracle-raw"},
-		Override:  "godror",
+		Override:  "oracle",
 	}
 	dburl.Register(oracleScheme)
 

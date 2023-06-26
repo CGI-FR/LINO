@@ -1,7 +1,7 @@
 project_name: lino
 env:
   - GO111MODULE=on
-  - CGO_ENABLED=1
+  - CGO_ENABLED=0
 before:
   hooks:
     - go mod download
@@ -49,6 +49,8 @@ builds:
       - linux
     goarch:
       - amd64
+    env:
+      - CGO_ENABLED=1
     binary: lino-db2
     flags:
       - -tags=db2
@@ -62,6 +64,7 @@ builds:
     goarch:
       - "amd64"
     env:
+      - CGO_ENABLED=1
       - CXX_FOR_TARGET=x86_64-w64-mingw32-g++
       - CC_FOR_TARGET=x86_64-w64-mingw32-gcc
       - CC=x86_64-w64-mingw32-gcc-win32
@@ -78,6 +81,7 @@ builds:
     goarch:
       - "386"
     env:
+      - CGO_ENABLED=1
       - CXX_FOR_TARGET=i686-w64-mingw32-g++
       - CC_FOR_TARGET=i686-w64-mingw32-gcc
       - CC=i686-w64-mingw32-gcc-win32

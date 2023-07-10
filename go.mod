@@ -16,7 +16,7 @@ require (
 	github.com/mattn/go-isatty v0.0.19
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.29.1
-	github.com/sijms/go-ora/v2 v2.7.8
+	github.com/sijms/go-ora/v2 v2.7.9
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/xo/dburl v0.14.2

@@ -50,7 +50,7 @@ func newCountCommand(fullName string, err *os.File, out *os.File, in *os.File) *
 
 			u := urlbuilder.BuildURL(alias, err)
 
-			factory, ok := tableExtractorFactories[u.Unaliased]
+			factory, ok := tableExtractorFactories[u.UnaliasedDriver]
 			if !ok {
 				fmt.Fprintln(err, "no extractor found for database type")
 				os.Exit(1)

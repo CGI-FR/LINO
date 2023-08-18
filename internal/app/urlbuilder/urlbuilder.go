@@ -33,7 +33,7 @@ import (
 )
 
 // GenOracleRaw generates a Go Driver for Oracle (godror) DSN from the passed URL.
-func GenOracleRaw(u *dburl.URL) (string, error) {
+func GenOracleRaw(u *dburl.URL) (string, string, error) {
 	// example of DSN generated :
 	//   `oracle://proxy_user:proxy_password@host:port/service?proxy client name=schema_owner`
 
@@ -61,23 +61,23 @@ func GenOracleRaw(u *dburl.URL) (string, error) {
 		dsn += fmt.Sprintf("%s=\"%s\"", value, u.Query().Get(value))
 	}
 
-	return dsn, nil
+	return dsn, "", nil
 }
 
-func genJDBCOracle(u *dburl.URL) (string, error) {
+func genJDBCOracle(u *dburl.URL) (string, string, error) {
 	if u.User == nil {
-		return go_ora.BuildJDBC("", "", u.Host, map[string]string{}), nil
+		return go_ora.BuildJDBC("", "", u.Host, map[string]string{}), "", nil
 	}
 
 	if un := u.User.Username(); len(un) > 0 {
 		if up, ok := u.User.Password(); ok {
-			return go_ora.BuildJDBC(u.User.Username(), up, u.Host, map[string]string{}), nil
+			return go_ora.BuildJDBC(u.User.Username(), up, u.Host, map[string]string{}), "", nil
 		} else {
-			return go_ora.BuildJDBC(u.User.Username(), "", u.Host, map[string]string{}), nil
+			return go_ora.BuildJDBC(u.User.Username(), "", u.Host, map[string]string{}), "", nil
 		}
 	}
 
-	return go_ora.BuildJDBC("", "", u.Host, map[string]string{}), nil
+	return go_ora.BuildJDBC("", "", u.Host, map[string]string{}), "", nil
 }
 
 func init() {
@@ -93,11 +93,11 @@ func init() {
 
 	db2Scheme := dburl.Scheme{
 		Driver: "db2",
-		Generator: func(u *dburl.URL) (string, error) {
+		Generator: func(u *dburl.URL) (string, string, error) {
 			password, _ := u.User.Password()
 			database := strings.TrimPrefix(u.Path, "/")
 			result := fmt.Sprintf("HOSTNAME=%s;DATABASE=%s;PORT=%s;UID=%s;PWD=%s", u.Hostname(), database, u.Port(), u.User.Username(), password)
-			return result, nil
+			return result, "", nil
 		},
 		Transport: dburl.TransportAny,
 		Opaque:    false,

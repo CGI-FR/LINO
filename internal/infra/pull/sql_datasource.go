@@ -53,7 +53,7 @@ func (ds *SQLDataSource) Open() error {
 		return err
 	}
 
-	ds.dbx = sqlx.NewDb(db, u.Unaliased)
+	ds.dbx = sqlx.NewDb(db, u.UnaliasedDriver)
 
 	err = ds.dbx.Ping()
 	if err != nil {

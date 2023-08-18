@@ -48,7 +48,7 @@ func newPingCommand(fullName string, err *os.File, out *os.File, in *os.File) *c
 				os.Exit(5)
 			}
 			u := urlbuilder.BuildURL(dc, err)
-			dataPingerFactory, ok := dataPingerFactory[u.Unaliased]
+			dataPingerFactory, ok := dataPingerFactory[u.UnaliasedDriver]
 			if !ok {
 				fmt.Fprintln(err, "no datadestination found for database type")
 				os.Exit(4)

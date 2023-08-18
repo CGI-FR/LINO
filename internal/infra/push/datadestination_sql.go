@@ -135,7 +135,7 @@ func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode, disableConstr
 		return &push.Error{Description: err.Error()}
 	}
 
-	dbx := sqlx.NewDb(db, u.Unaliased)
+	dbx := sqlx.NewDb(db, u.UnaliasedDriver)
 
 	err = dbx.Ping()
 	if err != nil {

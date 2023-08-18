@@ -53,7 +53,7 @@ func (pdp SQLDataPinger) Ping() *dataconnector.Error {
 		return &dataconnector.Error{Description: err.Error()}
 	}
 
-	dbx := sqlx.NewDb(db, u.Unaliased)
+	dbx := sqlx.NewDb(db, u.UnaliasedDriver)
 
 	err = dbx.Ping()
 	if err != nil {

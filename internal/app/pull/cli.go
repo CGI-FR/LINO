@@ -56,7 +56,8 @@ func Inject(
 	dsfmap map[string]pull.DataSourceFactory,
 	exporterFactory func(io.Writer) pull.RowExporter,
 	rrf func(io.ReadCloser) pull.RowReader,
-	tl pull.TraceListener) {
+	tl pull.TraceListener,
+) {
 	dataconnectorStorage = dbas
 	relStorage = rs
 	tabStorage = ts
@@ -192,7 +193,7 @@ func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, er
 
 	u := urlbuilder.BuildURL(alias, out)
 
-	datasourceFactory, ok := dataSourceFactories[u.Unaliased]
+	datasourceFactory, ok := dataSourceFactories[u.UnaliasedDriver]
 	if !ok {
 		return nil, fmt.Errorf("no datasource found for database type")
 	}

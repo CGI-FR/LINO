@@ -45,6 +45,7 @@ func Count(s Storage, e Extractor) ([]TableCount, *Error) {
 		if err != nil {
 			return nil, err
 		}
+
 		result = append(result, TableCount{table, count})
 	}
 	return result, nil

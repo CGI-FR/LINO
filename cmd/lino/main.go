@@ -27,6 +27,7 @@ import (
 	"text/template"
 
 	over "github.com/adrienaury/zeromdc"
+	"github.com/cgi-fr/lino/internal/app/analyse"
 	"github.com/cgi-fr/lino/internal/app/dataconnector"
 	"github.com/cgi-fr/lino/internal/app/http"
 	"github.com/cgi-fr/lino/internal/app/id"
@@ -158,6 +159,7 @@ func init() {
 	rootCmd.AddCommand(pull.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(push.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(http.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
+	rootCmd.AddCommand(analyse.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 }
 
 func initConfig() {

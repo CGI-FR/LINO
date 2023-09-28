@@ -28,7 +28,7 @@ type Extractor interface {
 	Count(tableName string) (int, *Error)
 }
 
-// Storage allows to store and retrieve Relations objects.
+// Storage allows to store and retrieve Tables objects.
 type Storage interface {
 	List() ([]Table, *Error)
 	Store(tables []Table) *Error

@@ -17,16 +17,16 @@
 
 package analyse
 
-// DataSource is the provider of data to analyse
 type DataSource interface {
-	BaseName() string
-	Next() bool
-	Value() ([]interface{}, string, string, error)
+	Name() string
+	ListTables() []string
+	ListColumn(tableName string) []string
+	ExtractValues(columnName string) []interface{}
 }
 
 // Analyser is the provider of statistics analyse
 type Analyser interface {
-	Analyse(ds DataSource) error
+	Analyse(ds *ColumnIterator) error
 }
 
 // Reporter is the provider of reporting result of the analyse

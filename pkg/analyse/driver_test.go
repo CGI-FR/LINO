@@ -31,7 +31,7 @@ type rimoAnalyser struct {
 	writer rimo.Writer
 }
 
-func (ra rimoAnalyser) Analyse(ds analyse.DataSource) error {
+func (ra rimoAnalyser) Analyse(ds *analyse.ColumnIterator) error {
 	return rimo.AnalyseBase(ds, ra)
 }
 
@@ -39,22 +39,22 @@ func (ra rimoAnalyser) Export(base *model.Base) error {
 	return ra.writer.Export(base)
 }
 
-type testDataSource struct {
-	collumnMax int
-}
+type testDataSource struct{}
 
-func (tds *testDataSource) BaseName() string {
+func (tds *testDataSource) Name() string {
 	return "TestBase"
 }
 
-func (tds *testDataSource) Next() bool {
-	tds.collumnMax--
-	return tds.collumnMax > 0
+func (tds *testDataSource) ListTables() []string {
+	return []string{"table1", "table2"}
 }
 
-func (tds *testDataSource) Value() ([]interface{}, string, string, error) {
-	columnName := fmt.Sprintf("collumnName_%d", tds.collumnMax)
-	return []interface{}{1., 2., 3., 4., 5.}, columnName, "tableName", nil
+func (tds *testDataSource) ListColumn(tableName string) []string {
+	return []string{"col1", "col2"}
+}
+
+func (tds *testDataSource) ExtractValues(columnName string) []interface{} {
+	return []interface{}{1., 2., 3., 4., 5.}
 }
 
 type testWriter struct {
@@ -68,16 +68,35 @@ func (tw *testWriter) Export(report *model.Base) error {
 
 func TestAnalyseShouldNotReturnError(t *testing.T) {
 	t.Parallel()
-	dataSource := &testDataSource{collumnMax: 10}
+	dataSource := &testDataSource{}
 	writer := &testWriter{}
 	analyser := rimoAnalyser{writer}
 
 	err := analyse.Do(dataSource, analyser)
 
 	assert.Nil(t, err)
-	assert.Equal(t, 0, dataSource.collumnMax)
 	assert.NotNil(t, writer.result)
 	assert.Equal(t, "TestBase", writer.result.Name)
-	assert.Equal(t, 1, len(writer.result.Tables))
+	assert.Equal(t, 2, len(writer.result.Tables))
 	assert.Equal(t, 5, writer.result.Tables[0].Columns[0].MainMetric.Count)
+}
+
+func TestColumnIteratorNext(t *testing.T) {
+	t.Parallel()
+
+	dataSource := &testDataSource{}
+
+	iterator := analyse.NewColumnIterator(dataSource)
+
+	for table := 1; table < 3; table++ {
+		for c := 1; c < 3; c++ {
+			assert.True(t, iterator.Next())
+			_, tableName, columnName, err := iterator.Value()
+			assert.Nil(t, err)
+			assert.Equal(t, fmt.Sprintf("table%d", table), tableName)
+			assert.Equal(t, fmt.Sprintf("col%d", c), columnName)
+		}
+	}
+
+	assert.False(t, iterator.Next())
 }

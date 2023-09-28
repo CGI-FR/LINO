@@ -19,5 +19,55 @@ package analyse
 
 // Do performe statistics on datasource.
 func Do(ds DataSource, analyser Analyser) error {
-	return analyser.Analyse(ds)
+	iterator := NewColumnIterator(ds)
+	return analyser.Analyse(iterator)
+}
+
+type ColumnIterator struct {
+	tables []string
+	column []string
+	DataSource
+}
+
+func NewColumnIterator(ds DataSource) *ColumnIterator {
+	return &ColumnIterator{
+		tables:     []string{},
+		column:     []string{},
+		DataSource: ds,
+	}
+}
+
+func (ci *ColumnIterator) BaseName() string { return ci.Name() }
+
+// Next return true if there is more column to iterate over.
+func (ci *ColumnIterator) Next() bool {
+	if len(ci.tables) == 0 {
+		ci.tables = ci.ListTables()
+		if len(ci.tables) == 0 {
+			return false
+		}
+		ci.column = ci.ListColumn(ci.tables[0])
+		if len(ci.column) > 0 {
+			return true
+		}
+	}
+
+	if len(ci.column) > 1 {
+		ci.column = ci.column[1:]
+		return true
+	}
+
+	for len(ci.tables) > 1 {
+		ci.tables = ci.tables[1:]
+		ci.column = ci.DataSource.ListColumn(ci.tables[0])
+		if len(ci.column) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// Value return the column content.
+func (ci *ColumnIterator) Value() ([]interface{}, string, string, error) {
+	return ci.DataSource.ExtractValues(ci.column[0]), ci.tables[0], ci.column[0], nil
 }

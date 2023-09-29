@@ -1,0 +1,177 @@
+// Copyright (C) 2021 CGI France
+//
+// This file is part of LINO.
+//
+// LINO is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// LINO is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with LINO.  If not, see <http://www.gnu.org/licenses/>.
+
+package push
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/cgi-fr/lino/pkg/push"
+	"github.com/lib/pq"
+
+	// import SQLServersql connector
+	_ "github.com/microsoft/go-mssqldb"
+)
+
+// SQLServerDataDestinationFactory exposes methods to create new SQLServer pullers.
+type SQLServerDataDestinationFactory struct{}
+
+// NewSQLServerDataDestinationFactory creates a new SQLServer datadestination factory.
+func NewSQLServerDataDestinationFactory() *SQLServerDataDestinationFactory {
+	return &SQLServerDataDestinationFactory{}
+}
+
+// New return a SQLServer pusher
+func (e *SQLServerDataDestinationFactory) New(url string, schema string) push.DataDestination {
+	return NewSQLDataDestination(url, schema, SQLServerDialect{})
+}
+
+// SQLServerDialect inject SQLServer variations
+type SQLServerDialect struct{}
+
+// Placeholde return the variable format for SQLServer
+func (d SQLServerDialect) Placeholder(position int) string {
+	return fmt.Sprintf("@p%d", position)
+}
+
+// EnableConstraintsStatement generate statments to activate constraintes
+func (d SQLServerDialect) EnableConstraintsStatement(tableName string) string {
+	return fmt.Sprintf("ALTER TABLE %s CHECK CONSTRAINT ALL", tableName)
+}
+
+// DisableConstraintsStatement generate statments to deactivate constraintes
+func (d SQLServerDialect) DisableConstraintsStatement(tableName string) string {
+	return fmt.Sprintf("ALTER TABLE %s NOCHECK CONSTRAINT ALL", tableName)
+}
+
+// TruncateStatement generate statement to truncat table content
+func (d SQLServerDialect) TruncateStatement(tableName string) string {
+	return fmt.Sprintf("TRUNCATE TABLE %s CASCADE", tableName)
+}
+
+// InsertStatement  generate insert statement
+func (d SQLServerDialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
+	protectedColumns := []string{}
+	for _, c := range selectValues {
+		protectedColumns = append(protectedColumns, fmt.Sprintf("[%s]", c.name)) // Utilisation de crochets pour les noms de colonnes
+	}
+
+	sql := &strings.Builder{}
+	sql.WriteString("INSERT INTO ")
+	sql.WriteString(tableName)
+	sql.WriteString("(")
+	sql.WriteString(strings.Join(protectedColumns, ","))
+	sql.WriteString(") VALUES (")
+	for i := 1; i <= len(selectValues); i++ {
+		sql.WriteString(d.Placeholder(i))
+		if i < len(selectValues) {
+			sql.WriteString(", ")
+		}
+	}
+	if len(primaryKeys) > 0 {
+		sql.WriteString(") ON CONFLICT (") // L'instruction "ON CONFLICT" n'est pas directement transposable à SQL Server
+		sql.WriteString(strings.Join(primaryKeys, ","))
+		sql.WriteString(") DO NOTHING")
+	} else {
+		sql.WriteString(")")
+	}
+
+	return sql.String(), selectValues
+}
+
+func (d SQLServerDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	sql := &strings.Builder{}
+	sql.WriteString("UPDATE ")
+	sql.WriteString(tableName)
+	sql.WriteString(" SET ")
+
+	for index, column := range selectValues {
+		// Ne met pas à jour la clé primaire sauf si elle est dans whereValues
+		if isAPrimaryKey(column.name, primaryKeys) {
+			isInWhere := false
+			for _, pk := range whereValues {
+				if column.name == pk.name {
+					isInWhere = true
+					break
+				}
+			}
+			if !isInWhere {
+				continue
+			}
+		}
+
+		headers = append(headers, column)
+
+		sql.WriteString(column.name)
+		sql.WriteString("=")
+		sql.WriteString(d.Placeholder(index + 1))
+		if index+1 < len(selectValues) {
+			sql.WriteString(", ")
+		}
+	}
+
+	if len(headers) == 0 {
+		return "", nil, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no columns are selected", tableName)}
+	}
+
+	if len(whereValues) > 0 {
+		sql.WriteString(" WHERE ")
+	} else {
+		return "", nil, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
+	}
+
+	for index, pk := range whereValues {
+		headers = append(headers, pk)
+
+		sql.WriteString(pk.name)
+		sql.WriteString("=")
+		sql.WriteString(d.Placeholder(len(selectValues) + index + 1))
+		if index+1 < len(whereValues) {
+			sql.Write([]byte(" AND "))
+		}
+	}
+
+	return sql.String(), headers, nil
+}
+
+// IsDuplicateError check if error is a duplicate error
+func (d SQLServerDialect) IsDuplicateError(err error) bool {
+	pqErr, ok := err.(*pq.Error)
+	return ok && pqErr.Code == "23505" // Verifier le numero de violation dans github.com/microsoft/go-mssqldb
+}
+
+// ConvertValue before load
+func (d SQLServerDialect) ConvertValue(from push.Value) push.Value {
+	return from
+}
+
+func (d SQLServerDialect) CanDisableIndividualConstraints() bool {
+	return false
+}
+
+func (d SQLServerDialect) ReadConstraintsStatement(tableName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d SQLServerDialect) DisableConstraintStatement(tableName string, constraintName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d SQLServerDialect) EnableConstraintStatement(tableName string, constraintName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}

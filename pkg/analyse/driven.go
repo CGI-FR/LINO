@@ -17,11 +17,24 @@
 
 package analyse
 
+import "io"
+
+type ExtractorFactory interface {
+	New(url string, schema string) Extractor
+}
+
 type DataSource interface {
 	Name() string
 	ListTables() []string
 	ListColumn(tableName string) []string
-	ExtractValues(columnName string) []interface{}
+}
+
+type Extractor interface {
+	ExtractValues(tableName string, columnName string) []interface{}
+}
+
+type AnalyserFactory interface {
+	New(io.Writer) Analyser
 }
 
 // Analyser is the provider of statistics analyse
@@ -29,7 +42,6 @@ type Analyser interface {
 	Analyse(ds *ColumnIterator) error
 }
 
-// Reporter is the provider of reporting result of the analyse
-type Reporter interface {
-	Export() error
+type DataSourceFactory interface {
+	New() DataSource
 }

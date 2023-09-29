@@ -18,8 +18,8 @@
 package analyse
 
 // Do performe statistics on datasource.
-func Do(ds DataSource, analyser Analyser) error {
-	iterator := NewColumnIterator(ds)
+func Do(ds DataSource, ex Extractor, analyser Analyser) error {
+	iterator := NewColumnIterator(ds, ex)
 	return analyser.Analyse(iterator)
 }
 
@@ -27,13 +27,15 @@ type ColumnIterator struct {
 	tables []string
 	column []string
 	DataSource
+	Extractor
 }
 
-func NewColumnIterator(ds DataSource) *ColumnIterator {
+func NewColumnIterator(ds DataSource, ex Extractor) *ColumnIterator {
 	return &ColumnIterator{
 		tables:     []string{},
 		column:     []string{},
 		DataSource: ds,
+		Extractor:  ex,
 	}
 }
 
@@ -69,5 +71,5 @@ func (ci *ColumnIterator) Next() bool {
 
 // Value return the column content.
 func (ci *ColumnIterator) Value() ([]interface{}, string, string, error) {
-	return ci.DataSource.ExtractValues(ci.column[0]), ci.tables[0], ci.column[0], nil
+	return ci.ExtractValues(ci.tables[0], ci.column[0]), ci.tables[0], ci.column[0], nil
 }

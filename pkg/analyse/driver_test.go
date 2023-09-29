@@ -53,7 +53,9 @@ func (tds *testDataSource) ListColumn(tableName string) []string {
 	return []string{"col1", "col2"}
 }
 
-func (tds *testDataSource) ExtractValues(columnName string) []interface{} {
+type testExtractor struct{}
+
+func (tds *testExtractor) ExtractValues(tableName string, columnName string) []interface{} {
 	return []interface{}{1., 2., 3., 4., 5.}
 }
 
@@ -69,10 +71,11 @@ func (tw *testWriter) Export(report *model.Base) error {
 func TestAnalyseShouldNotReturnError(t *testing.T) {
 	t.Parallel()
 	dataSource := &testDataSource{}
+	extractor := &testExtractor{}
 	writer := &testWriter{}
 	analyser := rimoAnalyser{writer}
 
-	err := analyse.Do(dataSource, analyser)
+	err := analyse.Do(dataSource, extractor, analyser)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, writer.result)
@@ -85,8 +88,9 @@ func TestColumnIteratorNext(t *testing.T) {
 	t.Parallel()
 
 	dataSource := &testDataSource{}
+	extractor := &testExtractor{}
 
-	iterator := analyse.NewColumnIterator(dataSource)
+	iterator := analyse.NewColumnIterator(dataSource, extractor)
 
 	for table := 1; table < 3; table++ {
 		for c := 1; c < 3; c++ {

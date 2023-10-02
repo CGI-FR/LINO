@@ -55,8 +55,8 @@ func (tds *testDataSource) ListColumn(tableName string) []string {
 
 type testExtractor struct{}
 
-func (tds *testExtractor) ExtractValues(tableName string, columnName string) []interface{} {
-	return []interface{}{1., 2., 3., 4., 5.}
+func (tds *testExtractor) ExtractValues(tableName string, columnName string) ([]interface{}, error) {
+	return []interface{}{1., 2., 3., 4., 5.}, nil
 }
 
 type testWriter struct {

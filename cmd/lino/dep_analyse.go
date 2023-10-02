@@ -15,33 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package analyse
+package main
 
-import "io"
+import (
+	infra "github.com/cgi-fr/lino/internal/infra/analyse"
+	domain "github.com/cgi-fr/lino/pkg/analyse"
+)
 
-type ExtractorFactory interface {
-	New(url string, schema string) Extractor
+func analyseDataSourceFactory() map[string]domain.ExtractorFactory {
+	return map[string]domain.ExtractorFactory{
+		"postgres": infra.NewPostgresExtractorFactory(),
+	}
 }
 
-type DataSource interface {
-	Name() string
-	ListTables() []string
-	ListColumn(tableName string) []string
-}
-
-type Extractor interface {
-	ExtractValues(tableName string, columnName string) ([]interface{}, error)
-}
-
-type AnalyserFactory interface {
-	New(io.Writer) Analyser
-}
-
-// Analyser is the provider of statistics analyse
-type Analyser interface {
-	Analyse(ds *ColumnIterator) error
-}
-
-type DataSourceFactory interface {
-	New() DataSource
+func analyserFactory() domain.AnalyserFactory {
+	return infra.RimoAnalyserFactory{}
 }

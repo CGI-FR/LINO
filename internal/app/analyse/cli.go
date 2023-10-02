@@ -35,7 +35,6 @@ var (
 	dataconnectorStorage dataconnector.Storage
 	extractorFactories   map[string]analyse.ExtractorFactory
 	analyserFactory      analyse.AnalyserFactory
-	dataSourceFactory    analyse.DataSourceFactory
 )
 
 // Inject dependencies

@@ -27,12 +27,12 @@ import (
 	"github.com/xo/dburl"
 )
 
-// PostgresExtractorFactory exposes methods to create new Postgres pullers.
-type PostgresExtractorFactory struct{}
+// SQLExtractorFactory exposes methods to create new Postgres pullers.
+type SQLExtractorFactory struct{}
 
-// NewPostgresExtractorFactory creates a new postgres datasource factory.
-func NewPostgresExtractorFactory() *PostgresExtractorFactory {
-	return &PostgresExtractorFactory{}
+// NewSQLExtractorFactory creates a new postgres datasource factory.
+func NewSQLExtractorFactory() *SQLExtractorFactory {
+	return &SQLExtractorFactory{}
 }
 
 // SQLDataSource to read in the analyse process.
@@ -72,7 +72,7 @@ func (ds *SQLDataSource) ExtractValues(tableName string, columnName string) ([]i
 	return result, nil
 }
 
-func (e *PostgresExtractorFactory) New(url string, schema string) analyse.Extractor {
+func (e *SQLExtractorFactory) New(url string, schema string) analyse.Extractor {
 	return &SQLDataSource{
 		url:    url,
 		schema: schema,

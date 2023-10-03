@@ -24,7 +24,11 @@ import (
 
 func analyseDataSourceFactory() map[string]domain.ExtractorFactory {
 	return map[string]domain.ExtractorFactory{
-		"postgres": infra.NewPostgresExtractorFactory(),
+		"postgres":   infra.NewSQLExtractorFactory(),
+		"godror":     infra.NewSQLExtractorFactory(),
+		"godror-raw": infra.NewSQLExtractorFactory(),
+		"mysql":      infra.NewSQLExtractorFactory(),
+		"db2":        infra.NewSQLExtractorFactory(),
 	}
 }
 

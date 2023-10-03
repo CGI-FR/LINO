@@ -78,7 +78,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			e2 := analyse.Do(dataSource, extractor, analyser)
 
 			if e2 != nil {
-				fmt.Fprintf(err, "analyse faield '%s'", dataConnector)
+				fmt.Fprintf(err, "analyse failed '%s'", dataConnector)
 				fmt.Fprintln(err)
 				os.Exit(5)
 			}

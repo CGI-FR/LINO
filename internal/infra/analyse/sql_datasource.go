@@ -54,7 +54,7 @@ func (ds *SQLDataSource) ExtractValues(tableName string, columnName string) ([]i
 	}
 	defer ds.db.Close()
 
-	cursor, err := ds.db.Query(fmt.Sprintf("select %s from %s;", columnName, tableName))
+	cursor, err := ds.db.Query(fmt.Sprintf("select %s from %s", columnName, tableName))
 	if err != nil {
 		log.Error().Err(err).Msg("SQL select failed")
 		return result, err

@@ -11,6 +11,8 @@
 LINO is a simple ETL (Extract Transform Load) tools to manage tests datas.
 The `lino` command line tool pull test data from a relational database to create a smallest production-like database.
 
+![lino](doc/img/lino.png)
+
 ## Usage
 
 `lino` command line work in relative project's directory, like `git` or `docker`

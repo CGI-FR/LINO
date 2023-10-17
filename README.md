@@ -1,10 +1,10 @@
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CGI-FR/LINO/ci.yml?branch=main)
- [![Go Report Card](https://goreportcard.com/badge/github.com/cgi-fr/pimo)](https://goreportcard.com/report/github.com/cgi-fr/lino)
- ![GitHub all releases](https://img.shields.io/github/downloads/CGI-FR/LINO/total)
- ![GitHub](https://img.shields.io/github/license/CGI-FR/LINO)
- ![GitHub Repo stars](https://img.shields.io/github/stars/CGI-FR/LINO)
- ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/CGI-FR/LINO)
- ![GitHub release (latest by date)](https://img.shields.io/github/v/release/CGI-FR/LINO)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cgi-fr/pimo)](https://goreportcard.com/report/github.com/cgi-fr/lino)
+![GitHub all releases](https://img.shields.io/github/downloads/CGI-FR/LINO/total)
+![GitHub](https://img.shields.io/github/license/CGI-FR/LINO)
+![GitHub Repo stars](https://img.shields.io/github/stars/CGI-FR/LINO)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/CGI-FR/LINO)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/CGI-FR/LINO)
 
 # LINO : Large Input, Narrow Output
 
@@ -287,11 +287,106 @@ lino push update source --table actor <<<'{"actor_id":998,"last_name":"CHASE","_
 
 The `__usingpk__` field can also be used with an ingress descriptor at any level in the data. The name of this field can be changed to another value with the `--using-pk-field` flag.
 
-### Interaction with other tools
+## Analyse
+
+Use the `lino analyse <data_connector_alias>` command to extract metrics from the database in YAML format.
+
+Only tables and columns explicitly listed in the tables.yaml file will be analysed.
+
+Example result :
+
+```yaml
+database: source
+tables:
+    - name: first_name
+      columns:
+        - name: actor
+          type: string
+          concept: ""
+          constraint: []
+          confidential: null
+          mainMetric:
+            count: 200
+            empty: 0
+            unique: 128
+            sample:
+                - WALTER
+                - MAE
+                - LAURENCE
+                - GREG
+                - ALEC
+          stringMetric:
+            mostFrequentLen:
+                - length: 4
+                  freq: 0.235
+                  sample:
+                    - GARY
+                    - ALAN
+                    - ADAM
+                    - JEFF
+                    - GINA
+                - length: 5
+                  freq: 0.215
+                  sample:
+                    - REESE
+                    - MILLA
+                    - SALMA
+                    - RALPH
+                    - SUSAN
+                - length: 7
+                  freq: 0.16
+                  sample:
+                    - OLYMPIA
+                    - KIRSTEN
+                    - MATTHEW
+                    - RICHARD
+                    - KIRSTEN
+                - length: 6
+                  freq: 0.14
+                  sample:
+                    - WHOOPI
+                    - WALTER
+                    - SANDRA
+                    - WHOOPI
+                    - JOHNNY
+                - length: 3
+                  freq: 0.12
+                  sample:
+                    - BOB
+                    - BEN
+                    - KIM
+                    - BOB
+                    - TOM
+            leastFrequentLen:
+                - length: 11
+                  freq: 0.01
+                  sample:
+                    - CHRISTOPHER
+                - length: 9
+                  freq: 0.02
+                  sample:
+                    - CHRISTIAN
+                    - SYLVESTER
+                - length: 2
+                  freq: 0.02
+                  sample:
+                    - AL
+                    - ED
+                - length: 8
+                  freq: 0.08
+                  sample:
+                    - JULIANNE
+                    - LAURENCE
+                    - JULIANNE
+                    - SCARLETT
+                    - LAURENCE
+```
+
+## Interaction with other tools
 
 **LINO** respect the UNIX philosophy and use standards input an output to share data with others tools.
 
-## MongoDB storage
+### MongoDB storage
 
 Data set could be store in mongoDB easily with the `mongoimport` tool:
 
@@ -304,11 +399,12 @@ and reload later to a database :
 ```bash
 $ mongoexport --db myproject --collection customer | lino push customer --jdbc jdbc:oracle:thin:scott/tiger@target:1721:xe
 ```
-## Miller `mlr`
+
+### Miller `mlr`
 
 `mlr` tool can be used to format json lines into another tabular format (csv, markdown table, ...).
 
-## jq
+### jq
 
 `jq` tool can be piped with the **LINO** output to prettify it.
 

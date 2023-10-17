@@ -15,21 +15,33 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package table
+package analyse
 
-// ExtractorFactory exposes methods to create new extractors.
+import "io"
+
 type ExtractorFactory interface {
 	New(url string, schema string) Extractor
 }
 
-// Extractor allows to extract primary keys from a relational database.
-type Extractor interface {
-	Extract() ([]Table, *Error)
-	Count(tableName string) (int, *Error)
+type DataSource interface {
+	Name() string
+	ListTables() []string
+	ListColumn(tableName string) []string
 }
 
-// Storage allows to store and retrieve Tables objects.
-type Storage interface {
-	List() ([]Table, *Error)
-	Store(tables []Table) *Error
+type Extractor interface {
+	ExtractValues(tableName string, columnName string) ([]interface{}, error)
+}
+
+type AnalyserFactory interface {
+	New(io.Writer) Analyser
+}
+
+// Analyser is the provider of statistics analyse
+type Analyser interface {
+	Analyse(ds *ColumnIterator) error
+}
+
+type DataSourceFactory interface {
+	New() DataSource
 }

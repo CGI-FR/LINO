@@ -66,6 +66,7 @@ func (ci *ColumnIterator) Next() bool {
 			return true
 		}
 	}
+
 	return false
 }
 

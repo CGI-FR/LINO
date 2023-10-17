@@ -47,6 +47,8 @@ type SQLDataSource struct {
 func (ds *SQLDataSource) ExtractValues(tableName string, columnName string) ([]interface{}, error) {
 	result := []interface{}{}
 
+	log.Trace().Str("tablename", tableName).Str("columnname", columnName).Msg("extract values")
+
 	err := ds.Open()
 	if err != nil {
 		log.Error().Err(err).Msg("Connection failed")

@@ -14,8 +14,12 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.5.0]
+
+- `Added` command `analyse` to extract metrics from the database in YAML format.
+
 ## [2.4.0]
- 
+
 - `Added` go-ora driver for oracle in replacement of old driver (remove technical prerequisite to install Oracle Instant Client)
 
 ## [2.3.0]

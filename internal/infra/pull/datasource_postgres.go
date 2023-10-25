@@ -53,3 +53,8 @@ func (pd PostgresDialect) Placeholder(position int) string {
 func (pd PostgresDialect) Limit(limit uint) string {
 	return fmt.Sprintf(" LIMIT %d", limit)
 }
+
+// Method that structures the request in the correct order
+func (sd PostgresDialect) CreateSelect(sel string, where string, limit string, etoile string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, etoile, from, where, limit)
+}

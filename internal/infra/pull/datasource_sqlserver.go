@@ -51,6 +51,12 @@ func (sd SQLServerDialect) Placeholder(position int) string {
 	return fmt.Sprintf("@p%d", position)
 }
 
+// La méthode Limit est ajustée pour être compatible avec SQL Server
 func (sd SQLServerDialect) Limit(limit uint) string {
-	return fmt.Sprintf("TOP %d", limit)
+	return fmt.Sprintf(" TOP %d", limit)
+}
+
+// Method that structures the request in the correct order
+func (sd SQLServerDialect) CreateSelect(sel string, where string, limit string, etoile string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, limit, etoile, from, where)
 }

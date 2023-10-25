@@ -34,6 +34,7 @@ func pullDataSourceFactory() map[string]domain.DataSourceFactory {
 		"db2":        infra.NewDb2DataSourceFactory(),
 		"http":       infra.NewHTTPDataSourceFactory(),
 		"ws":         infra.NewWSDataSourceFactory(),
+		"sqlserver":  infra.NewSQLServerDataSourceFactory(),
 	}
 }
 

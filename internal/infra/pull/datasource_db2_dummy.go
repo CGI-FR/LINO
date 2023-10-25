@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
+//go:build !db2
 // +build !db2
 
 package pull
@@ -51,4 +52,9 @@ func (od Db2Dialect) Placeholder(position int) string {
 
 func (od Db2Dialect) Limit(limit uint) string {
 	panic(fmt.Errorf("Not implemented"))
+}
+
+// Method that structures the request in the correct order
+func (sd Db2Dialect) CreateSelect(sel string, where string, limit string, etoile string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, etoile, from, where, limit)
 }

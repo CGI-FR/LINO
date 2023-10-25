@@ -25,8 +25,6 @@ import (
 	"github.com/cgi-fr/lino/pkg/pull"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/xo/dburl"
 )
 
@@ -93,68 +91,73 @@ func (ds *SQLDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSe
 }
 
 // RowReader iterate over rows in table with filter
+// Version modifiée
+// RowReader generates a SQL query for reading rows from a table with optional filtering and limiting.
 func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, error) {
-	sql := &strings.Builder{}
-	sql.Write([]byte("SELECT "))
+	// String Builders
+	sqlSelect := &strings.Builder{}
+	sqlLimit := &strings.Builder{}
+	sqlWhere := &strings.Builder{}
+	sqlAsterisk := &strings.Builder{}
+	sqlFrom := &strings.Builder{}
 
+	// Build SELECT clause *******************************************
+	sqlSelect.Write([]byte("SELECT "))
 	if filter.Distinct {
-		sql.Write([]byte("DISTINCT "))
+		sqlSelect.Write([]byte("DISTINCT "))
 	}
-
 	if pcols := source.Columns; len(pcols) > 0 && source.ExportMode != pull.ExportModeAll {
 		for idx := int(0); idx < len(pcols); idx++ {
 			if idx > 0 {
-				sql.Write([]byte(", "))
+				sqlSelect.Write([]byte(", "))
 			}
-			sql.Write([]byte(pcols[idx].Name))
+			sqlSelect.Write([]byte(pcols[idx].Name))
 		}
 	} else {
-		sql.Write([]byte("*"))
+		sqlAsterisk.Write([]byte("*"))
 	}
 
-	sql.Write([]byte(" FROM "))
-	sql.Write([]byte(ds.tableName(source)))
-	sql.Write([]byte(" WHERE "))
+	// Build FROM clause *********************************************
+	sqlFrom.Write([]byte(" FROM "))
+	sqlFrom.Write([]byte(ds.tableName(source)))
 
+	// Build LIMIT clause ********************************************
+	if filter.Limit > 0 {
+		fmt.Fprint(sqlLimit, ds.dialect.Limit(filter.Limit))
+	}
+
+	// Build WHERE clause ********************************************
+	sqlWhere.Write([]byte(" WHERE "))
 	whereContentFlag := false
-
 	values := []interface{}{}
 	for key, value := range filter.Values {
-		sql.Write([]byte(key))
+		sqlWhere.Write([]byte(key))
 		values = append(values, value)
-		fmt.Fprint(sql, "=")
-		fmt.Fprint(sql, ds.dialect.Placeholder(len(values)))
+		fmt.Fprint(sqlWhere, "=")
+		fmt.Fprint(sqlWhere, ds.dialect.Placeholder(len(values)))
 		if len(values) < len(filter.Values) {
-			sql.Write([]byte(" AND "))
+			sqlWhere.Write([]byte(" AND "))
 		}
 		whereContentFlag = true
 	}
 
 	if strings.TrimSpace(filter.Where) != "" {
 		if whereContentFlag {
-			sql.Write([]byte(" AND "))
+			sqlWhere.Write([]byte(" AND "))
 		}
-		fmt.Fprint(sql, filter.Where)
+		fmt.Fprint(sqlWhere, filter.Where)
 		whereContentFlag = true
 	}
 
 	if !whereContentFlag {
-		sql.Write([]byte(" 1=1 "))
+		sqlWhere.Write([]byte(" 1=1 "))
 	}
 
-	if filter.Limit > 0 {
-		fmt.Fprint(sql, ds.dialect.Limit(filter.Limit))
-	}
+	// Assemble the builders in order using the existing method
+	sql := ds.dialect.CreateSelect(sqlSelect.String(), sqlWhere.String(), sqlLimit.String(), sqlAsterisk.String(), sqlFrom.String())
 
-	if log.Logger.GetLevel() <= zerolog.DebugLevel {
-		printSQL := sql.String()
-		for i, v := range values {
-			printSQL = strings.ReplaceAll(printSQL, ds.dialect.Placeholder(i+1), fmt.Sprintf("%v", v))
-		}
-		log.Debug().Msg(fmt.Sprint(printSQL))
-	}
-
-	rows, err := ds.dbx.Queryx(sql.String(), values...)
+	// Execute the SQL query and return the iterator
+	rows, err := ds.dbx.Queryx(sql, values...)
 	if err != nil {
 		return nil, err
 	}
@@ -225,4 +228,6 @@ type SQLDialect interface {
 	Placeholder(int) string
 	// Limit format limitation clause
 	Limit(uint) string
+	// Select Method
+	CreateSelect(string, string, string, string, string) string
 }

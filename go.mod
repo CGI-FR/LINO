@@ -23,7 +23,7 @@ require (
 	github.com/xo/dburl v0.16.0
 	golang.org/x/term v0.13.0
 	gopkg.in/yaml.v3 v3.0.1
-	nhooyr.io/websocket v1.8.7
+	nhooyr.io/websocket v1.8.9
 )
 
 require (
@@ -34,7 +34,6 @@ require (
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/invopop/jsonschema v0.7.0 // indirect
-	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -43,7 +42,6 @@ require (
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/tools v0.12.0 // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	mvdan.cc/gofumpt v0.5.0 // indirect
 )

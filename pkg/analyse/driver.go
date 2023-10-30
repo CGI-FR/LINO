@@ -73,5 +73,5 @@ func (ci *ColumnIterator) Next() bool {
 // Value return the column content.
 func (ci *ColumnIterator) Value() ([]interface{}, string, string, error) {
 	values, err := ci.ExtractValues(ci.tables[0], ci.column[0])
-	return values, ci.tables[0], ci.column[0], err
+	return values, ci.column[0], ci.tables[0], err
 }

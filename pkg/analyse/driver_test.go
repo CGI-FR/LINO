@@ -95,7 +95,7 @@ func TestColumnIteratorNext(t *testing.T) {
 	for table := 1; table < 3; table++ {
 		for c := 1; c < 3; c++ {
 			assert.True(t, iterator.Next())
-			_, tableName, columnName, err := iterator.Value()
+			_, columnName, tableName, err := iterator.Value()
 			assert.Nil(t, err)
 			assert.Equal(t, fmt.Sprintf("table%d", table), tableName)
 			assert.Equal(t, fmt.Sprintf("col%d", c), columnName)

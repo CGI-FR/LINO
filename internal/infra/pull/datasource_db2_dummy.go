@@ -50,8 +50,14 @@ func (od Db2Dialect) Placeholder(position int) string {
 	panic(fmt.Errorf("Not implemented"))
 }
 
+/*
 func (od Db2Dialect) Limit(limit uint) string {
 	panic(fmt.Errorf("Not implemented"))
+}
+*/
+
+func (od Db2Dialect) Limit(limit uint) string {
+	return fmt.Sprintf(" FETCH FIRST %d ROWS ONLY", limit)
 }
 
 // Method that structures the request in the correct order

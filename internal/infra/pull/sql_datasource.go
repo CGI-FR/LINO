@@ -61,6 +61,25 @@ func (ds *SQLDataSource) Open() error {
 	return nil
 }
 
+// OpenWithDB Open a connection with a given DB (for mock)
+func (ds *SQLDataSource) OpenWithDB(db *sql.DB) error {
+	ds.db = db
+
+	u, err := dburl.Parse(ds.url)
+	if err != nil {
+		return err
+	}
+
+	ds.dbx = sqlx.NewDb(db, u.UnaliasedDriver)
+
+	err = ds.dbx.Ping()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // build table name with or without schema from dataconnector
 func (ds *SQLDataSource) tableName(source pull.Table) string {
 	if ds.schema == "" {

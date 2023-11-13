@@ -22,10 +22,10 @@ import (
 	"strings"
 
 	"github.com/cgi-fr/lino/pkg/push"
-	"github.com/lib/pq"
 
 	// import SQLServersql connector
 	_ "github.com/microsoft/go-mssqldb"
+	mssql "github.com/microsoft/go-mssqldb"
 )
 
 // SQLServerDataDestinationFactory exposes methods to create new SQLServer pullers.
@@ -64,11 +64,11 @@ func (d SQLServerDialect) TruncateStatement(tableName string) string {
 	return fmt.Sprintf("TRUNCATE TABLE %s CASCADE", tableName)
 }
 
-// InsertStatement  generate insert statement
+// InsertStatement generates an insert statement for SQL Server
 func (d SQLServerDialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
 	protectedColumns := []string{}
-	for _, c := range selectValues {
-		protectedColumns = append(protectedColumns, fmt.Sprintf("[%s]", c.name)) // Utilisation de crochets pour les noms de colonnes
+	for _, value := range selectValues {
+		protectedColumns = append(protectedColumns, fmt.Sprintf("[%s]", value.name))
 	}
 
 	sql := &strings.Builder{}
@@ -78,18 +78,12 @@ func (d SQLServerDialect) InsertStatement(tableName string, selectValues []Value
 	sql.WriteString(strings.Join(protectedColumns, ","))
 	sql.WriteString(") VALUES (")
 	for i := 1; i <= len(selectValues); i++ {
-		sql.WriteString(d.Placeholder(i))
+		sql.WriteString(d.Placeholder(i)) // Assuming Placeholder is a method that returns the appropriate placeholder for SQL Server, like "?"
 		if i < len(selectValues) {
 			sql.WriteString(", ")
 		}
 	}
-	if len(primaryKeys) > 0 {
-		sql.WriteString(") ON CONFLICT (") // L'instruction "ON CONFLICT" n'est pas directement transposable à SQL Server
-		sql.WriteString(strings.Join(primaryKeys, ","))
-		sql.WriteString(") DO NOTHING")
-	} else {
-		sql.WriteString(")")
-	}
+	sql.WriteString(")")
 
 	return sql.String(), selectValues
 }
@@ -151,8 +145,8 @@ func (d SQLServerDialect) UpdateStatement(tableName string, selectValues []Value
 
 // IsDuplicateError check if error is a duplicate error
 func (d SQLServerDialect) IsDuplicateError(err error) bool {
-	pqErr, ok := err.(*pq.Error)
-	return ok && pqErr.Code == "23505" // Verifier le numero de violation dans github.com/microsoft/go-mssqldb
+	msErr, ok := err.(mssql.Error)
+	return ok && msErr.Number == 2627 // Verifier le numero de violation dans github.com/microsoft/go-mssqldb
 }
 
 // ConvertValue before load

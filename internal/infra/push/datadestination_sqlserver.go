@@ -59,9 +59,9 @@ func (d SQLServerDialect) DisableConstraintsStatement(tableName string) string {
 	return fmt.Sprintf("ALTER TABLE %s NOCHECK CONSTRAINT ALL", tableName)
 }
 
-// TruncateStatement generate statement to truncat table content
+// TruncateStatement generate statement to truncate table content for SQL Server
 func (d SQLServerDialect) TruncateStatement(tableName string) string {
-	return fmt.Sprintf("TRUNCATE TABLE %s CASCADE", tableName)
+	return fmt.Sprintf("TRUNCATE TABLE %s", tableName)
 }
 
 // InsertStatement generates an insert statement for SQL Server

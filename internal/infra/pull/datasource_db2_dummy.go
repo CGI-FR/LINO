@@ -50,17 +50,11 @@ func (od Db2Dialect) Placeholder(position int) string {
 	panic(fmt.Errorf("Not implemented"))
 }
 
-/*
-func (od Db2Dialect) Limit(limit uint) string {
-	panic(fmt.Errorf("Not implemented"))
-}
-*/
-
 func (od Db2Dialect) Limit(limit uint) string {
 	return fmt.Sprintf(" FETCH FIRST %d ROWS ONLY", limit)
 }
 
-// Method that structures the request in the correct order
-func (sd Db2Dialect) CreateSelect(sel string, where string, limit string, etoile string, from string) string {
-	return fmt.Sprintf("%s %s %s %s %s", sel, etoile, from, where, limit)
+// CreateSelect generate a SQL request in the correct order.
+func (sd Db2Dialect) CreateSelect(sel string, where string, limit string, column string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, column, from, where, limit)
 }

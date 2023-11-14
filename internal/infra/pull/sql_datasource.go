@@ -117,7 +117,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	sqlSelect := &strings.Builder{}
 	sqlLimit := &strings.Builder{}
 	sqlWhere := &strings.Builder{}
-	sqlAsterisk := &strings.Builder{}
+	sqlColumn := &strings.Builder{}
 	sqlFrom := &strings.Builder{}
 
 	// Build SELECT clause *******************************************
@@ -133,7 +133,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 			sqlSelect.Write([]byte(pcols[idx].Name))
 		}
 	} else {
-		sqlAsterisk.Write([]byte("*"))
+		sqlColumn.Write([]byte("*"))
 	}
 
 	// Build FROM clause *********************************************
@@ -173,7 +173,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	}
 
 	// Assemble the builders in order using the existing method
-	sql := ds.dialect.CreateSelect(sqlSelect.String(), sqlWhere.String(), sqlLimit.String(), sqlAsterisk.String(), sqlFrom.String())
+	sql := ds.dialect.CreateSelect(sqlSelect.String(), sqlWhere.String(), sqlLimit.String(), sqlColumn.String(), sqlFrom.String())
 
 	// Execute the SQL query and return the iterator
 	rows, err := ds.dbx.Queryx(sql, values...)

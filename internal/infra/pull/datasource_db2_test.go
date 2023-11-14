@@ -20,9 +20,9 @@ func TestCreateSelectDb2(t *testing.T) {
 
 	mock.ExpectQuery("SELECT  *  FROM CUSTOMERS  WHERE  1=1   FETCH FIRST 5 ROWS ONLY").WillReturnRows()
 
-	pgFactory := infra.NewDb2DataSourceFactory()
+	db2Factory := infra.NewDb2DataSourceFactory()
 
-	pgDS := pgFactory.New("pg://server/name", "")
+	pgDS := db2Factory.New("pg://server/name", "")
 
 	err = pgDS.(*infra.SQLDataSource).OpenWithDB(db)
 

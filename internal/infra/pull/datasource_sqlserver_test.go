@@ -20,9 +20,9 @@ func TestCreateSelectSQLServer(t *testing.T) {
 
 	mock.ExpectQuery("SELECT  TOP 5 *  FROM CUSTOMERS  WHERE  1=1").WillReturnRows()
 
-	pgFactory := infra.NewSQLServerDataSourceFactory()
+	msFactory := infra.NewSQLServerDataSourceFactory()
 
-	pgDS := pgFactory.New("pg://server/name", "")
+	pgDS := msFactory.New("pg://server/name", "")
 
 	err = pgDS.(*infra.SQLDataSource).OpenWithDB(db)
 

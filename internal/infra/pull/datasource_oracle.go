@@ -34,7 +34,7 @@ func (od OracleDialect) Limit(limit uint) string {
 	return fmt.Sprintf(" AND rownum <= %d", limit)
 }
 
-// Method that structures the request in the correct order
-func (sd OracleDialect) CreateSelect(sel string, where string, limit string, etoile string, from string) string {
-	return fmt.Sprintf("%s %s %s %s %s", sel, etoile, from, where, limit)
+// CreateSelect generate a SQL request in the correct order.
+func (sd OracleDialect) CreateSelect(sel string, where string, limit string, column string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, column, from, where, limit)
 }

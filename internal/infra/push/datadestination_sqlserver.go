@@ -23,7 +23,6 @@ import (
 
 	"github.com/cgi-fr/lino/pkg/push"
 
-	// import SQLServersql connector
 	_ "github.com/microsoft/go-mssqldb"
 	mssql "github.com/microsoft/go-mssqldb"
 )
@@ -95,7 +94,6 @@ func (d SQLServerDialect) UpdateStatement(tableName string, selectValues []Value
 	sql.WriteString(" SET ")
 
 	for index, column := range selectValues {
-		// Ne met pas à jour la clé primaire sauf si elle est dans whereValues
 		if isAPrimaryKey(column.name, primaryKeys) {
 			isInWhere := false
 			for _, pk := range whereValues {
@@ -146,7 +144,7 @@ func (d SQLServerDialect) UpdateStatement(tableName string, selectValues []Value
 // IsDuplicateError check if error is a duplicate error
 func (d SQLServerDialect) IsDuplicateError(err error) bool {
 	msErr, ok := err.(mssql.Error)
-	return ok && msErr.Number == 2627 // Verifier le numero de violation dans github.com/microsoft/go-mssqldb
+	return ok && msErr.Number == 2627 // Check violation number in https://github.com/microsoft/go-mssqldb/blob/main/error.go
 }
 
 // ConvertValue before load

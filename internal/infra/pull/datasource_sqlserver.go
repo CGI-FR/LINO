@@ -22,7 +22,6 @@ import (
 
 	"github.com/cgi-fr/lino/pkg/pull"
 
-	// import SQLServersql connector
 	_ "github.com/microsoft/go-mssqldb"
 )
 
@@ -51,12 +50,12 @@ func (sd SQLServerDialect) Placeholder(position int) string {
 	return fmt.Sprintf("@p%d", position)
 }
 
-// La méthode Limit est ajustée pour être compatible avec SQL Server
+// Limit method is adjusted to be compatible with SQL Server
 func (sd SQLServerDialect) Limit(limit uint) string {
 	return fmt.Sprintf(" TOP %d", limit)
 }
 
-// Method that structures the request in the correct order
-func (sd SQLServerDialect) CreateSelect(sel string, where string, limit string, etoile string, from string) string {
-	return fmt.Sprintf("%s %s %s %s %s", sel, limit, etoile, from, where)
+// CreateSelect generate a SQL request in the correct order
+func (sd SQLServerDialect) CreateSelect(sel string, where string, limit string, column string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, limit, column, from, where)
 }

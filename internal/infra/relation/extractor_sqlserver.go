@@ -20,7 +20,6 @@ package relation
 import (
 	"fmt"
 
-	// import SQL Server connector
 	_ "github.com/microsoft/go-mssqldb"
 
 	"github.com/cgi-fr/lino/pkg/relation"

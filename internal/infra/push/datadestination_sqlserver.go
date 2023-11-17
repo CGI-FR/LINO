@@ -60,7 +60,7 @@ func (d SQLServerDialect) DisableConstraintsStatement(tableName string) string {
 
 // TruncateStatement generate statement to truncate table content for SQL Server
 func (d SQLServerDialect) TruncateStatement(tableName string) string {
-	return fmt.Sprintf("TRUNCATE TABLE %s", tableName)
+	return fmt.Sprintf("DELETE FROM %s", tableName)
 }
 
 // InsertStatement generates an insert statement for SQL Server

@@ -19,7 +19,6 @@ package relation
 
 import (
 	"fmt"
-	"log"
 
 	_ "github.com/microsoft/go-mssqldb"
 
@@ -43,7 +42,6 @@ type SQLServerDialect struct{}
 
 func (d SQLServerDialect) SQL(schema string) string {
 	SQL := `
-	-- Requête principale pour récupérer les informations sur les clés étrangères
 	SELECT
 		'FK__' + TP2.name + '__' + TP.name + '__' + CONVERT(VARCHAR(40), FK.object_id) AS name,
 		child.name AS child_name,
@@ -56,7 +54,6 @@ func (d SQLServerDialect) SQL(schema string) string {
 		sys.tables TP ON FK.parent_object_id = TP.object_id
 	JOIN
 		sys.tables TP2 ON FK.referenced_object_id = TP2.object_id
-	-- Pour avoir les colonnes parents on fais une jointure avec la sous requetes
 	JOIN
 		(
 			SELECT
@@ -76,8 +73,6 @@ func (d SQLServerDialect) SQL(schema string) string {
 				FK.name, TP2.name
 		) parent
 		ON FK.name = parent.constraint_name AND TP2.name = parent.name
-
-	-- Pour avoir les colonnes child on fais une jointure avec la sous requetes
 	JOIN
 		(
 			SELECT
@@ -99,9 +94,6 @@ func (d SQLServerDialect) SQL(schema string) string {
 		ON FK.name = child.constraint_name AND TP.name = child.name;
 
 `
-	// Ajouter des logs pour déboguer
-	log.Println("Generated SQL:")
-	log.Println(SQL)
 
 	if schema != "" {
 		SQL += fmt.Sprintf("AND tc.table_schema = '%s'", schema)

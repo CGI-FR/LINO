@@ -55,6 +55,6 @@ func (od Db2Dialect) Limit(limit uint) string {
 }
 
 // CreateSelect generate a SQL request in the correct order.
-func (sd Db2Dialect) CreateSelect(sel string, where string, limit string, column string, from string) string {
-	return fmt.Sprintf("%s %s %s %s %s", sel, column, from, where, limit)
+func (sd Db2Dialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
 }

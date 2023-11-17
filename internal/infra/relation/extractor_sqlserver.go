@@ -42,21 +42,27 @@ type SQLServerDialect struct{}
 
 func (d SQLServerDialect) SQL(schema string) string {
 	SQL := `
-SELECT
-    tc.constraint_name,
-    tc.table_name,
-    kcu.column_name,
-    ccu.table_name AS foreign_table_name,
-    ccu.column_name AS foreign_column_name
+	SELECT
+    FK.name AS constraint_name,
+    TP.name AS parent_table_name,
+    TP2.name AS referenced_table_name,
+    kcu.column_name AS parent_column_name,
+    ccu.column_name AS referenced_column_name
 FROM
-    information_schema.table_constraints AS tc
-    JOIN information_schema.key_column_usage AS kcu
-      ON tc.constraint_name = kcu.constraint_name
-      AND tc.table_schema = kcu.table_schema
-    JOIN information_schema.constraint_column_usage AS ccu
-      ON ccu.constraint_name = tc.constraint_name
-      AND ccu.table_schema = tc.table_schema
-WHERE tc.constraint_type = 'FOREIGN KEY'
+    sys.foreign_keys FK
+JOIN
+    sys.tables TP ON FK.parent_object_id = TP.object_id
+JOIN
+    sys.tables TP2 ON FK.referenced_object_id = TP2.object_id
+JOIN
+    information_schema.key_column_usage AS kcu
+    ON FK.name = kcu.constraint_name
+JOIN
+    information_schema.constraint_column_usage AS ccu
+    ON kcu.constraint_name = ccu.constraint_name
+WHERE
+    FK.type = 'F';
+
 `
 
 	if schema != "" {

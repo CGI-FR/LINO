@@ -22,12 +22,12 @@ func TestCreateSelectDb2(t *testing.T) {
 
 	db2Factory := infra.NewDb2DataSourceFactory()
 
-	pgDS := db2Factory.New("pg://server/name", "")
+	db2DS := db2Factory.New("pg://server/name", "")
 
-	err = pgDS.(*infra.SQLDataSource).OpenWithDB(db)
+	err = db2DS.(*infra.SQLDataSource).OpenWithDB(db)
 
 	assert.Nil(t, err)
 
-	_, err = pgDS.RowReader(aTable, aFilter)
+	_, err = db2DS.RowReader(aTable, aFilter)
 	assert.Nil(t, err)
 }

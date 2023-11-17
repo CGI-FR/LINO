@@ -22,12 +22,12 @@ func TestCreateSelectSQLServer(t *testing.T) {
 
 	msFactory := infra.NewSQLServerDataSourceFactory()
 
-	pgDS := msFactory.New("pg://server/name", "")
+	msDS := msFactory.New("pg://server/name", "")
 
-	err = pgDS.(*infra.SQLDataSource).OpenWithDB(db)
+	err = msDS.(*infra.SQLDataSource).OpenWithDB(db)
 
 	assert.Nil(t, err)
 
-	_, err = pgDS.RowReader(aTable, aFilter)
+	_, err = msDS.RowReader(aTable, aFilter)
 	assert.Nil(t, err)
 }

@@ -56,6 +56,6 @@ func (sd SQLServerDialect) Limit(limit uint) string {
 }
 
 // CreateSelect generate a SQL request in the correct order
-func (sd SQLServerDialect) CreateSelect(sel string, where string, limit string, column string, from string) string {
-	return fmt.Sprintf("%s %s %s %s %s", sel, limit, column, from, where)
+func (sd SQLServerDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, limit, columns, from, where)
 }

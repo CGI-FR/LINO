@@ -20,7 +20,7 @@ require (
 	github.com/sijms/go-ora/v2 v2.7.19
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
-	github.com/xo/dburl v0.16.0
+	github.com/xo/dburl v0.19.1
 	golang.org/x/term v0.13.0
 	gopkg.in/yaml.v3 v3.0.1
 	nhooyr.io/websocket v1.8.10

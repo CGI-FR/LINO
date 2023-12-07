@@ -24,12 +24,24 @@ The following flags can be used:
 * `--stats <filename | url>` This flag either outputs run statistics to the specified file or send them to specified url (has to start with `http` or `https`).
 * `--statsTemplate <string>` This flag will have LINO use the value as a template to generate statistics. Please use go templating format to include statistics. To include them you have to specify them as `{{ .Stats }}`. (i.e. `{"software":"LINO","stats":{{ .Stats }}}`
 
-## Database support
+## Databases support
 
 ### db2
-### mariadb
-### oracle
-### postgres
+
+Lino support db2 familly databases using this driver : https://github.com/ibmdb/go_ibm_db.
+
+### Mariadb / MySql
+
+Lino support mariaDB / MySql databases using this driver : <https://github.com/go-sql-driver/mysql>.
+
+### Oracle DB
+
+Lino support Oracle Database using this driver : <https://github.com/sijms/go-ora>.
+
+### Postgres
+
+Lino support Postgres databases using this driver : <https://github.com/lib/pq>.
+
 ### SQL Server
 
 Lino provides comprehensive support for SQL Server, with extended compatibility for platforms such as SQL Server, Azure SQL Database, and Azure SQL Instance Management. The management features are also fully compatible with these environments.

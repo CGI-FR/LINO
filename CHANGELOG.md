@@ -14,7 +14,15 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
-## [2.3.0] Not released yet
+## [2.5.0]
+
+- `Added` command `analyse` to extract metrics from the database in YAML format.
+
+## [2.4.0]
+
+- `Added` go-ora driver for oracle in replacement of old driver (remove technical prerequisite to install Oracle Instant Client)
+
+## [2.3.0]
 
 - `Added` flag `--pk-translation` allow update of primary keys, by giving a cache.jsonl file containing old and new values for a specific key
 - `Added` if a JSON object contains a `__usingpk__` with a dictionary of key/values, it will be used by the push command to select the target record to update (push update only)

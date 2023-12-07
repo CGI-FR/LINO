@@ -15,21 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package table
+package main
 
-// ExtractorFactory exposes methods to create new extractors.
-type ExtractorFactory interface {
-	New(url string, schema string) Extractor
+import (
+	infra "github.com/cgi-fr/lino/internal/infra/analyse"
+	domain "github.com/cgi-fr/lino/pkg/analyse"
+)
+
+func analyseDataSourceFactory() map[string]domain.ExtractorFactory {
+	return map[string]domain.ExtractorFactory{
+		"postgres":   infra.NewSQLExtractorFactory(),
+		"godror":     infra.NewSQLExtractorFactory(),
+		"godror-raw": infra.NewSQLExtractorFactory(),
+		"mysql":      infra.NewSQLExtractorFactory(),
+		"db2":        infra.NewSQLExtractorFactory(),
+	}
 }
 
-// Extractor allows to extract primary keys from a relational database.
-type Extractor interface {
-	Extract() ([]Table, *Error)
-	Count(tableName string) (int, *Error)
-}
-
-// Storage allows to store and retrieve Tables objects.
-type Storage interface {
-	List() ([]Table, *Error)
-	Store(tables []Table) *Error
+func analyserFactory() domain.AnalyserFactory {
+	return infra.RimoAnalyserFactory{}
 }

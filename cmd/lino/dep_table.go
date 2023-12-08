@@ -35,5 +35,6 @@ func tableExtractorFactory() map[string]domain.ExtractorFactory {
 		"db2":        infra.NewDb2ExtractorFactory(),
 		"http":       infra.NewHTTPExtractorFactory(),
 		"ws":         infra.NewWSExtractorFactory(),
+		"sqlserver":  infra.NewSQLServerExtractorFactory(),
 	}
 }

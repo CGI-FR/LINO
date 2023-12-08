@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.6.0]
+
+- `Added` `sqlserver` support.
+-
 ## [2.5.0]
 
 - `Added` command `analyse` to extract metrics from the database in YAML format.

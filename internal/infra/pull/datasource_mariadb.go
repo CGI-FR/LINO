@@ -22,7 +22,6 @@ import (
 
 	"github.com/cgi-fr/lino/pkg/pull"
 
-	// import mariadbsql connector
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -52,4 +51,9 @@ func (pd MariadbDialect) Placeholder(position int) string {
 
 func (pd MariadbDialect) Limit(limit uint) string {
 	return fmt.Sprintf(" LIMIT %d", limit)
+}
+
+// CreateSelect generate a SQL request in the correct order.
+func (sd MariadbDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
 }

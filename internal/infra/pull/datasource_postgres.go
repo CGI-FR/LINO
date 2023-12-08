@@ -22,7 +22,6 @@ import (
 
 	"github.com/cgi-fr/lino/pkg/pull"
 
-	// import postgresql connector
 	_ "github.com/lib/pq"
 )
 
@@ -51,5 +50,10 @@ func (pd PostgresDialect) Placeholder(position int) string {
 }
 
 func (pd PostgresDialect) Limit(limit uint) string {
-	return fmt.Sprintf(" LIMIT %d", limit)
+	return fmt.Sprintf("LIMIT %d", limit)
+}
+
+// CreateSelect generate a SQL request in the correct order.
+func (sd PostgresDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
 }

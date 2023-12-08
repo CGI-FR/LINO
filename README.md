@@ -26,6 +26,32 @@ The following flags can be used:
 * `--stats <filename | url>` This flag either outputs run statistics to the specified file or send them to specified url (has to start with `http` or `https`).
 * `--statsTemplate <string>` This flag will have LINO use the value as a template to generate statistics. Please use go templating format to include statistics. To include them you have to specify them as `{{ .Stats }}`. (i.e. `{"software":"LINO","stats":{{ .Stats }}}`
 
+## Databases support
+
+### db2
+
+Lino support db2 familly databases using this driver : https://github.com/ibmdb/go_ibm_db.
+
+### Mariadb / MySql
+
+Lino support mariaDB / MySql databases using this driver : <https://github.com/go-sql-driver/mysql>.
+
+### Oracle DB
+
+Lino support Oracle Database using this driver : <https://github.com/sijms/go-ora>.
+
+### Postgres
+
+Lino support Postgres databases using this driver : <https://github.com/lib/pq>.
+
+### SQL Server
+
+Lino provides comprehensive support for SQL Server, with extended compatibility for platforms such as SQL Server, Azure SQL Database, and Azure SQL Instance Management. The management features are also fully compatible with these environments.
+
+The possibility of establishing compatibility has been made achievable through Microsoft's adaptation of the `ms-mssqldb` driver, specifically designed to facilitate integration between SQL Server and the Go programming language. You can find the link to this driver on GitHub: [https://github.com/microsoft/go-mssqldb](https://github.com/microsoft/go-mssqldb). This initiative now enables a more seamless and efficient interaction between Go and SQL Server environments, providing developers with a technically optimized solution for their data management and manipulation needs.
+
+However, given that the `TRUNCATE` function is not available on SQL Server, it has been replaced with the `DELETE` statement. Consequently, a slight performance loss should be expected.
+
 ## Create a new LINO project
 
 ```

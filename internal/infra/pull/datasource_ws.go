@@ -35,7 +35,7 @@ import (
 
 type action string
 
-//  "pull_open", "push_open", "push_data", "push_commit", "push_close"
+// "pull_open", "push_open", "push_data", "push_commit", "push_close"
 const (
 	PullOpen action = "pull_open"
 )

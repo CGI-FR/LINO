@@ -27,7 +27,7 @@ configuration: ["~/.dockerhub.yml", "~/.github.yml"] # DO NOT COMMIT THESE FILES
 properties:
   # Build Configuration (edit this section to override default values)
   BY: "" # Leave empty to default to the user.email property in git configuration
-  MODULE: "" # Leave empty to default to the git remote url (e.g. "github.com/<usename>/<reponame>")
+  MODULE: "github.com/cgi-fr/lino" # Leave empty to default to the git remote url (e.g. "github.com/<usename>/<reponame>")
   PROJECT: "" # Leave empty to default to the git repository name (e.g. "<reponame>")
   LDFLAGS: "" # Add custom standard ldflags, will be applied everywhere everytime
   BUILD_DIR: "bin" # Subfolder where the build will output, should be ignored by .gitignore
@@ -261,7 +261,9 @@ targets:
           sudo docker-compose -p lino rm -f dest
           sudo docker-compose -p lino up -d source dest
           sudo docker-compose -p lino up -d --build lino
+          mkdir -p ={TEST_WS_DIR}
           sudo chown vscode:vscode ={TEST_WS_DIR}
+          sleep 60
 
   test-int:
     doc: "Run all integration tests"

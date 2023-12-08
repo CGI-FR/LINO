@@ -10,7 +10,7 @@ require (
 	github.com/cgi-fr/rimo v0.2.1
 	github.com/docker/docker-credential-helpers v0.8.0
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ibmdb/go_ibm_db v0.4.4
 	github.com/jmoiron/sqlx v1.3.5

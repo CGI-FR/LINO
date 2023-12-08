@@ -7,7 +7,7 @@ require (
 	github.com/adrienaury/zeromdc v0.0.0-20221116212822-6a366c26ee61
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/cgi-fr/jsonline v0.5.0
-	github.com/cgi-fr/rimo v0.2.1
+	github.com/cgi-fr/rimo v0.3.0
 	github.com/docker/docker-credential-helpers v0.8.0
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gorilla/mux v1.8.1
@@ -32,23 +32,20 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hexops/valast v1.4.4 // indirect
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/invopop/jsonschema v0.7.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
-	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
-	golang.org/x/mod v0.13.0 // indirect
+	golang.org/x/net v0.16.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
-	golang.org/x/tools v0.14.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	mvdan.cc/gofumpt v0.5.0 // indirect
 )

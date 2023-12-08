@@ -25,6 +25,8 @@ import (
 	"github.com/cgi-fr/lino/pkg/pull"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/xo/dburl"
 )
 
@@ -121,23 +123,23 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	sqlFrom := &strings.Builder{}
 
 	// Build SELECT clause *******************************************
-	sqlSelect.Write([]byte("SELECT "))
+	sqlSelect.Write([]byte("SELECT"))
 	if filter.Distinct {
-		sqlSelect.Write([]byte("DISTINCT "))
+		sqlSelect.Write([]byte(" DISTINCT"))
 	}
 	if pcols := source.Columns; len(pcols) > 0 && source.ExportMode != pull.ExportModeAll {
 		for idx := int(0); idx < len(pcols); idx++ {
 			if idx > 0 {
 				sqlSelect.Write([]byte(", "))
 			}
-			sqlSelect.Write([]byte(pcols[idx].Name))
+			sqlSelect.Write([]byte(" " + pcols[idx].Name))
 		}
 	} else {
 		sqlColumns.Write([]byte("*"))
 	}
 
 	// Build FROM clause *********************************************
-	sqlFrom.Write([]byte(" FROM "))
+	sqlFrom.Write([]byte("FROM "))
 	sqlFrom.Write([]byte(ds.tableName(source)))
 
 	// Build LIMIT clause ********************************************
@@ -146,7 +148,8 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	}
 
 	// Build WHERE clause ********************************************
-	sqlWhere.Write([]byte(" WHERE "))
+
+	sqlWhere.Write([]byte("WHERE "))
 	whereContentFlag := false
 	values := []interface{}{}
 	for key, value := range filter.Values {
@@ -175,6 +178,13 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	// Assemble the builders in order using the existing method
 	sql := ds.dialect.CreateSelect(sqlSelect.String(), sqlWhere.String(), sqlLimit.String(), sqlColumns.String(), sqlFrom.String())
 
+	if log.Logger.GetLevel() <= zerolog.DebugLevel {
+		printSQL := sql
+		for i, v := range values {
+			printSQL = strings.ReplaceAll(printSQL, ds.dialect.Placeholder(i+1), fmt.Sprintf("%v", v))
+		}
+		log.Debug().Msg(fmt.Sprint(printSQL))
+	}
 	// Execute the SQL query and return the iterator
 	rows, err := ds.dbx.Queryx(sql, values...)
 	if err != nil {

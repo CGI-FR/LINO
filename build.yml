@@ -263,6 +263,7 @@ targets:
           sudo docker-compose -p lino up -d --build lino
           mkdir -p ={TEST_WS_DIR}
           sudo chown vscode:vscode ={TEST_WS_DIR}
+          sleep 60
 
   test-int:
     doc: "Run all integration tests"

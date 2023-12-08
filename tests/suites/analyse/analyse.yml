@@ -19,10 +19,14 @@ name: analyse command
 testcases:
   - name: prepare test
     steps:
-      - script: rm -f *
+      - script: "rm -rf * || :"
       - script: lino dataconnector add source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
       - script: lino table extract source
+        assertions:
+          - result.systemerr ShouldBeEmpty
       - script: lino table add-column actor first_name
+        assertions:
+          - result.systemerr ShouldBeEmpty
   - name: analyse
     steps:
       - script: lino analyse source

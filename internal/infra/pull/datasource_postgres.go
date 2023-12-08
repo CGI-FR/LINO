@@ -50,7 +50,7 @@ func (pd PostgresDialect) Placeholder(position int) string {
 }
 
 func (pd PostgresDialect) Limit(limit uint) string {
-	return fmt.Sprintf(" LIMIT %d", limit)
+	return fmt.Sprintf("LIMIT %d", limit)
 }
 
 // CreateSelect generate a SQL request in the correct order.

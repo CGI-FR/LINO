@@ -17,11 +17,92 @@
 
 package analyse
 
-// Do performe statistics on datasource.
-func Do(ds DataSource, ex Extractor, analyser Analyser) error {
-	iterator := NewColumnIterator(ds, ex)
-	return analyser.Analyse(iterator)
+import (
+	"github.com/cgi-fr/rimo/pkg/model"
+	"github.com/cgi-fr/rimo/pkg/rimo"
+)
+
+type Driver struct {
+	analyser rimo.Driver
+	ds       DataSource
+	exf      ExtractorFactory
+
+	tables  []string
+	columns []string
+
+	curTable  int
+	curColumn int
 }
+
+func NewDriver(ds DataSource) *Driver {
+	return &Driver{
+		analyser:  rimo.Driver{SampleSize: 5, Distinct: false}, //nolint:gomnd
+		ds:        ds,
+		tables:    ds.ListTables(),
+		columns:   []string{},
+		curTable:  -1,
+		curColumn: -1,
+	}
+}
+
+// Analyse performs statistics on datasource.
+func (d *Driver) Analyse() error {
+	return d.analyser.AnalyseBase(d, d) //nolint:wrapcheck
+}
+
+func (d *Driver) BaseName() string {
+	return d.ds.Name()
+}
+
+// Next returns next column in database
+func (d *Driver) Next() bool {
+	// check if there is more columns in current table
+	if d.curColumn+1 < len(d.columns) {
+		// yes, so increase column index
+		d.curColumn++
+
+		return true
+	}
+
+	// no more columns, check if there is more tables
+	for d.curTable+1 < len(d.tables) {
+		// yes, increase table index and read columns
+		d.curTable++
+		d.curColumn = 0
+		d.columns = d.ds.ListColumn(d.tables[d.curTable])
+
+		// should we try next table because there is no column in this table
+		if len(d.columns) > 0 {
+			break // table has columns, let's go!
+		}
+	}
+
+	// last table is not passed
+	return d.curTable < len(d.tables)
+}
+
+func (d *Driver) Col() (rimo.ColReader, error) { //nolint:ireturn
+	return &ValueIterator{
+		Extractor: d.exf.New(d.tables[d.curTable], d.columns[d.curColumn]),
+		tableName: d.tables[d.curTable],
+		colName:   d.columns[d.curColumn],
+	}, nil
+}
+
+func (d *Driver) Export(base *model.Base) error {
+	return nil
+}
+
+type ValueIterator struct {
+	Extractor
+	tableName string
+	colName   string
+}
+
+func (vi *ValueIterator) ColName() string     { return vi.colName }
+func (vi *ValueIterator) TableName() string   { return vi.tableName }
+func (vi *ValueIterator) Next() bool          { panic("") }
+func (vi *ValueIterator) Value() (any, error) { panic("") }
 
 type ColumnIterator struct {
 	tables []string

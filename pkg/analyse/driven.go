@@ -17,31 +17,16 @@
 
 package analyse
 
-import "io"
-
-type ExtractorFactory interface {
-	New(url string, schema string) Extractor
-}
-
 type DataSource interface {
 	Name() string
 	ListTables() []string
 	ListColumn(tableName string) []string
 }
 
+type ExtractorFactory interface {
+	New(tableName string, columnName string) Extractor
+}
+
 type Extractor interface {
-	ExtractValues(tableName string, columnName string) ([]interface{}, error)
-}
-
-type AnalyserFactory interface {
-	New(io.Writer) Analyser
-}
-
-// Analyser is the provider of statistics analyse
-type Analyser interface {
-	Analyse(ds *ColumnIterator) error
-}
-
-type DataSourceFactory interface {
-	New() DataSource
+	ExtractValue() (bool, interface{}, error)
 }

@@ -50,6 +50,9 @@ func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer) *Driver {
 	}
 }
 
+func (d *Driver) Open() error  { return nil }
+func (d *Driver) Close() error { return nil }
+
 // Analyse performs statistics on datasource.
 func (d *Driver) Analyse() error {
 	return d.analyser.AnalyseBase(d, d) //nolint:wrapcheck
@@ -90,21 +93,14 @@ func (d *Driver) Next() bool {
 	return d.curTable < len(d.tables) && len(d.columns) > 0
 }
 
-//nolint:ireturn
-func (d *Driver) Col() (rimo.ColReader, error) {
-	vi := &ValueIterator{
+func (d *Driver) Col() (rimo.ColReader, error) { //nolint:ireturn
+	return &ValueIterator{
 		Extractor: d.exf.New(d.tables[d.curTable], d.columns[d.curColumn]),
 		tableName: d.tables[d.curTable],
 		colName:   d.columns[d.curColumn],
 		nextValue: nil,
 		err:       nil,
-	}
-
-	if err := vi.Open(); err != nil {
-		return nil, err
-	}
-
-	return vi, nil
+	}, nil
 }
 
 func (d *Driver) Export(base *model.Base) error {

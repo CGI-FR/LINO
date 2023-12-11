@@ -31,54 +31,43 @@ import (
 type SQLExtractorFactory struct{}
 
 // NewSQLExtractorFactory creates a new postgres datasource factory.
-func NewSQLExtractorFactory() *SQLExtractorFactory {
-	return &SQLExtractorFactory{}
+func NewSQLExtractorFactory() SQLExtractorFactory {
+	return SQLExtractorFactory{}
+}
+
+func (e SQLExtractorFactory) New(url string, schema string) analyse.ExtractorFactory {
+	return &SQLExtractor{
+		url:    url,
+		schema: schema,
+	}
+}
+
+type SQLExtractor struct {
+	url    string
+	schema string
+}
+
+func (s SQLExtractor) New(tableName string, columnName string) analyse.Extractor {
+	return &SQLDataSource{
+		url:    s.url,
+		schema: s.schema,
+		table:  tableName,
+		column: columnName,
+		dbx:    nil,
+		db:     nil,
+		cursor: nil,
+	}
 }
 
 // SQLDataSource to read in the analyse process.
 type SQLDataSource struct {
 	url    string
 	schema string
+	table  string
+	column string
 	dbx    *sqlx.DB
 	db     *sql.DB
-}
-
-// ExtractValues implements analyse.DataSource
-func (ds *SQLDataSource) ExtractValues(tableName string, columnName string) ([]interface{}, error) {
-	result := []interface{}{}
-
-	log.Trace().Str("tablename", tableName).Str("columnname", columnName).Msg("extract values")
-
-	err := ds.Open()
-	if err != nil {
-		log.Error().Err(err).Msg("Connection failed")
-		return result, err
-	}
-	defer ds.db.Close()
-
-	cursor, err := ds.db.Query(fmt.Sprintf("select %s from %s", columnName, tableName))
-	if err != nil {
-		log.Error().Err(err).Msg("SQL select failed")
-		return result, err
-	}
-	for cursor.Next() {
-		var value interface{}
-		err = cursor.Scan(&value)
-		if err != nil {
-			log.Error().Err(err).Msg("SQL scan failed")
-			return result, err
-		}
-
-		result = append(result, value)
-	}
-	return result, nil
-}
-
-func (e *SQLExtractorFactory) New(url string, schema string) analyse.Extractor {
-	return &SQLDataSource{
-		url:    url,
-		schema: schema,
-	}
+	cursor *sql.Rows
 }
 
 // Open a connection to the SQL DB
@@ -102,5 +91,33 @@ func (ds *SQLDataSource) Open() error {
 		return err
 	}
 
+	ds.cursor, err = ds.db.Query(fmt.Sprintf("select %s from %s", ds.column, ds.table))
+	if err != nil {
+		log.Error().Err(err).Msg("SQL select failed")
+		return err
+	}
+
 	return nil
+}
+
+// Close a connection to the SQL DB
+func (ds *SQLDataSource) Close() error {
+	return ds.db.Close()
+}
+
+// ExtractValues implements analyse.DataSource
+func (ds *SQLDataSource) ExtractValue() (bool, interface{}, error) {
+	log.Trace().Str("tablename", ds.table).Str("columnname", ds.column).Msg("extract value")
+
+	if ds.cursor.Next() {
+		var value interface{}
+		if err := ds.cursor.Scan(&value); err != nil {
+			log.Error().Err(err).Msg("SQL scan failed")
+			return false, nil, err
+		}
+
+		return true, value, nil
+	}
+
+	return false, nil, nil
 }

@@ -204,7 +204,7 @@ func initConfig() {
 		zerolog.SetGlobalLevel(zerolog.Disabled)
 	}
 
-	analyse.Inject(tableStorage(), dataconnectorStorage(), analyseDataSourceFactory(), analyserFactory())
+	analyse.Inject(tableStorage(), dataconnectorStorage(), analyseDataSourceFactory())
 	dataconnector.Inject(dataconnectorStorage(), dataPingerFactory())
 	relation.Inject(dataconnectorStorage(), relationStorage(), relationExtractorFactory())
 	table.Inject(dataconnectorStorage(), tableStorage(), tableExtractorFactory())

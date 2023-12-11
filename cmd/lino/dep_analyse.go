@@ -19,19 +19,14 @@ package main
 
 import (
 	infra "github.com/cgi-fr/lino/internal/infra/analyse"
-	domain "github.com/cgi-fr/lino/pkg/analyse"
 )
 
-func analyseDataSourceFactory() map[string]domain.ExtractorFactory {
-	return map[string]domain.ExtractorFactory{
+func analyseDataSourceFactory() map[string]infra.SQLExtractorFactory {
+	return map[string]infra.SQLExtractorFactory{
 		"postgres":   infra.NewSQLExtractorFactory(),
 		"godror":     infra.NewSQLExtractorFactory(),
 		"godror-raw": infra.NewSQLExtractorFactory(),
 		"mysql":      infra.NewSQLExtractorFactory(),
 		"db2":        infra.NewSQLExtractorFactory(),
 	}
-}
-
-func analyserFactory() domain.AnalyserFactory {
-	return infra.RimoAnalyserFactory{}
 }

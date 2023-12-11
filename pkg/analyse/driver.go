@@ -28,6 +28,7 @@ type Driver struct {
 	analyser rimo.Driver
 	ds       DataSource
 	exf      ExtractorFactory
+	w        Writer
 
 	tables  []string
 	columns []string
@@ -36,12 +37,13 @@ type Driver struct {
 	curColumn int
 }
 
-func NewDriver(ds DataSource, exf ExtractorFactory) *Driver {
+func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer) *Driver {
 	return &Driver{
 		analyser:  rimo.Driver{SampleSize: 5, Distinct: false}, //nolint:gomnd
-		ds:        ds,
+		ds:        datasource,
 		exf:       exf,
-		tables:    ds.ListTables(),
+		w:         w,
+		tables:    datasource.ListTables(),
 		columns:   []string{},
 		curTable:  -1,
 		curColumn: -1,
@@ -63,8 +65,13 @@ func (d *Driver) Next() bool {
 	if d.curColumn+1 < len(d.columns) {
 		// yes, so increase column index
 		d.curColumn++
+		fmt.Println("next column!", d.curTable, d.curColumn)
 
 		return true
+	}
+
+	if d.curTable+1 == len(d.tables) {
+		return false
 	}
 
 	// no more columns, check if there is more tables
@@ -72,6 +79,7 @@ func (d *Driver) Next() bool {
 		// yes, increase table index and read columns
 		d.curTable++
 		d.curColumn = 0
+		fmt.Println("next table!", d.curTable, d.curColumn)
 		d.columns = d.ds.ListColumn(d.tables[d.curTable])
 
 		// should we try next table because there is no column in this table
@@ -90,10 +98,15 @@ func (d *Driver) Col() (rimo.ColReader, error) { //nolint:ireturn
 		tableName: d.tables[d.curTable],
 		colName:   d.columns[d.curColumn],
 		nextValue: nil,
+		err:       nil,
 	}, nil
 }
 
 func (d *Driver) Export(base *model.Base) error {
+	if err := d.w.Write(base); err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
 	return nil
 }
 

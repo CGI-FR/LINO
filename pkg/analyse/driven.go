@@ -17,6 +17,8 @@
 
 package analyse
 
+import "github.com/cgi-fr/rimo/pkg/model"
+
 type DataSource interface {
 	Name() string
 	ListTables() []string
@@ -29,4 +31,8 @@ type ExtractorFactory interface {
 
 type Extractor interface {
 	ExtractValue() (bool, interface{}, error)
+}
+
+type Writer interface {
+	Write(report *model.Base) error
 }

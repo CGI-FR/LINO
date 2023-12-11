@@ -65,7 +65,6 @@ func (d *Driver) Next() bool {
 	if d.curColumn+1 < len(d.columns) {
 		// yes, so increase column index
 		d.curColumn++
-		fmt.Println("next column!", d.curTable, d.curColumn)
 
 		return true
 	}
@@ -79,7 +78,6 @@ func (d *Driver) Next() bool {
 		// yes, increase table index and read columns
 		d.curTable++
 		d.curColumn = 0
-		fmt.Println("next table!", d.curTable, d.curColumn)
 		d.columns = d.ds.ListColumn(d.tables[d.curTable])
 
 		// should we try next table because there is no column in this table
@@ -89,17 +87,24 @@ func (d *Driver) Next() bool {
 	}
 
 	// last table is not passed
-	return d.curTable < len(d.tables)
+	return d.curTable < len(d.tables) && len(d.columns) > 0
 }
 
-func (d *Driver) Col() (rimo.ColReader, error) { //nolint:ireturn
-	return &ValueIterator{
+//nolint:ireturn
+func (d *Driver) Col() (rimo.ColReader, error) {
+	vi := &ValueIterator{
 		Extractor: d.exf.New(d.tables[d.curTable], d.columns[d.curColumn]),
 		tableName: d.tables[d.curTable],
 		colName:   d.columns[d.curColumn],
 		nextValue: nil,
 		err:       nil,
-	}, nil
+	}
+
+	if err := vi.Open(); err != nil {
+		return nil, err
+	}
+
+	return vi, nil
 }
 
 func (d *Driver) Export(base *model.Base) error {
@@ -118,6 +123,8 @@ type ValueIterator struct {
 	err       error
 }
 
+func (vi *ValueIterator) Open() error       { return vi.Extractor.Open() }  //nolint:wrapcheck
+func (vi *ValueIterator) Close() error      { return vi.Extractor.Close() } //nolint:wrapcheck
 func (vi *ValueIterator) ColName() string   { return vi.colName }
 func (vi *ValueIterator) TableName() string { return vi.tableName }
 

@@ -17,7 +17,9 @@
 
 package analyse
 
-import "github.com/cgi-fr/rimo/pkg/model"
+import (
+	"github.com/cgi-fr/rimo/pkg/model"
+)
 
 type DataSource interface {
 	Name() string
@@ -30,6 +32,8 @@ type ExtractorFactory interface {
 }
 
 type Extractor interface {
+	Open() error
+	Close() error
 	ExtractValue() (bool, interface{}, error)
 }
 

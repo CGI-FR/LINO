@@ -47,7 +47,7 @@ type SQLExtractor struct {
 	schema string
 }
 
-func (s SQLExtractor) New(tableName string, columnName string) analyse.Extractor {
+func (s SQLExtractor) New(tableName string, columnName string) analyse.Extractor { //nolint:ireturn
 	return &SQLDataSource{
 		url:    s.url,
 		schema: s.schema,

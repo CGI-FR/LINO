@@ -44,6 +44,9 @@ type testExtractor struct {
 	index  int
 }
 
+func (tds *testExtractor) Open() error  { return nil }
+func (tds *testExtractor) Close() error { return nil }
+
 func (tds *testExtractor) ExtractValue() (bool, interface{}, error) {
 	defer func() { tds.index++ }()
 

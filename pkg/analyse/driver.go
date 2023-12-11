@@ -18,6 +18,8 @@
 package analyse
 
 import (
+	"fmt"
+
 	"github.com/cgi-fr/rimo/pkg/model"
 	"github.com/cgi-fr/rimo/pkg/rimo"
 )
@@ -34,10 +36,11 @@ type Driver struct {
 	curColumn int
 }
 
-func NewDriver(ds DataSource) *Driver {
+func NewDriver(ds DataSource, exf ExtractorFactory) *Driver {
 	return &Driver{
 		analyser:  rimo.Driver{SampleSize: 5, Distinct: false}, //nolint:gomnd
 		ds:        ds,
+		exf:       exf,
 		tables:    ds.ListTables(),
 		columns:   []string{},
 		curTable:  -1,
@@ -86,6 +89,7 @@ func (d *Driver) Col() (rimo.ColReader, error) { //nolint:ireturn
 		Extractor: d.exf.New(d.tables[d.curTable], d.columns[d.curColumn]),
 		tableName: d.tables[d.curTable],
 		colName:   d.columns[d.curColumn],
+		nextValue: nil,
 	}, nil
 }
 
@@ -97,62 +101,25 @@ type ValueIterator struct {
 	Extractor
 	tableName string
 	colName   string
+	nextValue interface{}
+	err       error
 }
 
-func (vi *ValueIterator) ColName() string     { return vi.colName }
-func (vi *ValueIterator) TableName() string   { return vi.tableName }
-func (vi *ValueIterator) Next() bool          { panic("") }
-func (vi *ValueIterator) Value() (any, error) { panic("") }
+func (vi *ValueIterator) ColName() string   { return vi.colName }
+func (vi *ValueIterator) TableName() string { return vi.tableName }
 
-type ColumnIterator struct {
-	tables []string
-	column []string
-	DataSource
-	Extractor
+func (vi *ValueIterator) Next() bool {
+	var result bool
+
+	result, vi.nextValue, vi.err = vi.ExtractValue()
+
+	return result
 }
 
-func NewColumnIterator(ds DataSource, ex Extractor) *ColumnIterator {
-	return &ColumnIterator{
-		tables:     []string{},
-		column:     []string{},
-		DataSource: ds,
-		Extractor:  ex,
-	}
-}
-
-func (ci *ColumnIterator) BaseName() string { return ci.Name() }
-
-// Next return true if there is more column to iterate over.
-func (ci *ColumnIterator) Next() bool {
-	if len(ci.tables) == 0 {
-		ci.tables = ci.ListTables()
-		if len(ci.tables) == 0 {
-			return false
-		}
-		ci.column = ci.ListColumn(ci.tables[0])
-		if len(ci.column) > 0 {
-			return true
-		}
+func (vi *ValueIterator) Value() (any, error) {
+	if vi.err != nil {
+		return nil, fmt.Errorf("could not extract value: %w", vi.err)
 	}
 
-	if len(ci.column) > 1 {
-		ci.column = ci.column[1:]
-		return true
-	}
-
-	for len(ci.tables) > 1 {
-		ci.tables = ci.tables[1:]
-		ci.column = ci.DataSource.ListColumn(ci.tables[0])
-		if len(ci.column) > 0 {
-			return true
-		}
-	}
-
-	return false
-}
-
-// Value return the column content.
-func (ci *ColumnIterator) Value() ([]interface{}, string, string, error) {
-	values, err := ci.ExtractValues(ci.tables[0], ci.column[0])
-	return values, ci.column[0], ci.tables[0], err
+	return vi.nextValue, nil
 }

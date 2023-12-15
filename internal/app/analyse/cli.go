@@ -49,6 +49,9 @@ func Inject(
 
 // NewCommand implements the cli analyse command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
+	// local flags
+	var distinct bool
+
 	cmd := &cobra.Command{
 		Use:     "analyse",
 		Short:   "Analyse database content",
@@ -72,7 +75,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			writer := getWriter(out)
 
-			driver := analyse.NewDriver(dataSource, extractor, writer)
+			driver := analyse.NewDriver(dataSource, extractor, writer, analyse.Config{Distinct: distinct})
 			if e2 := driver.Analyse(); e2 != nil {
 				fmt.Fprintf(err, "analyse failed '%s'", dataConnector)
 				fmt.Fprintln(err)
@@ -80,6 +83,9 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			}
 		},
 	}
+
+	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "count distinct values")
+
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

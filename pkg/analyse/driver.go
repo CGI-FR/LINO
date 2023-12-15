@@ -24,6 +24,10 @@ import (
 	"github.com/cgi-fr/rimo/pkg/rimo"
 )
 
+type Config struct {
+	Distinct bool
+}
+
 type Driver struct {
 	analyser rimo.Driver
 	ds       DataSource
@@ -37,9 +41,9 @@ type Driver struct {
 	curColumn int
 }
 
-func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer) *Driver {
+func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer, c Config) *Driver {
 	return &Driver{
-		analyser:  rimo.Driver{SampleSize: 5, Distinct: false}, //nolint:gomnd
+		analyser:  rimo.Driver{SampleSize: 5, Distinct: c.Distinct}, //nolint:gomnd
 		ds:        datasource,
 		exf:       exf,
 		w:         w,

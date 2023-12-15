@@ -77,7 +77,7 @@ func TestAnalyseShouldNotReturnError(t *testing.T) {
 	dataSource := &testDataSource{}
 	extractor := &testExtractor{values: []interface{}{nil, 1., 2., 3., 4., 5.}}
 	writer := &testWriter{}
-	driver := analyse.NewDriver(dataSource, extractor, writer)
+	driver := analyse.NewDriver(dataSource, extractor, writer, analyse.Config{Distinct: false})
 
 	assert.NoError(t, driver.Analyse())
 

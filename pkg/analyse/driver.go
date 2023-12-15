@@ -28,6 +28,7 @@ import (
 type Config struct {
 	Distinct bool
 	Limit    uint
+	Tables   []string
 }
 
 type Driver struct {
@@ -45,13 +46,18 @@ type Driver struct {
 }
 
 func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer, cfg Config) *Driver {
+	tables := datasource.ListTables()
+	if len(cfg.Tables) > 0 {
+		tables = cfg.Tables
+	}
+
 	return &Driver{
 		analyser:  rimo.Driver{SampleSize: 5, Distinct: cfg.Distinct}, //nolint:gomnd
 		ds:        datasource,
 		exf:       exf,
 		w:         w,
 		cfg:       cfg,
-		tables:    datasource.ListTables(),
+		tables:    tables,
 		columns:   []string{},
 		curTable:  -1,
 		curColumn: -1,

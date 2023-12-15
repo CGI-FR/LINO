@@ -52,6 +52,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	// local flags
 	var distinct bool
 	var limit uint
+	var tables []string
+	var wheres map[string]string
 
 	cmd := &cobra.Command{
 		Use:     "analyse",
@@ -76,7 +78,13 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			writer := getWriter(out)
 
-			driver := analyse.NewDriver(dataSource, extractor, writer, analyse.Config{Distinct: distinct, Limit: limit})
+			driver := analyse.NewDriver(dataSource, extractor, writer,
+				analyse.Config{
+					Distinct: distinct,
+					Limit:    limit,
+					Tables:   tables,
+				},
+			)
 			if e2 := driver.Analyse(); e2 != nil {
 				fmt.Fprintf(err, "analyse failed '%s'", dataConnector)
 				fmt.Fprintln(err)
@@ -87,6 +95,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 	cmd.Flags().UintVarP(&limit, "limit", "l", 0, "limit the number of results (0 = no limit)")
 	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "count distinct values")
+	cmd.Flags().StringToStringVarP(&wheres, "where", "w", map[string]string{}, "where clauses by table")
+	cmd.Flags().StringArrayVarP(&tables, "table", "t", []string{}, "specify tables to analyse")
 
 	cmd.SetOut(out)
 	cmd.SetErr(err)

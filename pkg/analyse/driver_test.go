@@ -18,26 +18,12 @@
 package analyse_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cgi-fr/lino/pkg/analyse"
 	"github.com/cgi-fr/rimo/pkg/model"
-	"github.com/cgi-fr/rimo/pkg/rimo"
 	"github.com/stretchr/testify/assert"
 )
-
-type rimoAnalyser struct {
-	writer rimo.Writer
-}
-
-func (ra rimoAnalyser) Analyse(ds *analyse.ColumnIterator) error {
-	return rimo.AnalyseBase(ds, ra)
-}
-
-func (ra rimoAnalyser) Export(base *model.Base) error {
-	return ra.writer.Export(base)
-}
 
 type testDataSource struct{}
 
@@ -53,54 +39,52 @@ func (tds *testDataSource) ListColumn(tableName string) []string {
 	return []string{"col1", "col2"}
 }
 
-type testExtractor struct{}
+type testExtractor struct {
+	values []interface{}
+	index  int
+}
 
-func (tds *testExtractor) ExtractValues(tableName string, columnName string) ([]interface{}, error) {
-	return []interface{}{1., 2., 3., 4., 5.}, nil
+func (tds *testExtractor) Open() error  { return nil }
+func (tds *testExtractor) Close() error { return nil }
+
+func (tds *testExtractor) ExtractValue() (bool, interface{}, error) {
+	defer func() { tds.index++ }()
+
+	if tds.index < len(tds.values) {
+		return true, tds.values[tds.index], nil
+	}
+
+	return false, nil, nil
+}
+
+func (tds *testExtractor) New(tableName string, columnName string, limit uint, where string) analyse.Extractor { //nolint:ireturn
+	tds.index = 0
+	return tds
 }
 
 type testWriter struct {
 	result *model.Base
 }
 
-func (tw *testWriter) Export(report *model.Base) error {
+func (tw *testWriter) Write(report *model.Base) error {
 	tw.result = report
 	return nil
 }
 
 func TestAnalyseShouldNotReturnError(t *testing.T) {
 	t.Parallel()
+
 	dataSource := &testDataSource{}
-	extractor := &testExtractor{}
+	extractor := &testExtractor{values: []interface{}{nil, 1., 2., 3., 4., 5.}}
 	writer := &testWriter{}
-	analyser := rimoAnalyser{writer}
+	driver := analyse.NewDriver(dataSource, extractor, writer, analyse.Config{Distinct: false})
 
-	err := analyse.Do(dataSource, extractor, analyser)
+	assert.NoError(t, driver.Analyse())
 
-	assert.Nil(t, err)
 	assert.NotNil(t, writer.result)
 	assert.Equal(t, "TestBase", writer.result.Name)
 	assert.Equal(t, 2, len(writer.result.Tables))
-	assert.Equal(t, 5, writer.result.Tables[0].Columns[0].MainMetric.Count)
-}
-
-func TestColumnIteratorNext(t *testing.T) {
-	t.Parallel()
-
-	dataSource := &testDataSource{}
-	extractor := &testExtractor{}
-
-	iterator := analyse.NewColumnIterator(dataSource, extractor)
-
-	for table := 1; table < 3; table++ {
-		for c := 1; c < 3; c++ {
-			assert.True(t, iterator.Next())
-			_, columnName, tableName, err := iterator.Value()
-			assert.Nil(t, err)
-			assert.Equal(t, fmt.Sprintf("table%d", table), tableName)
-			assert.Equal(t, fmt.Sprintf("col%d", c), columnName)
-		}
-	}
-
-	assert.False(t, iterator.Next())
+	assert.Equal(t, uint(6), writer.result.Tables[0].Columns[0].MainMetric.Count)
+	assert.Equal(t, uint(1), writer.result.Tables[0].Columns[0].MainMetric.Null)
+	assert.Equal(t, uint(0), writer.result.Tables[0].Columns[0].MainMetric.Empty)
 }

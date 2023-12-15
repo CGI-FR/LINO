@@ -38,3 +38,32 @@ testcases:
             result.systemout ShouldContainSubstring "    - name: actor"
           - |
             result.systemout ShouldContainSubstring "        - name: first_name"
+  - name: sample-size
+    steps:
+      - script: lino analyse source --sample-size 10 | grep -e "^                - " | wc -l
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring 19
+  - name: distinct
+    steps:
+      - script: lino analyse source --distinct
+        assertions:
+          - result.code ShouldEqual 0
+          - |
+            result.systemout ShouldContainSubstring "distinct: 1"
+  - name: limit
+    steps:
+      - script: lino analyse source --limit 1
+        assertions:
+          - result.code ShouldEqual 0
+          - |
+            result.systemout ShouldContainSubstring "count: 1"
+  - name: where
+    steps:
+      - script: lino analyse source --where "actor=first_name like 'A%'"
+        assertions:
+          - result.code ShouldEqual 0
+          - |
+            result.systemout ShouldContainSubstring "min: ADAM"
+          - |
+            result.systemout ShouldContainSubstring "max: AUDREY"

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 CGI France
+// Copyright (C) 2023 CGI France
 //
 // This file is part of LINO.
 //
@@ -15,29 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-//go:build !db2
-// +build !db2
+package commonsql
 
-package pull
+import "fmt"
 
-import (
-	"github.com/cgi-fr/lino/internal/infra/commonsql"
-	"github.com/cgi-fr/lino/pkg/pull"
-)
+// PostgresDialect implement postgres SQL variations
+type PostgresDialect struct{}
 
-// Db2DataSourceFactory exposes methods to create new Db2 pullers.
-type Db2DataSourceFactory struct{}
-
-// NewDb2DataSourceFactory creates a new oracle datasource factory.
-func NewDb2DataSourceFactory() *Db2DataSourceFactory {
-	return &Db2DataSourceFactory{}
+func (pgd PostgresDialect) Placeholder(position int) string {
+	return fmt.Sprintf("$%d", position)
 }
 
-// New return a Db2 puller
-func (e *Db2DataSourceFactory) New(url string, schema string) pull.DataSource {
-	return &SQLDataSource{
-		url:     url,
-		schema:  schema,
-		dialect: commonsql.Db2Dialect{},
-	}
+func (pgd PostgresDialect) Limit(limit uint) string {
+	return fmt.Sprintf("LIMIT %d", limit)
+}
+
+// CreateSelect generate a SQL request in the correct order.
+func (pgd PostgresDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
 }

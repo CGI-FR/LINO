@@ -23,7 +23,7 @@ import (
 	"os"
 
 	"github.com/cgi-fr/lino/internal/app/urlbuilder"
-	ianalyse "github.com/cgi-fr/lino/internal/infra/analyse"
+	infra "github.com/cgi-fr/lino/internal/infra/analyse"
 	"github.com/cgi-fr/lino/pkg/analyse"
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/cgi-fr/lino/pkg/table"
@@ -33,25 +33,31 @@ import (
 var (
 	tableStorage         table.Storage
 	dataconnectorStorage dataconnector.Storage
-	extractorFactories   map[string]analyse.ExtractorFactory
-	analyserFactory      analyse.AnalyserFactory
+	extractorFactories   map[string]infra.SQLExtractorFactory
 )
+
+const DefaultSampleSize = uint(5)
 
 // Inject dependencies
 func Inject(
 	ts table.Storage,
 	dbas dataconnector.Storage,
-	dsf map[string]analyse.ExtractorFactory,
-	a analyse.AnalyserFactory,
+	dsf map[string]infra.SQLExtractorFactory,
 ) {
 	tableStorage = ts
 	dataconnectorStorage = dbas
 	extractorFactories = dsf
-	analyserFactory = a
 }
 
 // NewCommand implements the cli analyse command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
+	// local flags
+	var distinct bool
+	var limit uint
+	var tables []string
+	var wheres map[string]string
+	var sampleSize uint
+
 	cmd := &cobra.Command{
 		Use:     "analyse",
 		Short:   "Analyse database content",
@@ -73,22 +79,42 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			analyser := analyserFactory.New(out)
-			e2 := analyse.Do(dataSource, extractor, analyser)
-			if e2 != nil {
+			writer := getWriter(out)
+
+			driver := analyse.NewDriver(dataSource, extractor, writer,
+				analyse.Config{
+					SampleSize: sampleSize,
+					Distinct:   distinct,
+					Limit:      limit,
+					Tables:     tables,
+					Wheres:     wheres,
+				},
+			)
+			if e2 := driver.Analyse(); e2 != nil {
 				fmt.Fprintf(err, "analyse failed '%s'", dataConnector)
 				fmt.Fprintln(err)
 				os.Exit(5)
 			}
 		},
 	}
+
+	cmd.Flags().UintVarP(&limit, "limit", "l", 0, "limit the number of results (0 = no limit)")
+	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "count distinct values")
+	cmd.Flags().StringToStringVarP(&wheres, "where", "w", map[string]string{}, "where clauses by table")
+	cmd.Flags().StringArrayVarP(&tables, "table", "t", []string{}, "specify tables to analyse")
+	cmd.Flags().UintVar(&sampleSize, "sample-size", DefaultSampleSize, "number of sample value to collect")
+
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
 	return cmd
 }
 
-func getExtractor(dataconnectorName string, out io.Writer) (analyse.Extractor, error) {
+func getWriter(out io.Writer) analyse.Writer {
+	return infra.NewStdWriter(out)
+}
+
+func getExtractor(dataconnectorName string, out io.Writer) (analyse.ExtractorFactory, error) {
 	alias, e1 := dataconnector.Get(dataconnectorStorage, dataconnectorName)
 	if e1 != nil {
 		return nil, e1
@@ -122,5 +148,5 @@ func getDatasource(dataconnectorName string) (analyse.DataSource, error) {
 		result[table.Name] = columns
 	}
 
-	return ianalyse.NewMapDataSource(dataconnectorName, result), nil
+	return infra.NewMapDataSource(dataconnectorName, result), nil
 }

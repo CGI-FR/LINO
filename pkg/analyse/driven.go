@@ -17,11 +17,9 @@
 
 package analyse
 
-import "io"
-
-type ExtractorFactory interface {
-	New(url string, schema string) Extractor
-}
+import (
+	"github.com/cgi-fr/rimo/pkg/model"
+)
 
 type DataSource interface {
 	Name() string
@@ -29,19 +27,16 @@ type DataSource interface {
 	ListColumn(tableName string) []string
 }
 
+type ExtractorFactory interface {
+	New(tableName string, columnName string, limit uint, where string) Extractor
+}
+
 type Extractor interface {
-	ExtractValues(tableName string, columnName string) ([]interface{}, error)
+	Open() error
+	Close() error
+	ExtractValue() (bool, interface{}, error)
 }
 
-type AnalyserFactory interface {
-	New(io.Writer) Analyser
-}
-
-// Analyser is the provider of statistics analyse
-type Analyser interface {
-	Analyse(ds *ColumnIterator) error
-}
-
-type DataSourceFactory interface {
-	New() DataSource
+type Writer interface {
+	Write(report *model.Base) error
 }

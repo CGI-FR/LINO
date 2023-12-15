@@ -18,8 +18,7 @@
 package pull
 
 import (
-	"fmt"
-
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/pull"
 
 	_ "github.com/microsoft/go-mssqldb"
@@ -38,24 +37,6 @@ func (e *SQLServerDataSourceFactory) New(url string, schema string) pull.DataSou
 	return &SQLDataSource{
 		url:     url,
 		schema:  schema,
-		dialect: SQLServerDialect{},
+		dialect: commonsql.SQLServerDialect{},
 	}
-}
-
-// SQLServerDialect implement SQLServer SQL variations
-
-type SQLServerDialect struct{}
-
-func (sd SQLServerDialect) Placeholder(position int) string {
-	return fmt.Sprintf("@p%d", position)
-}
-
-// Limit method is adjusted to be compatible with SQL Server
-func (sd SQLServerDialect) Limit(limit uint) string {
-	return fmt.Sprintf(" TOP %d", limit)
-}
-
-// CreateSelect generate a SQL request in the correct order
-func (sd SQLServerDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
-	return fmt.Sprintf("%s %s %s %s %s", sel, limit, columns, from, where)
 }

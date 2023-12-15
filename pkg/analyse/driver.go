@@ -17,61 +17,152 @@
 
 package analyse
 
-// Do performe statistics on datasource.
-func Do(ds DataSource, ex Extractor, analyser Analyser) error {
-	iterator := NewColumnIterator(ds, ex)
-	return analyser.Analyse(iterator)
+import (
+	"fmt"
+
+	"github.com/cgi-fr/rimo/pkg/model"
+	"github.com/cgi-fr/rimo/pkg/rimo"
+	"github.com/rs/zerolog/log"
+)
+
+type Config struct {
+	SampleSize uint
+	Distinct   bool
+	Limit      uint
+	Tables     []string
+	Wheres     map[string]string
 }
 
-type ColumnIterator struct {
-	tables []string
-	column []string
-	DataSource
-	Extractor
+type Driver struct {
+	analyser rimo.Driver
+	ds       DataSource
+	exf      ExtractorFactory
+	w        Writer
+	cfg      Config
+
+	tables  []string
+	columns []string
+
+	curTable  int
+	curColumn int
 }
 
-func NewColumnIterator(ds DataSource, ex Extractor) *ColumnIterator {
-	return &ColumnIterator{
-		tables:     []string{},
-		column:     []string{},
-		DataSource: ds,
-		Extractor:  ex,
+func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer, cfg Config) *Driver {
+	tables := datasource.ListTables()
+	if len(cfg.Tables) > 0 {
+		tables = cfg.Tables
+	}
+
+	return &Driver{
+		analyser:  rimo.Driver{SampleSize: cfg.SampleSize, Distinct: cfg.Distinct}, //nolint:gomnd
+		ds:        datasource,
+		exf:       exf,
+		w:         w,
+		cfg:       cfg,
+		tables:    tables,
+		columns:   []string{},
+		curTable:  -1,
+		curColumn: -1,
 	}
 }
 
-func (ci *ColumnIterator) BaseName() string { return ci.Name() }
+func (d *Driver) Open() error  { return nil }
+func (d *Driver) Close() error { return nil }
 
-// Next return true if there is more column to iterate over.
-func (ci *ColumnIterator) Next() bool {
-	if len(ci.tables) == 0 {
-		ci.tables = ci.ListTables()
-		if len(ci.tables) == 0 {
-			return false
-		}
-		ci.column = ci.ListColumn(ci.tables[0])
-		if len(ci.column) > 0 {
-			return true
-		}
-	}
+// Analyse performs statistics on datasource.
+func (d *Driver) Analyse() error {
+	return d.analyser.AnalyseBase(d, d) //nolint:wrapcheck
+}
 
-	if len(ci.column) > 1 {
-		ci.column = ci.column[1:]
+func (d *Driver) BaseName() string {
+	return d.ds.Name()
+}
+
+// Next returns next column in database
+func (d *Driver) Next() bool {
+	// check if there is more columns in current table
+	if d.curColumn+1 < len(d.columns) {
+		// yes, so increase column index
+		d.curColumn++
+
+		log.Debug().Msg("go to next column")
+
 		return true
 	}
 
-	for len(ci.tables) > 1 {
-		ci.tables = ci.tables[1:]
-		ci.column = ci.DataSource.ListColumn(ci.tables[0])
-		if len(ci.column) > 0 {
-			return true
+	if d.curTable+1 == len(d.tables) {
+		log.Debug().Msg("last column of last table reached")
+
+		return false
+	}
+
+	// no more columns, check if there is more tables
+	for d.curTable+1 < len(d.tables) {
+		// yes, increase table index and read columns
+		d.curTable++
+		d.curColumn = 0
+		d.columns = d.ds.ListColumn(d.tables[d.curTable])
+
+		// should we try next table because there is no column in this table
+		if len(d.columns) > 0 {
+			log.Debug().
+				Str("table", d.tables[d.curTable]).
+				Strs("columns", d.columns).
+				Msg("next table")
+
+			break // table has columns, let's go!
 		}
 	}
 
-	return false
+	// last table is not passed
+	return d.curTable < len(d.tables) && len(d.columns) > 0
 }
 
-// Value return the column content.
-func (ci *ColumnIterator) Value() ([]interface{}, string, string, error) {
-	values, err := ci.ExtractValues(ci.tables[0], ci.column[0])
-	return values, ci.column[0], ci.tables[0], err
+func (d *Driver) Col() (rimo.ColReader, error) { //nolint:ireturn
+	where := d.cfg.Wheres[d.tables[d.curTable]]
+
+	return &ValueIterator{
+		Extractor: d.exf.New(d.tables[d.curTable], d.columns[d.curColumn], d.cfg.Limit, where),
+		tableName: d.tables[d.curTable],
+		colName:   d.columns[d.curColumn],
+		nextValue: nil,
+		err:       nil,
+	}, nil
+}
+
+func (d *Driver) Export(base *model.Base) error {
+	if err := d.w.Write(base); err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	return nil
+}
+
+type ValueIterator struct {
+	Extractor
+	tableName string
+	colName   string
+	nextValue interface{}
+	err       error
+}
+
+func (vi *ValueIterator) Open() error       { return vi.Extractor.Open() }  //nolint:wrapcheck
+func (vi *ValueIterator) Close() error      { return vi.Extractor.Close() } //nolint:wrapcheck
+func (vi *ValueIterator) ColName() string   { return vi.colName }
+func (vi *ValueIterator) TableName() string { return vi.tableName }
+
+func (vi *ValueIterator) Next() bool {
+	var result bool
+
+	result, vi.nextValue, vi.err = vi.ExtractValue()
+
+	return result
+}
+
+func (vi *ValueIterator) Value() (any, error) {
+	if vi.err != nil {
+		return nil, fmt.Errorf("could not extract value: %w", vi.err)
+	}
+
+	return vi.nextValue, nil
 }

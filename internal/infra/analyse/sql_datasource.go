@@ -19,8 +19,8 @@ package analyse
 
 import (
 	"database/sql"
-	"fmt"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/analyse"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -28,57 +28,86 @@ import (
 )
 
 // SQLExtractorFactory exposes methods to create new Postgres pullers.
-type SQLExtractorFactory struct{}
+type SQLExtractorFactory struct {
+	dialect commonsql.Dialect
+}
 
-// NewSQLExtractorFactory creates a new postgres datasource factory.
-func NewSQLExtractorFactory() *SQLExtractorFactory {
-	return &SQLExtractorFactory{}
+// NewPostgresExtractorFactory creates a new postgres datasource factory.
+func NewPostgresExtractorFactory() SQLExtractorFactory {
+	return SQLExtractorFactory{
+		dialect: commonsql.PostgresDialect{},
+	}
+}
+
+// NewOracleExtractorFactory creates a new postgres datasource factory.
+func NewOracleExtractorFactory() SQLExtractorFactory {
+	return SQLExtractorFactory{
+		dialect: commonsql.OracleDialect{},
+	}
+}
+
+// NewMariaDBExtractorFactory creates a new postgres datasource factory.
+func NewMariaDBExtractorFactory() SQLExtractorFactory {
+	return SQLExtractorFactory{
+		dialect: commonsql.MariadbDialect{},
+	}
+}
+
+// NewDB2ExtractorFactory creates a new postgres datasource factory.
+func NewDB2ExtractorFactory() SQLExtractorFactory {
+	return SQLExtractorFactory{
+		dialect: commonsql.Db2Dialect{},
+	}
+}
+
+// NewSQLServerExtractorFactory creates a new postgres datasource factory.
+func NewSQLServerExtractorFactory() SQLExtractorFactory {
+	return SQLExtractorFactory{
+		dialect: commonsql.SQLServerDialect{},
+	}
+}
+
+func (e SQLExtractorFactory) New(url string, schema string) analyse.ExtractorFactory {
+	return &SQLExtractor{
+		url:     url,
+		schema:  schema,
+		dialect: e.dialect,
+	}
+}
+
+type SQLExtractor struct {
+	url     string
+	schema  string
+	dialect commonsql.Dialect
+}
+
+func (s SQLExtractor) New(tableName string, columnName string, limit uint, where string) analyse.Extractor { //nolint:ireturn
+	return &SQLDataSource{
+		url:     s.url,
+		schema:  s.schema,
+		table:   tableName,
+		column:  columnName,
+		limit:   limit,
+		where:   where,
+		dialect: s.dialect,
+		dbx:     nil,
+		db:      nil,
+		cursor:  nil,
+	}
 }
 
 // SQLDataSource to read in the analyse process.
 type SQLDataSource struct {
-	url    string
-	schema string
-	dbx    *sqlx.DB
-	db     *sql.DB
-}
-
-// ExtractValues implements analyse.DataSource
-func (ds *SQLDataSource) ExtractValues(tableName string, columnName string) ([]interface{}, error) {
-	result := []interface{}{}
-
-	log.Trace().Str("tablename", tableName).Str("columnname", columnName).Msg("extract values")
-
-	err := ds.Open()
-	if err != nil {
-		log.Error().Err(err).Msg("Connection failed")
-		return result, err
-	}
-	defer ds.db.Close()
-
-	cursor, err := ds.db.Query(fmt.Sprintf("select %s from %s", columnName, tableName))
-	if err != nil {
-		log.Error().Err(err).Msg("SQL select failed")
-		return result, err
-	}
-	for cursor.Next() {
-		var value interface{}
-		err = cursor.Scan(&value)
-		if err != nil {
-			log.Error().Err(err).Msg("SQL scan failed")
-			return result, err
-		}
-
-		result = append(result, value)
-	}
-	return result, nil
-}
-
-func (e *SQLExtractorFactory) New(url string, schema string) analyse.Extractor {
-	return &SQLDataSource{
-		url:    url,
-		schema: schema,
-	}
+	url     string
+	schema  string
+	table   string
+	column  string
+	limit   uint
+	where   string
+	dialect commonsql.Dialect
+	dbx     *sqlx.DB
+	db      *sql.DB
+	cursor  *sql.Rows
 }
 
 // Open a connection to the SQL DB
@@ -102,5 +131,38 @@ func (ds *SQLDataSource) Open() error {
 		return err
 	}
 
+	sql := commonsql.Select(ds.dialect, []string{ds.column}, false, ds.schema, ds.table, map[string]any{}, ds.where, ds.limit)
+
+	ds.cursor, err = ds.db.Query(sql)
+	if err != nil {
+		log.Error().Err(err).Msg("SQL select failed")
+		return err
+	}
+
 	return nil
+}
+
+// Close a connection to the SQL DB
+func (ds *SQLDataSource) Close() error {
+	return ds.db.Close()
+}
+
+// ExtractValues implements analyse.DataSource
+func (ds *SQLDataSource) ExtractValue() (bool, interface{}, error) {
+	if ds.cursor.Next() {
+		var value interface{}
+		if err := ds.cursor.Scan(&value); err != nil {
+			log.Error().Err(err).Msg("SQL scan failed")
+			return false, nil, err
+		}
+
+		log.Trace().
+			Str("tablename", ds.table).
+			Str("columnname", ds.column).
+			Interface("value", value).Msg("extract value")
+
+		return true, value, nil
+	}
+
+	return false, nil, nil
 }

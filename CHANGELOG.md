@@ -16,11 +16,12 @@ Types of changes
 
 ## [2.6.0]
 
-- `Added` `sqlserver` support.
--
+- `Added` `sqlserver` support
+- `Added` flags `sample-size`, `distinct`, `limit`, `where` and `table` to the `analyse` command, by default distinct values are not counted
+
 ## [2.5.0]
 
-- `Added` command `analyse` to extract metrics from the database in YAML format.
+- `Added` command `analyse` to extract metrics from the database in YAML format
 
 ## [2.4.0]
 

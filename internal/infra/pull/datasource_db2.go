@@ -25,6 +25,7 @@ import (
 
 	_ "github.com/ibmdb/go_ibm_db"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/pull"
 )
 
@@ -41,22 +42,6 @@ func (e *Db2DataSourceFactory) New(url string, schema string) pull.DataSource {
 	return &SQLDataSource{
 		url:     url,
 		schema:  schema,
-		dialect: Db2Dialect{},
+		dialect: commonsql.Db2Dialect{},
 	}
-}
-
-// PostgresDialect implement postgres SQL variations
-type Db2Dialect struct{}
-
-func (od Db2Dialect) Placeholder(position int) string {
-	return "?"
-}
-
-func (od Db2Dialect) Limit(limit uint) string {
-	return fmt.Sprintf(" FETCH FIRST %d ROWS ONLY", limit)
-}
-
-// CreateSelect generate a SQL request in the correct order.
-func (sd Db2Dialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
-	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
 }

@@ -17,7 +17,7 @@ Types of changes
 ## [2.6.0]
 
 - `Added` `sqlserver` support
-- `Added` flag `distinct` to the `analyse` command, by default distinct values are not counted
+- `Added` flags `distinct`, `limit`, `where` and `table` to the `analyse` command, by default distinct values are not counted
 
 ## [2.5.0]
 

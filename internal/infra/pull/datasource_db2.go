@@ -21,8 +21,6 @@
 package pull
 
 import (
-	"fmt"
-
 	_ "github.com/ibmdb/go_ibm_db"
 
 	"github.com/cgi-fr/lino/internal/infra/commonsql"

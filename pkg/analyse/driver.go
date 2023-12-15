@@ -22,6 +22,7 @@ import (
 
 	"github.com/cgi-fr/rimo/pkg/model"
 	"github.com/cgi-fr/rimo/pkg/rimo"
+	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
@@ -43,13 +44,13 @@ type Driver struct {
 	curColumn int
 }
 
-func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer, c Config) *Driver {
+func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer, cfg Config) *Driver {
 	return &Driver{
-		analyser:  rimo.Driver{SampleSize: 5, Distinct: c.Distinct}, //nolint:gomnd
+		analyser:  rimo.Driver{SampleSize: 5, Distinct: cfg.Distinct}, //nolint:gomnd
 		ds:        datasource,
 		exf:       exf,
 		w:         w,
-		cfg:       c,
+		cfg:       cfg,
 		tables:    datasource.ListTables(),
 		columns:   []string{},
 		curTable:  -1,
@@ -76,10 +77,14 @@ func (d *Driver) Next() bool {
 		// yes, so increase column index
 		d.curColumn++
 
+		log.Debug().Msg("go to next column")
+
 		return true
 	}
 
 	if d.curTable+1 == len(d.tables) {
+		log.Debug().Msg("last column of last table reached")
+
 		return false
 	}
 
@@ -92,6 +97,11 @@ func (d *Driver) Next() bool {
 
 		// should we try next table because there is no column in this table
 		if len(d.columns) > 0 {
+			log.Debug().
+				Str("table", d.tables[d.curTable]).
+				Strs("columns", d.columns).
+				Msg("next table")
+
 			break // table has columns, let's go!
 		}
 	}

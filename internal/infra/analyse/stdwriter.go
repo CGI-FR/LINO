@@ -30,5 +30,10 @@ func (w StdWriter) Write(report *model.Base) error {
 		return err
 	}
 
+	err = w.out.Flush()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -85,7 +85,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		},
 	}
 
-	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")
+	cmd.Flags().UintVarP(&limit, "limit", "l", 0, "limit the number of results (0 = no limit)")
 	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "count distinct values")
 
 	cmd.SetOut(out)

@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package rdbms
+package commonsql
 
 import (
 	"fmt"

@@ -15,22 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package rdbms
+package commonsql
 
 import "fmt"
 
-// Db2Dialect implement IBM DB2 SQL variations
-type Db2Dialect struct{}
+// PostgresDialect implement postgres SQL variations
+type PostgresDialect struct{}
 
-func (db2 Db2Dialect) Placeholder(position int) string {
-	return "?"
+func (pgd PostgresDialect) Placeholder(position int) string {
+	return fmt.Sprintf("$%d", position)
 }
 
-func (db2 Db2Dialect) Limit(limit uint) string {
-	return fmt.Sprintf(" FETCH FIRST %d ROWS ONLY", limit)
+func (pgd PostgresDialect) Limit(limit uint) string {
+	return fmt.Sprintf("LIMIT %d", limit)
 }
 
 // CreateSelect generate a SQL request in the correct order.
-func (db2 Db2Dialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
+func (pgd PostgresDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
 }

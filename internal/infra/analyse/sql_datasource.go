@@ -20,7 +20,7 @@ package analyse
 import (
 	"database/sql"
 
-	"github.com/cgi-fr/lino/internal/infra/rdbms"
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/analyse"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -29,41 +29,41 @@ import (
 
 // SQLExtractorFactory exposes methods to create new Postgres pullers.
 type SQLExtractorFactory struct {
-	dialect rdbms.Dialect
+	dialect commonsql.Dialect
 }
 
 // NewPostgresExtractorFactory creates a new postgres datasource factory.
 func NewPostgresExtractorFactory() SQLExtractorFactory {
 	return SQLExtractorFactory{
-		dialect: rdbms.PostgresDialect{},
+		dialect: commonsql.PostgresDialect{},
 	}
 }
 
 // NewOracleExtractorFactory creates a new postgres datasource factory.
 func NewOracleExtractorFactory() SQLExtractorFactory {
 	return SQLExtractorFactory{
-		dialect: rdbms.OracleDialect{},
+		dialect: commonsql.OracleDialect{},
 	}
 }
 
 // NewMariaDBExtractorFactory creates a new postgres datasource factory.
 func NewMariaDBExtractorFactory() SQLExtractorFactory {
 	return SQLExtractorFactory{
-		dialect: rdbms.MariadbDialect{},
+		dialect: commonsql.MariadbDialect{},
 	}
 }
 
 // NewDB2ExtractorFactory creates a new postgres datasource factory.
 func NewDB2ExtractorFactory() SQLExtractorFactory {
 	return SQLExtractorFactory{
-		dialect: rdbms.Db2Dialect{},
+		dialect: commonsql.Db2Dialect{},
 	}
 }
 
 // NewSQLServerExtractorFactory creates a new postgres datasource factory.
 func NewSQLServerExtractorFactory() SQLExtractorFactory {
 	return SQLExtractorFactory{
-		dialect: rdbms.SQLServerDialect{},
+		dialect: commonsql.SQLServerDialect{},
 	}
 }
 
@@ -78,7 +78,7 @@ func (e SQLExtractorFactory) New(url string, schema string) analyse.ExtractorFac
 type SQLExtractor struct {
 	url     string
 	schema  string
-	dialect rdbms.Dialect
+	dialect commonsql.Dialect
 }
 
 func (s SQLExtractor) New(tableName string, columnName string, limit uint, where string) analyse.Extractor { //nolint:ireturn
@@ -104,7 +104,7 @@ type SQLDataSource struct {
 	column  string
 	limit   uint
 	where   string
-	dialect rdbms.Dialect
+	dialect commonsql.Dialect
 	dbx     *sqlx.DB
 	db      *sql.DB
 	cursor  *sql.Rows
@@ -131,7 +131,7 @@ func (ds *SQLDataSource) Open() error {
 		return err
 	}
 
-	sql := rdbms.Select(ds.dialect, []string{ds.column}, false, ds.schema, ds.table, map[string]any{}, ds.where, ds.limit)
+	sql := commonsql.Select(ds.dialect, []string{ds.column}, false, ds.schema, ds.table, map[string]any{}, ds.where, ds.limit)
 
 	ds.cursor, err = ds.db.Query(sql)
 	if err != nil {

@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/pull"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -36,7 +36,7 @@ type SQLDataSource struct {
 	schema  string
 	dbx     *sqlx.DB
 	db      *sql.DB
-	dialect SQLDialect
+	dialect commonsql.Dialect
 }
 
 // Open a connection to the SQL DB
@@ -249,14 +249,4 @@ func (di *SQLDataIterator) Value() pull.Row {
 // Error returns the iterator error
 func (di *SQLDataIterator) Error() error {
 	return di.err
-}
-
-// SQLDialect to inject SQL variations
-type SQLDialect interface {
-	// Placeholder format variable in query
-	Placeholder(int) string
-	// Limit format limitation clause
-	Limit(uint) string
-	// Select Method
-	CreateSelect(string, string, string, string, string) string
 }

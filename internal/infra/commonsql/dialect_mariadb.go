@@ -15,22 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package rdbms
+package commonsql
 
 import "fmt"
 
-// OracleDialect implement Oracle SQL variations
-type OracleDialect struct{}
+// MariadbDialect implement mariadb SQL variations
+type MariadbDialect struct{}
 
-func (od OracleDialect) Placeholder(position int) string {
-	return fmt.Sprintf(":v%d", position)
+func (pd MariadbDialect) Placeholder(position int) string {
+	return " ?"
 }
 
-func (od OracleDialect) Limit(limit uint) string {
-	return fmt.Sprintf(" AND rownum <= %d", limit)
+func (pd MariadbDialect) Limit(limit uint) string {
+	return fmt.Sprintf(" LIMIT %d", limit)
 }
 
 // CreateSelect generate a SQL request in the correct order.
-func (od OracleDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
+func (sd MariadbDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
 }

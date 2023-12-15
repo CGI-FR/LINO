@@ -18,8 +18,7 @@
 package pull
 
 import (
-	"fmt"
-
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/pull"
 
 	_ "github.com/lib/pq"
@@ -38,22 +37,6 @@ func (e *PostgresDataSourceFactory) New(url string, schema string) pull.DataSour
 	return &SQLDataSource{
 		url:     url,
 		schema:  schema,
-		dialect: PostgresDialect{},
+		dialect: commonsql.PostgresDialect{},
 	}
-}
-
-// PostgresDialect implement postgres SQL variations
-type PostgresDialect struct{}
-
-func (pd PostgresDialect) Placeholder(position int) string {
-	return fmt.Sprintf("$%d", position)
-}
-
-func (pd PostgresDialect) Limit(limit uint) string {
-	return fmt.Sprintf("LIMIT %d", limit)
-}
-
-// CreateSelect generate a SQL request in the correct order.
-func (sd PostgresDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
-	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
 }

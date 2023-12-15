@@ -15,22 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package rdbms
+package commonsql
 
 import "fmt"
 
-// MariadbDialect implement mariadb SQL variations
-type MariadbDialect struct{}
+// SQLServerDialect implement SQLServer SQL variations
+type SQLServerDialect struct{} //nolint:golint,revive
 
-func (pd MariadbDialect) Placeholder(position int) string {
-	return " ?"
+func (sd SQLServerDialect) Placeholder(position int) string {
+	return fmt.Sprintf("@p%d", position)
 }
 
-func (pd MariadbDialect) Limit(limit uint) string {
-	return fmt.Sprintf(" LIMIT %d", limit)
+// Limit method is adjusted to be compatible with SQL Server
+func (sd SQLServerDialect) Limit(limit uint) string {
+	return fmt.Sprintf(" TOP %d", limit)
 }
 
-// CreateSelect generate a SQL request in the correct order.
-func (sd MariadbDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
-	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
+// CreateSelect generate a SQL request in the correct order
+func (sd SQLServerDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, limit, columns, from, where)
 }

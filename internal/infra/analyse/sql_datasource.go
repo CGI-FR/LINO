@@ -81,13 +81,14 @@ type SQLExtractor struct {
 	dialect rdbms.Dialect
 }
 
-func (s SQLExtractor) New(tableName string, columnName string, limit uint) analyse.Extractor { //nolint:ireturn
+func (s SQLExtractor) New(tableName string, columnName string, limit uint, where string) analyse.Extractor { //nolint:ireturn
 	return &SQLDataSource{
 		url:     s.url,
 		schema:  s.schema,
 		table:   tableName,
 		column:  columnName,
 		limit:   limit,
+		where:   where,
 		dialect: s.dialect,
 		dbx:     nil,
 		db:      nil,
@@ -102,6 +103,7 @@ type SQLDataSource struct {
 	table   string
 	column  string
 	limit   uint
+	where   string
 	dialect rdbms.Dialect
 	dbx     *sqlx.DB
 	db      *sql.DB
@@ -129,7 +131,7 @@ func (ds *SQLDataSource) Open() error {
 		return err
 	}
 
-	sql := rdbms.Select(ds.dialect, []string{ds.column}, false, ds.schema, ds.table, map[string]any{}, "", ds.limit)
+	sql := rdbms.Select(ds.dialect, []string{ds.column}, false, ds.schema, ds.table, map[string]any{}, ds.where, ds.limit)
 
 	ds.cursor, err = ds.db.Query(sql)
 	if err != nil {

@@ -29,6 +29,7 @@ type Config struct {
 	Distinct bool
 	Limit    uint
 	Tables   []string
+	Wheres   map[string]string
 }
 
 type Driver struct {
@@ -117,8 +118,10 @@ func (d *Driver) Next() bool {
 }
 
 func (d *Driver) Col() (rimo.ColReader, error) { //nolint:ireturn
+	where, _ := d.cfg.Wheres[d.tables[d.curTable]]
+
 	return &ValueIterator{
-		Extractor: d.exf.New(d.tables[d.curTable], d.columns[d.curColumn], d.cfg.Limit),
+		Extractor: d.exf.New(d.tables[d.curTable], d.columns[d.curColumn], d.cfg.Limit, where),
 		tableName: d.tables[d.curTable],
 		colName:   d.columns[d.curColumn],
 		nextValue: nil,

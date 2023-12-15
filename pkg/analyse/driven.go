@@ -28,7 +28,7 @@ type DataSource interface {
 }
 
 type ExtractorFactory interface {
-	New(tableName string, columnName string, limit uint) Extractor
+	New(tableName string, columnName string, limit uint, where string) Extractor
 }
 
 type Extractor interface {

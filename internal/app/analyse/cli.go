@@ -83,6 +83,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 					Distinct: distinct,
 					Limit:    limit,
 					Tables:   tables,
+					Wheres:   wheres,
 				},
 			)
 			if e2 := driver.Analyse(); e2 != nil {

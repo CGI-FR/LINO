@@ -36,6 +36,8 @@ var (
 	extractorFactories   map[string]infra.SQLExtractorFactory
 )
 
+const DefaultSampleSize = uint(5)
+
 // Inject dependencies
 func Inject(
 	ts table.Storage,
@@ -54,6 +56,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var limit uint
 	var tables []string
 	var wheres map[string]string
+	var sampleSize uint
 
 	cmd := &cobra.Command{
 		Use:     "analyse",
@@ -80,10 +83,11 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			driver := analyse.NewDriver(dataSource, extractor, writer,
 				analyse.Config{
-					Distinct: distinct,
-					Limit:    limit,
-					Tables:   tables,
-					Wheres:   wheres,
+					SampleSize: sampleSize,
+					Distinct:   distinct,
+					Limit:      limit,
+					Tables:     tables,
+					Wheres:     wheres,
 				},
 			)
 			if e2 := driver.Analyse(); e2 != nil {
@@ -98,6 +102,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "count distinct values")
 	cmd.Flags().StringToStringVarP(&wheres, "where", "w", map[string]string{}, "where clauses by table")
 	cmd.Flags().StringArrayVarP(&tables, "table", "t", []string{}, "specify tables to analyse")
+	cmd.Flags().UintVar(&sampleSize, "sample-size", DefaultSampleSize, "number of sample value to collect")
 
 	cmd.SetOut(out)
 	cmd.SetErr(err)

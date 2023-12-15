@@ -26,10 +26,11 @@ import (
 )
 
 type Config struct {
-	Distinct bool
-	Limit    uint
-	Tables   []string
-	Wheres   map[string]string
+	SampleSize uint
+	Distinct   bool
+	Limit      uint
+	Tables     []string
+	Wheres     map[string]string
 }
 
 type Driver struct {
@@ -53,7 +54,7 @@ func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer, cfg Config
 	}
 
 	return &Driver{
-		analyser:  rimo.Driver{SampleSize: 5, Distinct: cfg.Distinct}, //nolint:gomnd
+		analyser:  rimo.Driver{SampleSize: cfg.SampleSize, Distinct: cfg.Distinct}, //nolint:gomnd
 		ds:        datasource,
 		exf:       exf,
 		w:         w,

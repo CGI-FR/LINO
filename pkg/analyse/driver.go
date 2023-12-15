@@ -118,7 +118,7 @@ func (d *Driver) Next() bool {
 }
 
 func (d *Driver) Col() (rimo.ColReader, error) { //nolint:ireturn
-	where, _ := d.cfg.Wheres[d.tables[d.curTable]]
+	where := d.cfg.Wheres[d.tables[d.curTable]]
 
 	return &ValueIterator{
 		Extractor: d.exf.New(d.tables[d.curTable], d.columns[d.curColumn], d.cfg.Limit, where),

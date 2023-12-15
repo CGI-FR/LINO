@@ -51,6 +51,7 @@ func Inject(
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	// local flags
 	var distinct bool
+	var limit uint
 
 	cmd := &cobra.Command{
 		Use:     "analyse",
@@ -75,7 +76,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			writer := getWriter(out)
 
-			driver := analyse.NewDriver(dataSource, extractor, writer, analyse.Config{Distinct: distinct})
+			driver := analyse.NewDriver(dataSource, extractor, writer, analyse.Config{Distinct: distinct, Limit: limit})
 			if e2 := driver.Analyse(); e2 != nil {
 				fmt.Fprintf(err, "analyse failed '%s'", dataConnector)
 				fmt.Fprintln(err)
@@ -84,6 +85,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		},
 	}
 
+	cmd.Flags().UintVarP(&limit, "limit", "l", 1, "limit the number of results")
 	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "count distinct values")
 
 	cmd.SetOut(out)

@@ -26,6 +26,7 @@ import (
 
 type Config struct {
 	Distinct bool
+	Limit    uint
 }
 
 type Driver struct {
@@ -33,6 +34,7 @@ type Driver struct {
 	ds       DataSource
 	exf      ExtractorFactory
 	w        Writer
+	cfg      Config
 
 	tables  []string
 	columns []string
@@ -47,6 +49,7 @@ func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer, c Config) 
 		ds:        datasource,
 		exf:       exf,
 		w:         w,
+		cfg:       c,
 		tables:    datasource.ListTables(),
 		columns:   []string{},
 		curTable:  -1,
@@ -99,7 +102,7 @@ func (d *Driver) Next() bool {
 
 func (d *Driver) Col() (rimo.ColReader, error) { //nolint:ireturn
 	return &ValueIterator{
-		Extractor: d.exf.New(d.tables[d.curTable], d.columns[d.curColumn]),
+		Extractor: d.exf.New(d.tables[d.curTable], d.columns[d.curColumn], d.cfg.Limit),
 		tableName: d.tables[d.curTable],
 		colName:   d.columns[d.curColumn],
 		nextValue: nil,

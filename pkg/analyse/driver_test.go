@@ -57,7 +57,7 @@ func (tds *testExtractor) ExtractValue() (bool, interface{}, error) {
 	return false, nil, nil
 }
 
-func (tds *testExtractor) New(tableName string, columnName string) analyse.Extractor { //nolint:ireturn
+func (tds *testExtractor) New(tableName string, columnName string, limit uint) analyse.Extractor { //nolint:ireturn
 	tds.index = 0
 	return tds
 }

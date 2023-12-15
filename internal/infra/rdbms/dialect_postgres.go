@@ -1,4 +1,4 @@
-// Copyright (C) 2021 CGI France
+// Copyright (C) 2023 CGI France
 //
 // This file is part of LINO.
 //
@@ -15,19 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package rdbms
 
-import (
-	infra "github.com/cgi-fr/lino/internal/infra/analyse"
-)
+import "fmt"
 
-func analyseDataSourceFactory() map[string]infra.SQLExtractorFactory {
-	return map[string]infra.SQLExtractorFactory{
-		"postgres":   infra.NewPostgresExtractorFactory(),
-		"godror":     infra.NewOracleExtractorFactory(),
-		"godror-raw": infra.NewOracleExtractorFactory(),
-		"mysql":      infra.NewMariaDBExtractorFactory(),
-		"db2":        infra.NewDB2ExtractorFactory(),
-		"sqlserver":  infra.NewSQLServerExtractorFactory(),
-	}
+// PostgresDialect implement postgres SQL variations
+type PostgresDialect struct{}
+
+func (pgd PostgresDialect) Placeholder(position int) string {
+	return fmt.Sprintf("$%d", position)
+}
+
+func (pgd PostgresDialect) Limit(limit uint) string {
+	return fmt.Sprintf("LIMIT %d", limit)
+}
+
+// CreateSelect generate a SQL request in the correct order.
+func (pgd PostgresDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
+	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
 }

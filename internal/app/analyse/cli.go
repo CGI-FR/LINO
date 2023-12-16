@@ -58,6 +58,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var tables []string
 	var wheres map[string]string
 	var exclude map[string]string
+	var excludePks bool
 	var sampleSize uint
 
 	cmd := &cobra.Command{
@@ -69,10 +70,15 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			dataConnector := args[0]
-			dataSource, e0 := getDatasource(dataConnector)
+			dataSource, primaryKeys, e0 := getDatasource(dataConnector)
 			if e0 != nil {
 				fmt.Fprintln(err, e0.Error())
 				os.Exit(1)
+			}
+
+			excludedColumns := splitColumns(exclude)
+			if excludePks {
+				excludedColumns = mergeColumns(excludedColumns, primaryKeys)
 			}
 
 			extractor, e1 := getExtractor(dataConnector, out)
@@ -90,7 +96,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 					Limit:          limit,
 					Tables:         tables,
 					Wheres:         wheres,
-					ExcludeColumns: splitColumns(exclude),
+					ExcludeColumns: excludedColumns,
 				},
 			)
 			if e2 := driver.Analyse(); e2 != nil {
@@ -106,6 +112,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringArrayVarP(&tables, "table", "t", []string{}, "specify tables to analyse")
 	cmd.Flags().StringToStringVarP(&wheres, "where", "w", map[string]string{}, "where clauses by table")
 	cmd.Flags().StringToStringVarP(&exclude, "exclude", "e", map[string]string{}, "specify columns to exclude by table")
+	cmd.Flags().BoolVarP(&excludePks, "exclude-pk", "x", false, "exclude primary keys of each tables")
 	cmd.Flags().UintVar(&sampleSize, "sample-size", DefaultSampleSize, "number of sample value to collect")
 
 	cmd.SetOut(out)
@@ -137,11 +144,12 @@ func getExtractor(dataconnectorName string, out io.Writer) (analyse.ExtractorFac
 	return datasourceFactory.New(u.URL.String(), alias.Schema), nil
 }
 
-func getDatasource(dataconnectorName string) (analyse.DataSource, error) {
+func getDatasource(dataconnectorName string) (analyse.DataSource, map[string][]string, error) {
+	primaryKeys := map[string][]string{}
 	result := map[string][]string{}
 	tables, err := tableStorage.List()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	for _, table := range tables {
@@ -150,15 +158,32 @@ func getDatasource(dataconnectorName string) (analyse.DataSource, error) {
 			columns = append(columns, column.Name)
 		}
 		result[table.Name] = columns
+
+		primaryKeys[table.Name] = table.Keys
 	}
 
-	return infra.NewMapDataSource(dataconnectorName, result), nil
+	return infra.NewMapDataSource(dataconnectorName, result), primaryKeys, nil
 }
 
 func splitColumns(exclude map[string]string) map[string][]string {
 	result := make(map[string][]string, len(exclude))
 	for table, columns := range exclude {
 		result[table] = strings.Split(columns, ",")
+	}
+	return result
+}
+
+func mergeColumns(excludedColumns map[string][]string, primaryKeys map[string][]string) map[string][]string {
+	result := make(map[string][]string, len(excludedColumns)+len(primaryKeys))
+	for table, columns := range primaryKeys {
+		result[table] = columns
+	}
+	for table, columns := range excludedColumns {
+		if existing, ok := result[table]; ok {
+			result[table] = append(existing, columns...)
+		} else {
+			result[table] = columns
+		}
 	}
 	return result
 }

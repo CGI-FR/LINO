@@ -86,3 +86,14 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldContainSubstring 0
+  - name: exclude pk
+    steps:
+      - script: lino table add-column actor actor_id
+      - script: lino analyse source | grep -e "^        - " | wc -l
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring 3
+      - script: lino analyse source --exclude-pk | grep -e "^        - " | wc -l
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring 2

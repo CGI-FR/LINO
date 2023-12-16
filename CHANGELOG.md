@@ -18,6 +18,7 @@ Types of changes
 
 - `Added` `sqlserver` support
 - `Added` flags `sample-size`, `distinct`, `limit`, `where` and `table` to the `analyse` command, by default distinct values are not counted
+- `Added` flags `exlude` and `exlude-pk` to exclude columns from analyse
 
 ## [2.5.0]
 

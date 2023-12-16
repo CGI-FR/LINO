@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/cgi-fr/lino/internal/app/urlbuilder"
 	infra "github.com/cgi-fr/lino/internal/infra/analyse"
@@ -56,6 +57,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var limit uint
 	var tables []string
 	var wheres map[string]string
+	var exclude map[string]string
 	var sampleSize uint
 
 	cmd := &cobra.Command{
@@ -83,11 +85,12 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			driver := analyse.NewDriver(dataSource, extractor, writer,
 				analyse.Config{
-					SampleSize: sampleSize,
-					Distinct:   distinct,
-					Limit:      limit,
-					Tables:     tables,
-					Wheres:     wheres,
+					SampleSize:     sampleSize,
+					Distinct:       distinct,
+					Limit:          limit,
+					Tables:         tables,
+					Wheres:         wheres,
+					ExcludeColumns: splitColumns(exclude),
 				},
 			)
 			if e2 := driver.Analyse(); e2 != nil {
@@ -100,8 +103,9 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 	cmd.Flags().UintVarP(&limit, "limit", "l", 0, "limit the number of results (0 = no limit)")
 	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "count distinct values")
-	cmd.Flags().StringToStringVarP(&wheres, "where", "w", map[string]string{}, "where clauses by table")
 	cmd.Flags().StringArrayVarP(&tables, "table", "t", []string{}, "specify tables to analyse")
+	cmd.Flags().StringToStringVarP(&wheres, "where", "w", map[string]string{}, "where clauses by table")
+	cmd.Flags().StringToStringVarP(&exclude, "exclude", "e", map[string]string{}, "specify columns to exclude by table")
 	cmd.Flags().UintVar(&sampleSize, "sample-size", DefaultSampleSize, "number of sample value to collect")
 
 	cmd.SetOut(out)
@@ -149,4 +153,12 @@ func getDatasource(dataconnectorName string) (analyse.DataSource, error) {
 	}
 
 	return infra.NewMapDataSource(dataconnectorName, result), nil
+}
+
+func splitColumns(exclude map[string]string) map[string][]string {
+	result := make(map[string][]string, len(exclude))
+	for table, columns := range exclude {
+		result[table] = strings.Split(columns, ",")
+	}
+	return result
 }

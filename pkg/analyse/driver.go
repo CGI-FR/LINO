@@ -23,14 +23,16 @@ import (
 	"github.com/cgi-fr/rimo/pkg/model"
 	"github.com/cgi-fr/rimo/pkg/rimo"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
 )
 
 type Config struct {
-	SampleSize uint
-	Distinct   bool
-	Limit      uint
-	Tables     []string
-	Wheres     map[string]string
+	SampleSize     uint
+	Distinct       bool
+	Limit          uint
+	Tables         []string
+	Wheres         map[string]string   // tablename -> where clause
+	ExcludeColumns map[string][]string // tablename -> list of columns
 }
 
 type Driver struct {
@@ -47,17 +49,17 @@ type Driver struct {
 	curColumn int
 }
 
-func NewDriver(datasource DataSource, exf ExtractorFactory, w Writer, cfg Config) *Driver {
+func NewDriver(datasource DataSource, exf ExtractorFactory, writer Writer, cfg Config) *Driver {
 	tables := datasource.ListTables()
 	if len(cfg.Tables) > 0 {
 		tables = cfg.Tables
 	}
 
 	return &Driver{
-		analyser:  rimo.Driver{SampleSize: cfg.SampleSize, Distinct: cfg.Distinct}, //nolint:gomnd
+		analyser:  rimo.Driver{SampleSize: cfg.SampleSize, Distinct: cfg.Distinct},
 		ds:        datasource,
 		exf:       exf,
-		w:         w,
+		w:         writer,
 		cfg:       cfg,
 		tables:    tables,
 		columns:   []string{},
@@ -102,6 +104,13 @@ func (d *Driver) Next() bool {
 		d.curTable++
 		d.curColumn = 0
 		d.columns = d.ds.ListColumn(d.tables[d.curTable])
+
+		d.columns = slices.DeleteFunc(d.columns, func(column string) bool {
+			if excluded, ok := d.cfg.ExcludeColumns[d.tables[d.curTable]]; ok {
+				return slices.Contains(excluded, column)
+			}
+			return false
+		})
 
 		// should we try next table because there is no column in this table
 		if len(d.columns) > 0 {

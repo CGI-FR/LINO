@@ -19,7 +19,7 @@ require (
 	github.com/microsoft/go-mssqldb v1.6.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.31.0
-	github.com/sijms/go-ora/v2 v2.8.4
+	github.com/sijms/go-ora/v2 v2.8.5
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/xo/dburl v0.20.2

@@ -17,124 +17,134 @@
 
 name: pull with file filters
 testcases:
-- name: prepare test
-  steps:
-    # Clean working directory
-    - script: rm -f *
-    - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: lino relation extract source
-    - script: lino table extract source
-    - script: lino id create customer
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup staff_store_id_fkey true
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino relation extract source
+      - script: lino table extract source
+      - script: lino id create customer
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup staff_store_id_fkey true
 
-- name: pull one value
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"customer_id":9}' > customer_filter.jsonl
-    - script: lino pull source --filter-from-file customer_filter.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":13,"create_date":"2006-02-14T00:00:00Z","customer_id":9,"email":"MARGARET.MOORE@sakilacustomer.org","first_name":"MARGARET","last_name":"MOORE","last_update":"2006-02-15T09:57:20Z","store_id":2}
-        - result.systemerr ShouldBeEmpty
+  - name: pull one value
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"customer_id":9}' > customer_filter.jsonl
+      - script: lino pull source --filter-from-file customer_filter.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":13,"create_date":"2006-02-14T00:00:00Z","customer_id":9,"email":"MARGARET.MOORE@sakilacustomer.org","first_name":"MARGARET","last_name":"MOORE","last_update":"2006-02-15T09:57:20Z","store_id":2}
+          - result.systemerr ShouldBeEmpty
 
-- name: pull error value
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"no_column_id":9}' > customer_filter.jsonl
-    - script: lino pull source --filter-from-file customer_filter.jsonl
-      assertions:
-        - result.code ShouldEqual 1
-        - result.systemout ShouldBeEmpty
+  - name: pull error value
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"no_column_id":9}' > customer_filter.jsonl
+      - script: lino pull source --filter-from-file customer_filter.jsonl
+        assertions:
+          - result.code ShouldEqual 1
+          - result.systemout ShouldBeEmpty
 
-- name: pull no value
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"customer_id":-1}' > customer_filter.jsonl
-    - script: lino pull source --filter-from-file customer_filter.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
+  - name: pull no value
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"customer_id":-1}' > customer_filter.jsonl
+      - script: lino pull source --filter-from-file customer_filter.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
 
-- name: pull many value with implicit limit to 1
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"active":1}' > customer_filter.jsonl
-    - script: lino pull source --filter-from-file customer_filter.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
-        - result.systemerr ShouldBeEmpty
+  - name: pull many value with implicit limit to 1
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"active":1}' > customer_filter.jsonl
+      - script: lino pull source --filter-from-file customer_filter.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}
+          - result.systemerr ShouldBeEmpty
 
-- name: pull many values with explicit limit to 2
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"active":1}' > customer_filter.jsonl
-    - script: echo '{"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}' > expected.jsonl
-    - script: echo '{"active":1,"activebool":true,"address_id":6,"create_date":"2006-02-14T00:00:00Z","customer_id":2,"email":"PATRICIA.JOHNSON@sakilacustomer.org","first_name":"PATRICIA","last_name":"JOHNSON","last_update":"2006-02-15T09:57:20Z","store_id":1}' >> expected.jsonl
-    - script: lino pull source --filter-from-file customer_filter.jsonl --limit 2 > actual.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemerr ShouldBeEmpty
-    - script: diff expected.jsonl actual.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
+  - name: pull many values with explicit limit to 2
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"active":1}' > customer_filter.jsonl
+      - script: echo '{"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}' > expected.jsonl
+      - script: echo '{"active":1,"activebool":true,"address_id":6,"create_date":"2006-02-14T00:00:00Z","customer_id":2,"email":"PATRICIA.JOHNSON@sakilacustomer.org","first_name":"PATRICIA","last_name":"JOHNSON","last_update":"2006-02-15T09:57:20Z","store_id":1}' >> expected.jsonl
+      - script: lino pull source --filter-from-file customer_filter.jsonl --limit 2 > actual.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldBeEmpty
+      - script: diff expected.jsonl actual.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
 
-- name: pull values with reversed order
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"customer_id":2}\n{"customer_id":1}' > customer_filter.jsonl
-    - script: echo '{"active":1,"activebool":true,"address_id":6,"create_date":"2006-02-14T00:00:00Z","customer_id":2,"email":"PATRICIA.JOHNSON@sakilacustomer.org","first_name":"PATRICIA","last_name":"JOHNSON","last_update":"2006-02-15T09:57:20Z","store_id":1}' > expected.jsonl
-    - script: echo '{"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}' >> expected.jsonl
-    - script: lino pull source --filter-from-file customer_filter.jsonl --limit 2 > actual.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemerr ShouldBeEmpty
-    - script: diff expected.jsonl actual.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
+  - name: pull values with reversed order
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"customer_id":2}\n{"customer_id":1}' > customer_filter.jsonl
+      - script: echo '{"active":1,"activebool":true,"address_id":6,"create_date":"2006-02-14T00:00:00Z","customer_id":2,"email":"PATRICIA.JOHNSON@sakilacustomer.org","first_name":"PATRICIA","last_name":"JOHNSON","last_update":"2006-02-15T09:57:20Z","store_id":1}' > expected.jsonl
+      - script: echo '{"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}' >> expected.jsonl
+      - script: lino pull source --filter-from-file customer_filter.jsonl --limit 2 > actual.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldBeEmpty
+      - script: diff expected.jsonl actual.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
 
-- name: pull values with aditional filter
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"active":1}\n{"active":0}' > customer_filter.jsonl
-    - script: lino pull source --filter-from-file customer_filter.jsonl --filter store_id=2 | jq .active
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemerr ShouldBeEmpty
-        - |
-          result.systemout ShouldEqual "1
-          0"
+  - name: pull values with aditional filter
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"active":1}\n{"active":0}' > customer_filter.jsonl
+      - script: lino pull source --filter-from-file customer_filter.jsonl --filter store_id=2 | jq .active
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldBeEmpty
+          - |
+            result.systemout ShouldEqual "1
+            0"
 
-- name: pull values with override filter
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"customer_id":1}\n{"customer_id":3}' > customer_filter.jsonl
-    - script: echo '{"active":1,"activebool":true,"address_id":6,"create_date":"2006-02-14T00:00:00Z","customer_id":2,"email":"PATRICIA.JOHNSON@sakilacustomer.org","first_name":"PATRICIA","last_name":"JOHNSON","last_update":"2006-02-15T09:57:20Z","store_id":1}' > expected.jsonl
-    - script: echo '{"active":1,"activebool":true,"address_id":6,"create_date":"2006-02-14T00:00:00Z","customer_id":2,"email":"PATRICIA.JOHNSON@sakilacustomer.org","first_name":"PATRICIA","last_name":"JOHNSON","last_update":"2006-02-15T09:57:20Z","store_id":1}' >> expected.jsonl
-    - script: lino pull source --filter-from-file customer_filter.jsonl --filter customer_id=2 > actual.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemerr ShouldBeEmpty
-    - script: diff expected.jsonl actual.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
+  - name: pull values with override filter
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"customer_id":1}\n{"customer_id":3}' > customer_filter.jsonl
+      - script: echo '{"active":1,"activebool":true,"address_id":6,"create_date":"2006-02-14T00:00:00Z","customer_id":2,"email":"PATRICIA.JOHNSON@sakilacustomer.org","first_name":"PATRICIA","last_name":"JOHNSON","last_update":"2006-02-15T09:57:20Z","store_id":1}' > expected.jsonl
+      - script: echo '{"active":1,"activebool":true,"address_id":6,"create_date":"2006-02-14T00:00:00Z","customer_id":2,"email":"PATRICIA.JOHNSON@sakilacustomer.org","first_name":"PATRICIA","last_name":"JOHNSON","last_update":"2006-02-15T09:57:20Z","store_id":1}' >> expected.jsonl
+      - script: lino pull source --filter-from-file customer_filter.jsonl --filter customer_id=2 > actual.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldBeEmpty
+      - script: diff expected.jsonl actual.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
 
-- name: pull values with filter from stdin
-  steps:
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: echo '{"customer_id":1}\n{"customer_id":2}' > customer_filter.jsonl
-    - script: echo '{"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}' > expected.jsonl
-    - script: echo '{"active":1,"activebool":true,"address_id":6,"create_date":"2006-02-14T00:00:00Z","customer_id":2,"email":"PATRICIA.JOHNSON@sakilacustomer.org","first_name":"PATRICIA","last_name":"JOHNSON","last_update":"2006-02-15T09:57:20Z","store_id":1}' >> expected.jsonl
-    - script: lino pull source --filter-from-file - < customer_filter.jsonl > actual.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemerr ShouldBeEmpty
-    - script: diff expected.jsonl actual.jsonl
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
+  - name: pull values with filter from stdin
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"customer_id":1}\n{"customer_id":2}' > customer_filter.jsonl
+      - script: echo '{"active":1,"activebool":true,"address_id":5,"create_date":"2006-02-14T00:00:00Z","customer_id":1,"email":"MARY.SMITH@sakilacustomer.org","first_name":"MARY","last_name":"SMITH","last_update":"2006-02-15T09:57:20Z","store_id":1}' > expected.jsonl
+      - script: echo '{"active":1,"activebool":true,"address_id":6,"create_date":"2006-02-14T00:00:00Z","customer_id":2,"email":"PATRICIA.JOHNSON@sakilacustomer.org","first_name":"PATRICIA","last_name":"JOHNSON","last_update":"2006-02-15T09:57:20Z","store_id":1}' >> expected.jsonl
+      - script: lino pull source --filter-from-file - < customer_filter.jsonl > actual.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemerr ShouldBeEmpty
+      - script: diff expected.jsonl actual.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+
+  - name: pull all exclude one value
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"customer_id":9}' > customer_filter.jsonl
+      - script: lino pull source --limit 0 --exclude-from-file customer_filter.jsonl | grep '"customer_id":9,'
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty

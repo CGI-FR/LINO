@@ -49,6 +49,10 @@ func NewJSONKeyStore(file io.Reader) *JSONKeyStore {
 }
 
 func (ks *JSONKeyStore) Has(row pull.Row) bool {
+	if len(ks.store) == 0 {
+		return false
+	}
+
 	bytes, err := json.Marshal(row)
 	if err != nil {
 		panic(err)

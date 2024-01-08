@@ -35,6 +35,7 @@ type pullerParallel struct {
 	errChan   chan error
 	outChan   chan ExportedRow
 	errors    []error
+	excluded  KeyStore
 }
 
 func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, diagnostic TraceListener, nbworkers uint) Puller { //nolint:lll
@@ -53,6 +54,7 @@ func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, d
 			errChan:   nil,
 			outChan:   nil,
 			errors:    nil,
+			excluded:  nil,
 		}
 	}
 
@@ -99,6 +101,7 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 	p.errChan = make(chan error)
 	p.outChan = make(chan ExportedRow)
 	p.errors = []error{}
+	p.excluded = excluded
 
 	wg := &sync.WaitGroup{}
 
@@ -163,6 +166,11 @@ LOOP:
 			log.Debug().Msg("received row")
 
 			out := start.export(row)
+
+			if p.excluded != nil && p.excluded.Has(extract(out, start.Keys)) {
+				continue
+			}
+
 			err := p.pull(start, out)
 			if err != nil {
 				p.errChan <- err

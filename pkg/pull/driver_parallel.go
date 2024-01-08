@@ -59,7 +59,7 @@ func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, d
 	return puller
 }
 
-func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader) error {
+func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader, excludeCohort RowReader) error {
 	start = p.graph.addMissingColumns(start)
 
 	if err := p.datasource.Open(); err != nil {

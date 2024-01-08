@@ -46,7 +46,7 @@ func NewStep(puller *puller, out ExportedRow, entry Relation) *Step {
 }
 
 type Puller interface {
-	Pull(start Table, filter Filter, filterCohort RowReader) error
+	Pull(start Table, filter Filter, filterCohort RowReader, excludeCohort RowReader) error
 }
 
 type puller struct {
@@ -65,7 +65,7 @@ func NewPuller(plan Plan, datasource DataSource, exporter RowExporter, diagnosti
 	}
 }
 
-func (p *puller) Pull(start Table, filter Filter, filterCohort RowReader) error {
+func (p *puller) Pull(start Table, filter Filter, filterCohort RowReader, excludeCohort RowReader) error {
 	start = p.graph.addMissingColumns(start)
 
 	if err := p.datasource.Open(); err != nil {

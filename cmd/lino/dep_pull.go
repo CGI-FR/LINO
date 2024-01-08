@@ -50,6 +50,12 @@ func pullRowReaderFactory() func(file io.ReadCloser) domain.RowReader {
 	}
 }
 
+func pullKeyStoreFactory() func(file io.ReadCloser) domain.KeyStore {
+	return func(file io.ReadCloser) domain.KeyStore {
+		return infra.NewJSONKeyStore(file)
+	}
+}
+
 func traceListner(file *os.File) domain.TraceListener {
 	return infra.NewJSONTraceListener(file)
 }

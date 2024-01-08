@@ -145,6 +145,26 @@ testcases:
       - script: echo '{"customer_id":9}' > customer_filter.jsonl
       - script: lino pull source --limit 0 --exclude-from-file customer_filter.jsonl | grep '"customer_id":9,'
         assertions:
+          - result.code ShouldEqual 1
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+
+  - name: pull all exclude two values
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"customer_id":11}' >> customer_filter.jsonl
+      - script: lino pull source --limit 0 --exclude-from-file customer_filter.jsonl | grep '"customer_id":11,'
+        assertions:
+          - result.code ShouldEqual 1
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+
+  - name: pull combine include + exclude
+    steps:
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: echo '{"customer_id":9}' > customer_filter.jsonl
+      - script: lino pull source --limit 0 -X customer_filter.jsonl -F customer_filter.jsonl
+        assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldBeEmpty
           - result.systemerr ShouldBeEmpty

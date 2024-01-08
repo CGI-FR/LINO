@@ -46,7 +46,7 @@ func NewStep(puller *puller, out ExportedRow, entry Relation) *Step {
 }
 
 type Puller interface {
-	Pull(start Table, filter Filter, filterCohort RowReader, excludeCohort RowReader) error
+	Pull(start Table, filter Filter, filterCohort RowReader, excluded KeyStore) error
 }
 
 type puller struct {
@@ -65,7 +65,7 @@ func NewPuller(plan Plan, datasource DataSource, exporter RowExporter, diagnosti
 	}
 }
 
-func (p *puller) Pull(start Table, filter Filter, filterCohort RowReader, excludeCohort RowReader) error {
+func (p *puller) Pull(start Table, filter Filter, filterCohort RowReader, excluded KeyStore) error {
 	start = p.graph.addMissingColumns(start)
 
 	if err := p.datasource.Open(); err != nil {
@@ -113,6 +113,10 @@ func (p *puller) Pull(start Table, filter Filter, filterCohort RowReader, exclud
 		for reader.Next() {
 			IncLinesPerStepCount(string(start.Name))
 			row := start.export(reader.Value())
+
+			if excluded != nil && excluded.Has(extract(row, start.Keys)) {
+				continue
+			}
 
 			if err := p.pull(start, row); err != nil {
 				return fmt.Errorf("%w", err)
@@ -303,4 +307,12 @@ func createFilter(relation Relation, localRow ExportedRow) map[string]interface{
 	}
 
 	return filter
+}
+
+func extract(row ExportedRow, keys []string) Row {
+	result := Row{}
+	for _, key := range keys {
+		result[key] = row.GetOrNil(key)
+	}
+	return result
 }

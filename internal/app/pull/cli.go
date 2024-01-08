@@ -43,6 +43,7 @@ var (
 	dataSourceFactories  map[string]pull.DataSourceFactory
 	pullExporterFactory  func(io.Writer) pull.RowExporter
 	rowReaderFactory     func(io.ReadCloser) pull.RowReader
+	keyStoreFactory      func(io.ReadCloser) pull.KeyStore
 )
 
 var traceListener pull.TraceListener
@@ -56,6 +57,7 @@ func Inject(
 	dsfmap map[string]pull.DataSourceFactory,
 	exporterFactory func(io.Writer) pull.RowExporter,
 	rrf func(io.ReadCloser) pull.RowReader,
+	ksf func(io.ReadCloser) pull.KeyStore,
 	tl pull.TraceListener,
 ) {
 	dataconnectorStorage = dbas
@@ -65,6 +67,7 @@ func Inject(
 	dataSourceFactories = dsfmap
 	pullExporterFactory = exporterFactory
 	rowReaderFactory = rrf
+	keyStoreFactory = ksf
 	traceListener = tl
 }
 
@@ -80,7 +83,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var where string
 	var initialFilters map[string]string
 	var diagnostic bool
-	var filters, filtersEx pull.RowReader
+	var filters pull.RowReader
 	var parallel uint
 
 	cmd := &cobra.Command{
@@ -145,18 +148,14 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				log.Trace().Str("file", filefilter).Msg("reading file")
 			}
 
-			switch fileexclude {
-			case "":
-				filtersEx = pull.NewOneEmptyRowReader()
-			case "-":
-				filtersEx = rowReaderFactory(in)
-			default:
+			var filtersEx pull.KeyStore
+			if len(fileexclude) > 0 {
 				filterReader, e3 := os.Open(fileexclude)
 				if e3 != nil {
 					fmt.Fprintln(err, e3.Error())
 					os.Exit(1)
 				}
-				filtersEx = rowReaderFactory(filterReader)
+				filtersEx = keyStoreFactory(filterReader)
 				log.Trace().Str("file", fileexclude).Msg("reading file")
 			}
 

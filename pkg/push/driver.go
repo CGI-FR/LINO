@@ -66,7 +66,7 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 		}
 		i++
 		if savepointPath != "" {
-			committed = append(committed, *row)
+			committed = append(committed, extractValues(*row, plan.FirstTable().PrimaryKey()))
 		}
 		if i%commitSize == 0 {
 			log.Info().Msg("Intermediate commit")
@@ -273,4 +273,12 @@ func savepoint(savepointPath string, committed []Row) *Error {
 	}
 
 	return nil
+}
+
+func extractValues(row Row, keys []string) Row {
+	result := Row{}
+	for _, key := range keys {
+		result[key] = row[key]
+	}
+	return result
 }

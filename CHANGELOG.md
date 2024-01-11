@@ -17,8 +17,10 @@ Types of changes
 ## [2.6.0]
 
 - `Added` `sqlserver` support
-- `Added` flags `sample-size`, `distinct`, `limit`, `where` and `table` to the `analyse` command, by default distinct values are not counted
-- `Added` flags `exlude` and `exlude-pk` to exclude columns from analyse
+- `Added` flags to `lino analyse` : `sample-size`, `distinct`, `limit`, `where` and `table` (by default distinct values are not counted)
+- `Added` flags to `lino analyse` : `exlude` and `exlude-pk` to exclude columns from analyse
+- `Added` flags to `lino pull` : `-X` or `--exclude-from-file` to filter out lines from a JSON lines file reference
+- `Added` flags to `lino push` : `--savepoint` to write primary keys of all commited line to a file
 
 ## [2.5.0]
 

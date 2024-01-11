@@ -24,7 +24,7 @@ import (
 )
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string) (err *Error) {
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, savepointPath string) (err *Error) {
 	err1 := destination.Open(plan, mode, disableConstraints)
 	if err1 != nil {
 		return err1
@@ -48,6 +48,8 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 
 	Reset()
 
+	committed := make([]Row, 0, commitSize)
+
 	i := uint(0)
 	for ri.Next() {
 		row := ri.Value()
@@ -61,11 +63,20 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			log.Warn().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
 		}
 		i++
+		if savepointPath != "" {
+			committed = append(committed, *row)
+		}
 		if i%commitSize == 0 {
 			log.Info().Msg("Intermediate commit")
 			errCommit := destination.Commit()
 			if errCommit != nil {
 				return errCommit
+			}
+			if savepointPath != "" {
+				if err := savepoint(savepointPath, committed); err != nil {
+					return err
+				}
+				committed = committed[:0] // clear slice without releasing memory
 			}
 			IncCommitsCount()
 		}
@@ -232,4 +243,8 @@ func computeTranslatedKeys(row Row, table Table, translator Translator) Row {
 	}
 
 	return where
+}
+
+func savepoint(savepointPath string, committed []Row) *Error {
+	panic("unimplemented")
 }

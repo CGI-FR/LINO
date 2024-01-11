@@ -24,7 +24,7 @@ testcases:
       - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
       - script: lino relation extract source
       - script: lino table extract source
-      - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
+      - script: lino dataconnector add dest 'postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable'
 
   - name: savepoint all customers
     steps:

@@ -18,7 +18,9 @@
 package push
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/rs/zerolog/log"
 )
@@ -81,6 +83,13 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			IncCommitsCount()
 		}
 		IncInputLinesCount()
+	}
+
+	if savepointPath != "" {
+		if err := savepoint(savepointPath, committed); err != nil {
+			return err
+		}
+		committed = committed[:0] // clear slice without releasing memory
 	}
 
 	if ri.Error() != nil {
@@ -246,5 +255,22 @@ func computeTranslatedKeys(row Row, table Table, translator Translator) Row {
 }
 
 func savepoint(savepointPath string, committed []Row) *Error {
-	panic("unimplemented")
+	f, err := os.OpenFile(savepointPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	if err != nil {
+		return &Error{Description: err.Error()}
+	}
+	defer f.Close()
+
+	for _, row := range committed {
+		bytes, err := json.Marshal(row)
+		if err != nil {
+			return &Error{Description: err.Error()}
+		}
+
+		if _, err := f.Write(append(bytes, '\n')); err != nil {
+			return &Error{Description: err.Error()}
+		}
+	}
+
+	return nil
 }

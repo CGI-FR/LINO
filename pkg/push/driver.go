@@ -89,7 +89,6 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 		if err := savepoint(savepointPath, committed); err != nil {
 			return err
 		}
-		committed = committed[:0] // clear slice without releasing memory
 	}
 
 	if ri.Error() != nil {

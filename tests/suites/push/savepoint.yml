@@ -33,5 +33,18 @@ testcases:
           - result.code ShouldEqual 0
           - result.systemout ShouldBeEmpty
           - result.systemerr ShouldBeEmpty
-      - script: lino pull -t customer dest > customers2.json
-      - script: diff customers.json customers2.json
+      - script: wc -l customers.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual '599 customers.jsonl'
+          - result.systemerr ShouldBeEmpty
+      - script: lino pull --table customer --limit 0 -X customers.jsonl source | lino push -d truncate -t customer --savepoint customers.jsonl dest
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: wc -l customers.jsonl
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual '599 customers.jsonl'
+          - result.systemerr ShouldBeEmpty

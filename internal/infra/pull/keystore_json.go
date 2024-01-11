@@ -19,7 +19,7 @@ package pull
 
 import (
 	"bufio"
-	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/cgi-fr/lino/pkg/pull"
@@ -27,38 +27,26 @@ import (
 
 // JSONKeyStore read row from JSONLine file
 type JSONKeyStore struct {
-	store map[string]interface{}
+	store *KeyStoreIndexed
 }
 
 // NewJSONKeyStore create a new JSONKeyStore
-func NewJSONKeyStore(file io.Reader) *JSONKeyStore {
+func NewJSONKeyStore(file io.Reader, keys []string) (*JSONKeyStore, error) {
 	reader := &JSONRowReader{file, bufio.NewScanner(file), nil, nil}
-	store := map[string]interface{}{}
+	store := NewKeyStoreIndexed(keys)
 	for reader.Next() {
-		bytes, err := json.Marshal(reader.Value())
-		if err != nil {
-			panic(err)
-		}
+		store.Add(reader.Value())
+	}
 
-		store[string(bytes)] = true
+	if reader.Error() != nil {
+		return nil, fmt.Errorf("error loading filter file: %w", reader.Error())
 	}
 
 	return &JSONKeyStore{
 		store: store,
-	}
+	}, nil
 }
 
 func (ks *JSONKeyStore) Has(row pull.Row) bool {
-	if len(ks.store) == 0 {
-		return false
-	}
-
-	bytes, err := json.Marshal(row)
-	if err != nil {
-		panic(err)
-	}
-
-	_, ok := ks.store[string(bytes)]
-
-	return ok
+	return ks.store.Has(row)
 }

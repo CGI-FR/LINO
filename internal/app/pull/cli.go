@@ -43,7 +43,7 @@ var (
 	dataSourceFactories  map[string]pull.DataSourceFactory
 	pullExporterFactory  func(io.Writer) pull.RowExporter
 	rowReaderFactory     func(io.ReadCloser) pull.RowReader
-	keyStoreFactory      func(io.ReadCloser) pull.KeyStore
+	keyStoreFactory      func(io.ReadCloser, []string) (pull.KeyStore, error)
 )
 
 var traceListener pull.TraceListener
@@ -57,7 +57,7 @@ func Inject(
 	dsfmap map[string]pull.DataSourceFactory,
 	exporterFactory func(io.Writer) pull.RowExporter,
 	rrf func(io.ReadCloser) pull.RowReader,
-	ksf func(io.ReadCloser) pull.KeyStore,
+	ksf func(io.ReadCloser, []string) (pull.KeyStore, error),
 	tl pull.TraceListener,
 ) {
 	dataconnectorStorage = dbas
@@ -155,7 +155,11 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 					fmt.Fprintln(err, e3.Error())
 					os.Exit(1)
 				}
-				filtersEx = keyStoreFactory(filterReader)
+				filtersEx, e3 = keyStoreFactory(filterReader, start.Keys)
+				if e3 != nil {
+					fmt.Fprintln(err, e3.Error())
+					os.Exit(1)
+				}
 				log.Trace().Str("file", fileexclude).Msg("reading file")
 			}
 

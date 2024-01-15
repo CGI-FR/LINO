@@ -148,7 +148,7 @@ func (d SQLServerDialect) IsDuplicateError(err error) bool {
 }
 
 // ConvertValue before load
-func (d SQLServerDialect) ConvertValue(from push.Value) push.Value {
+func (d SQLServerDialect) ConvertValue(from push.Value, descriptor ValueDescriptor) push.Value {
 	return from
 }
 

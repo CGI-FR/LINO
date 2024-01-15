@@ -78,7 +78,7 @@ func (d Db2Dialect) IsDuplicateError(err error) bool {
 }
 
 // ConvertValue before load
-func (d Db2Dialect) ConvertValue(from push.Value) push.Value {
+func (d Db2Dialect) ConvertValue(from push.Value, descriptor ValueDescriptor) push.Value {
 	panic(fmt.Errorf("Not implemented"))
 }
 

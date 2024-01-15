@@ -20,6 +20,7 @@ package push
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -44,6 +45,21 @@ func (t table) Name() string         { return t.name }
 func (t table) PrimaryKey() []string { return t.pk }
 func (t table) Columns() ColumnList  { return t.columns }
 func (t table) String() string       { return t.name }
+
+func (t table) GetColumn(name string) Column {
+	if t.columns == nil {
+		return nil
+	}
+
+	for idx := uint(0); idx < t.columns.Len(); idx++ {
+		cur := t.columns.Column(idx)
+		if name == cur.Name() {
+			return cur
+		}
+	}
+
+	return nil
+}
 
 type columnList struct {
 	len   uint
@@ -112,11 +128,11 @@ func (t *table) initTemplate() {
 			log.Debug().Str("column", key).Str("format", format).Str("typ", typ).Msg("parseFormatWithType")
 
 			switch format {
-			case "string":
+			case "string", "file":
 				t.template.WithMappedString(key, parseImportType(typ))
 			case "numeric":
 				t.template.WithMappedNumeric(key, parseImportType(typ))
-			case "base64", "binary":
+			case "base64", "binary", "blob":
 				t.template.WithMappedBinary(key, parseImportType(typ))
 			case "datetime":
 				t.template.WithMappedDateTime(key, parseImportType(typ))
@@ -144,6 +160,23 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 	result := ImportedRow{t.template.CreateRowEmpty()}
 	if err := result.Import(row); err != nil {
 		return ImportedRow{}, &Error{Description: err.Error()}
+	}
+
+	if t.columns != nil {
+		for idx := uint(0); idx < t.columns.Len(); idx++ {
+			col := t.columns.Column(uint(idx))
+			key := col.Name()
+
+			format, _ := parseFormatWithType(col.Import())
+
+			if format == "file" {
+				bytes, err := os.ReadFile(result.GetString(key))
+				if err != nil {
+					return ImportedRow{}, &Error{Description: err.Error()}
+				}
+				result.SetValue(key, jsonline.NewValueAuto(bytes))
+			}
+		}
 	}
 
 	return result, nil

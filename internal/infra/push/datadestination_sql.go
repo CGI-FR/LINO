@@ -291,6 +291,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 type ValueDescriptor struct {
 	name     string
 	override bool // value in row is overridden (used for key translations)
+	column   push.Column
 }
 
 type ValueHeaders []ValueDescriptor
@@ -311,14 +312,14 @@ func (vh ValueHeaders) String() string {
 func (rw *SQLRowWriter) computeStatementInfos(row push.Row, where push.Row) (selectValues []ValueDescriptor, whereValues []ValueDescriptor) {
 	for _, pk := range rw.table.PrimaryKey() {
 		if _, ok := where[pk]; ok {
-			whereValues = append(whereValues, ValueDescriptor{pk, true})
+			whereValues = append(whereValues, ValueDescriptor{pk, true, rw.table.GetColumn(pk)})
 		} else {
-			whereValues = append(whereValues, ValueDescriptor{pk, false})
+			whereValues = append(whereValues, ValueDescriptor{pk, false, rw.table.GetColumn(pk)})
 		}
 	}
 
 	for k := range row {
-		selectValues = append(selectValues, ValueDescriptor{k, false})
+		selectValues = append(selectValues, ValueDescriptor{k, false, rw.table.GetColumn(k)})
 	}
 
 	return
@@ -339,9 +340,9 @@ func (rw *SQLRowWriter) Write(row push.Row, where push.Row) *push.Error {
 	values := []interface{}{}
 	for _, h := range rw.headers {
 		if oldvalue, exists := where[h.name]; exists && h.override {
-			values = append(values, rw.dd.dialect.ConvertValue(oldvalue))
+			values = append(values, rw.dd.dialect.ConvertValue(oldvalue, h))
 		} else {
-			values = append(values, rw.dd.dialect.ConvertValue(importedRow.GetOrNil(h.name)))
+			values = append(values, rw.dd.dialect.ConvertValue(importedRow.GetOrNil(h.name), h))
 		}
 	}
 	log.Trace().Stringer("headers", rw.headers).Str("table", rw.table.Name()).Msg(fmt.Sprint(values))
@@ -456,7 +457,7 @@ type SQLDialect interface {
 	InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor)
 	UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error)
 	IsDuplicateError(error) bool
-	ConvertValue(push.Value) push.Value
+	ConvertValue(push.Value, ValueDescriptor) push.Value
 
 	CanDisableIndividualConstraints() bool
 

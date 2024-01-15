@@ -21,6 +21,7 @@ Types of changes
 - `Added` flags to `lino analyse` : `exlude` and `exlude-pk` to exclude columns from analyse
 - `Added` flags to `lino pull` : `-X` or `--exclude-from-file` to filter out lines from a JSON lines file reference
 - `Added` flags to `lino push` : `--savepoint` to write primary keys of all commited line to a file
+- `Added` new import types to `table.yaml` : `blob` will optimize push of blob column into database, `file` will read content of a file at the specified path and import as a blob
 
 ## [2.5.0]
 

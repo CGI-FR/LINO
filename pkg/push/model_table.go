@@ -159,7 +159,7 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 				if err != nil {
 					return ImportedRow{}, &Error{Description: err.Error()}
 				}
-				result.Set(key, bytes)
+				result.SetValue(key, jsonline.NewValueAuto(bytes))
 			}
 		}
 	}

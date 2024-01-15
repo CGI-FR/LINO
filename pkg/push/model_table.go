@@ -20,6 +20,7 @@ package push
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -112,7 +113,7 @@ func (t *table) initTemplate() {
 			log.Debug().Str("column", key).Str("format", format).Str("typ", typ).Msg("parseFormatWithType")
 
 			switch format {
-			case "string":
+			case "string", "file":
 				t.template.WithMappedString(key, parseImportType(typ))
 			case "numeric":
 				t.template.WithMappedNumeric(key, parseImportType(typ))
@@ -144,6 +145,23 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 	result := ImportedRow{t.template.CreateRowEmpty()}
 	if err := result.Import(row); err != nil {
 		return ImportedRow{}, &Error{Description: err.Error()}
+	}
+
+	if l := int(t.columns.Len()); l > 0 {
+		for idx := 0; idx < l; idx++ {
+			col := t.columns.Column(uint(idx))
+			key := col.Name()
+
+			format, _ := parseFormatWithType(col.Import())
+
+			if format == "file" {
+				bytes, err := os.ReadFile(result.GetString(key))
+				if err != nil {
+					return ImportedRow{}, &Error{Description: err.Error()}
+				}
+				result.Set(key, bytes)
+			}
+		}
 	}
 
 	return result, nil

@@ -147,6 +147,10 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 		return ImportedRow{}, &Error{Description: err.Error()}
 	}
 
+	if t.columns == nil {
+		return result, nil
+	}
+
 	if l := int(t.columns.Len()); l > 0 {
 		for idx := 0; idx < l; idx++ {
 			col := t.columns.Column(uint(idx))

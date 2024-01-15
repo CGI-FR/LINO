@@ -182,6 +182,7 @@ func (d OracleDialect) IsDuplicateError(err error) bool {
 
 // ConvertValue before load
 func (d OracleDialect) ConvertValue(from push.Value) push.Value {
+	//nolint:gocritic
 	switch v := from.(type) {
 	case []byte:
 		return go_ora.Blob{Data: v}

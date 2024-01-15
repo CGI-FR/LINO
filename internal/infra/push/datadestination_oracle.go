@@ -9,7 +9,6 @@ import (
 
 	// import Oracle connector
 	_ "github.com/sijms/go-ora/v2"
-	go_ora "github.com/sijms/go-ora/v2"
 )
 
 // OracleDataDestinationFactory exposes methods to create new Oracle extractors.
@@ -182,11 +181,10 @@ func (d OracleDialect) IsDuplicateError(err error) bool {
 
 // ConvertValue before load
 func (d OracleDialect) ConvertValue(from push.Value) push.Value {
-	//nolint:gocritic
-	switch v := from.(type) {
-	case []byte:
-		return go_ora.Blob{Data: v}
-	}
+	// switch v := from.(type) {
+	// case []byte:
+	// 	return go_ora.Blob{Data: v}
+	// }
 	// FIXME: Workaround to parse time from json
 	aTime, err := time.Parse("2006-01-02T15:04:05.999Z07:00", fmt.Sprintf("%v", from))
 	if err != nil {

@@ -52,6 +52,17 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 
 	committed := make([]Row, 0, commitSize)
 
+	defer func() {
+		if savepointPath != "" {
+			if err := savepoint(savepointPath, committed); err != nil {
+				log.Error().Msgf("Savepoint failure, %d lines committed unsaved", len(committed))
+				for _, unsaved := range committed {
+					log.Warn().Interface("value", unsaved).Msg("Unsaved committed value")
+				}
+			}
+		}
+	}()
+
 	i := uint(0)
 	for ri.Next() {
 		row := ri.Value()
@@ -83,12 +94,6 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			IncCommitsCount()
 		}
 		IncInputLinesCount()
-	}
-
-	if savepointPath != "" {
-		if err := savepoint(savepointPath, committed); err != nil {
-			return err
-		}
 	}
 
 	if ri.Error() != nil {

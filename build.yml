@@ -40,7 +40,8 @@ properties:
   ldflags: "" # Specify a additional ldflags with `-props "{ldflags: '<flags>'}"`
   tags: [] # Specify additional tags with `-props "{tags: ['tag']}"`
   buildpaths: [] # By default, all paths under the cmd/ folder are built, specify a different folder list with `-props "{buildpaths: ["other/path", "to/build"]}"`
-  testmod: "table" # Test only one module
+  testmod: "table" # Test only one venom module
+  testfile: "*" # Test only one venom file
   # List of linters to run on the lint target, if left empty : run all linters
   linters: [
       # TODO: review these linters, and consider using more
@@ -277,7 +278,7 @@ targets:
         todir: =TEST_WS_DIR
       - $: export COMPOSE_PROJECT_NAME=lino; venom run --stop-on-failure ={TEST_WS_DIR}/*/*.yml
 
-  # run "neon -props '{testmod: table}' test-int-dev
+  # run "neon -props '{testmod: table, testfile: config}' test-int-dev
   test-int-dev:
     doc: "Run all integration tests"
     # depends: ["info", "refresh", "lint", "test"]
@@ -285,10 +286,10 @@ targets:
     steps:
       - delete: ={TEST_WS_DIR}/**
       - mkdir: ={TEST_WS_DIR}/={testmod}/
-      - copy: "*.yml"
+      - copy: ={testfile}.yml
         dir: "tests/suites/={testmod}/"
         todir: ={TEST_WS_DIR}/={testmod}
-      - $: export COMPOSE_PROJECT_NAME=lino; venom run  ={TEST_WS_DIR}/={testmod}/*.yml
+      - $: export COMPOSE_PROJECT_NAME=lino; venom run  ={TEST_WS_DIR}/={testmod}/={testfile}.yml
 
   # run "neon -props '{buildpaths: ["path/to/main/package1","path/to/main/package2"]}' publish" to publish specific targets
   # example : neon -props '{buildpaths: ["cmd/cli"]}' publish

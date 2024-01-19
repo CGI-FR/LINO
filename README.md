@@ -313,6 +313,18 @@ lino push update source --table actor <<<'{"actor_id":998,"last_name":"CHASE","_
 
 The `__usingpk__` field can also be used with an ingress descriptor at any level in the data. The name of this field can be changed to another value with the `--using-pk-field` flag.
 
+### How to recover from error
+
+Use options `lino pull --exclude-from-file` (shortcut `-X`) and `lino push --savepoint` combined to handle error recovery. The process will restart where it failed if an error has interrupted it in a previous run.
+
+Example
+
+```console
+lino pull --table customers -X customers.jsonl source | lino push --table customers --savepoint customers.jsonl target
+```
+
+The customers.jsonl file will contain the list of customers id that have been transfererd to the target database.
+
 ## Analyse
 
 Use the `lino analyse <data_connector_alias>` command to extract metrics from the database in YAML format.

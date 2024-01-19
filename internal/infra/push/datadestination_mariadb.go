@@ -145,7 +145,7 @@ func (d MariadbDialect) IsDuplicateError(err error) bool {
 }
 
 // ConvertValue before load
-func (d MariadbDialect) ConvertValue(from push.Value) push.Value {
+func (d MariadbDialect) ConvertValue(from push.Value, descriptor ValueDescriptor) push.Value {
 	return from
 }
 

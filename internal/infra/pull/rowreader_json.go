@@ -33,7 +33,7 @@ type JSONRowReader struct {
 	value    *pull.Row
 }
 
-// NNewJSONRowReader create a new JSONRowReader
+// NewJSONRowReader create a new JSONRowReader
 func NewJSONRowReader(file io.Reader) *JSONRowReader {
 	return &JSONRowReader{file, bufio.NewScanner(file), nil, nil}
 }

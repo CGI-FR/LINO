@@ -18,13 +18,15 @@
 package push
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/rs/zerolog/log"
 )
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string) (err *Error) {
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, savepointPath string) (err *Error) {
 	err1 := destination.Open(plan, mode, disableConstraints)
 	if err1 != nil {
 		return err1
@@ -48,6 +50,19 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 
 	Reset()
 
+	committed := make([]Row, 0, commitSize)
+
+	defer func() {
+		if savepointPath != "" {
+			if err := savepoint(savepointPath, committed); err != nil {
+				log.Error().Msgf("Savepoint failure, %d lines committed unsaved", len(committed))
+				for _, unsaved := range committed {
+					log.Warn().Interface("value", unsaved).Msg("Unsaved committed value")
+				}
+			}
+		}
+	}()
+
 	i := uint(0)
 	for ri.Next() {
 		row := ri.Value()
@@ -61,11 +76,20 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			log.Warn().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
 		}
 		i++
+		if savepointPath != "" {
+			committed = append(committed, extractValues(*row, plan.FirstTable().PrimaryKey()))
+		}
 		if i%commitSize == 0 {
 			log.Info().Msg("Intermediate commit")
 			errCommit := destination.Commit()
 			if errCommit != nil {
 				return errCommit
+			}
+			if savepointPath != "" {
+				if err := savepoint(savepointPath, committed); err != nil {
+					return err
+				}
+				committed = committed[:0] // clear slice without releasing memory
 			}
 			IncCommitsCount()
 		}
@@ -232,4 +256,33 @@ func computeTranslatedKeys(row Row, table Table, translator Translator) Row {
 	}
 
 	return where
+}
+
+func savepoint(savepointPath string, committed []Row) *Error {
+	f, err := os.OpenFile(savepointPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	if err != nil {
+		return &Error{Description: err.Error()}
+	}
+	defer f.Close()
+
+	for _, row := range committed {
+		bytes, err := json.Marshal(row)
+		if err != nil {
+			return &Error{Description: err.Error()}
+		}
+
+		if _, err := f.Write(append(bytes, '\n')); err != nil {
+			return &Error{Description: err.Error()}
+		}
+	}
+
+	return nil
+}
+
+func extractValues(row Row, keys []string) Row {
+	result := Row{}
+	for _, key := range keys {
+		result[key] = row[key]
+	}
+	return result
 }

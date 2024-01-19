@@ -52,3 +52,7 @@ type NoTraceListener struct{}
 
 // TraceStep catch Step event.
 func (t NoTraceListener) TraceStep(s Step) TraceListener { return t }
+
+type KeyStore interface {
+	Has(row Row) bool
+}

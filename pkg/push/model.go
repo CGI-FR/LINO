@@ -31,6 +31,7 @@ type Table interface {
 	PrimaryKey() []string
 	Columns() ColumnList
 	Import(map[string]interface{}) (ImportedRow, *Error)
+	GetColumn(name string) Column
 }
 
 // ColumnList is a list of columns.

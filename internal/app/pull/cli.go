@@ -43,6 +43,7 @@ var (
 	dataSourceFactories  map[string]pull.DataSourceFactory
 	pullExporterFactory  func(io.Writer) pull.RowExporter
 	rowReaderFactory     func(io.ReadCloser) pull.RowReader
+	keyStoreFactory      func(io.ReadCloser, []string) (pull.KeyStore, error)
 )
 
 var traceListener pull.TraceListener
@@ -56,6 +57,7 @@ func Inject(
 	dsfmap map[string]pull.DataSourceFactory,
 	exporterFactory func(io.Writer) pull.RowExporter,
 	rrf func(io.ReadCloser) pull.RowReader,
+	ksf func(io.ReadCloser, []string) (pull.KeyStore, error),
 	tl pull.TraceListener,
 ) {
 	dataconnectorStorage = dbas
@@ -65,6 +67,7 @@ func Inject(
 	dataSourceFactories = dsfmap
 	pullExporterFactory = exporterFactory
 	rowReaderFactory = rrf
+	keyStoreFactory = ksf
 	traceListener = tl
 }
 
@@ -74,6 +77,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var distinct bool
 	var limit uint
 	var filefilter string
+	var fileexclude string
 	var table string
 	var ingressDescriptor string
 	var where string
@@ -95,6 +99,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Bool("diagnostic", diagnostic).
 				Bool("distinct", distinct).
 				Str("filter-from-file", filefilter).
+				Str("exclude-from-file", fileexclude).
 				Str("table", table).
 				Str("where", where).
 				Uint("parallel", parallel).
@@ -143,6 +148,21 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				log.Trace().Str("file", filefilter).Msg("reading file")
 			}
 
+			var filtersEx pull.KeyStore
+			if len(fileexclude) > 0 {
+				filterReader, e3 := os.Open(fileexclude)
+				if e3 != nil {
+					fmt.Fprintln(err, e3.Error())
+					os.Exit(1)
+				}
+				filtersEx, e3 = keyStoreFactory(filterReader, start.Keys)
+				if e3 != nil {
+					fmt.Fprintln(err, e3.Error())
+					os.Exit(1)
+				}
+				log.Trace().Str("file", fileexclude).Msg("reading file")
+			}
+
 			row := pull.Row{}
 			for column, value := range initialFilters {
 				row[column] = value
@@ -155,7 +175,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			}
 
 			puller := pull.NewPullerParallel(plan, datasource, pullExporterFactory(out), tracer, parallel)
-			if e3 := puller.Pull(start, filter, filters); e3 != nil {
+			if e3 := puller.Pull(start, filter, filters, filtersEx); e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the pull command")
 				os.Exit(1)
 			}
@@ -172,6 +192,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
 	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "select distinct values from start table")
 	cmd.Flags().StringVarP(&filefilter, "filter-from-file", "F", "", "Use file to filter start table")
+	cmd.Flags().StringVarP(&fileexclude, "exclude-from-file", "X", "", "Use file to filter out start table")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "pull content of table without relations instead of ingress descriptor definition")
 	cmd.Flags().StringVarP(&where, "where", "w", "", "Advanced SQL where clause to filter")
 	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "pull content using ingress descriptor definition")

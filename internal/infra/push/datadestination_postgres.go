@@ -147,7 +147,7 @@ func (d PostgresDialect) IsDuplicateError(err error) bool {
 }
 
 // ConvertValue before load
-func (d PostgresDialect) ConvertValue(from push.Value) push.Value {
+func (d PostgresDialect) ConvertValue(from push.Value, descriptor ValueDescriptor) push.Value {
 	return from
 }
 

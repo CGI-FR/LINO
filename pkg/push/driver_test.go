@@ -43,13 +43,13 @@ func TestSimplePush(t *testing.T) {
 	)
 	ri := rowIterator{limit: 10, row: push.Row{"name": "John"}}
 	tables := map[string]*rowWriter{
-		A.Name(): &rowWriter{},
-		B.Name(): &rowWriter{},
-		C.Name(): &rowWriter{},
+		A.Name(): {},
+		B.Name(): {},
+		C.Name(): {},
 	}
 	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{}, nil, "")
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{}, nil, "", "")
 
 	assert.Nil(t, err)
 	assert.Equal(t, true, dest.closed)
@@ -82,13 +82,13 @@ func TestRelationPush(t *testing.T) {
 	}}
 
 	tables := map[string]*rowWriter{
-		A.Name(): &rowWriter{},
-		B.Name(): &rowWriter{},
-		C.Name(): &rowWriter{},
+		A.Name(): {},
+		B.Name(): {},
+		C.Name(): {},
 	}
 	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{}, nil, "")
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{}, nil, "", "")
 
 	// no error
 	assert.Nil(t, err)
@@ -131,13 +131,13 @@ func TestRelationPushWithEmptyRelation(t *testing.T) {
 	}}
 
 	tables := map[string]*rowWriter{
-		A.Name(): &rowWriter{},
-		B.Name(): &rowWriter{},
-		C.Name(): &rowWriter{},
+		A.Name(): {},
+		B.Name(): {},
+		C.Name(): {},
 	}
 	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{}, nil, "")
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, true, push.NoErrorCaptureRowWriter{}, nil, "", "")
 
 	// no error
 	assert.Nil(t, err)
@@ -182,13 +182,13 @@ func TestInversseRelationPush(t *testing.T) {
 	}}
 
 	tables := map[string]*rowWriter{
-		A.Name(): &rowWriter{},
-		B.Name(): &rowWriter{},
-		C.Name(): &rowWriter{},
+		A.Name(): {},
+		B.Name(): {},
+		C.Name(): {},
 	}
 	dest := memoryDataDestination{tables, false, false, false}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 5, true, push.NoErrorCaptureRowWriter{}, nil, "")
+	err := push.Push(&ri, &dest, plan, push.Insert, 5, true, push.NoErrorCaptureRowWriter{}, nil, "", "")
 
 	// no error
 	assert.Nil(t, err)

@@ -113,3 +113,15 @@ testcases:
           - result.systemerr ShouldBeEmpty
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"staff_id":2,"picture":"Hello world"}
+
+  - name: import with file format
+    steps:
+      - script: rm tables.yaml
+      - script: lino table extract source
+      - script: lino table add-column staff staff_id
+      - script: lino table add-column staff picture --import file --export no
+      - script: lino pull --table staff source | jq -c '.picture="../../data/avatar.png"' | lino push update --table staff dest
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty

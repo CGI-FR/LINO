@@ -20,7 +20,6 @@ package push
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -33,12 +32,13 @@ type table struct {
 	pk      []string
 	columns ColumnList
 
-	template jsonline.Template
+	template  jsonline.Template
+	filecache *FileCache
 }
 
 // NewTable initialize a new Table object
 func NewTable(name string, pk []string, columns ColumnList) Table {
-	return table{name: name, pk: pk, columns: columns}
+	return table{name: name, pk: pk, columns: columns, filecache: &FileCache{}}
 }
 
 func (t table) Name() string         { return t.name }
@@ -170,7 +170,7 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 			format, _ := parseFormatWithType(col.Import())
 
 			if format == "file" {
-				bytes, err := os.ReadFile(result.GetString(key))
+				bytes, err := t.filecache.Load(result.GetString(key))
 				if err != nil {
 					return ImportedRow{}, &Error{Description: err.Error()}
 				}

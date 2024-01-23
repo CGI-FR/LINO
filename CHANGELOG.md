@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.6.1]
+
+- `Fixed` performance issue with `import: file`
+
 ## [2.6.0]
 
 - `Added` `sqlserver` support

@@ -62,10 +62,15 @@ func Select(d Dialect, columns []string, distinct bool, schema string, table str
 	// Build FROM clause *********************************************
 	sqlFrom.WriteString("FROM ")
 	if len(schema) > 0 {
+		sqlFrom.WriteString("\"")
 		sqlFrom.WriteString(schema)
+		sqlFrom.WriteString("\"")
 		sqlFrom.WriteString(".")
 	}
+
+	sqlFrom.WriteString("\"")
 	sqlFrom.WriteString(table)
+	sqlFrom.WriteString("\"")
 
 	// Build LIMIT clause ********************************************
 	if limit > 0 {
@@ -74,8 +79,10 @@ func Select(d Dialect, columns []string, distinct bool, schema string, table str
 
 	values := []interface{}{}
 	// Build WHERE clause ********************************************
+
+	sqlWhere.WriteString("WHERE ")
+
 	if len(filters) > 0 || len(where) > 0 {
-		sqlWhere.WriteString("WHERE ")
 		whereContentFlag := false
 		for key, value := range filters {
 			sqlWhere.WriteString(key)
@@ -93,12 +100,9 @@ func Select(d Dialect, columns []string, distinct bool, schema string, table str
 				sqlWhere.WriteString(" AND ")
 			}
 			sqlWhere.WriteString(where)
-			whereContentFlag = true
 		}
-
-		if !whereContentFlag {
-			sqlWhere.WriteString(" 1=1 ")
-		}
+	} else {
+		sqlWhere.WriteString(" 1=1 ")
 	}
 
 	// Assemble the builders in order using the existing method

@@ -18,7 +18,7 @@ func TestCreateSelectDb2(t *testing.T) {
 	assert.Nil(t, err)
 	defer db.Close()
 
-	mock.ExpectQuery("SELECT  *  FROM CUSTOMERS  WHERE  1=1   FETCH FIRST 5 ROWS ONLY").WillReturnRows()
+	mock.ExpectQuery("SELECT  *  FROM \"CUSTOMERS\" WHERE 1=1 FETCH FIRST 5 ROWS ONLY").WillReturnRows()
 
 	db2Factory := infra.NewDb2DataSourceFactory()
 

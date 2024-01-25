@@ -18,7 +18,7 @@ func TestCreateSelectSQLServer(t *testing.T) {
 	assert.Nil(t, err)
 	defer db.Close()
 
-	mock.ExpectQuery("SELECT  TOP 5 *  FROM CUSTOMERS  WHERE  1=1").WillReturnRows()
+	mock.ExpectQuery("SELECT  TOP 5 *  FROM \"CUSTOMERS\"  WHERE 1=1").WillReturnRows()
 
 	msFactory := infra.NewSQLServerDataSourceFactory()
 

@@ -82,17 +82,6 @@ func (ds *SQLDataSource) OpenWithDB(db *sql.DB) error {
 	return nil
 }
 
-// build table name with or without schema from dataconnector
-func (ds *SQLDataSource) tableName(source pull.Table) string {
-	if ds.schema == "" {
-		return string(source.Name)
-	}
-	if strings.Contains(string(source.Name), ".") {
-		return string(source.Name)
-	}
-	return ds.schema + "." + string(source.Name)
-}
-
 func (ds *SQLDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSet, error) {
 	reader, err := ds.RowReader(source, filter)
 	if err != nil {
@@ -112,79 +101,35 @@ func (ds *SQLDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSe
 }
 
 // RowReader iterate over rows in table with filter
-// Version modifiée
-// RowReader generates a SQL query for reading rows from a table with optional filtering and limiting.
 func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, error) {
-	// String Builders
-	sqlSelect := &strings.Builder{}
-	sqlLimit := &strings.Builder{}
-	sqlWhere := &strings.Builder{}
-	sqlColumns := &strings.Builder{}
-	sqlFrom := &strings.Builder{}
-
-	// Build SELECT clause *******************************************
-	sqlSelect.Write([]byte("SELECT"))
-	if filter.Distinct {
-		sqlSelect.Write([]byte(" DISTINCT"))
-	}
+	columns := []string{}
 	if pcols := source.Columns; len(pcols) > 0 && source.ExportMode != pull.ExportModeAll {
-		for idx := int(0); idx < len(pcols); idx++ {
-			if idx > 0 {
-				sqlSelect.Write([]byte(", "))
-			}
-			sqlSelect.Write([]byte(" " + pcols[idx].Name))
+		for _, column := range pcols {
+			columns = append(columns, column.Name)
 		}
-	} else {
-		sqlColumns.Write([]byte("*"))
 	}
 
-	// Build FROM clause *********************************************
-	sqlFrom.Write([]byte("FROM "))
-	sqlFrom.Write([]byte(ds.tableName(source)))
+	sql := commonsql.Select(
+		ds.dialect, columns, filter.Distinct, ds.schema, string(source.Name),
+		filter.Values, filter.Where, filter.Limit,
+	)
 
-	// Build LIMIT clause ********************************************
-	if filter.Limit > 0 {
-		fmt.Fprint(sqlLimit, ds.dialect.Limit(filter.Limit))
-	}
-
-	// Build WHERE clause ********************************************
-
-	sqlWhere.Write([]byte("WHERE "))
-	whereContentFlag := false
+	// get values for filter
 	values := []interface{}{}
-	for key, value := range filter.Values {
-		sqlWhere.Write([]byte(key))
+
+	for _, value := range filter.Values {
 		values = append(values, value)
-		fmt.Fprint(sqlWhere, "=")
-		fmt.Fprint(sqlWhere, ds.dialect.Placeholder(len(values)))
-		if len(values) < len(filter.Values) {
-			sqlWhere.Write([]byte(" AND "))
-		}
-		whereContentFlag = true
 	}
-
-	if strings.TrimSpace(filter.Where) != "" {
-		if whereContentFlag {
-			sqlWhere.Write([]byte(" AND "))
-		}
-		fmt.Fprint(sqlWhere, filter.Where)
-		whereContentFlag = true
-	}
-
-	if !whereContentFlag {
-		sqlWhere.Write([]byte(" 1=1 "))
-	}
-
-	// Assemble the builders in order using the existing method
-	sql := ds.dialect.CreateSelect(sqlSelect.String(), sqlWhere.String(), sqlLimit.String(), sqlColumns.String(), sqlFrom.String())
 
 	if log.Logger.GetLevel() <= zerolog.DebugLevel {
 		printSQL := sql
+
 		for i, v := range values {
 			printSQL = strings.ReplaceAll(printSQL, ds.dialect.Placeholder(i+1), fmt.Sprintf("%v", v))
 		}
 		log.Debug().Msg(fmt.Sprint(printSQL))
 	}
+
 	// Execute the SQL query and return the iterator
 	rows, err := ds.dbx.Queryx(sql, values...)
 	if err != nil {

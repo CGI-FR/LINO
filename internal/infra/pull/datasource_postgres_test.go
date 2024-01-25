@@ -18,7 +18,7 @@ func TestCreateSelectPostgres(t *testing.T) {
 	assert.Nil(t, err)
 	defer db.Close()
 
-	mock.ExpectQuery("SELECT * FROM CUSTOMERS WHERE 1=1 LIMIT 5").WillReturnRows()
+	mock.ExpectQuery("SELECT * FROM \"CUSTOMERS\"  WHERE 1=1 LIMIT 5").WillReturnRows()
 
 	pgFactory := infra.NewPostgresDataSourceFactory()
 
@@ -42,7 +42,7 @@ func TestCreateSelectPostgresWithColumns(t *testing.T) {
 	defer db.Close()
 
 	// Définir l'expectation de la requête SELECT avec des colonnes spécifiques
-	mock.ExpectQuery("SELECT Name FROM CUSTOMERS WHERE 1=1 LIMIT 5").WillReturnRows()
+	mock.ExpectQuery("SELECT Name FROM \"CUSTOMERS\"  WHERE 1=1 LIMIT 5").WillReturnRows()
 
 	// Créer une instance de la fabrique de source de données PostgreSQL
 	pgFactory := infra.NewPostgresDataSourceFactory()

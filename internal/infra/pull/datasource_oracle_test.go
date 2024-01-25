@@ -18,7 +18,7 @@ func TestCreateSelectOracle(t *testing.T) {
 	assert.Nil(t, err)
 	defer db.Close()
 
-	mock.ExpectQuery("SELECT * FROM CUSTOMERS WHERE 1=1 AND rownum <= 5").WillReturnRows()
+	mock.ExpectQuery("SELECT * FROM \"CUSTOMERS\" WHERE 1=1 AND rownum <= 5").WillReturnRows()
 
 	pgFactory := infra.NewOracleDataSourceFactory()
 

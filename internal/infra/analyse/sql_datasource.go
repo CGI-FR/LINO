@@ -131,7 +131,10 @@ func (ds *SQLDataSource) Open() error {
 		return err
 	}
 
-	sql := commonsql.Select(ds.dialect, []string{ds.column}, false, ds.schema, ds.table, map[string]any{}, ds.where, ds.limit)
+	sql := commonsql.Select(
+		ds.dialect, []string{ds.column}, false, ds.schema, ds.table,
+		map[string]any{}, ds.where, ds.limit,
+	)
 
 	ds.cursor, err = ds.db.Query(sql)
 	if err != nil {

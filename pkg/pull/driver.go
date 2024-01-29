@@ -110,6 +110,8 @@ func (p *puller) Pull(start Table, filter Filter, filterCohort RowReader, exclud
 			return fmt.Errorf("%w", err)
 		}
 
+		defer reader.Close()
+
 		for reader.Next() {
 			IncLinesPerStepCount(string(start.Name))
 			row := start.export(reader.Value())

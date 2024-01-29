@@ -40,6 +40,8 @@ func (ds DataSourceInMemory) Read(source Table, filter Filter) (RowSet, error) {
 		return nil, err
 	}
 
+	defer reader.Close()
+
 	result := RowSet{}
 	for reader.Next() {
 		result = append(result, reader.Value())
@@ -104,3 +106,4 @@ func (rr *RowReaderInMemory) Value() Row {
 	return row
 }
 func (rr *RowReaderInMemory) Error() error { return nil }
+func (rr *RowReaderInMemory) Close() error { return nil }

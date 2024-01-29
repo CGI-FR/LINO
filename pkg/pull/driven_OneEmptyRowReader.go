@@ -38,3 +38,6 @@ func (r OneEmptyRowReader) Value() Row { return Row{} }
 
 // Error return always nil
 func (r OneEmptyRowReader) Error() error { return nil }
+
+// Close return always nil
+func (r OneEmptyRowReader) Close() error { return nil }

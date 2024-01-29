@@ -99,6 +99,8 @@ func (ds *SQLDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSe
 		return nil, err
 	}
 
+	defer reader.Close()
+
 	result := pull.RowSet{}
 	for reader.Next() {
 		result = append(result, reader.Value())
@@ -249,4 +251,9 @@ func (di *SQLDataIterator) Value() pull.Row {
 // Error returns the iterator error
 func (di *SQLDataIterator) Error() error {
 	return di.err
+}
+
+// Close returns the iterator
+func (di *SQLDataIterator) Close() error {
+	return di.rows.Close()
 }

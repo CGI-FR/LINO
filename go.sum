@@ -55,8 +55,8 @@ github.com/DATA-DOG/go-sqlmock v1.5.2 h1:OcvFkGmslmlZibjAjaHm3L//6LiuBgolP7Oputl
 github.com/DATA-DOG/go-sqlmock v1.5.2/go.mod h1:88MAG/4G7SMwSE3CeA0ZKzrT5CiOU3OJ+JlNzwDqpNU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/Trendyol/overlog v0.1.0/go.mod h1:kns76uyvmPFX0xS6Xsn/adMpB/ldlO6tyvK+Ug+cLsU=
-github.com/adrienaury/zeromdc v0.0.0-20221116212822-6a366c26ee61 h1:GXmgCyG0oDr3BFL+NYcwKEP2H3L9DuBo66ZR++zNasA=
-github.com/adrienaury/zeromdc v0.0.0-20221116212822-6a366c26ee61/go.mod h1:5UlMlw0MRjEAms20gDadR5GrN2wEp9XEXTBiMp/XI4E=
+github.com/adrienaury/zeromdc v0.1.1 h1:0ExOHKSX1m5R7oPTG88Umoeom7JGX5K5FHy98ZtHlbs=
+github.com/adrienaury/zeromdc v0.1.1/go.mod h1:5UlMlw0MRjEAms20gDadR5GrN2wEp9XEXTBiMp/XI4E=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=

@@ -39,8 +39,7 @@ func (e *PostgresExtractorFactory) New(url string, schema string) table.Extracto
 	return NewSQLExtractor(url, schema, PostgresDialect{})
 }
 
-type PostgresDialect struct {
-}
+type PostgresDialect struct{}
 
 func (d PostgresDialect) SQL(schema string) string {
 	SQL := `SELECT kcu.table_schema,
@@ -64,8 +63,6 @@ GROUP BY tco.constraint_name,
 	kcu.table_name
 ORDER BY kcu.table_schema,
 	kcu.table_name`
-
-	openDB()
 
 	return SQL
 }

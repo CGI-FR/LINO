@@ -18,6 +18,9 @@
 package table
 
 import (
+	"database/sql"
+	"fmt"
+	"log"
 	"strings"
 
 	"github.com/cgi-fr/lino/pkg/table"
@@ -56,14 +59,12 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
-
 	SQL := e.dialect.SQL(e.schema)
 
 	rows, err := db.Query(SQL)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
-
 	tables := []table.Table{}
 
 	var (
@@ -77,9 +78,8 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 		if err != nil {
 			return nil, &table.Error{Description: err.Error()}
 		}
-
+		ColumnInfo(db, tableName)
 		table := table.Table{
-
 			Name: tableName,
 			Keys: strings.Split(keyColumns, ","),
 		}
@@ -127,4 +127,42 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 	}
 
 	return count, nil
+}
+
+func ColumnInfo(db *sql.DB, tableName string) {
+	// Exécution de la requête pour obtenir les informations sur les colonnes
+	rows, err := db.Query("SELECT * FROM " + tableName + " LIMIT 1")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	// Récupération des informations sur les colonnes
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		rows.Close()
+		log.Fatal(err)
+	}
+
+	// Parcours des informations sur les colonnes
+	for _, ct := range columnTypes {
+		// Récupération du nom de la colonne
+		columnName := ct.Name()
+
+		// Récupération du type de données de la colonne
+		dataType := ct.DatabaseTypeName()
+
+		// Récupération de la longueur ou de la taille de la colonne (si applicable)
+		columnLength, _ := ct.Length()
+		columnSize, _ := ct.Length()
+
+		// Affichage des informations sur la colonne
+		fmt.Printf("Column Name: %s, Data Type: %s", columnName, dataType)
+		if columnLength > 0 {
+			fmt.Printf(", Length: %d", columnLength)
+		} else if columnSize > 0 {
+			fmt.Printf(", Size: %d", columnSize)
+		}
+		fmt.Println()
+	}
 }

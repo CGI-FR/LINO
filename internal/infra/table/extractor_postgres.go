@@ -65,5 +65,7 @@ GROUP BY tco.constraint_name,
 ORDER BY kcu.table_schema,
 	kcu.table_name`
 
+	openDB()
+
 	return SQL
 }

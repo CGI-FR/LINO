@@ -19,7 +19,6 @@ package table
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/cgi-fr/lino/pkg/table"
@@ -78,12 +77,11 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 			return nil, &table.Error{Description: err.Error()}
 		}
 		// Get columns information, check is there have types needs to be modify in export
-		columns := []table.Column{}
-		columns, err = ColumnInfo(db, tableName)
+		columns, err := ColumnInfo(db, tableName)
 		if err != nil {
 			return nil, &table.Error{Description: err.Error()}
 		}
-		fmt.Println("=======Table:", tableName, "===========")
+
 		if len(columns) > 0 {
 			table := table.Table{
 				Name:       tableName,
@@ -165,21 +163,18 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 	columns := []table.Column{}
 	// Iterate over column information
 	for _, ct := range columnTypes {
-
 		columnName := ct.Name()
 		dataType := ct.DatabaseTypeName()
-		fmt.Println("ColumnName: ", columnName, " Type: ", dataType)
-		columnType, save := checkType(dataType)
-		if save {
 
+		exportType, save := checkType(dataType)
+		if save {
 			// columnLength, _ := ct.Length()
 			// columnPrecision, columnSize, _ := ct.DecimalSize()
 
 			columnInfo := table.Column{
 				Name:   columnName,
-				Export: columnType,
+				Export: exportType,
 			}
-			fmt.Println(" Name: ", columnInfo.Name, "Type: ", columnInfo.Export)
 			// if columnLength > 0 {
 			// 	fmt.Printf(", Length: %d", columnLength)
 			// } else if columnSize > 0 {
@@ -195,14 +190,19 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 
 func checkType(columnType string) (string, bool) {
 	switch columnType {
+	// string case
 	case "TSVECTOR", "_TEXT", "", "BPCHAR":
 		return "string", true
+	// numeric case
 	case "NUMERIC":
 		return "numeric", true
+	// timestamp case
 	case "TIMESTAMP":
 		return "timestamp", true
+	// datetime case
 	case "DATE":
 		return "datetime", true
+	// base64/binary case
 	case "BYTEA":
 		return "base64", true
 	default:

@@ -19,6 +19,7 @@ package table
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/cgi-fr/lino/pkg/table"
@@ -161,13 +162,18 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 	}
 
 	columns := []table.Column{}
+	columnsNoType := []string{}
 	// Iterate over column information
 	for _, ct := range columnTypes {
 		columnName := ct.Name()
 		dataType := ct.DatabaseTypeName()
 
-		exportType, save := checkType(dataType)
-		if save {
+		// if data type is unusual or data not correct
+		if len(dataType) == 0 {
+			columnsNoType = append(columnsNoType, columnName)
+		}
+		exportType, isSavingColumn := checkType(dataType)
+		if isSavingColumn {
 			// columnLength, _ := ct.Length()
 			// columnPrecision, columnSize, _ := ct.DecimalSize()
 
@@ -184,20 +190,23 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 			columns = append(columns, columnInfo)
 		}
 	}
-
+	// Notify user unusual column
+	if len(columnsNoType) > 0 {
+		fmt.Println("Table", tableName, "contains some columns with unusual characteristics:", columnsNoType, ".It may be necessary to manually specify the export type if the data does not display correctly.")
+	}
 	return columns, nil
 }
 
 func checkType(columnType string) (string, bool) {
 	switch columnType {
 	// string case
-	case "TSVECTOR", "_TEXT", "", "BPCHAR":
+	case "TSVECTOR", "_TEXT", "BPCHAR":
 		return "string", true
 	// numeric case
-	case "NUMERIC":
+	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE PRECISION", "MONEY", "SMALLINT", "INTEGER", "BIGINT":
 		return "numeric", true
 	// timestamp case
-	case "TIMESTAMP":
+	case "TIMESTAMP", "TIMESTAMPTZ":
 		return "timestamp", true
 	// datetime case
 	case "DATE":

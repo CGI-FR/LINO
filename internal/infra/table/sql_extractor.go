@@ -83,6 +83,7 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 		if err != nil {
 			return nil, &table.Error{Description: err.Error()}
 		}
+		fmt.Println("=======Table:", tableName, "===========")
 		if len(columns) > 0 {
 			table := table.Table{
 				Name:       tableName,
@@ -147,14 +148,14 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 }
 
 func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
-	// Exécution de la requête pour obtenir les informations sur les colonnes
+	// Execute query to fetch column information
 	rows, err := db.Query("SELECT * FROM " + tableName + " LIMIT 1")
 	if err != nil {
 		return []table.Column{}, err
 	}
 	defer rows.Close()
 
-	// Récupération des informations sur les colonnes
+	// Retrieve column information
 	columnTypes, err := rows.ColumnTypes()
 	if err != nil {
 		rows.Close()
@@ -162,31 +163,29 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 	}
 
 	columns := []table.Column{}
-	// Parcours des informations sur les colonnes
+	// Iterate over column information
 	for _, ct := range columnTypes {
-		// Récupération du nom de la colonne
-		columnName := ct.Name()
 
-		// Récupération du type de données de la colonne
+		columnName := ct.Name()
 		dataType := ct.DatabaseTypeName()
+		fmt.Println("ColumnName: ", columnName, " Type: ", dataType)
 		columnType, save := checkType(dataType)
 		if save {
-			// Récupération de la longueur ou de la taille de la colonne (si applicable)
-			columnLength, _ := ct.Length()
-			columnPrecision, columnSize, _ := ct.DecimalSize()
 
-			// Affichage des informations sur la colonne
+			// columnLength, _ := ct.Length()
+			// columnPrecision, columnSize, _ := ct.DecimalSize()
+
 			columnInfo := table.Column{
 				Name:   columnName,
 				Export: columnType,
 			}
 			fmt.Println(" Name: ", columnInfo.Name, "Type: ", columnInfo.Export)
-			if columnLength > 0 {
-				fmt.Printf(", Length: %d", columnLength)
-			} else if columnSize > 0 {
-				fmt.Printf(", Size: %d", columnSize)
-				fmt.Printf(", Precision: %d", columnPrecision)
-			}
+			// if columnLength > 0 {
+			// 	fmt.Printf(", Length: %d", columnLength)
+			// } else if columnSize > 0 {
+			// 	fmt.Printf(", Size: %d", columnSize)
+			// 	fmt.Printf(", Precision: %d", columnPrecision)
+			// }
 			columns = append(columns, columnInfo)
 		}
 	}
@@ -196,9 +195,9 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 
 func checkType(columnType string) (string, bool) {
 	switch columnType {
-	case "TSVECTOR", "_TEXT":
+	case "TSVECTOR", "_TEXT", "", "BPCHAR":
 		return "string", true
-	case "NUMERIC", "":
+	case "NUMERIC":
 		return "numeric", true
 	case "TIMESTAMP":
 		return "timestamp", true

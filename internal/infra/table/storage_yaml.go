@@ -99,11 +99,17 @@ func (s YAMLStorage) Store(tables []table.Table) *table.Error {
 		for _, rc := range r.Columns {
 			cols = append(cols, YAMLColumn{Name: rc.Name, Export: rc.Export, Import: rc.Import})
 		}
+
 		yml := YAMLTable{
 			Name:    r.Name,
 			Keys:    r.Keys,
 			Columns: cols,
 		}
+
+		if r.ExportMode == table.ExportModeAll {
+			yml.ExportMode = "all"
+		}
+
 		list.Tables = append(list.Tables, yml)
 	}
 

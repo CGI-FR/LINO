@@ -190,22 +190,28 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 	return columns, nil
 }
 
+// Contains check type list for mariaDB, oracle, postgres, SQL server
 func checkType(columnType string) (string, bool) {
 	switch columnType {
-	// string case
-	case "TSVECTOR", "_TEXT", "BPCHAR":
+	// String types
+	case "TSVECTOR", "_TEXT", "BPCHAR", "CHARACTER", "CHARACTER VARYING", "VARCHAR", "TEXT",
+		"CHAR", "VARCHAR2", "NCHAR", "NVARCHAR2", "CLOB", "NCLOB",
+		"TINYTEXT", "MEDIUMTEXT", "LONGTEXT":
 		return "string", true
-	// numeric case
-	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE PRECISION", "MONEY", "SMALLINT", "INTEGER", "BIGINT":
+	// Numeric types
+	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE PRECISION", "MONEY", "INTEGER", "BIGINT",
+		"NUMBER", "BINARY_FLOAT", "BINARY_DOUBLE", "INT", "TINYINT", "SMALLINT", "MEDIUMINT":
 		return "numeric", true
-	// timestamp case
-	case "TIMESTAMP", "TIMESTAMPTZ":
+	// Timestamp types
+	case "TIMESTAMP", "TIMESTAMPTZ",
+		"TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
 		return "timestamp", true
-	// datetime case
-	case "DATE":
+	// Datetime types
+	case "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME":
 		return "datetime", true
-	// base64/binary case
-	case "BYTEA":
+	// Binary types
+	case "BYTEA",
+		"RAW", "LONG RAW", "BINARY", "VARBINARY", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "IMAGE", "BLOB":
 		return "base64", true
 	default:
 		return "", false

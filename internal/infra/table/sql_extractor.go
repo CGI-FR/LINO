@@ -137,7 +137,10 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 
 func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 	// Execute query to fetch column information
-	rows, err := db.Query("SELECT * FROM " + tableName + " LIMIT 1")
+	query := "SELECT * FROM "
+	query += tableName
+	query += " LIMIT 1"
+	rows, err := db.Query(query)
 	if err != nil {
 		return []table.Column{}, err
 	}

@@ -20,6 +20,7 @@ package table
 import (
 	"bytes"
 	"os"
+	"sort"
 
 	"github.com/cgi-fr/lino/pkg/table"
 	"gopkg.in/yaml.v3"
@@ -99,6 +100,10 @@ func (s YAMLStorage) Store(tables []table.Table) *table.Error {
 		for _, rc := range r.Columns {
 			cols = append(cols, YAMLColumn{Name: rc.Name, Export: rc.Export, Import: rc.Import})
 		}
+		// sort keys in ordre of columns
+		if len(r.Keys) > 1 {
+			r.Keys = SortKeysByColumnName(r.Keys, cols)
+		}
 
 		yml := YAMLTable{
 			Name:    r.Name,
@@ -154,4 +159,19 @@ func writeFile(list *YAMLStructure) *table.Error {
 	}
 
 	return nil
+}
+
+func SortKeysByColumnName(keys []string, columns []YAMLColumn) []string {
+	// Create a map to match column names to their index in the list
+	columnIndex := make(map[string]int)
+	for i, column := range columns {
+		columnIndex[column.Name] = i
+	}
+
+	// Sort keys based on the order of column names
+	sort.Slice(keys, func(i, j int) bool {
+		return columnIndex[keys[i]] < columnIndex[keys[j]]
+	})
+
+	return keys
 }

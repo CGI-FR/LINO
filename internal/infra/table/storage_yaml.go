@@ -107,7 +107,7 @@ func (s YAMLStorage) Store(tables []table.Table) *table.Error {
 			Columns: cols,
 		}
 		// list columns in Alphabet order of column name
-		yml.SortColumns()
+		yml.SortColumnsAndKeys()
 		list.Tables = append(list.Tables, yml)
 	}
 
@@ -158,8 +158,9 @@ func writeFile(list *YAMLStructure) *table.Error {
 	return nil
 }
 
-func (t *YAMLTable) SortColumns() {
+func (t *YAMLTable) SortColumnsAndKeys() {
 	sort.Slice(t.Columns, func(i, j int) bool {
 		return t.Columns[i].Name < t.Columns[j].Name
 	})
+	sort.Strings(t.Keys)
 }

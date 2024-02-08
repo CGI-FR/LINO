@@ -83,24 +83,13 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 			return nil, &table.Error{Description: err.Error()}
 		}
 
-		if len(columns) > 0 {
-			table := table.Table{
-				Name:       tableName,
-				Keys:       strings.Split(keyColumns, ","),
-				Columns:    columns,
-				ExportMode: table.ExportModeAll,
-			}
-
-			tables = append(tables, table)
-		} else {
-			table := table.Table{
-				Name: tableName,
-				Keys: strings.Split(keyColumns, ","),
-			}
-
-			tables = append(tables, table)
+		table := table.Table{
+			Name:    tableName,
+			Keys:    strings.Split(keyColumns, ","),
+			Columns: columns,
 		}
 
+		tables = append(tables, table)
 	}
 	err = rows.Err()
 	if err != nil {
@@ -168,28 +157,32 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 		columnName := ct.Name()
 		dataType := ct.DatabaseTypeName()
 
+		// columnLength, _ := ct.Length()
+		// columnPrecision, columnSize, _ := ct.DecimalSize()
+		// if columnLength > 0 {
+		// 	fmt.Printf(", Length: %d", columnLength)
+		// } else if columnSize > 0 {
+		// 	fmt.Printf(", Size: %d", columnSize)
+		// 	fmt.Printf(", Precision: %d", columnPrecision)
+		// }
+
 		// if data type is unusual or data not correct
 		if len(dataType) == 0 {
 			columnsNoType = append(columnsNoType, columnName)
 		}
-		exportType, isSavingColumn := checkType(dataType)
-		if isSavingColumn {
-			// columnLength, _ := ct.Length()
-			// columnPrecision, columnSize, _ := ct.DecimalSize()
 
-			columnInfo := table.Column{
-				Name:   columnName,
-				Export: exportType,
-			}
-			// if columnLength > 0 {
-			// 	fmt.Printf(", Length: %d", columnLength)
-			// } else if columnSize > 0 {
-			// 	fmt.Printf(", Size: %d", columnSize)
-			// 	fmt.Printf(", Precision: %d", columnPrecision)
-			// }
-			columns = append(columns, columnInfo)
+		exportType, needExport := checkType(dataType)
+		columnInfo := table.Column{
+			Name: columnName,
 		}
+
+		if needExport {
+			columnInfo.Export = exportType
+		}
+
+		columns = append(columns, columnInfo)
 	}
+
 	// Notify user unusual column
 	if len(columnsNoType) > 0 {
 		fmt.Println("Table", tableName, "contains some columns with unusual characteristics:", columnsNoType, ".It may be necessary to manually specify the export type if the data does not display correctly.")

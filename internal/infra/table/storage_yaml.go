@@ -106,10 +106,6 @@ func (s YAMLStorage) Store(tables []table.Table) *table.Error {
 			Columns: cols,
 		}
 
-		if r.ExportMode == table.ExportModeAll {
-			yml.ExportMode = "all"
-		}
-
 		list.Tables = append(list.Tables, yml)
 	}
 

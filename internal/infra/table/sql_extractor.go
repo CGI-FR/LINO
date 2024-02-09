@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/cgi-fr/lino/pkg/table"
+	"github.com/rs/zerolog/log"
 	"github.com/xo/dburl"
 )
 
@@ -139,7 +140,7 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 	// Execute query to fetch column information
 	query := "SELECT * FROM "
 	query += tableName
-	query += " LIMIT 1"
+	query += " LIMIT 0"
 	rows, err := db.Query(query)
 	if err != nil {
 		return []table.Column{}, err
@@ -149,7 +150,6 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 	// Retrieve column information
 	columnTypes, err := rows.ColumnTypes()
 	if err != nil {
-		rows.Close()
 		return []table.Column{}, err
 	}
 
@@ -188,7 +188,8 @@ func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 
 	// Notify user unusual column
 	if len(columnsNoType) > 0 {
-		fmt.Println("Table", tableName, "contains some columns with unusual characteristics:", columnsNoType, ".It may be necessary to manually specify the export type if the data does not display correctly.")
+		msg := fmt.Sprintf("Table %s contains some columns with unusual characteristics: %v. It may be necessary to manually specify the export type if the data does not display correctly.", tableName, columnsNoType)
+		log.Warn().Msg(msg)
 	}
 	return columns, nil
 }

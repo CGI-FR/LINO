@@ -35,8 +35,8 @@ func NewPostgresExtractorFactory() *PostgresExtractorFactory {
 type PostgresExtractorFactory struct{}
 
 // New return a Postgres extractor
-func (e *PostgresExtractorFactory) New(url string, schema string) table.Extractor {
-	return NewSQLExtractor(url, schema, PostgresDialect{})
+func (e *PostgresExtractorFactory) New(url string, schema string, onlyTables bool) table.Extractor {
+	return NewSQLExtractor(url, schema, PostgresDialect{}, onlyTables)
 }
 
 type PostgresDialect struct{}

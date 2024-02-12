@@ -56,7 +56,7 @@ func newCountCommand(fullName string, err *os.File, out *os.File, in *os.File) *
 				os.Exit(1)
 			}
 
-			extractor := factory.New(u.URL.String(), alias.Schema)
+			extractor := factory.New(u.URL.String(), alias.Schema, false)
 
 			result, e2 := table.Count(tableStorage, extractor)
 			if e2 != nil {

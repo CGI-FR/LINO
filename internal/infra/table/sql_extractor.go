@@ -29,9 +29,10 @@ import (
 
 // SQLExtractor provides table extraction logic from SQL database.
 type SQLExtractor struct {
-	url     string
-	schema  string
-	dialect Dialect
+	url        string
+	schema     string
+	dialect    Dialect
+	onlyTables bool
 }
 
 type Dialect interface {
@@ -39,11 +40,12 @@ type Dialect interface {
 }
 
 // NewSQLExtractor creates a new SQL extractor.
-func NewSQLExtractor(url string, schema string, dialect Dialect) *SQLExtractor {
+func NewSQLExtractor(url string, schema string, dialect Dialect, onlyTables bool) *SQLExtractor {
 	return &SQLExtractor{
-		url:     url,
-		schema:  schema,
-		dialect: dialect,
+		url:        url,
+		schema:     schema,
+		dialect:    dialect,
+		onlyTables: onlyTables,
 	}
 }
 
@@ -78,20 +80,30 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 		if err != nil {
 			return nil, &table.Error{Description: err.Error()}
 		}
-		// Get columns information, check is there have types needs to be modify in export
-		columns, err := ColumnInfo(db, tableName)
-		if err != nil {
-			return nil, &table.Error{Description: err.Error()}
-		}
+		if !e.onlyTables {
+			// Get columns information, check is there have types needs to be modify in export
+			columns, err := ColumnInfo(db, tableName)
+			if err != nil {
+				return nil, &table.Error{Description: err.Error()}
+			}
 
-		table := table.Table{
-			Name:    tableName,
-			Keys:    strings.Split(keyColumns, ","),
-			Columns: columns,
-		}
+			table := table.Table{
+				Name:    tableName,
+				Keys:    strings.Split(keyColumns, ","),
+				Columns: columns,
+			}
 
-		tables = append(tables, table)
+			tables = append(tables, table)
+		} else {
+			table := table.Table{
+				Name: tableName,
+				Keys: strings.Split(keyColumns, ","),
+			}
+
+			tables = append(tables, table)
+		}
 	}
+
 	err = rows.Err()
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}

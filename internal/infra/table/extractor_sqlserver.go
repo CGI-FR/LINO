@@ -34,8 +34,8 @@ func NewSQLServerExtractorFactory() *SQLServerExtractorFactory {
 type SQLServerExtractorFactory struct{}
 
 // New return a SQL Server extractor
-func (e *SQLServerExtractorFactory) New(connectionString string, schema string) table.Extractor {
-	return NewSQLExtractor(connectionString, schema, SQLServerDialect{})
+func (e *SQLServerExtractorFactory) New(connectionString string, schema string, onlyTables bool) table.Extractor {
+	return NewSQLExtractor(connectionString, schema, SQLServerDialect{}, onlyTables)
 }
 
 type SQLServerDialect struct{}

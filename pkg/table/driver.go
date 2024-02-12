@@ -23,12 +23,16 @@ import (
 )
 
 // Extract table metadatas from a relational database.
-func Extract(e Extractor, s Storage) *Error {
+func Extract(e Extractor, s Storage, onlyTables bool) *Error {
 	tables, err := e.Extract()
 	if err != nil {
 		return err
 	}
-	SortKeysByColumnOrder(tables)
+
+	if !onlyTables {
+		SortKeysByColumnOrder(tables)
+	}
+
 	err = s.Store(tables)
 	if err != nil {
 		return err

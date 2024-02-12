@@ -18,8 +18,8 @@ func NewOracleExtractorFactory() *OracleExtractorFactory {
 type OracleExtractorFactory struct{}
 
 // New return a Oracle extractor
-func (e *OracleExtractorFactory) New(url string, schema string) table.Extractor {
-	return NewSQLExtractor(url, schema, OracleDialect{})
+func (e *OracleExtractorFactory) New(url string, schema string, onlyTables bool) table.Extractor {
+	return NewSQLExtractor(url, schema, OracleDialect{}, onlyTables)
 }
 
 type OracleDialect struct{}

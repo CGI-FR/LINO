@@ -35,12 +35,11 @@ func NewMariadbExtractorFactory() *MariadbExtractorFactory {
 type MariadbExtractorFactory struct{}
 
 // New return a Mariadb extractor
-func (e *MariadbExtractorFactory) New(url string, schema string) table.Extractor {
-	return NewSQLExtractor(url, schema, MariadbDialect{})
+func (e *MariadbExtractorFactory) New(url string, schema string, onlyTables bool) table.Extractor {
+	return NewSQLExtractor(url, schema, MariadbDialect{}, onlyTables)
 }
 
-type MariadbDialect struct {
-}
+type MariadbDialect struct{}
 
 func (d MariadbDialect) SQL(schema string) string {
 	SQL := `SELECT kcu.table_schema,

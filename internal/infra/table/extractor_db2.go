@@ -38,8 +38,8 @@ func NewDb2ExtractorFactory() *Db2ExtractorFactory {
 type Db2ExtractorFactory struct{}
 
 // New return a Db2 extractor
-func (e *Db2ExtractorFactory) New(url string, schema string, onlyTables bool) table.Extractor {
-	return NewSQLExtractor(url, schema, Db2Dialect{}, onlyTables)
+func (e *Db2ExtractorFactory) New(url string, schema string) table.Extractor {
+	return NewSQLExtractor(url, schema, Db2Dialect{})
 }
 
 type Db2Dialect struct{}

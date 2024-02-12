@@ -29,7 +29,7 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
       - script: lino relation extract source
-      - script: lino table extract source
+      - script: lino table extract source --only-tables
       - script: lino id create store
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
       - script: lino id set-child-lookup staff_store_id_fkey true

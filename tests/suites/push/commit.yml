@@ -17,34 +17,32 @@
 
 name: push children relation
 testcases:
-- name: prepare test
-  steps:
-    # Clean working directory
-    - script: rm -f *
-    - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: lino relation extract source
-    - script: lino table extract source
-    - script: lino id create inventory
-    - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino pull source --limit 0 -f store_id=1 > store1.json
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino relation extract source
+      - script: lino table extract source --only-tables
+      - script: lino id create inventory
+      - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino pull source --limit 0 -f store_id=1 > store1.json
 
-
-
-- name: push insert lot of row with small commit size
-  steps:
-    - script: cat store1.json | lino push -c 10  -d dest
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
-    - script: lino pull dest --limit 0 -f store_id=1 > store1_dest.json
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
-    - script: diff store1.json store1_dest.json
-      assertions:
-        #- result.code ShouldEqual 0
-        #- result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
+  - name: push insert lot of row with small commit size
+    steps:
+      - script: cat store1.json | lino push -c 10  -d dest
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: lino pull dest --limit 0 -f store_id=1 > store1_dest.json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: diff store1.json store1_dest.json
+        assertions:
+          #- result.code ShouldEqual 0
+          #- result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty

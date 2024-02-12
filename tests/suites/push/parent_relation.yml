@@ -17,57 +17,54 @@
 
 name: push children relation
 testcases:
-- name: prepare test
-  steps:
-    # Clean working directory
-    - script: rm -f *
-    - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: lino relation extract source
-    - script: lino table extract source
-    - script: lino id create address
-    - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-parent-lookup address_city_id_fkey true
-    - script: lino id set-parent-lookup city_country_id_fkey true
-    - script: lino pull source -f address_id=1 > store1.json
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino relation extract source
+      - script: lino table extract source --only-tables
+      - script: lino id create address
+      - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-parent-lookup address_city_id_fkey true
+      - script: lino id set-parent-lookup city_country_id_fkey true
+      - script: lino pull source -f address_id=1 > store1.json
 
+  - name: push truncate
+    steps:
+      - script: cat store1.json | lino push truncate -d dest
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: lino pull dest --limit 1 -f address_id=1 > store1_dest.json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: diff store1.json store1_dest.json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
 
-
-- name: push truncate 
-  steps:
-    - script: cat store1.json | lino push truncate -d dest
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
-    - script: lino pull dest --limit 1 -f address_id=1 > store1_dest.json
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
-    - script: diff store1.json store1_dest.json
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
-
-
-- name: push delete 
-  steps:
-    # Load store 1 with adress
-    - script: cat store1.json | lino push truncate dest
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
-    # try to delete it with constraints enabled
-    - script: cat store1.json | lino push delete dest
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
-    - script: lino pull dest -f address_id=1 
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldBeEmpty
+  - name: push delete
+    steps:
+      # Load store 1 with adress
+      - script: cat store1.json | lino push truncate dest
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      # try to delete it with constraints enabled
+      - script: cat store1.json | lino push delete dest
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: lino pull dest -f address_id=1
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty

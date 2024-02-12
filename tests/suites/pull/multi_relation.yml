@@ -23,7 +23,7 @@ testcases:
       - script: rm -f *
       - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
       - script: lino relation extract source
-      - script: lino table extract source
+      - script: lino table extract source --only-tables
       - script: lino id create store
   - name: pull multi relations
     steps:

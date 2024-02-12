@@ -23,7 +23,7 @@ testcases:
       - script: rm -f *
       - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
       - script: lino relation extract source
-      - script: lino table extract source
+      - script: lino table extract source --only-tables
       - script: lino id create store
       - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml

@@ -26,7 +26,7 @@ testcases:
       - script: sudo docker-compose -p lino up -d wsmock
       - script: lino dataconnector add ws 'ws://wsmock:1080/'
       - script: count=0; while ! lino dc ping ws; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
-      - script: lino table extract ws
+      - script: lino table extract ws --only-tables
       - script: lino relation extract ws
       - script: lino id create PROJECT
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml

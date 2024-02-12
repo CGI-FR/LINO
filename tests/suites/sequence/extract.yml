@@ -21,7 +21,7 @@ testcases:
     steps:
       - script: rm -f *
       - script: lino dataconnector add --schema public source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
-      - script: lino table extract source
+      - script: lino table extract source --only-tables
       - script: lino sequence extract source > result.yaml
       - script: yaml2json <sequences.yaml | jq -S "." > sequences.json
       - script: |-
@@ -106,7 +106,7 @@ testcases:
     steps:
       - script: rm -f *
       - script: lino dataconnector add --schema public source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
-      - script: lino table extract source
+      - script: lino table extract source --only-tables
       - script: lino sequence extract source
       - script: lino sequence status source > result.txt
       - script: |-
@@ -134,7 +134,7 @@ testcases:
     steps:
       - script: rm -f *
       - script: lino dataconnector add --schema public dest 'postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable'
-      - script: lino table extract dest
+      - script: lino table extract dest --only-tables
       - script: lino relation extract dest
       - script: lino sequence extract dest
       - script: |-

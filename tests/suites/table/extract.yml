@@ -26,7 +26,7 @@ testcases:
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual "lino finds 15 table(s)"
           - result.systemerr ShouldBeEmpty
-      - script: diff ../../expected.yaml tables.yaml
+      - script: diff ../../data/expected.yml tables.yaml
         assertions:
           - result.systemout ShouldBeEmpty
           - result.code ShouldEqual 0
@@ -40,7 +40,7 @@ testcases:
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual "lino finds 15 table(s)"
           - result.systemerr ShouldBeEmpty
-      - script: diff ../../expected.yaml tables.yaml
+      - script: diff ../../data/expected.yml tables.yaml
         assertions:
           - result.systemout ShouldBeEmpty
           - result.code ShouldEqual 0

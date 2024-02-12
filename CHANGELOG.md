@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.6.2]
+
+- `Changed` Add columns info and export type with command `lino table extract`, columns and keys are in order of database.
+
 ## [2.6.1]
 
 - `Fixed` performance issue with `import: file`

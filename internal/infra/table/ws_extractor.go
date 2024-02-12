@@ -52,24 +52,22 @@ type ResultMessage struct {
 
 // WSExtractor provides table extraction logic from an WS Rest Endpoint.
 type WSExtractor struct {
-	url        string
-	schema     string
-	conn       *websocket.Conn
-	sequence   int
-	onlyTables bool
+	url      string
+	schema   string
+	conn     *websocket.Conn
+	sequence int
 }
 
 // NewWSExtractor creates a new WS extractor.
-func NewWSExtractor(url string, schema string, onlyTables bool) *WSExtractor {
+func NewWSExtractor(url string, schema string) *WSExtractor {
 	return &WSExtractor{
-		url:        url,
-		schema:     schema,
-		onlyTables: onlyTables,
+		url:    url,
+		schema: schema,
 	}
 }
 
 // Extract tables from the database.
-func (e *WSExtractor) Extract() ([]table.Table, *table.Error) {
+func (e *WSExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
 	if err := e.Dial(); err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
@@ -165,6 +163,6 @@ func NewWSExtractorFactory() *WSExtractorFactory {
 type WSExtractorFactory struct{}
 
 // New return a WS extractor
-func (e *WSExtractorFactory) New(url string, schema string, onlyTables bool) table.Extractor {
-	return NewWSExtractor(url, schema, onlyTables)
+func (e *WSExtractorFactory) New(url string, schema string) table.Extractor {
+	return NewWSExtractor(url, schema)
 }

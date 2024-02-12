@@ -35,8 +35,8 @@ func NewMariadbExtractorFactory() *MariadbExtractorFactory {
 type MariadbExtractorFactory struct{}
 
 // New return a Mariadb extractor
-func (e *MariadbExtractorFactory) New(url string, schema string, onlyTables bool) table.Extractor {
-	return NewSQLExtractor(url, schema, MariadbDialect{}, onlyTables)
+func (e *MariadbExtractorFactory) New(url string, schema string) table.Extractor {
+	return NewSQLExtractor(url, schema, MariadbDialect{})
 }
 
 type MariadbDialect struct{}

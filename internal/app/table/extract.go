@@ -57,7 +57,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 				os.Exit(1)
 			}
 
-			extractor := factory.New(u.URL.String(), alias.Schema, onlyTables)
+			extractor := factory.New(u.URL.String(), alias.Schema)
 
 			e2 := table.Extract(extractor, tableStorage, onlyTables)
 			if e2 != nil {

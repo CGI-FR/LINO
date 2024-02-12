@@ -24,7 +24,7 @@ import (
 
 // Extract table metadatas from a relational database.
 func Extract(e Extractor, s Storage, onlyTables bool) *Error {
-	tables, err := e.Extract()
+	tables, err := e.Extract(onlyTables)
 	if err != nil {
 		return err
 	}

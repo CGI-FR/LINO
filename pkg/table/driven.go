@@ -19,12 +19,12 @@ package table
 
 // ExtractorFactory exposes methods to create new extractors.
 type ExtractorFactory interface {
-	New(url string, schema string, onlyTables bool) Extractor
+	New(url string, schema string) Extractor
 }
 
 // Extractor allows to extract primary keys from a relational database.
 type Extractor interface {
-	Extract() ([]Table, *Error)
+	Extract(onlyTables bool) ([]Table, *Error)
 	Count(tableName string) (int, *Error)
 }
 

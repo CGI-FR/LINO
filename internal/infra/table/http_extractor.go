@@ -30,22 +30,20 @@ import (
 
 // HTTPExtractor provides table extraction logic from an HTTP Rest Endpoint.
 type HTTPExtractor struct {
-	url        string
-	schema     string
-	onlyTables bool
+	url    string
+	schema string
 }
 
 // NewHTTPExtractor creates a new HTTP extractor.
-func NewHTTPExtractor(url string, schema string, onlyTables bool) *HTTPExtractor {
+func NewHTTPExtractor(url string, schema string) *HTTPExtractor {
 	return &HTTPExtractor{
-		url:        url,
-		schema:     schema,
-		onlyTables: onlyTables,
+		url:    url,
+		schema: schema,
 	}
 }
 
 // Extract tables from the database.
-func (e *HTTPExtractor) Extract() ([]table.Table, *table.Error) {
+func (e *HTTPExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
 	url := e.url + "/tables"
 	if len(e.schema) > 0 {
 		url = url + "?schema=" + e.schema
@@ -131,6 +129,6 @@ func NewHTTPExtractorFactory() *HTTPExtractorFactory {
 type HTTPExtractorFactory struct{}
 
 // New return a HTTP extractor
-func (e *HTTPExtractorFactory) New(url string, schema string, onlyTables bool) table.Extractor {
-	return NewHTTPExtractor(url, schema, onlyTables)
+func (e *HTTPExtractorFactory) New(url string, schema string) table.Extractor {
+	return NewHTTPExtractor(url, schema)
 }

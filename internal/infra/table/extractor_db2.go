@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
+//go:build db2
 // +build db2
 
 package table
@@ -37,8 +38,8 @@ func NewDb2ExtractorFactory() *Db2ExtractorFactory {
 type Db2ExtractorFactory struct{}
 
 // New return a Db2 extractor
-func (e *Db2ExtractorFactory) New(url string, schema string) table.Extractor {
-	return NewSQLExtractor(url, schema, Db2Dialect{})
+func (e *Db2ExtractorFactory) New(url string, schema string, onlyTables bool) table.Extractor {
+	return NewSQLExtractor(url, schema, Db2Dialect{}, onlyTables)
 }
 
 type Db2Dialect struct{}

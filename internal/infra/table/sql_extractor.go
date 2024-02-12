@@ -29,10 +29,9 @@ import (
 
 // SQLExtractor provides table extraction logic from SQL database.
 type SQLExtractor struct {
-	url        string
-	schema     string
-	dialect    Dialect
-	onlyTables bool
+	url     string
+	schema  string
+	dialect Dialect
 }
 
 type Dialect interface {
@@ -40,17 +39,16 @@ type Dialect interface {
 }
 
 // NewSQLExtractor creates a new SQL extractor.
-func NewSQLExtractor(url string, schema string, dialect Dialect, onlyTables bool) *SQLExtractor {
+func NewSQLExtractor(url string, schema string, dialect Dialect) *SQLExtractor {
 	return &SQLExtractor{
-		url:        url,
-		schema:     schema,
-		dialect:    dialect,
-		onlyTables: onlyTables,
+		url:     url,
+		schema:  schema,
+		dialect: dialect,
 	}
 }
 
 // Extract tables from the database.
-func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
+func (e *SQLExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
 	db, err := dburl.Open(e.url)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
@@ -80,7 +78,7 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 		if err != nil {
 			return nil, &table.Error{Description: err.Error()}
 		}
-		if !e.onlyTables {
+		if !onlyTables {
 			// Get columns information, check is there have types needs to be modify in export
 			columns, err := ColumnInfo(db, tableName)
 			if err != nil {

@@ -29,6 +29,8 @@ import (
 
 // newExtractCommand implements the cli relation extract command
 func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
+	var onlyTables bool
+
 	cmd := &cobra.Command{
 		Use:     "extract [DB Alias Name]",
 		Short:   "Extract tables metadatas from database",
@@ -72,6 +74,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 			fmt.Fprintf(out, "lino finds %v table(s)\n", len(tables))
 		},
 	}
+	cmd.Flags().BoolVar(&onlyTables, "only-tables", false, "")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

@@ -83,7 +83,7 @@ func (e *SQLExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
 			// Get columns information, check is there have types needs to be modify in export
 			columns, err := e.ColumnInfo(db, tableName)
 			if err != nil {
-				return nil, &table.Error{Description: err.Error()}
+				log.Warn().Msg("Cannot scan columns infomations for table: " + tableName)
 			}
 
 			table := table.Table{

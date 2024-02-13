@@ -151,7 +151,7 @@ func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column,
 	query := e.dialect.Select(tableName)
 	rows, err := db.Query(query)
 	if err != nil {
-		log.Warn().Msg("Cannot scan columns infomations for table: " + tableName)
+		log.Warn().Msg("Cannot scan columns informations for table: " + tableName)
 		return []table.Column{}, nil
 	}
 	defer rows.Close()

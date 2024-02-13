@@ -74,7 +74,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 			fmt.Fprintf(out, "lino finds %v table(s)\n", len(tables))
 		},
 	}
-	cmd.Flags().BoolVar(&onlyTables, "only-tables", false, "extract tables without columns infomations")
+	cmd.Flags().BoolVar(&onlyTables, "only-tables", false, "extract tables without columns informations")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

@@ -19,7 +19,6 @@ package table
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/cgi-fr/lino/pkg/table"
@@ -83,7 +82,7 @@ func (e *SQLExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
 			// Get columns information, check is there have types needs to be modify in export
 			columns, err := e.ColumnInfo(db, tableName)
 			if err != nil {
-				log.Warn().Msg("Cannot scan columns infomations for table: " + tableName)
+				return nil, &table.Error{Description: err.Error()}
 			}
 
 			table := table.Table{
@@ -152,7 +151,8 @@ func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column,
 	query := e.dialect.Select(tableName)
 	rows, err := db.Query(query)
 	if err != nil {
-		return []table.Column{}, err
+		log.Warn().Msg("Cannot scan columns infomations for table: " + tableName)
+		return []table.Column{}, nil
 	}
 	defer rows.Close()
 
@@ -197,8 +197,8 @@ func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column,
 
 	// Notify user unusual column
 	if len(columnsNoType) > 0 {
-		msg := fmt.Sprintf("Table %s contains some columns with unusual characteristics: %v. It may be necessary to manually specify the export type if the data does not display correctly.", tableName, columnsNoType)
-		log.Warn().Msg(msg)
+		log.Warn().
+			Msgf("Table %s contains some columns with unusual characteristics: %v. It may be necessary to manually specify the export type if the data does not display correctly.", tableName, columnsNoType)
 	}
 	return columns, nil
 }

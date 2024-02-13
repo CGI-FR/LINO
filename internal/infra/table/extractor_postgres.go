@@ -66,3 +66,11 @@ ORDER BY kcu.table_schema,
 
 	return SQL
 }
+
+func (d PostgresDialect) Select(tableName string) string {
+	query := "SELECT * FROM "
+	query += tableName
+	query += " LIMIT 0"
+
+	return query
+}

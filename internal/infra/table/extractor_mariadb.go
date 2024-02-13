@@ -65,3 +65,11 @@ func (d MariadbDialect) SQL(schema string) string {
 
 	return SQL
 }
+
+func (d MariadbDialect) Select(tableName string) string {
+	query := "SELECT * FROM "
+	query += tableName
+	query += " LIMIT 0"
+
+	return query
+}

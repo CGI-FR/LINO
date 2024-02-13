@@ -44,3 +44,7 @@ type Db2Dialect struct{}
 func (d Db2Dialect) SQL(schema string) string {
 	panic(fmt.Errorf("Not implemented"))
 }
+
+func (d Db2Dialect) Select(tableName string) string {
+	panic(fmt.Errorf("Not implemented"))
+}

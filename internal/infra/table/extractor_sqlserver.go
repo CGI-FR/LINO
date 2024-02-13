@@ -65,3 +65,10 @@ ORDER BY kcu.table_schema,
 
 	return SQL
 }
+
+func (d SQLServerDialect) Select(tableName string) string {
+	query := "SELECT TOP 0 * FROM "
+	query += tableName
+
+	return query
+}

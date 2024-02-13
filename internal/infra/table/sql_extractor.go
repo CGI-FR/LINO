@@ -36,6 +36,7 @@ type SQLExtractor struct {
 
 type Dialect interface {
 	SQL(schema string) string
+	Select(tableName string) string
 }
 
 // NewSQLExtractor creates a new SQL extractor.
@@ -80,7 +81,7 @@ func (e *SQLExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
 		}
 		if !onlyTables {
 			// Get columns information, check is there have types needs to be modify in export
-			columns, err := ColumnInfo(db, tableName)
+			columns, err := e.ColumnInfo(db, tableName)
 			if err != nil {
 				return nil, &table.Error{Description: err.Error()}
 			}
@@ -146,11 +147,9 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 	return count, nil
 }
 
-func ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
+func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 	// Execute query to fetch column information
-	query := "SELECT * FROM "
-	query += tableName
-	query += " LIMIT 0"
+	query := e.dialect.Select(tableName)
 	rows, err := db.Query(query)
 	if err != nil {
 		return []table.Column{}, err

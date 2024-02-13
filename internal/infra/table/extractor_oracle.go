@@ -49,3 +49,11 @@ SELECT
 
 	return SQL
 }
+
+func (d OracleDialect) Select(tableName string) string {
+	query := "SELECT * FROM "
+	query += tableName
+	query += " WHERE ROWNUM <= 0"
+
+	return query
+}

@@ -69,3 +69,11 @@ func (d Db2Dialect) SQL(schema string) string {
 
 	return SQL
 }
+
+func (d MariadbDialect) Select(tableName string) string {
+	query := "SELECT * FROM "
+	query += tableName
+	query += " FETCH FIRST 0 ROWS ONLY"
+
+	return query
+}

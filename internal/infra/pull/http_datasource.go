@@ -63,6 +63,8 @@ func (ds *HTTPDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowS
 		return nil, err
 	}
 
+	defer reader.Close()
+
 	result := pull.RowSet{}
 	for reader.Next() {
 		result = append(result, reader.Value())

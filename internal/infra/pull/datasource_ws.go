@@ -289,3 +289,7 @@ func (rs *ResultStream) Value() pull.Row {
 func (rs *ResultStream) Error() error {
 	return rs.err
 }
+
+func (rs *ResultStream) Close() error {
+	return nil
+}

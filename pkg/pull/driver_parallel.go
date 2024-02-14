@@ -121,6 +121,8 @@ func (p *pullerParallel) Pull(start Table, filter Filter, filterCohort RowReader
 			return fmt.Errorf("%w", err)
 		}
 
+		defer reader.Close()
+
 		for reader.Next() {
 			IncLinesPerStepCount(string(start.Name))
 			p.inChan <- reader.Value()

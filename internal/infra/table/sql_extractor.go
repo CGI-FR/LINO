@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"strings"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/table"
 	"github.com/rs/zerolog/log"
 	"github.com/xo/dburl"
@@ -34,8 +35,8 @@ type SQLExtractor struct {
 }
 
 type Dialect interface {
+	commonsql.Dialect
 	SQL(schema string) string
-	Select(tableName string) string
 }
 
 // NewSQLExtractor creates a new SQL extractor.
@@ -148,7 +149,7 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 
 func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
 	// Execute query to fetch column information
-	query := e.dialect.Select(tableName)
+	query := e.dialect.SelectLimit(tableName, e.schema, "", false, 0)
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Warn().Msg("Cannot scan columns informations for table: " + tableName)

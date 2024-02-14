@@ -30,7 +30,18 @@ type Dialect interface {
 	Placeholder(int) string
 	// Limit format limitation clause
 	Limit(uint) string
-	// Select Method
+	// From clause
+	From(tableName string, schemaName string) string
+	// Where clause
+	Where(string) string
+	// Select clause
+	Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string
+	// SelectLimit clause
+	SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string
+	// Quote identifier
+	Quote(id string) string
+
+	// Deprecated
 	CreateSelect(sel string, where string, limit string, columns string, from string) string
 }
 
@@ -75,7 +86,6 @@ func Select(d Dialect, columns []string, distinct bool, schema string, table str
 	values := []interface{}{}
 	// Build WHERE clause ********************************************
 	if len(filters) > 0 || len(where) > 0 {
-		sqlWhere.WriteString("WHERE ")
 		whereContentFlag := false
 		for key, value := range filters {
 			sqlWhere.WriteString(key)
@@ -101,8 +111,14 @@ func Select(d Dialect, columns []string, distinct bool, schema string, table str
 		}
 	}
 
+	var sql string
+
 	// Assemble the builders in order using the existing method
-	sql := d.CreateSelect(sqlSelect.String(), sqlWhere.String(), sqlLimit.String(), sqlColumns.String(), sqlFrom.String())
+	if limit > 0 {
+		sql = d.SelectLimit(table, schema, sqlWhere.String(), distinct, limit, columns...)
+	} else {
+		sql = d.Select(table, schema, sqlWhere.String(), distinct, columns...)
+	}
 
 	if log.Logger.GetLevel() <= zerolog.DebugLevel {
 		printSQL := sql

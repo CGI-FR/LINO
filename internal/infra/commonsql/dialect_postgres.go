@@ -17,7 +17,10 @@
 
 package commonsql
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // PostgresDialect implement postgres SQL variations
 type PostgresDialect struct{}
@@ -28,6 +31,85 @@ func (pgd PostgresDialect) Placeholder(position int) string {
 
 func (pgd PostgresDialect) Limit(limit uint) string {
 	return fmt.Sprintf("LIMIT %d", limit)
+}
+
+// From clause
+func (pgd PostgresDialect) From(tableName string, schemaName string) string {
+	if strings.TrimSpace(schemaName) == "" {
+		return fmt.Sprintf("FROM %s", tableName)
+	}
+
+	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
+}
+
+// Where clause
+func (pgd PostgresDialect) Where(where string) string {
+	if strings.TrimSpace(where) == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("WHERE %s", where)
+}
+
+// Select clause
+func (pgd PostgresDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+	var query strings.Builder
+
+	query.WriteString("SELECT ")
+
+	if distinct {
+		query.WriteString("DISTINCT ")
+	}
+
+	if len(columns) > 0 {
+		query.WriteString(strings.Join(columns, ", "))
+	} else {
+		query.WriteRune('*')
+	}
+
+	query.WriteRune(' ')
+	query.WriteString(pgd.From(tableName, schemaName))
+	query.WriteRune(' ')
+	query.WriteString(pgd.Where(where))
+
+	return query.String()
+}
+
+// SelectLimit clause
+func (pgd PostgresDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+	var query strings.Builder
+
+	query.WriteString("SELECT ")
+
+	if distinct {
+		query.WriteString("DISTINCT ")
+	}
+
+	if len(columns) > 0 {
+		query.WriteString(strings.Join(columns, ", "))
+	} else {
+		query.WriteRune('*')
+	}
+
+	query.WriteRune(' ')
+	query.WriteString(pgd.From(tableName, schemaName))
+	query.WriteRune(' ')
+	query.WriteString(pgd.Where(where))
+	query.WriteRune(' ')
+	query.WriteString(pgd.Limit(limit))
+
+	return query.String()
+}
+
+func (pgd PostgresDialect) Quote(id string) string {
+	var sb strings.Builder
+
+	sb.Grow(len(id) + 2)
+	sb.WriteRune('"')
+	sb.WriteString(id)
+	sb.WriteRune('"')
+
+	return sb.String()
 }
 
 // CreateSelect generate a SQL request in the correct order.

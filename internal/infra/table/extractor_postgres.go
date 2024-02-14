@@ -23,6 +23,7 @@ import (
 	// import postgresql connector
 	_ "github.com/lib/pq"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/table"
 )
 
@@ -36,10 +37,12 @@ type PostgresExtractorFactory struct{}
 
 // New return a Postgres extractor
 func (e *PostgresExtractorFactory) New(url string, schema string) table.Extractor {
-	return NewSQLExtractor(url, schema, PostgresDialect{})
+	return NewSQLExtractor(url, schema, PostgresDialect{commonsql.PostgresDialect{}})
 }
 
-type PostgresDialect struct{}
+type PostgresDialect struct {
+	commonsql.Dialect
+}
 
 func (d PostgresDialect) SQL(schema string) string {
 	SQL := `SELECT kcu.table_schema,
@@ -65,12 +68,4 @@ ORDER BY kcu.table_schema,
 	kcu.table_name`
 
 	return SQL
-}
-
-func (d PostgresDialect) Select(tableName string) string {
-	query := "SELECT * FROM "
-	query += tableName
-	query += " LIMIT 0"
-
-	return query
 }

@@ -23,6 +23,7 @@ import (
 	// import mariadbsql connector
 	_ "github.com/go-sql-driver/mysql"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/table"
 )
 
@@ -36,10 +37,12 @@ type MariadbExtractorFactory struct{}
 
 // New return a Mariadb extractor
 func (e *MariadbExtractorFactory) New(url string, schema string) table.Extractor {
-	return NewSQLExtractor(url, schema, MariadbDialect{})
+	return NewSQLExtractor(url, schema, MariadbDialect{commonsql.MariadbDialect{}})
 }
 
-type MariadbDialect struct{}
+type MariadbDialect struct {
+	commonsql.Dialect
+}
 
 func (d MariadbDialect) SQL(schema string) string {
 	SQL := `SELECT kcu.table_schema,
@@ -64,12 +67,4 @@ func (d MariadbDialect) SQL(schema string) string {
 			kcu.table_name`
 
 	return SQL
-}
-
-func (d MariadbDialect) Select(tableName string) string {
-	query := "SELECT * FROM "
-	query += tableName
-	query += " LIMIT 0"
-
-	return query
 }

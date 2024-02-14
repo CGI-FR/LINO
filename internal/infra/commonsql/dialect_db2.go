@@ -17,7 +17,10 @@
 
 package commonsql
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Db2Dialect implement IBM DB2 SQL variations
 type Db2Dialect struct{}
@@ -28,6 +31,78 @@ func (db2 Db2Dialect) Placeholder(position int) string {
 
 func (db2 Db2Dialect) Limit(limit uint) string {
 	return fmt.Sprintf(" FETCH FIRST %d ROWS ONLY", limit)
+}
+
+// From clause
+func (db2 Db2Dialect) From(tableName string, schemaName string) string {
+	if strings.TrimSpace(schemaName) == "" {
+		return fmt.Sprintf("FROM %s", tableName)
+	}
+
+	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
+}
+
+// Where clause
+func (db2 Db2Dialect) Where(where string) string {
+	if strings.TrimSpace(where) == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("WHERE %s", where)
+}
+
+// Select clause
+func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+	var query strings.Builder
+
+	query.WriteString("SELECT ")
+
+	if distinct {
+		query.WriteString("DISTINCT ")
+	}
+
+	if len(columns) > 0 {
+		query.WriteString(strings.Join(columns, ", "))
+	} else {
+		query.WriteRune('*')
+	}
+
+	query.WriteRune(' ')
+	query.WriteString(db2.From(tableName, schemaName))
+	query.WriteRune(' ')
+	query.WriteString(db2.Where(where))
+
+	return query.String()
+}
+
+// SelectLimit clause
+func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+	var query strings.Builder
+
+	query.WriteString("SELECT ")
+
+	if distinct {
+		query.WriteString("DISTINCT ")
+	}
+
+	if len(columns) > 0 {
+		query.WriteString(strings.Join(columns, ", "))
+	} else {
+		query.WriteRune('*')
+	}
+
+	query.WriteRune(' ')
+	query.WriteString(db2.From(tableName, schemaName))
+	query.WriteRune(' ')
+	query.WriteString(db2.Where(where))
+	query.WriteRune(' ')
+	query.WriteString(db2.Limit(limit))
+
+	return query.String()
+}
+
+func (db2 Db2Dialect) Quote(id string) string {
+	return id
 }
 
 // CreateSelect generate a SQL request in the correct order.

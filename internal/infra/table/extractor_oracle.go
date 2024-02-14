@@ -6,6 +6,7 @@ import (
 	// import Oracle connector
 	_ "github.com/sijms/go-ora/v2"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/table"
 )
 
@@ -19,10 +20,12 @@ type OracleExtractorFactory struct{}
 
 // New return a Oracle extractor
 func (e *OracleExtractorFactory) New(url string, schema string) table.Extractor {
-	return NewSQLExtractor(url, schema, OracleDialect{})
+	return NewSQLExtractor(url, schema, OracleDialect{commonsql.OracleDialect{}})
 }
 
-type OracleDialect struct{}
+type OracleDialect struct {
+	commonsql.Dialect
+}
 
 func (d OracleDialect) SQL(schema string) string {
 	SQL := `
@@ -48,12 +51,4 @@ SELECT
 	`
 
 	return SQL
-}
-
-func (d OracleDialect) Select(tableName string) string {
-	query := "SELECT * FROM "
-	query += tableName
-	query += " WHERE ROWNUM <= 0"
-
-	return query
 }

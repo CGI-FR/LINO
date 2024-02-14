@@ -37,6 +37,7 @@ type SQLExtractor struct {
 type Dialect interface {
 	commonsql.Dialect
 	SQL(schema string) string
+	GetExportType(dbtype string) (string, bool)
 }
 
 // NewSQLExtractor creates a new SQL extractor.
@@ -184,7 +185,7 @@ func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column,
 			columnsNoType = append(columnsNoType, columnName)
 		}
 
-		exportType, needExport := checkType(dataType)
+		exportType, needExport := e.dialect.GetExportType(dataType)
 		columnInfo := table.Column{
 			Name: columnName,
 		}
@@ -202,32 +203,4 @@ func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column,
 			Msgf("Table %s contains some columns with unusual characteristics: %v. It may be necessary to manually specify the export type if the data does not display correctly.", tableName, columnsNoType)
 	}
 	return columns, nil
-}
-
-// Contains check type list for mariaDB, oracle, postgres, SQL server
-func checkType(columnType string) (string, bool) {
-	switch columnType {
-	// String types
-	case "TSVECTOR", "_TEXT", "BPCHAR", "CHARACTER", "CHARACTER VARYING", "VARCHAR", "TEXT",
-		"CHAR", "VARCHAR2", "NCHAR", "NVARCHAR2", "CLOB", "NCLOB",
-		"TINYTEXT", "MEDIUMTEXT", "LONGTEXT":
-		return "string", true
-	// Numeric types
-	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE PRECISION", "MONEY", "INTEGER", "BIGINT",
-		"NUMBER", "BINARY_FLOAT", "BINARY_DOUBLE", "INT", "TINYINT", "SMALLINT", "MEDIUMINT":
-		return "numeric", true
-	// Timestamp types
-	case "TIMESTAMP", "TIMESTAMPTZ",
-		"TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
-		return "timestamp", true
-	// Datetime types
-	case "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME":
-		return "datetime", true
-	// Binary types
-	case "BYTEA",
-		"RAW", "LONG RAW", "BINARY", "VARBINARY", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "IMAGE", "BLOB":
-		return "base64", true
-	default:
-		return "", false
-	}
 }

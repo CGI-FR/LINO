@@ -27,7 +27,7 @@ testcases:
       - script: sudo docker-compose -p lino up -d httpmock
       - script: lino dataconnector add http http://httpmock:1080/api/v1
       - script: count=0; while ! lino dc ping http; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
-      - script: lino table extract http
+      - script: lino table extract http --only-tables
       - script: lino relation extract http
 
   - name: pull all

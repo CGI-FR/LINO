@@ -27,7 +27,7 @@ testcases:
       - script: sudo docker-compose -p lino up -d httpmock
       - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
       - script: lino relation extract source
-      - script: lino table extract source
+      - script: lino table extract source --only-tables
       - script: lino id create customer
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
       - script: lino id set-child-lookup staff_store_id_fkey true

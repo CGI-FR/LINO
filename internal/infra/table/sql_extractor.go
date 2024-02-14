@@ -18,9 +18,12 @@
 package table
 
 import (
+	"database/sql"
 	"strings"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/table"
+	"github.com/rs/zerolog/log"
 	"github.com/xo/dburl"
 )
 
@@ -32,6 +35,7 @@ type SQLExtractor struct {
 }
 
 type Dialect interface {
+	commonsql.Dialect
 	SQL(schema string) string
 }
 
@@ -45,7 +49,7 @@ func NewSQLExtractor(url string, schema string, dialect Dialect) *SQLExtractor {
 }
 
 // Extract tables from the database.
-func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
+func (e *SQLExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
 	db, err := dburl.Open(e.url)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
@@ -56,14 +60,12 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
-
 	SQL := e.dialect.SQL(e.schema)
 
 	rows, err := db.Query(SQL)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
-
 	tables := []table.Table{}
 
 	var (
@@ -77,14 +79,30 @@ func (e *SQLExtractor) Extract() ([]table.Table, *table.Error) {
 		if err != nil {
 			return nil, &table.Error{Description: err.Error()}
 		}
+		if !onlyTables {
+			// Get columns information, check is there have types needs to be modify in export
+			columns, err := e.ColumnInfo(db, tableName)
+			if err != nil {
+				return nil, &table.Error{Description: err.Error()}
+			}
 
-		table := table.Table{
+			table := table.Table{
+				Name:    tableName,
+				Keys:    strings.Split(keyColumns, ","),
+				Columns: columns,
+			}
 
-			Name: tableName,
-			Keys: strings.Split(keyColumns, ","),
+			tables = append(tables, table)
+		} else {
+			table := table.Table{
+				Name: tableName,
+				Keys: strings.Split(keyColumns, ","),
+			}
+
+			tables = append(tables, table)
 		}
-		tables = append(tables, table)
 	}
+
 	err = rows.Err()
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
@@ -127,4 +145,89 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 	}
 
 	return count, nil
+}
+
+func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
+	// Execute query to fetch column information
+	query := e.dialect.SelectLimit(tableName, e.schema, "", false, 0)
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Warn().Msg("Cannot scan columns informations for table: " + tableName)
+		return []table.Column{}, nil
+	}
+	defer rows.Close()
+
+	// Retrieve column information
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return []table.Column{}, err
+	}
+
+	columns := []table.Column{}
+	columnsNoType := []string{}
+	// Iterate over column information
+	for _, ct := range columnTypes {
+		columnName := ct.Name()
+		dataType := ct.DatabaseTypeName()
+
+		// columnLength, _ := ct.Length()
+		// columnPrecision, columnSize, _ := ct.DecimalSize()
+		// if columnLength > 0 {
+		// 	fmt.Printf(", Length: %d", columnLength)
+		// } else if columnSize > 0 {
+		// 	fmt.Printf(", Size: %d", columnSize)
+		// 	fmt.Printf(", Precision: %d", columnPrecision)
+		// }
+
+		// if data type is unusual or data not correct
+		if len(dataType) == 0 {
+			columnsNoType = append(columnsNoType, columnName)
+		}
+
+		exportType, needExport := checkType(dataType)
+		columnInfo := table.Column{
+			Name: columnName,
+		}
+
+		if needExport {
+			columnInfo.Export = exportType
+		}
+
+		columns = append(columns, columnInfo)
+	}
+
+	// Notify user unusual column
+	if len(columnsNoType) > 0 {
+		log.Warn().
+			Msgf("Table %s contains some columns with unusual characteristics: %v. It may be necessary to manually specify the export type if the data does not display correctly.", tableName, columnsNoType)
+	}
+	return columns, nil
+}
+
+// Contains check type list for mariaDB, oracle, postgres, SQL server
+func checkType(columnType string) (string, bool) {
+	switch columnType {
+	// String types
+	case "TSVECTOR", "_TEXT", "BPCHAR", "CHARACTER", "CHARACTER VARYING", "VARCHAR", "TEXT",
+		"CHAR", "VARCHAR2", "NCHAR", "NVARCHAR2", "CLOB", "NCLOB",
+		"TINYTEXT", "MEDIUMTEXT", "LONGTEXT":
+		return "string", true
+	// Numeric types
+	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE PRECISION", "MONEY", "INTEGER", "BIGINT",
+		"NUMBER", "BINARY_FLOAT", "BINARY_DOUBLE", "INT", "TINYINT", "SMALLINT", "MEDIUMINT":
+		return "numeric", true
+	// Timestamp types
+	case "TIMESTAMP", "TIMESTAMPTZ",
+		"TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
+		return "timestamp", true
+	// Datetime types
+	case "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME":
+		return "datetime", true
+	// Binary types
+	case "BYTEA",
+		"RAW", "LONG RAW", "BINARY", "VARBINARY", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "IMAGE", "BLOB":
+		return "base64", true
+	default:
+		return "", false
+	}
 }

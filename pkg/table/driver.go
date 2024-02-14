@@ -17,14 +17,22 @@
 
 package table
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 // Extract table metadatas from a relational database.
-func Extract(e Extractor, s Storage) *Error {
-	tables, err := e.Extract()
+func Extract(e Extractor, s Storage, onlyTables bool) *Error {
+	tables, err := e.Extract(onlyTables)
 	if err != nil {
 		return err
 	}
+
+	if !onlyTables {
+		SortKeysByColumnOrder(tables)
+	}
+
 	err = s.Store(tables)
 	if err != nil {
 		return err
@@ -166,4 +174,24 @@ func removeColumn(table Table, columnName string) Table {
 	table.Columns = updatedColumns
 
 	return table
+}
+
+func SortKeysByColumnOrder(tables []Table) []Table {
+	for _, table := range tables {
+		// No need to sort table which only contain one or zero key
+		if len(table.Keys) > 1 {
+			// Create a map to match column names to their index in the list
+			columnIndex := make(map[string]int)
+			for i, column := range table.Columns {
+				columnIndex[column.Name] = i
+			}
+
+			// Sort keys based on the order of column names
+			sort.Slice(table.Keys, func(i, j int) bool {
+				return columnIndex[table.Keys[i]] < columnIndex[table.Keys[j]]
+			})
+		}
+	}
+
+	return tables
 }

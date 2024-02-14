@@ -17,7 +17,10 @@
 
 package commonsql
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // MariadbDialect implement mariadb SQL variations
 type MariadbDialect struct{}
@@ -28,6 +31,85 @@ func (pd MariadbDialect) Placeholder(position int) string {
 
 func (pd MariadbDialect) Limit(limit uint) string {
 	return fmt.Sprintf(" LIMIT %d", limit)
+}
+
+// From clause
+func (pd MariadbDialect) From(tableName string, schemaName string) string {
+	if strings.TrimSpace(schemaName) == "" {
+		return fmt.Sprintf("FROM %s", tableName)
+	}
+
+	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
+}
+
+// Where clause
+func (pd MariadbDialect) Where(where string) string {
+	if strings.TrimSpace(where) == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("WHERE %s", where)
+}
+
+// Select clause
+func (pd MariadbDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+	var query strings.Builder
+
+	query.WriteString("SELECT ")
+
+	if distinct {
+		query.WriteString("DISTINCT ")
+	}
+
+	if len(columns) > 0 {
+		query.WriteString(strings.Join(columns, ", "))
+	} else {
+		query.WriteRune('*')
+	}
+
+	query.WriteRune(' ')
+	query.WriteString(pd.From(tableName, schemaName))
+	query.WriteRune(' ')
+	query.WriteString(pd.Where(where))
+
+	return query.String()
+}
+
+// SelectLimit clause
+func (pd MariadbDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+	var query strings.Builder
+
+	query.WriteString("SELECT ")
+
+	if distinct {
+		query.WriteString("DISTINCT ")
+	}
+
+	if len(columns) > 0 {
+		query.WriteString(strings.Join(columns, ", "))
+	} else {
+		query.WriteRune('*')
+	}
+
+	query.WriteRune(' ')
+	query.WriteString(pd.From(tableName, schemaName))
+	query.WriteRune(' ')
+	query.WriteString(pd.Where(where))
+	query.WriteRune(' ')
+	query.WriteString(pd.Limit(limit))
+
+	return query.String()
+}
+
+func (sd MariadbDialect) Quote(id string) string {
+	var sb strings.Builder
+
+	sb.Grow(len(id) + 2)
+	sb.WriteRune('`')
+	sb.WriteString(id)
+	sb.WriteRune('`')
+
+	return sb.String()
 }
 
 // CreateSelect generate a SQL request in the correct order.

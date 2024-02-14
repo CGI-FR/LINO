@@ -17,7 +17,10 @@
 
 package commonsql
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // SQLServerDialect implement SQLServer SQL variations
 type SQLServerDialect struct{} //nolint:golint,revive
@@ -29,6 +32,79 @@ func (sd SQLServerDialect) Placeholder(position int) string {
 // Limit method is adjusted to be compatible with SQL Server
 func (sd SQLServerDialect) Limit(limit uint) string {
 	return fmt.Sprintf(" TOP %d", limit)
+}
+
+// From clause
+func (sd SQLServerDialect) From(tableName string, schemaName string) string {
+	if strings.TrimSpace(schemaName) == "" {
+		return fmt.Sprintf("FROM %s", tableName)
+	}
+
+	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
+}
+
+// Where clause
+func (sd SQLServerDialect) Where(where string) string {
+	if strings.TrimSpace(where) == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("WHERE %s", where)
+}
+
+// Select clause
+func (sd SQLServerDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+	var query strings.Builder
+
+	query.WriteString("SELECT ")
+
+	if distinct {
+		query.WriteString("DISTINCT ")
+	}
+
+	if len(columns) > 0 {
+		query.WriteString(strings.Join(columns, ", "))
+	} else {
+		query.WriteRune('*')
+	}
+
+	query.WriteRune(' ')
+	query.WriteString(sd.From(tableName, schemaName))
+	query.WriteRune(' ')
+	query.WriteString(sd.Where(where))
+
+	return query.String()
+}
+
+// SelectLimit clause
+func (sd SQLServerDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+	var query strings.Builder
+
+	query.WriteString("SELECT ")
+
+	if distinct {
+		query.WriteString("DISTINCT ")
+	}
+
+	query.WriteString(sd.Limit(limit))
+	query.WriteRune(' ')
+
+	if len(columns) > 0 {
+		query.WriteString(strings.Join(columns, ", "))
+	} else {
+		query.WriteRune('*')
+	}
+
+	query.WriteRune(' ')
+	query.WriteString(sd.From(tableName, schemaName))
+	query.WriteRune(' ')
+	query.WriteString(sd.Where(where))
+
+	return query.String()
+}
+
+func (sd SQLServerDialect) Quote(id string) string {
+	return id
 }
 
 // CreateSelect generate a SQL request in the correct order

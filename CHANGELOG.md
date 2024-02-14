@@ -14,6 +14,11 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.7.0]
+
+- `Added` columns information and export type using the `lino table extract` command, columns and keys organized according to the database order.
+- `Added` flag `--only-tables` to `lino table extract` command. This flag allows for the extraction of table information exclusively, excluding columns. It has been included to maintain the previous behavior.
+
 ## [2.6.1]
 
 - `Fixed` performance issue with `import: file`

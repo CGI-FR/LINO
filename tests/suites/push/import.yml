@@ -48,7 +48,7 @@ testcases:
 
   - name: export to different format than stored in datasource
     steps:
-      - script: lino table extract source
+      - script: lino table extract source --only-tables
       - script: lino pull source --table customer --limit 0 | lino push truncate dest --table customer
       - script: |-
           cat  > tables.yaml <<EOF
@@ -117,7 +117,7 @@ testcases:
   - name: import with file format
     steps:
       - script: rm tables.yaml
-      - script: lino table extract source
+      - script: lino table extract source --only-tables
       - script: lino table add-column staff staff_id
       - script: lino table add-column staff picture --import file --export no
       - script: lino pull --table staff source | jq -c '.picture="../../data/avatar.png"' | lino push update --table staff dest

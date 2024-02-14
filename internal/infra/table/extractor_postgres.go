@@ -23,6 +23,7 @@ import (
 	// import postgresql connector
 	_ "github.com/lib/pq"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/table"
 )
 
@@ -36,10 +37,11 @@ type PostgresExtractorFactory struct{}
 
 // New return a Postgres extractor
 func (e *PostgresExtractorFactory) New(url string, schema string) table.Extractor {
-	return NewSQLExtractor(url, schema, PostgresDialect{})
+	return NewSQLExtractor(url, schema, PostgresDialect{commonsql.PostgresDialect{}})
 }
 
 type PostgresDialect struct {
+	commonsql.Dialect
 }
 
 func (d PostgresDialect) SQL(schema string) string {

@@ -139,18 +139,49 @@ $ lino table extract source
 lino finds 15 table(s)
 ```
 
-`lino` store the table description in `table.yml` file :
+`lino` store the table description with columns informations in `table.yml` file, Columns and keys are arranged according to the database order:
 
 ```yaml
 version: v1
 tables:
-  - name: public.actor
+  - name: actor
     keys:
       - actor_id
-  - name: public.address
+    columns:
+      - name: actor_id
+      - name: first_name
+        export: string
+      - name: last_name
+        export: string
+      - name: last_update
+        export: timestamp
+  - name: address
+    keys:
+```
+
+`export:` field is utilized for columns containing data types that require transformation for correct display.
+
+In case some unusual types cannot be automatically detected, appending the  `-v2` flag enables logging information. For instance, you will receive a notification similar to the following example, indicating which columns of a table lack types:
+
+`Table film contains some columns with unusual characteristics: [rating] .It may be necessary to manually specify the export type if the data does not display correctly.`
+
+### --only-tables
+
+Including the `only-tables` flag allows LINO to solely extract table information, excluding columns, and store it in the `table.yml` file :
+
+```yaml
+version: v1
+tables:
+  - name: actor
+    keys:
+      - actor_id
+  - name: address
     keys:
       - address_id
-  - name: public.category
+  - name: category
+    keys:
+      - category_id
+  - name: city
     keys:
 ```
 

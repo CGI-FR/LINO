@@ -17,7 +17,10 @@
 
 package commonsql
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // OracleDialect implement Oracle SQL variations
 type OracleDialect struct{}
@@ -28,6 +31,85 @@ func (od OracleDialect) Placeholder(position int) string {
 
 func (od OracleDialect) Limit(limit uint) string {
 	return fmt.Sprintf(" AND rownum <= %d", limit)
+}
+
+// From clause
+func (od OracleDialect) From(tableName string, schemaName string) string {
+	if strings.TrimSpace(schemaName) == "" {
+		return fmt.Sprintf("FROM %s", tableName)
+	}
+
+	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
+}
+
+// Where clause
+func (od OracleDialect) Where(where string) string {
+	if strings.TrimSpace(where) == "" {
+		return "WHERE 1=1"
+	}
+
+	return fmt.Sprintf("WHERE %s", where)
+}
+
+// Select clause
+func (od OracleDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+	var query strings.Builder
+
+	query.WriteString("SELECT ")
+
+	if distinct {
+		query.WriteString("DISTINCT ")
+	}
+
+	if len(columns) > 0 {
+		query.WriteString(strings.Join(columns, ", "))
+	} else {
+		query.WriteRune('*')
+	}
+
+	query.WriteRune(' ')
+	query.WriteString(od.From(tableName, schemaName))
+	query.WriteRune(' ')
+	query.WriteString(od.Where(where))
+
+	return query.String()
+}
+
+// SelectLimit clause
+func (od OracleDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+	var query strings.Builder
+
+	query.WriteString("SELECT ")
+
+	if distinct {
+		query.WriteString("DISTINCT ")
+	}
+
+	if len(columns) > 0 {
+		query.WriteString(strings.Join(columns, ", "))
+	} else {
+		query.WriteRune('*')
+	}
+
+	query.WriteRune(' ')
+	query.WriteString(od.From(tableName, schemaName))
+	query.WriteRune(' ')
+	query.WriteString(od.Where(where))
+	query.WriteRune(' ')
+	query.WriteString(od.Limit(limit))
+
+	return query.String()
+}
+
+func (od OracleDialect) Quote(id string) string {
+	var sb strings.Builder
+
+	sb.Grow(len(id) + 2)
+	sb.WriteRune('"')
+	sb.WriteString(id)
+	sb.WriteRune('"')
+
+	return sb.String()
 }
 
 // CreateSelect generate a SQL request in the correct order.

@@ -17,35 +17,35 @@
 
 name: push single relation
 testcases:
-- name: prepare test
-  steps:
-    # Clean working directory
-    - script: rm -f *
-    - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-    - script: lino relation extract source
-    - script: lino table extract source
-    - script: lino id create store
-    - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
-    - script: sed -i "s/true/false/g" ingress-descriptor.yaml
-    - script: lino id set-child-lookup staff_store_id_fkey true
-    - script: echo '{"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' > store1.jsonl
-    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}' > store2.jsonl
-    - script: cat store1.jsonl store2.jsonl | lino push -d truncate dest
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino relation extract source
+      - script: lino table extract source --only-tables
+      - script: lino id create store
+      - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      - script: lino id set-child-lookup staff_store_id_fkey true
+      - script: echo '{"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' > store1.jsonl
+      - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":2,"staff_store_id_fkey":[{"active":true,"address_id":4,"email":"Jon.Stephens@sakilastaff.com","first_name":"Jon","last_name":"Stephens","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":null,"staff_id":2,"store_id":2,"username":"Jon"}],"store_id":2}' > store2.jsonl
+      - script: cat store1.jsonl store2.jsonl | lino push -d truncate dest
 
-- name: push insert with disable-constraints 
-  steps:
-    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | lino push -v 5 --disable-constraints dest
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldContainSubstring  DISABLE
-        - result.systemerr ShouldContainSubstring  ENABLE
+  - name: push insert with disable-constraints
+    steps:
+      - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | lino push -v 5 --disable-constraints dest
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldContainSubstring  DISABLE
+          - result.systemerr ShouldContainSubstring  ENABLE
 
-- name: push insert without disable-constraints 
-  steps:
-    - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | lino push -v 5 dest
-      assertions:
-        - result.code ShouldEqual 0
-        - result.systemout ShouldBeEmpty
-        - result.systemerr ShouldNotContainSubstring  DISABLE
-        - result.systemerr ShouldNotContainSubstring  ENABLE
+  - name: push insert without disable-constraints
+    steps:
+      - script: echo '{"address_id":2,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"staff_store_id_fkey":[{"active":true,"address_id":3,"email":"Mike.Hillyer@sakilastaff.com","first_name":"Mike","last_name":"Hillyer","last_update":"2006-05-16T16:13:11.79328Z","password":"8cb2237d0679ca88db6464eac60da96345513964","picture":"iVBORw0KWgo=","staff_id":1,"store_id":1,"username":"Mike"}],"store_id":1}' | lino push -v 5 dest
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldNotContainSubstring  DISABLE
+          - result.systemerr ShouldNotContainSubstring  ENABLE

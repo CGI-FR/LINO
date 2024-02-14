@@ -22,6 +22,7 @@ import (
 
 	_ "github.com/microsoft/go-mssqldb"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/table"
 )
 
@@ -35,10 +36,12 @@ type SQLServerExtractorFactory struct{}
 
 // New return a SQL Server extractor
 func (e *SQLServerExtractorFactory) New(connectionString string, schema string) table.Extractor {
-	return NewSQLExtractor(connectionString, schema, SQLServerDialect{})
+	return NewSQLExtractor(connectionString, schema, SQLServerDialect{commonsql.SQLServerDialect{}})
 }
 
-type SQLServerDialect struct{}
+type SQLServerDialect struct{
+	commonsql.Dialect
+}
 
 func (d SQLServerDialect) SQL(schema string) string {
 	SQL := `SELECT kcu.table_schema,

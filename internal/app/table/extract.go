@@ -27,6 +27,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var onlyTables bool
+
 // newExtractCommand implements the cli relation extract command
 func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	cmd := &cobra.Command{
@@ -57,7 +59,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 
 			extractor := factory.New(u.URL.String(), alias.Schema)
 
-			e2 := table.Extract(extractor, tableStorage)
+			e2 := table.Extract(extractor, tableStorage, onlyTables)
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Description)
 				os.Exit(1)
@@ -72,6 +74,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 			fmt.Fprintf(out, "lino finds %v table(s)\n", len(tables))
 		},
 	}
+	cmd.Flags().BoolVar(&onlyTables, "only-tables", false, "extract tables without columns informations")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

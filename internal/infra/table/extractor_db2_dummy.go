@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
+//go:build !db2
 // +build !db2
 
 package table
@@ -22,6 +23,7 @@ package table
 import (
 	"fmt"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/table"
 )
 
@@ -35,10 +37,12 @@ type Db2ExtractorFactory struct{}
 
 // New return a Db2 extractor
 func (e *Db2ExtractorFactory) New(url string, schema string) table.Extractor {
-	return NewSQLExtractor(url, schema, Db2Dialect{})
+	return NewSQLExtractor(url, schema, Db2Dialect{commonsql.Db2Dialect{}})
 }
 
-type Db2Dialect struct{}
+type Db2Dialect struct {
+	commonsql.Dialect
+}
 
 func (d Db2Dialect) SQL(schema string) string {
 	panic(fmt.Errorf("Not implemented"))

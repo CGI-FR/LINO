@@ -21,7 +21,7 @@ testcases:
     steps:
       - script: "rm -rf * || :"
       - script: lino dataconnector add source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
-      - script: lino table extract source
+      - script: lino table extract source --only-tables
         assertions:
           - result.systemerr ShouldBeEmpty
       - script: lino table add-column actor first_name

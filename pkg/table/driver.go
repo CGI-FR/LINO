@@ -23,8 +23,8 @@ import (
 )
 
 // Extract table metadatas from a relational database.
-func Extract(e Extractor, s Storage, onlyTables bool) *Error {
-	tables, err := e.Extract(onlyTables)
+func Extract(e Extractor, s Storage, onlyTables bool, withDbInfo bool) *Error {
+	tables, err := e.Extract(onlyTables, withDbInfo)
 	if err != nil {
 		return err
 	}

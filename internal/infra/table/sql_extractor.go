@@ -50,7 +50,7 @@ func NewSQLExtractor(url string, schema string, dialect Dialect) *SQLExtractor {
 }
 
 // Extract tables from the database.
-func (e *SQLExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
+func (e *SQLExtractor) Extract(onlyTables bool, withDbInfo bool) ([]table.Table, *table.Error) {
 	db, err := dburl.Open(e.url)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}

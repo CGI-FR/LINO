@@ -185,6 +185,33 @@ tables:
     keys:
 ```
 
+#### --wtih-db-infos
+
+Including the `wtih-db-infos` flag allows LINO to enables the extraction of more informations regarding columns, like column type, length, size and precision if the columns has been configured with these specifications. All will be stored in the `table.yml` file :
+
+```yaml
+version: v1
+tables:
+  - name: actor
+    keys:
+      - actor_id
+    columns:
+      - name: actor_id
+        dbinfo:
+          type: INT4
+      - name: first_name
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 45
+      - name: rental_rate
+        export: numeric
+        dbinfo:
+          type: NUMERIC
+          size: 2
+          precision: 4
+```
+
 ## Ingress descriptor
 
 Ingress descriptor object describe how `lino` has to go through the relations to extract data test.

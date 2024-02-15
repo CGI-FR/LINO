@@ -72,24 +72,23 @@ ORDER BY kcu.table_schema,
 func (d SQLServerDialect) GetExportType(dbtype string) (string, bool) {
 	switch dbtype {
 	// String types
-	case "TSVECTOR", "_TEXT", "BPCHAR", "CHARACTER", "CHARACTER VARYING", "VARCHAR", "TEXT",
-		"CHAR", "VARCHAR2", "NCHAR", "NVARCHAR2", "CLOB", "NCLOB",
-		"TINYTEXT", "MEDIUMTEXT", "LONGTEXT":
+	case "BPCHAR", "CHARACTER", "VARCHAR", "TEXT",
+		"CHAR", "NCHAR", "NVARCHAR", "CLOB", "NCLOB", "NTEXT":
 		return "string", true
 	// Numeric types
-	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE PRECISION", "MONEY", "INTEGER", "BIGINT",
-		"NUMBER", "BINARY_FLOAT", "BINARY_DOUBLE", "INT", "TINYINT", "SMALLINT", "MEDIUMINT":
+	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "MONEY", "SMALLMONEY", "BIGINT",
+		"INT", "TINYINT", "SMALLINT":
 		return "numeric", true
 	// Timestamp types
 	case "TIMESTAMP", "TIMESTAMPTZ",
 		"TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
 		return "timestamp", true
 	// Datetime types
-	case "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME":
+	case "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME", "TIME", "DATETIMEOFFSET":
 		return "datetime", true
 	// Binary types
 	case "BYTEA",
-		"RAW", "LONG RAW", "BINARY", "VARBINARY", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "IMAGE", "BLOB":
+		"BINARY", "VARBINARY", "IMAGE":
 		return "base64", true
 	default:
 		return "", false

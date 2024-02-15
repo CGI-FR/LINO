@@ -19,7 +19,6 @@ package table
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/cgi-fr/lino/internal/infra/commonsql"
@@ -88,7 +87,6 @@ func (e *SQLExtractor) Extract(onlyTables bool, withDBInfos bool) ([]table.Table
 				return nil, &table.Error{Description: err.Error()}
 			}
 
-			fmt.Println(columns)
 			table := table.Table{
 				Name:    tableName,
 				Keys:    strings.Split(keyColumns, ","),

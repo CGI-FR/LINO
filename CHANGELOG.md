@@ -18,6 +18,7 @@ Types of changes
 
 - `Added` columns information and export type using the `lino table extract` command, columns and keys organized according to the database order.
 - `Added` flag `--only-tables` to `lino table extract` command. This flag allows for the extraction of table information exclusively, excluding columns. It has been included to maintain the previous behavior.
+- `Added` flag `--with-db-infos` to `lino table extract` command. This flag enables the extraction of information regarding column types, length, size, and precision if the column has been configured with these specifications.
 
 ## [2.6.1]
 

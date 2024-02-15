@@ -24,7 +24,7 @@ type ExtractorFactory interface {
 
 // Extractor allows to extract primary keys from a relational database.
 type Extractor interface {
-	Extract(onlyTables bool) ([]Table, *Error)
+	Extract(onlyTables bool, withDBInfos bool) ([]Table, *Error)
 	Count(tableName string) (int, *Error)
 }
 

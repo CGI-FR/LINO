@@ -170,3 +170,17 @@ testcases:
         assertions:
           - result.systemout ShouldBeEmpty
           - result.code ShouldEqual 0
+
+  - name: extract table with data base infos
+    steps:
+      - script: rm -f *
+      - script: lino dataconnector add --schema public source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
+      - script: lino table extract source --with-db-infos
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual "lino finds 15 table(s)"
+          - result.systemerr ShouldBeEmpty
+      - script: diff ../../data/expected_with_db_infos.yaml tables.yaml
+        assertions:
+          - result.systemout ShouldBeEmpty
+          - result.code ShouldEqual 0

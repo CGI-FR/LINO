@@ -67,7 +67,7 @@ func NewWSExtractor(url string, schema string) *WSExtractor {
 }
 
 // Extract tables from the database.
-func (e *WSExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
+func (e *WSExtractor) Extract(onlyTables bool, withDBInfos bool) ([]table.Table, *table.Error) {
 	if err := e.Dial(); err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}

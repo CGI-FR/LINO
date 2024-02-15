@@ -52,3 +52,29 @@ SELECT
 
 	return SQL
 }
+
+func (d OracleDialect) GetExportType(dbtype string) (string, bool) {
+	switch dbtype {
+	// String types
+	case "NVARCHAR2", "CLOB", "LONG", "CHAR", "NCHAR", "NCLOB", "VARCHAR2",
+		"VARCHAR":
+		return "string", true
+	// Numeric types
+	case "NUMBER", "DECIMAL", "FLOAT", "REAL", "DOUBLE PRECISION", "INTEGER", "BIGINT", "DEC",
+		"SMALLINT":
+		return "numeric", true
+	// Timestamp types
+	case "TIMESTAMP", "TIMESTAMPTZ",
+		"TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
+		return "timestamp", true
+	// Date types
+	case "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME":
+		return "datetime", true
+	// Binary types
+	case "BYTEA",
+		"RAW", "LONG RAW", "BINARY", "BINARY_DOUBLE", "BINARY_FLOAT", "MEDIUMBLOB", "LONGBLOB", "IMAGE", "BLOB":
+		return "base64", true
+	default:
+		return "", false
+	}
+}

@@ -39,7 +39,7 @@ func (e *SQLServerExtractorFactory) New(connectionString string, schema string) 
 	return NewSQLExtractor(connectionString, schema, SQLServerDialect{commonsql.SQLServerDialect{}})
 }
 
-type SQLServerDialect struct{
+type SQLServerDialect struct {
 	commonsql.Dialect
 }
 
@@ -67,4 +67,30 @@ ORDER BY kcu.table_schema,
 	kcu.table_name`
 
 	return SQL
+}
+
+func (d SQLServerDialect) GetExportType(dbtype string) (string, bool) {
+	switch dbtype {
+	// String types
+	case "BPCHAR", "CHARACTER", "VARCHAR", "TEXT",
+		"CHAR", "NCHAR", "NVARCHAR", "CLOB", "NCLOB", "NTEXT":
+		return "string", true
+	// Numeric types
+	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "MONEY", "SMALLMONEY", "BIGINT",
+		"INT", "TINYINT", "SMALLINT":
+		return "numeric", true
+	// Timestamp types
+	case "TIMESTAMP", "TIMESTAMPTZ",
+		"TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
+		return "timestamp", true
+	// Datetime types
+	case "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME", "TIME", "DATETIMEOFFSET":
+		return "datetime", true
+	// Binary types
+	case "BYTEA",
+		"BINARY", "VARBINARY", "IMAGE":
+		return "base64", true
+	default:
+		return "", false
+	}
 }

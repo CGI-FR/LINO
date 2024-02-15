@@ -68,3 +68,25 @@ func (d MariadbDialect) SQL(schema string) string {
 
 	return SQL
 }
+
+func (d MariadbDialect) GetExportType(dbtype string) (string, bool) {
+	switch dbtype {
+	// String types
+	case "_TEXT", "BPCHAR", "CHARACTER", "CHARACTER VARYING", "VARCHAR", "TEXT",
+		"CHAR", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT", "DATE", "DATETIME":
+		return "string", true
+	// Numeric types
+	case "NUMERIC", "DECIMAL", "FLOAT", "BOOLEAN", "BIT", "MONEY", "INTEGER", "BIGINT",
+		"INT", "TINYINT", "SMALLINT", "MEDIUMINT":
+		return "numeric", true
+	// Timestamp types
+	case "TIMESTAMP":
+		return "timestamp", true
+	// Binary types
+	case "BYTEA",
+		"RAW", "CHAR BYTE", "BINARY", "VARBINARY", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "BLOB":
+		return "base64", true
+	default:
+		return "", false
+	}
+}

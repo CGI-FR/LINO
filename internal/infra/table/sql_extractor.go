@@ -37,6 +37,7 @@ type SQLExtractor struct {
 type Dialect interface {
 	commonsql.Dialect
 	SQL(schema string) string
+	GetExportType(dbtype string) (string, bool)
 }
 
 // NewSQLExtractor creates a new SQL extractor.
@@ -49,7 +50,7 @@ func NewSQLExtractor(url string, schema string, dialect Dialect) *SQLExtractor {
 }
 
 // Extract tables from the database.
-func (e *SQLExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
+func (e *SQLExtractor) Extract(onlyTables bool, withDBInfos bool) ([]table.Table, *table.Error) {
 	db, err := dburl.Open(e.url)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
@@ -81,7 +82,7 @@ func (e *SQLExtractor) Extract(onlyTables bool) ([]table.Table, *table.Error) {
 		}
 		if !onlyTables {
 			// Get columns information, check is there have types needs to be modify in export
-			columns, err := e.ColumnInfo(db, tableName)
+			columns, err := e.ColumnInfo(db, tableName, withDBInfos)
 			if err != nil {
 				return nil, &table.Error{Description: err.Error()}
 			}
@@ -147,7 +148,7 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 	return count, nil
 }
 
-func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
+func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string, withDBInfos bool) ([]table.Column, error) {
 	// Execute query to fetch column information
 	query := e.dialect.SelectLimit(tableName, e.schema, "", false, 0)
 	rows, err := db.Query(query)
@@ -170,29 +171,34 @@ func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column,
 		columnName := ct.Name()
 		dataType := ct.DatabaseTypeName()
 
-		// columnLength, _ := ct.Length()
-		// columnPrecision, columnSize, _ := ct.DecimalSize()
-		// if columnLength > 0 {
-		// 	fmt.Printf(", Length: %d", columnLength)
-		// } else if columnSize > 0 {
-		// 	fmt.Printf(", Size: %d", columnSize)
-		// 	fmt.Printf(", Precision: %d", columnPrecision)
-		// }
-
 		// if data type is unusual or data not correct
 		if len(dataType) == 0 {
 			columnsNoType = append(columnsNoType, columnName)
 		}
 
-		exportType, needExport := checkType(dataType)
+		exportType, needExport := e.dialect.GetExportType(dataType)
 		columnInfo := table.Column{
 			Name: columnName,
 		}
-
+		// If column type need export
 		if needExport {
 			columnInfo.Export = exportType
 		}
+		// If with-db-infos flag is actived
+		if withDBInfos {
+			columnInfo.DBInfo.Type = dataType
+			columnLength, _ := ct.Length()
+			columnPrecision, columnSize, _ := ct.DecimalSize()
 
+			if columnLength > 0 {
+				columnInfo.DBInfo.Length = columnLength
+			}
+
+			if columnSize > 0 {
+				columnInfo.DBInfo.Size = columnSize
+				columnInfo.DBInfo.Precision = columnPrecision
+			}
+		}
 		columns = append(columns, columnInfo)
 	}
 
@@ -202,32 +208,4 @@ func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column,
 			Msgf("Table %s contains some columns with unusual characteristics: %v. It may be necessary to manually specify the export type if the data does not display correctly.", tableName, columnsNoType)
 	}
 	return columns, nil
-}
-
-// Contains check type list for mariaDB, oracle, postgres, SQL server
-func checkType(columnType string) (string, bool) {
-	switch columnType {
-	// String types
-	case "TSVECTOR", "_TEXT", "BPCHAR", "CHARACTER", "CHARACTER VARYING", "VARCHAR", "TEXT",
-		"CHAR", "VARCHAR2", "NCHAR", "NVARCHAR2", "CLOB", "NCLOB",
-		"TINYTEXT", "MEDIUMTEXT", "LONGTEXT":
-		return "string", true
-	// Numeric types
-	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE PRECISION", "MONEY", "INTEGER", "BIGINT",
-		"NUMBER", "BINARY_FLOAT", "BINARY_DOUBLE", "INT", "TINYINT", "SMALLINT", "MEDIUMINT":
-		return "numeric", true
-	// Timestamp types
-	case "TIMESTAMP", "TIMESTAMPTZ",
-		"TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
-		return "timestamp", true
-	// Datetime types
-	case "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME":
-		return "datetime", true
-	// Binary types
-	case "BYTEA",
-		"RAW", "LONG RAW", "BINARY", "VARBINARY", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "IMAGE", "BLOB":
-		return "base64", true
-	default:
-		return "", false
-	}
 }

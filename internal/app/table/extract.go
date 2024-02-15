@@ -28,8 +28,8 @@ import (
 )
 
 var (
-	onlyTables bool
-	withDbInfo bool
+	onlyTables  bool
+	withDBInfos bool
 )
 
 // newExtractCommand implements the cli relation extract command
@@ -62,7 +62,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 
 			extractor := factory.New(u.URL.String(), alias.Schema)
 
-			e2 := table.Extract(extractor, tableStorage, onlyTables, withDbInfo)
+			e2 := table.Extract(extractor, tableStorage, onlyTables, withDBInfos)
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Description)
 				os.Exit(1)
@@ -78,7 +78,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 		},
 	}
 	cmd.Flags().BoolVar(&onlyTables, "only-tables", false, "extract tables without columns informations")
-	cmd.Flags().BoolVar(&withDbInfo, "with-db-infos", false, "extract tables with columns informations including types, length/size, precision")
+	cmd.Flags().BoolVar(&withDBInfos, "with-db-infos", false, "extract tables with columns informations including types, length/size, precision")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

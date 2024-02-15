@@ -43,7 +43,7 @@ func NewHTTPExtractor(url string, schema string) *HTTPExtractor {
 }
 
 // Extract tables from the database.
-func (e *HTTPExtractor) Extract(onlyTables bool, withDbInfo bool) ([]table.Table, *table.Error) {
+func (e *HTTPExtractor) Extract(onlyTables bool, withDBInfos bool) ([]table.Table, *table.Error) {
 	url := e.url + "/tables"
 	if len(e.schema) > 0 {
 		url = url + "?schema=" + e.schema

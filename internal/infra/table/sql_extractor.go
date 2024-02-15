@@ -19,6 +19,7 @@ package table
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/cgi-fr/lino/internal/infra/commonsql"
@@ -50,7 +51,7 @@ func NewSQLExtractor(url string, schema string, dialect Dialect) *SQLExtractor {
 }
 
 // Extract tables from the database.
-func (e *SQLExtractor) Extract(onlyTables bool, withDbInfo bool) ([]table.Table, *table.Error) {
+func (e *SQLExtractor) Extract(onlyTables bool, withDBInfos bool) ([]table.Table, *table.Error) {
 	db, err := dburl.Open(e.url)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
@@ -82,11 +83,12 @@ func (e *SQLExtractor) Extract(onlyTables bool, withDbInfo bool) ([]table.Table,
 		}
 		if !onlyTables {
 			// Get columns information, check is there have types needs to be modify in export
-			columns, err := e.ColumnInfo(db, tableName)
+			columns, err := e.ColumnInfo(db, tableName, withDBInfos)
 			if err != nil {
 				return nil, &table.Error{Description: err.Error()}
 			}
 
+			fmt.Println(columns)
 			table := table.Table{
 				Name:    tableName,
 				Keys:    strings.Split(keyColumns, ","),
@@ -148,7 +150,7 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 	return count, nil
 }
 
-func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column, error) {
+func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string, withDBInfos bool) ([]table.Column, error) {
 	// Execute query to fetch column information
 	query := e.dialect.SelectLimit(tableName, e.schema, "", false, 0)
 	rows, err := db.Query(query)
@@ -171,15 +173,6 @@ func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column,
 		columnName := ct.Name()
 		dataType := ct.DatabaseTypeName()
 
-		// columnLength, _ := ct.Length()
-		// columnPrecision, columnSize, _ := ct.DecimalSize()
-		// if columnLength > 0 {
-		// 	fmt.Printf(", Length: %d", columnLength)
-		// } else if columnSize > 0 {
-		// 	fmt.Printf(", Size: %d", columnSize)
-		// 	fmt.Printf(", Precision: %d", columnPrecision)
-		// }
-
 		// if data type is unusual or data not correct
 		if len(dataType) == 0 {
 			columnsNoType = append(columnsNoType, columnName)
@@ -189,11 +182,25 @@ func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string) ([]table.Column,
 		columnInfo := table.Column{
 			Name: columnName,
 		}
-
+		// If column type need export
 		if needExport {
 			columnInfo.Export = exportType
 		}
+		// If with-db-infos flag is actived
+		if withDBInfos {
+			columnInfo.DBInfo.Type = dataType
+			columnLength, _ := ct.Length()
+			columnPrecision, columnSize, _ := ct.DecimalSize()
 
+			if columnLength > 0 {
+				columnInfo.DBInfo.Length = columnLength
+			}
+
+			if columnSize > 0 {
+				columnInfo.DBInfo.Size = columnSize
+				columnInfo.DBInfo.Precision = columnPrecision
+			}
+		}
 		columns = append(columns, columnInfo)
 	}
 

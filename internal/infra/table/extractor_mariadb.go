@@ -72,21 +72,19 @@ func (d MariadbDialect) SQL(schema string) string {
 func (d MariadbDialect) GetExportType(dbtype string) (string, bool) {
 	switch dbtype {
 	// String types
-	case "TSVECTOR", "_TEXT", "BPCHAR", "CHARACTER", "CHARACTER VARYING", "VARCHAR", "TEXT",
-		"CHAR", "VARCHAR2", "NCHAR", "NVARCHAR2", "CLOB", "NCLOB",
-		"TINYTEXT", "MEDIUMTEXT", "LONGTEXT", "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME":
+	case "_TEXT", "BPCHAR", "CHARACTER", "CHARACTER VARYING", "VARCHAR", "TEXT",
+		"CHAR", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT", "DATE", "DATETIME":
 		return "string", true
 	// Numeric types
-	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE PRECISION", "MONEY", "INTEGER", "BIGINT",
-		"NUMBER", "BINARY_FLOAT", "BINARY_DOUBLE", "INT", "TINYINT", "SMALLINT", "MEDIUMINT":
+	case "NUMERIC", "DECIMAL", "FLOAT", "BOOLEAN", "BIT", "MONEY", "INTEGER", "BIGINT",
+		"INT", "TINYINT", "SMALLINT", "MEDIUMINT":
 		return "numeric", true
 	// Timestamp types
-	case "TIMESTAMP", "TIMESTAMPTZ",
-		"TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
+	case "TIMESTAMP":
 		return "timestamp", true
 	// Binary types
 	case "BYTEA",
-		"RAW", "LONG RAW", "BINARY", "VARBINARY", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "IMAGE", "BLOB":
+		"RAW", "CHAR BYTE", "BINARY", "VARBINARY", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "BLOB":
 		return "base64", true
 	default:
 		return "", false

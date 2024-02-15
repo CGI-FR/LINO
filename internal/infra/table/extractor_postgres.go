@@ -88,9 +88,8 @@ func (d PostgresDialect) GetExportType(dbtype string) (string, bool) {
 	// Datetime types
 	case "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME":
 		return "datetime", true
-	// Binary types
-	case "BYTEA",
-		"RAW", "LONG RAW", "BINARY", "VARBINARY", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "IMAGE", "BLOB":
+	// Base64 types
+	case "BYTEA", "BLOB":
 		return "base64", true
 	default:
 		return "", false

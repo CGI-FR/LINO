@@ -1,0 +1,396 @@
+version: v1
+tables:
+  - name: actor
+    keys:
+      - actor_id
+    columns:
+      - name: actor_id
+        dbinfo:
+          type: INT4
+      - name: first_name
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 45
+      - name: last_name
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 45
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: address
+    keys:
+      - address_id
+    columns:
+      - name: address_id
+        dbinfo:
+          type: INT4
+      - name: address
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 50
+      - name: address2
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 50
+      - name: district
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 20
+      - name: city_id
+        dbinfo:
+          type: INT2
+      - name: postal_code
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 10
+      - name: phone
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 20
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: category
+    keys:
+      - category_id
+    columns:
+      - name: category_id
+        dbinfo:
+          type: INT4
+      - name: name
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 25
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: city
+    keys:
+      - city_id
+    columns:
+      - name: city_id
+        dbinfo:
+          type: INT4
+      - name: city
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 50
+      - name: country_id
+        dbinfo:
+          type: INT2
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: country
+    keys:
+      - country_id
+    columns:
+      - name: country_id
+        dbinfo:
+          type: INT4
+      - name: country
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 50
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: customer
+    keys:
+      - customer_id
+    columns:
+      - name: customer_id
+        dbinfo:
+          type: INT4
+      - name: store_id
+        dbinfo:
+          type: INT2
+      - name: first_name
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 45
+      - name: last_name
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 45
+      - name: email
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 50
+      - name: address_id
+        dbinfo:
+          type: INT2
+      - name: activebool
+        dbinfo:
+          type: BOOL
+      - name: create_date
+        export: datetime
+        dbinfo:
+          type: DATE
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+      - name: active
+        dbinfo:
+          type: INT4
+  - name: film
+    keys:
+      - film_id
+    columns:
+      - name: film_id
+        dbinfo:
+          type: INT4
+      - name: title
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 255
+      - name: description
+        export: string
+        dbinfo:
+          type: TEXT
+          length: 9223372036854775807
+      - name: release_year
+        dbinfo:
+          type: INT4
+      - name: language_id
+        dbinfo:
+          type: INT2
+      - name: original_language_id
+        dbinfo:
+          type: INT2
+      - name: rental_duration
+        dbinfo:
+          type: INT2
+      - name: rental_rate
+        export: numeric
+        dbinfo:
+          type: NUMERIC
+          size: 2
+          precision: 4
+      - name: length
+        dbinfo:
+          type: INT2
+      - name: replacement_cost
+        export: numeric
+        dbinfo:
+          type: NUMERIC
+          size: 2
+          precision: 5
+      - name: rating
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+      - name: special_features
+        export: string
+        dbinfo:
+          type: _TEXT
+      - name: fulltext
+        export: string
+        dbinfo:
+          type: TSVECTOR
+  - name: film_actor
+    keys:
+      - actor_id
+      - film_id
+    columns:
+      - name: actor_id
+        dbinfo:
+          type: INT2
+      - name: film_id
+        dbinfo:
+          type: INT2
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: film_category
+    keys:
+      - film_id
+      - category_id
+    columns:
+      - name: film_id
+        dbinfo:
+          type: INT2
+      - name: category_id
+        dbinfo:
+          type: INT2
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: inventory
+    keys:
+      - inventory_id
+    columns:
+      - name: inventory_id
+        dbinfo:
+          type: INT4
+      - name: film_id
+        dbinfo:
+          type: INT2
+      - name: store_id
+        dbinfo:
+          type: INT2
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: language
+    keys:
+      - language_id
+    columns:
+      - name: language_id
+        dbinfo:
+          type: INT4
+      - name: name
+        export: string
+        dbinfo:
+          type: BPCHAR
+          length: 20
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: payment
+    keys:
+      - payment_id
+    columns:
+      - name: payment_id
+        dbinfo:
+          type: INT4
+      - name: customer_id
+        dbinfo:
+          type: INT2
+      - name: staff_id
+        dbinfo:
+          type: INT2
+      - name: rental_id
+        dbinfo:
+          type: INT4
+      - name: amount
+        export: numeric
+        dbinfo:
+          type: NUMERIC
+          size: 2
+          precision: 5
+      - name: payment_date
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: rental
+    keys:
+      - rental_id
+    columns:
+      - name: rental_id
+        dbinfo:
+          type: INT4
+      - name: rental_date
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+      - name: inventory_id
+        dbinfo:
+          type: INT4
+      - name: customer_id
+        dbinfo:
+          type: INT2
+      - name: return_date
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+      - name: staff_id
+        dbinfo:
+          type: INT2
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+  - name: staff
+    keys:
+      - staff_id
+    columns:
+      - name: staff_id
+        dbinfo:
+          type: INT4
+      - name: first_name
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 45
+      - name: last_name
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 45
+      - name: address_id
+        dbinfo:
+          type: INT2
+      - name: email
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 50
+      - name: store_id
+        dbinfo:
+          type: INT2
+      - name: active
+        dbinfo:
+          type: BOOL
+      - name: username
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 16
+      - name: password
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 40
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP
+      - name: picture
+        export: base64
+        dbinfo:
+          type: BYTEA
+          length: 9223372036854775807
+  - name: store
+    keys:
+      - store_id
+    columns:
+      - name: store_id
+        dbinfo:
+          type: INT4
+      - name: manager_staff_id
+        dbinfo:
+          type: INT2
+      - name: address_id
+        dbinfo:
+          type: INT2
+      - name: last_update
+        export: timestamp
+        dbinfo:
+          type: TIMESTAMP

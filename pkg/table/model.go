@@ -17,11 +17,20 @@
 
 package table
 
+// DBInfo holds the type of a column, adding length or size precision if columns fixed thoses info.
+type DBInfo struct {
+	Type      string
+	Length    int64
+	Size      int64
+	Precision int64
+}
+
 // Column holds the name of a column.
 type Column struct {
 	Name   string
 	Export string
 	Import string
+	DBInfo DBInfo
 }
 
 type ExportMode byte

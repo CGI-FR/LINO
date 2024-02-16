@@ -185,9 +185,9 @@ tables:
     keys:
 ```
 
-#### --wtih-db-infos
+#### --with-db-infos
 
-Including the `wtih-db-infos` flag allows LINO to enables the extraction of more informations regarding columns, like column type, length, size and precision if the columns has been configured with these specifications. All will be stored in the `table.yml` file :
+Including the `with-db-infos` flag allows LINO to enables the extraction of more informations regarding columns, like column type, length, size and precision if the columns has been configured with these specifications. All will be stored in the `table.yml` file :
 
 ```yaml
 version: v1

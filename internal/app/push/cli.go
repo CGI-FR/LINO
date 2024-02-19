@@ -80,6 +80,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		pkTranslations     map[string]string
 		whereField         string
 		savepoint          string
+		autoTruncate       bool
 	)
 
 	cmd := &cobra.Command{
@@ -151,7 +152,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator, whereField, savepoint)
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator, whereField, savepoint, autoTruncate)
 			if e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)
@@ -172,6 +173,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringToStringVar(&pkTranslations, "pk-translation", map[string]string{}, "list of dictionaries old value / new value for primary key update")
 	cmd.Flags().StringVar(&whereField, "using-pk-field", "__usingpk__", "Name of the data field that can be used as pk for update queries")
 	cmd.Flags().StringVar(&savepoint, "savepoint", "", "Name of a file to write primary keys of effectively processed lines (commit to database)")
+	cmd.Flags().BoolVarP(&autoTruncate, "autotruncate", "a", false, "Automatically truncate values to the maximum length defined in table.yaml")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
@@ -300,7 +302,7 @@ func (c idToPushConverter) getTable(name string) push.Table {
 
 	columns := []push.Column{}
 	for _, col := range table.Columns {
-		columns = append(columns, push.NewColumn(col.Name, col.Export, col.Import))
+		columns = append(columns, push.NewColumn(col.Name, col.Export, col.Import, col.DBInfo.Length))
 	}
 
 	return push.NewTable(table.Name, table.Keys, push.NewColumnList(columns))

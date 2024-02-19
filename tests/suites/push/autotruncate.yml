@@ -29,7 +29,7 @@ testcases:
   - name: truncate field to maximum length
     steps:
       - script: echo '{"actor_id":1,"first_name":"VERY VERY VERY VERY VERY VERY VERY VERY LONG NAME","last_name":"GUINESS"}' | lino push truncate dest --table actor --autotruncate
-      - script: lino pull dest --table actor --filter id=1
+      - script: lino pull dest --table actor --filter actor_id=1
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"actor_id":1,"first_name":"VERY VERY VERY VERY VERY VERY VERY VERY LONG ","last_name":"GUINESS"}
@@ -38,7 +38,7 @@ testcases:
   - name: truncate field to maximum length with accents
     steps:
       - script: echo '{"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY LONG NAME","last_name":"GUINESS"}' | lino push truncate dest --table actor --autotruncate
-      - script: lino pull dest --table actor --filter id=1
+      - script: lino pull dest --table actor --filter actor_id=1
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉ","last_name":"GUINESS"}
@@ -46,9 +46,9 @@ testcases:
 
   - name: truncate field to maximum length with accents 2
     steps:
-      - script: echo '{"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY É","last_name":"GUINESS"}' | lino push truncate dest --table actor --autotruncate
-      - script: lino pull dest --table actor --filter id=1
+      - script: echo '{"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY 11É","last_name":"GUINESS"}' | lino push truncate dest --table actor --autotruncate
+      - script: lino pull dest --table actor --filter actor_id=1
         assertions:
           - result.code ShouldEqual 0
-          - result.systemout ShouldEqual {"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY ","last_name":"GUINESS"}
+          - result.systemout ShouldEqual {"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY 11","last_name":"GUINESS"}
           - result.systemerr ShouldBeEmpty

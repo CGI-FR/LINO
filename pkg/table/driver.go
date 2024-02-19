@@ -60,7 +60,7 @@ func Count(s Storage, e Extractor) ([]TableCount, *Error) {
 }
 
 // AddOrUpdateColumn will update table definitions with given export and import types, it will add the column if necessary
-func AddOrUpdateColumn(s Storage, tableName, columnName, exportType, importType string) (int, *Error) {
+func AddOrUpdateColumn(s Storage, tableName, columnName, exportType, importType string, maxLength int64, inBytes bool) (int, *Error) {
 	tables, err := s.List()
 	if err != nil {
 		return 0, err
@@ -71,7 +71,7 @@ func AddOrUpdateColumn(s Storage, tableName, columnName, exportType, importType 
 	updatedTables := []Table{}
 	for _, table := range tables {
 		if table.Name == tableName {
-			updatedTables = append(updatedTables, addOrUpdateColumn(table, columnName, exportType, importType))
+			updatedTables = append(updatedTables, addOrUpdateColumn(table, columnName, exportType, importType, maxLength, inBytes))
 			count++
 		} else {
 			updatedTables = append(updatedTables, table)
@@ -89,7 +89,7 @@ func AddOrUpdateColumn(s Storage, tableName, columnName, exportType, importType 
 	return count, nil
 }
 
-func addOrUpdateColumn(table Table, columnName, exportType, importType string) Table {
+func addOrUpdateColumn(table Table, columnName, exportType, importType string, maxLength int64, inBytes bool) Table {
 	count := 0
 
 	updatedColumns := []Column{}
@@ -104,10 +104,15 @@ func addOrUpdateColumn(table Table, columnName, exportType, importType string) T
 			if importType != "" {
 				importUpdate = importType
 			}
+			if maxLength > 0 {
+				column.DBInfo.Length = maxLength
+				column.DBInfo.ByteBased = inBytes
+			}
 			updatedColumns = append(updatedColumns, Column{
 				Name:   columnName,
 				Export: exportUpdate,
 				Import: importUpdate,
+				DBInfo: column.DBInfo,
 			})
 			count++
 		} else {

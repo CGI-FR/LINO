@@ -41,10 +41,20 @@ testcases:
       - script: lino pull dest --table actor --filter actor_id=1
         assertions:
           - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY LONG ","last_name":"GUINESS"}
+          - result.systemerr ShouldBeEmpty
+
+  - name: truncate field to maximum length with accents in bytes
+    steps:
+      - script: lino table add-column actor first_name --max-length 45 --bytes
+      - script: echo '{"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY LONG NAME","last_name":"GUINESS"}' | lino push truncate dest --table actor --autotruncate
+      - script: lino pull dest --table actor --filter actor_id=1
+        assertions:
+          - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉ","last_name":"GUINESS"}
           - result.systemerr ShouldBeEmpty
 
-  - name: truncate field to maximum length with accents 2
+  - name: truncate field to maximum length with accents in bytes do not split codepoint
     steps:
       - script: echo '{"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY 11É","last_name":"GUINESS"}' | lino push truncate dest --table actor --autotruncate
       - script: lino pull dest --table actor --filter actor_id=1

@@ -26,7 +26,6 @@ import (
 
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/exp/utf8string"
 )
 
 type table struct {
@@ -191,7 +190,7 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 				if col.LengthInBytes() {
 					result.Set(key, truncateUTF8String(result.GetString(key), int(col.Length())))
 				} else {
-					result.Set(key, utf8string.NewString(result.GetString(key)).Slice(0, int(col.Length())))
+					result.Set(key, truncateRuneString(result.GetString(key), int(col.Length())))
 				}
 			}
 		}
@@ -265,4 +264,17 @@ func truncateUTF8String(s string, n int) string {
 	}
 
 	return s[:n]
+}
+
+// truncateRuneString truncate s to n runes or less.
+func truncateRuneString(s string, n int) string {
+	if n <= 0 {
+		return ""
+	}
+
+	if utf8.RuneCountInString(s) < n {
+		return s
+	}
+
+	return string([]rune(s)[:n])
 }

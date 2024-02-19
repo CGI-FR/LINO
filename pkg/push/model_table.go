@@ -90,21 +90,23 @@ func (l columnList) String() string {
 }
 
 type column struct {
-	name string
-	exp  string
-	imp  string
-	lgth int64
+	name     string
+	exp      string
+	imp      string
+	lgth     int64
+	truncate bool
 }
 
 // NewColumn initialize a new Column object
-func NewColumn(name string, exp string, imp string, lgth int64) Column {
-	return column{name, exp, imp, lgth}
+func NewColumn(name string, exp string, imp string, lgth int64, truncate bool) Column {
+	return column{name, exp, imp, lgth, truncate}
 }
 
 func (c column) Name() string   { return c.name }
 func (c column) Export() string { return c.exp }
 func (c column) Import() string { return c.imp }
 func (c column) Length() int64  { return c.lgth }
+func (c column) Truncate() bool { return c.truncate }
 
 type ImportedRow struct {
 	jsonline.Row
@@ -182,7 +184,7 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 
 			// autotruncate
 			value, exists := result.GetValue(key)
-			if exists && col.Length() > 0 && value.GetFormat() == jsonline.String {
+			if exists && col.Truncate() && col.Length() > 0 && value.GetFormat() == jsonline.String {
 				result.Set(key, truncateUTF8String(result.GetString(key), int(col.Length())))
 			}
 		}

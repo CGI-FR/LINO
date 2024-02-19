@@ -26,6 +26,7 @@ import (
 
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/utf8string"
 )
 
 type table struct {
@@ -94,19 +95,21 @@ type column struct {
 	exp      string
 	imp      string
 	lgth     int64
+	inbytes  bool
 	truncate bool
 }
 
 // NewColumn initialize a new Column object
-func NewColumn(name string, exp string, imp string, lgth int64, truncate bool) Column {
-	return column{name, exp, imp, lgth, truncate}
+func NewColumn(name string, exp string, imp string, lgth int64, inbytes bool, truncate bool) Column {
+	return column{name, exp, imp, lgth, inbytes, truncate}
 }
 
-func (c column) Name() string   { return c.name }
-func (c column) Export() string { return c.exp }
-func (c column) Import() string { return c.imp }
-func (c column) Length() int64  { return c.lgth }
-func (c column) Truncate() bool { return c.truncate }
+func (c column) Name() string        { return c.name }
+func (c column) Export() string      { return c.exp }
+func (c column) Import() string      { return c.imp }
+func (c column) Length() int64       { return c.lgth }
+func (c column) LengthInBytes() bool { return c.inbytes }
+func (c column) Truncate() bool      { return c.truncate }
 
 type ImportedRow struct {
 	jsonline.Row
@@ -185,7 +188,11 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 			// autotruncate
 			value, exists := result.GetValue(key)
 			if exists && col.Truncate() && col.Length() > 0 && value.GetFormat() == jsonline.String {
-				result.Set(key, truncateUTF8String(result.GetString(key), int(col.Length())))
+				if col.LengthInBytes() {
+					result.Set(key, truncateUTF8String(result.GetString(key), int(col.Length())))
+				} else {
+					result.Set(key, utf8string.NewString(result.GetString(key)).Slice(0, int(col.Length())))
+				}
 			}
 		}
 	}

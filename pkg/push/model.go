@@ -46,6 +46,7 @@ type Column interface {
 	Export() string
 	Import() string
 	Length() int64
+	LengthInBytes() bool
 	Truncate() bool
 }
 

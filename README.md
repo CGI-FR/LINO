@@ -343,6 +343,36 @@ Each line is a filter and `lino` apply it to the start table to extract data.
 
 The `push` sub-command import a **json** line stream (jsonline format http://jsonlines.org/) in each table, following the ingress descriptor defined in current directory.
 
+### Autotruncate values
+
+Use the `autotruncate` flag to automatically truncate string values that overflows the maximum length accepted by the database.
+
+```
+$ lino push truncate dest --table actor --autotruncate < actors.jsonl
+```
+
+LINO will truncate each value based each `dbinfo`.`length` parameters set in the table.yaml file for each columns.
+
+Additionnaly, if your database maximum value is not defined in number of characters but in number of bytes, set the `dbinfo`.`bytes` to true. LINO will truncate the value based on a maximum number of bytes and not characters (assuming utf-8 encoding for now).
+
+```yaml
+version: v1
+tables:
+  - name: actor
+    keys:
+      - actor_id
+    columns:
+      - name: actor_id
+        dbinfo:
+          type: INT4
+      - name: first_name
+        export: string
+        dbinfo:
+          type: VARCHAR
+          length: 45
+          bytes: true
+```
+
 ### How to update primary key
 
 Let's say you have this record in database :

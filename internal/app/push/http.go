@@ -81,7 +81,23 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode, ingressDesc
 		return
 	}
 
-	plan, e2 := getPlan(idStorageFactory(query.Get("table"), ingressDescriptor))
+	autoTruncate := false
+	if query.Get("auto-truncate") != "" {
+		var err error
+		autoTruncate, err = strconv.ParseBool(query.Get("auto-truncate"))
+		if err != nil {
+			log.Error().Err(err).Msg("can't parse auto-truncate")
+			w.WriteHeader(http.StatusBadRequest)
+			_, ew := w.Write([]byte("{\"error\" : \"param auto-truncate must be a boolean\"}\n"))
+			if ew != nil {
+				log.Error().Err(ew).Msg("Write failed")
+				return
+			}
+			return
+		}
+	}
+
+	plan, e2 := getPlan(idStorageFactory(query.Get("table"), ingressDescriptor), autoTruncate)
 	if e2 != nil {
 		log.Error().Err(e2).Msg("")
 		w.WriteHeader(http.StatusNotFound)
@@ -130,7 +146,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode, ingressDesc
 
 	log.Debug().Msg(fmt.Sprintf("call Push with mode %s", mode))
 
-	e3 := push.Push(rowIteratorFactory(r.Body), datadestination, plan, mode, commitSize, disableConstraints, push.NoErrorCaptureRowWriter{}, nil, query.Get("using-pk-field"), "")
+	e3 := push.Push(rowIteratorFactory(r.Body), datadestination, plan, mode, commitSize, disableConstraints, push.NoErrorCaptureRowWriter{}, nil, query.Get("using-pk-field"), "", false)
 	if e3 != nil {
 		log.Error().Err(e3).Msg("")
 		w.WriteHeader(http.StatusNotFound)

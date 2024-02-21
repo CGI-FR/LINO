@@ -80,6 +80,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		pkTranslations     map[string]string
 		whereField         string
 		savepoint          string
+		autoTruncate       bool
 	)
 
 	cmd := &cobra.Command{
@@ -127,7 +128,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPlan(idStorageFactory(table, ingressDescriptor))
+			plan, e2 := getPlan(idStorageFactory(table, ingressDescriptor), autoTruncate)
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(2)
@@ -151,7 +152,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator, whereField, savepoint)
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator, whereField, savepoint, autoTruncate)
 			if e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)
@@ -172,6 +173,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringToStringVar(&pkTranslations, "pk-translation", map[string]string{}, "list of dictionaries old value / new value for primary key update")
 	cmd.Flags().StringVar(&whereField, "using-pk-field", "__usingpk__", "Name of the data field that can be used as pk for update queries")
 	cmd.Flags().StringVar(&savepoint, "savepoint", "", "Name of a file to write primary keys of effectively processed lines (commit to database)")
+	cmd.Flags().BoolVarP(&autoTruncate, "autotruncate", "a", false, "Automatically truncate values to the maximum length defined in table.yaml")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
@@ -241,7 +243,7 @@ func getDataDestination(dataconnectorName string) (push.DataDestination, *push.E
 	return datadestinationFactory.New(u.URL.String(), alias.Schema), nil
 }
 
-func getPlan(idStorage id.Storage) (push.Plan, *push.Error) {
+func getPlan(idStorage id.Storage, autoTruncate bool) (push.Plan, *push.Error) {
 	id, err1 := idStorage.Read()
 	if err1 != nil {
 		return nil, &push.Error{Description: err1.Error()}
@@ -274,7 +276,7 @@ func getPlan(idStorage id.Storage) (push.Plan, *push.Error) {
 		pushtmap: map[string]push.Table{},
 	}
 
-	return converter.getPlan(id), nil
+	return converter.getPlan(id, autoTruncate), nil
 }
 
 type idToPushConverter struct {
@@ -285,7 +287,7 @@ type idToPushConverter struct {
 	pushtmap map[string]push.Table
 }
 
-func (c idToPushConverter) getTable(name string) push.Table {
+func (c idToPushConverter) getTable(name string, autoTruncate bool) push.Table {
 	if pushtable, ok := c.pushtmap[name]; ok {
 		return pushtable
 	}
@@ -300,13 +302,13 @@ func (c idToPushConverter) getTable(name string) push.Table {
 
 	columns := []push.Column{}
 	for _, col := range table.Columns {
-		columns = append(columns, push.NewColumn(col.Name, col.Export, col.Import))
+		columns = append(columns, push.NewColumn(col.Name, col.Export, col.Import, col.DBInfo.Length, col.DBInfo.ByteBased, autoTruncate))
 	}
 
 	return push.NewTable(table.Name, table.Keys, push.NewColumnList(columns))
 }
 
-func (c idToPushConverter) getRelation(name string) push.Relation {
+func (c idToPushConverter) getRelation(name string, autoTruncate bool) push.Relation {
 	if pushrelation, ok := c.pushrmap[name]; ok {
 		return pushrelation
 	}
@@ -321,12 +323,12 @@ func (c idToPushConverter) getRelation(name string) push.Relation {
 
 	return push.NewRelation(
 		relation.Name,
-		c.getTable(relation.Parent.Name),
-		c.getTable(relation.Child.Name),
+		c.getTable(relation.Parent.Name, autoTruncate),
+		c.getTable(relation.Child.Name, autoTruncate),
 	)
 }
 
-func (c idToPushConverter) getPlan(idesc id.IngressDescriptor) push.Plan {
+func (c idToPushConverter) getPlan(idesc id.IngressDescriptor, autoTruncate bool) push.Plan {
 	relations := []push.Relation{}
 
 	activeTables, err := id.GetActiveTables(idesc)
@@ -338,9 +340,9 @@ func (c idToPushConverter) getPlan(idesc id.IngressDescriptor) push.Plan {
 		rel := idesc.Relations().Relation(idx)
 		if (activeTables.Contains(rel.Child().Name()) && rel.LookUpChild()) ||
 			(activeTables.Contains(rel.Parent().Name()) && rel.LookUpParent()) {
-			relations = append(relations, c.getRelation(rel.Name()))
+			relations = append(relations, c.getRelation(rel.Name(), autoTruncate))
 		}
 	}
 
-	return push.NewPlan(c.getTable(idesc.StartTable().Name()), relations)
+	return push.NewPlan(c.getTable(idesc.StartTable().Name(), autoTruncate), relations)
 }

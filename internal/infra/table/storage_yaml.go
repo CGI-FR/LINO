@@ -56,6 +56,7 @@ type YAMLDBInfo struct {
 	Length    int64  `yaml:"length,omitempty"`
 	Size      int64  `yaml:"size,omitempty"`
 	Precision int64  `yaml:"precision,omitempty"`
+	ByteBased bool   `yaml:"bytes,omitempty"`
 }
 
 // YAMLStorage provides storage in a local YAML file

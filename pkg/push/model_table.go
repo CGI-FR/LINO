@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/cgi-fr/jsonline/pkg/jsonline"
 	"github.com/rs/zerolog/log"
@@ -89,19 +90,25 @@ func (l columnList) String() string {
 }
 
 type column struct {
-	name string
-	exp  string
-	imp  string
+	name     string
+	exp      string
+	imp      string
+	lgth     int64
+	inbytes  bool
+	truncate bool
 }
 
 // NewColumn initialize a new Column object
-func NewColumn(name string, exp string, imp string) Column {
-	return column{name, exp, imp}
+func NewColumn(name string, exp string, imp string, lgth int64, inbytes bool, truncate bool) Column {
+	return column{name, exp, imp, lgth, inbytes, truncate}
 }
 
-func (c column) Name() string   { return c.name }
-func (c column) Export() string { return c.exp }
-func (c column) Import() string { return c.imp }
+func (c column) Name() string        { return c.name }
+func (c column) Export() string      { return c.exp }
+func (c column) Import() string      { return c.imp }
+func (c column) Length() int64       { return c.lgth }
+func (c column) LengthInBytes() bool { return c.inbytes }
+func (c column) Truncate() bool      { return c.truncate }
 
 type ImportedRow struct {
 	jsonline.Row
@@ -176,6 +183,16 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 				}
 				result.SetValue(key, jsonline.NewValueAuto(bytes))
 			}
+
+			// autotruncate
+			value, exists := result.GetValue(key)
+			if exists && col.Truncate() && col.Length() > 0 && value.GetFormat() == jsonline.String {
+				if col.LengthInBytes() {
+					result.Set(key, truncateUTF8String(result.GetString(key), int(col.Length())))
+				} else {
+					result.Set(key, truncateRuneString(result.GetString(key), int(col.Length())))
+				}
+			}
 		}
 	}
 
@@ -233,4 +250,31 @@ func parseFormatWithType(option string) (string, string) {
 		return option, ""
 	}
 	return parts[0], strings.Trim(parts[1], ")")
+}
+
+// truncateUTF8String truncate s to n bytes or less. If len(s) is more than n,
+// truncate before the start of the first rune that doesn't fit. s should
+// consist of valid utf-8.
+func truncateUTF8String(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	for n > 0 && !utf8.RuneStart(s[n]) {
+		n--
+	}
+
+	return s[:n]
+}
+
+// truncateRuneString truncate s to n runes or less.
+func truncateRuneString(s string, n int) string {
+	if n <= 0 {
+		return ""
+	}
+
+	if utf8.RuneCountInString(s) < n {
+		return s
+	}
+
+	return string([]rune(s)[:n])
 }

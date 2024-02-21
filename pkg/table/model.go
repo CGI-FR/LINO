@@ -23,6 +23,7 @@ type DBInfo struct {
 	Length    int64
 	Size      int64
 	Precision int64
+	ByteBased bool
 }
 
 // Column holds the name of a column.

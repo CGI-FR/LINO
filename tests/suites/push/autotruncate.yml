@@ -1,0 +1,64 @@
+# Copyright (C) 2024 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
+name: push with autotruncate option
+testcases:
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *yaml
+      - script: lino dataconnector add dest 'postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable'
+      - script: lino relation extract dest
+      - script: lino table extract dest --with-db-infos
+      - script: lino table remove-column actor last_update
+
+  - name: truncate field to maximum length
+    steps:
+      - script: echo '{"actor_id":1,"first_name":"VERY VERY VERY VERY VERY VERY VERY VERY LONG NAME","last_name":"GUINESS"}' | lino push truncate dest --table actor --autotruncate
+      - script: lino pull dest --table actor --filter actor_id=1
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"actor_id":1,"first_name":"VERY VERY VERY VERY VERY VERY VERY VERY LONG ","last_name":"GUINESS"}
+          - result.systemerr ShouldBeEmpty
+
+  - name: truncate field to maximum length with accents
+    steps:
+      - script: echo '{"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY LONG NAME","last_name":"GUINESS"}' | lino push truncate dest --table actor --autotruncate
+      - script: lino pull dest --table actor --filter actor_id=1
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY LONG ","last_name":"GUINESS"}
+          - result.systemerr ShouldBeEmpty
+
+  - name: truncate field to maximum length with accents in bytes
+    steps:
+      - script: lino table add-column actor first_name --max-length 45 --bytes
+      - script: echo '{"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY LONG NAME","last_name":"GUINESS"}' | lino push truncate dest --table actor --autotruncate
+      - script: lino pull dest --table actor --filter actor_id=1
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉ","last_name":"GUINESS"}
+          - result.systemerr ShouldBeEmpty
+
+  - name: truncate field to maximum length with accents in bytes do not split codepoint
+    steps:
+      - script: echo '{"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY 11É","last_name":"GUINESS"}' | lino push truncate dest --table actor --autotruncate
+      - script: lino pull dest --table actor --filter actor_id=1
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual {"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY 11","last_name":"GUINESS"}
+          - result.systemerr ShouldBeEmpty

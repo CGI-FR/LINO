@@ -45,6 +45,9 @@ type Column interface {
 	Name() string
 	Export() string
 	Import() string
+	Length() int64
+	LengthInBytes() bool
+	Truncate() bool
 }
 
 // Plan describe how to push data

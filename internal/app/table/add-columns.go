@@ -29,6 +29,8 @@ import (
 func newAddColumnCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	// local flags
 	var exportType, importType string
+	var maxLength int64
+	var byteBased bool
 
 	cmd := &cobra.Command{
 		Use:     "add-column [Table Name] [Column Name]",
@@ -40,7 +42,7 @@ func newAddColumnCommand(fullName string, err *os.File, out *os.File, in *os.Fil
 			tableName := args[0]
 			columnName := args[1]
 
-			_, e1 := table.AddOrUpdateColumn(tableStorage, tableName, columnName, exportType, importType)
+			_, e1 := table.AddOrUpdateColumn(tableStorage, tableName, columnName, exportType, importType, maxLength, byteBased)
 			if e1 != nil {
 				fmt.Fprintln(err, e1.Description)
 				os.Exit(1)
@@ -54,5 +56,7 @@ func newAddColumnCommand(fullName string, err *os.File, out *os.File, in *os.Fil
 	cmd.SetIn(in)
 	cmd.Flags().StringVarP(&exportType, "export", "e", "", "export type for the column")
 	cmd.Flags().StringVarP(&importType, "import", "i", "", "import type for the column")
+	cmd.Flags().Int64VarP(&maxLength, "max-length", "l", 0, "set optional maximum length for this column that can be used with --autotruncate flag on push")
+	cmd.Flags().BoolVarP(&byteBased, "bytes", "b", false, "maximum length is expressed in bytes, not in characters")
 	return cmd
 }

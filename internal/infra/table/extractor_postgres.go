@@ -79,12 +79,12 @@ func (d PostgresDialect) GetExportType(dbtype string) (string, bool) {
 		return "string", true
 	// Numeric types
 	case "NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE PRECISION", "MONEY", "INTEGER", "BIGINT",
-		"NUMBER", "BINARY_FLOAT", "BINARY_DOUBLE", "INT", "TINYINT", "SMALLINT", "MEDIUMINT":
+		"NUMBER", "BINARY_FLOAT", "BINARY_DOUBLE", "INT", "TINYINT", "SMALLINT", "MEDIUMINT", "INT4", "INT2", "BOOL":
 		return "numeric", true
 	// Timestamp types
 	case "TIMESTAMP", "TIMESTAMPTZ",
 		"TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
-		return "timestamp", true
+		return "datetime", true // export timestamps to datetime is the only option that works well with lino push
 	// Datetime types
 	case "DATE", "DATETIME2", "SMALLDATETIME", "DATETIME":
 		return "datetime", true
@@ -92,6 +92,6 @@ func (d PostgresDialect) GetExportType(dbtype string) (string, bool) {
 	case "BYTEA", "BLOB":
 		return "base64", true
 	default:
-		return "", false
+		return "string", true // default to export string since it will work most of the time (binary types are already handled)
 	}
 }

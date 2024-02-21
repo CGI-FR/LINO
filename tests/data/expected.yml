@@ -5,17 +5,19 @@ tables:
       - actor_id
     columns:
       - name: actor_id
+        export: numeric
       - name: first_name
         export: string
       - name: last_name
         export: string
       - name: last_update
-        export: timestamp
+        export: datetime
   - name: address
     keys:
       - address_id
     columns:
       - name: address_id
+        export: numeric
       - name: address
         export: string
       - name: address2
@@ -23,46 +25,53 @@ tables:
       - name: district
         export: string
       - name: city_id
+        export: numeric
       - name: postal_code
         export: string
       - name: phone
         export: string
       - name: last_update
-        export: timestamp
+        export: datetime
   - name: category
     keys:
       - category_id
     columns:
       - name: category_id
+        export: numeric
       - name: name
         export: string
       - name: last_update
-        export: timestamp
+        export: datetime
   - name: city
     keys:
       - city_id
     columns:
       - name: city_id
+        export: numeric
       - name: city
         export: string
       - name: country_id
+        export: numeric
       - name: last_update
-        export: timestamp
+        export: datetime
   - name: country
     keys:
       - country_id
     columns:
       - name: country_id
+        export: numeric
       - name: country
         export: string
       - name: last_update
-        export: timestamp
+        export: datetime
   - name: customer
     keys:
       - customer_id
     columns:
       - name: customer_id
+        export: numeric
       - name: store_id
+        export: numeric
       - name: first_name
         export: string
       - name: last_name
@@ -70,33 +79,43 @@ tables:
       - name: email
         export: string
       - name: address_id
+        export: numeric
       - name: activebool
+        export: numeric
       - name: create_date
         export: datetime
       - name: last_update
-        export: timestamp
+        export: datetime
       - name: active
+        export: numeric
   - name: film
     keys:
       - film_id
     columns:
       - name: film_id
+        export: numeric
       - name: title
         export: string
       - name: description
         export: string
       - name: release_year
+        export: numeric
       - name: language_id
+        export: numeric
       - name: original_language_id
+        export: numeric
       - name: rental_duration
+        export: numeric
       - name: rental_rate
         export: numeric
       - name: length
+        export: numeric
       - name: replacement_cost
         export: numeric
       - name: rating
+        export: string
       - name: last_update
-        export: timestamp
+        export: datetime
       - name: special_features
         export: string
       - name: fulltext
@@ -107,82 +126,102 @@ tables:
       - film_id
     columns:
       - name: actor_id
+        export: numeric
       - name: film_id
+        export: numeric
       - name: last_update
-        export: timestamp
+        export: datetime
   - name: film_category
     keys:
       - film_id
       - category_id
     columns:
       - name: film_id
+        export: numeric
       - name: category_id
+        export: numeric
       - name: last_update
-        export: timestamp
+        export: datetime
   - name: inventory
     keys:
       - inventory_id
     columns:
       - name: inventory_id
+        export: numeric
       - name: film_id
+        export: numeric
       - name: store_id
+        export: numeric
       - name: last_update
-        export: timestamp
+        export: datetime
   - name: language
     keys:
       - language_id
     columns:
       - name: language_id
+        export: numeric
       - name: name
         export: string
       - name: last_update
-        export: timestamp
+        export: datetime
   - name: payment
     keys:
       - payment_id
     columns:
       - name: payment_id
+        export: numeric
       - name: customer_id
+        export: numeric
       - name: staff_id
+        export: numeric
       - name: rental_id
+        export: numeric
       - name: amount
         export: numeric
       - name: payment_date
-        export: timestamp
+        export: datetime
   - name: rental
     keys:
       - rental_id
     columns:
       - name: rental_id
+        export: numeric
       - name: rental_date
-        export: timestamp
+        export: datetime
       - name: inventory_id
+        export: numeric
       - name: customer_id
+        export: numeric
       - name: return_date
-        export: timestamp
+        export: datetime
       - name: staff_id
+        export: numeric
       - name: last_update
-        export: timestamp
+        export: datetime
   - name: staff
     keys:
       - staff_id
     columns:
       - name: staff_id
+        export: numeric
       - name: first_name
         export: string
       - name: last_name
         export: string
       - name: address_id
+        export: numeric
       - name: email
         export: string
       - name: store_id
+        export: numeric
       - name: active
+        export: numeric
       - name: username
         export: string
       - name: password
         export: string
       - name: last_update
-        export: timestamp
+        export: datetime
       - name: picture
         export: base64
   - name: store
@@ -190,7 +229,10 @@ tables:
       - store_id
     columns:
       - name: store_id
+        export: numeric
       - name: manager_staff_id
+        export: numeric
       - name: address_id
+        export: numeric
       - name: last_update
-        export: timestamp
+        export: datetime

@@ -5,6 +5,7 @@ tables:
       - actor_id
     columns:
       - name: actor_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: first_name
@@ -18,7 +19,7 @@ tables:
           type: VARCHAR
           length: 45
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: address
@@ -26,6 +27,7 @@ tables:
       - address_id
     columns:
       - name: address_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: address
@@ -44,6 +46,7 @@ tables:
           type: VARCHAR
           length: 20
       - name: city_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: postal_code
@@ -57,7 +60,7 @@ tables:
           type: VARCHAR
           length: 20
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: category
@@ -65,6 +68,7 @@ tables:
       - category_id
     columns:
       - name: category_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: name
@@ -73,7 +77,7 @@ tables:
           type: VARCHAR
           length: 25
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: city
@@ -81,6 +85,7 @@ tables:
       - city_id
     columns:
       - name: city_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: city
@@ -89,10 +94,11 @@ tables:
           type: VARCHAR
           length: 50
       - name: country_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: country
@@ -100,6 +106,7 @@ tables:
       - country_id
     columns:
       - name: country_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: country
@@ -108,7 +115,7 @@ tables:
           type: VARCHAR
           length: 50
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: customer
@@ -116,9 +123,11 @@ tables:
       - customer_id
     columns:
       - name: customer_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: store_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: first_name
@@ -137,9 +146,11 @@ tables:
           type: VARCHAR
           length: 50
       - name: address_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: activebool
+        export: numeric
         dbinfo:
           type: BOOL
       - name: create_date
@@ -147,10 +158,11 @@ tables:
         dbinfo:
           type: DATE
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
       - name: active
+        export: numeric
         dbinfo:
           type: INT4
   - name: film
@@ -158,6 +170,7 @@ tables:
       - film_id
     columns:
       - name: film_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: title
@@ -171,15 +184,19 @@ tables:
           type: TEXT
           length: 9223372036854775807
       - name: release_year
+        export: numeric
         dbinfo:
           type: INT4
       - name: language_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: original_language_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: rental_duration
+        export: numeric
         dbinfo:
           type: INT2
       - name: rental_rate
@@ -189,6 +206,7 @@ tables:
           size: 2
           precision: 4
       - name: length
+        export: numeric
         dbinfo:
           type: INT2
       - name: replacement_cost
@@ -198,8 +216,9 @@ tables:
           size: 2
           precision: 5
       - name: rating
+        export: string
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
       - name: special_features
@@ -216,13 +235,15 @@ tables:
       - film_id
     columns:
       - name: actor_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: film_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: film_category
@@ -231,13 +252,15 @@ tables:
       - category_id
     columns:
       - name: film_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: category_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: inventory
@@ -245,16 +268,19 @@ tables:
       - inventory_id
     columns:
       - name: inventory_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: film_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: store_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: language
@@ -262,6 +288,7 @@ tables:
       - language_id
     columns:
       - name: language_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: name
@@ -270,7 +297,7 @@ tables:
           type: BPCHAR
           length: 20
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: payment
@@ -278,15 +305,19 @@ tables:
       - payment_id
     columns:
       - name: payment_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: customer_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: staff_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: rental_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: amount
@@ -296,7 +327,7 @@ tables:
           size: 2
           precision: 5
       - name: payment_date
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: rental
@@ -304,27 +335,31 @@ tables:
       - rental_id
     columns:
       - name: rental_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: rental_date
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
       - name: inventory_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: customer_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: return_date
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
       - name: staff_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
   - name: staff
@@ -332,6 +367,7 @@ tables:
       - staff_id
     columns:
       - name: staff_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: first_name
@@ -345,6 +381,7 @@ tables:
           type: VARCHAR
           length: 45
       - name: address_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: email
@@ -353,9 +390,11 @@ tables:
           type: VARCHAR
           length: 50
       - name: store_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: active
+        export: numeric
         dbinfo:
           type: BOOL
       - name: username
@@ -369,7 +408,7 @@ tables:
           type: VARCHAR
           length: 40
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP
       - name: picture
@@ -382,15 +421,18 @@ tables:
       - store_id
     columns:
       - name: store_id
+        export: numeric
         dbinfo:
           type: INT4
       - name: manager_staff_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: address_id
+        export: numeric
         dbinfo:
           type: INT2
       - name: last_update
-        export: timestamp
+        export: datetime
         dbinfo:
           type: TIMESTAMP

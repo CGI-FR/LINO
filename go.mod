@@ -16,7 +16,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-isatty v0.0.20
-	github.com/microsoft/go-mssqldb v1.6.0
+	github.com/microsoft/go-mssqldb v1.7.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.32.0
 	github.com/sijms/go-ora/v2 v2.8.9
@@ -43,9 +43,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
-	golang.org/x/net v0.16.0 // indirect
+	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

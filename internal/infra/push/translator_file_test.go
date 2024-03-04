@@ -52,7 +52,7 @@ func TestPushWithNilValueDescriptor(t *testing.T) {
 	iterator := push.NewJSONRowIterator(cache)
 	for iterator.Next() {
 		// row := iterator.Value()
-		error := oracleDialect.ConvertValue("value", descriptor)
-		assert.Nil(t, error)
+		err := oracleDialect.ConvertValue("value", descriptor)
+		assert.Equal(t, "descriptor column value est null", err)
 	}
 }

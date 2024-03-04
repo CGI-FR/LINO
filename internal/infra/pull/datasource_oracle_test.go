@@ -31,3 +31,26 @@ func TestCreateSelectOracle(t *testing.T) {
 	_, err = pgDS.RowReader(aTable, aFilter)
 	assert.Nil(t, err)
 }
+
+func TestPushWithNilValueDescriptor(t *testing.T) {
+	// arrange
+	aTable := pull.Table{Name: "CUSTOMERS"}
+	aFilter := pull.Filter{Limit: 5}
+
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	assert.Nil(t, err)
+	defer db.Close()
+	// action
+	mock.ExpectQuery("SELECT * FROM CUSTOMERS WHERE 1=1 AND rownum <= 5").WillReturnRows()
+
+	pgFactory := infra.NewOracleDataSourceFactory()
+
+	pgDS := pgFactory.New("pg://server/name", "")
+
+	err = pgDS.(*infra.SQLDataSource).OpenWithDB(db)
+	// assert
+	assert.Nil(t, err)
+
+	_, err = pgDS.RowReader(aTable, aFilter)
+	assert.Nil(t, err)
+}

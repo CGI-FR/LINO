@@ -183,7 +183,7 @@ func (d OracleDialect) IsDuplicateError(err error) bool {
 // ConvertValue before load
 func (d OracleDialect) ConvertValue(from push.Value, descriptor ValueDescriptor) push.Value {
 	if descriptor.column == nil {
-		return "descriptor column value est null"
+		return "descriptor column's value is null"
 	}
 
 	if descriptor.column.Import() == "file" || descriptor.column.Import() == "blob" {

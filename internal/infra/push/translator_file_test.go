@@ -45,14 +45,9 @@ func TestTranslator(t *testing.T) {
 	assert.Equal(t, "value", translator.FindValue(driver.Key{TableName: "table3", ColumnName: "column1"}, "value"))
 }
 
-func TestPushWithNilValueDescriptor(t *testing.T) {
+func TestConvertValueWithNilValueDescriptor(t *testing.T) {
 	oracleDialect := push.OracleDialect{}
 	descriptor := push.ValueDescriptor{}
-	cache := NewMemoryCache(`{"key":"key","value":"value"}`)
-	iterator := push.NewJSONRowIterator(cache)
-	for iterator.Next() {
-		// row := iterator.Value()
-		err := oracleDialect.ConvertValue("value", descriptor)
-		assert.Equal(t, "descriptor column value est null", err)
-	}
+	err := oracleDialect.ConvertValue("value", descriptor)
+	assert.Equal(t, "descriptor column value est null", err)
 }

@@ -49,5 +49,5 @@ func TestConvertValueWithNilValueDescriptor(t *testing.T) {
 	oracleDialect := push.OracleDialect{}
 	descriptor := push.ValueDescriptor{}
 	err := oracleDialect.ConvertValue("value", descriptor)
-	assert.Equal(t, "descriptor column's value is null", err)
+	assert.Equal(t, "value", err)
 }

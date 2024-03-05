@@ -115,6 +115,25 @@ func (ds *SQLDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSe
 // Version modifiée
 // RowReader generates a SQL query for reading rows from a table with optional filtering and limiting.
 func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, error) {
+	values, sql := ds.GetSelectSQLAndValues(source, filter)
+
+	if log.Logger.GetLevel() <= zerolog.DebugLevel {
+		printSQL := sql
+		for i, v := range values {
+			printSQL = strings.ReplaceAll(printSQL, ds.dialect.Placeholder(i+1), fmt.Sprintf("%v", v))
+		}
+		log.Debug().Msg(fmt.Sprint(printSQL))
+	}
+	// Execute the SQL query and return the iterator
+	rows, err := ds.dbx.Queryx(sql, values...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SQLDataIterator{rows, nil, nil}, nil
+}
+
+func (ds *SQLDataSource) GetSelectSQLAndValues(source pull.Table, filter pull.Filter) ([]interface{}, string) {
 	sqlWhere := &strings.Builder{}
 	sqlColumns := &strings.Builder{}
 
@@ -163,21 +182,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	} else {
 		sql = ds.dialect.Select(ds.tableName(source), "", sqlWhere.String(), filter.Distinct, sqlColumns.String())
 	}
-
-	if log.Logger.GetLevel() <= zerolog.DebugLevel {
-		printSQL := sql
-		for i, v := range values {
-			printSQL = strings.ReplaceAll(printSQL, ds.dialect.Placeholder(i+1), fmt.Sprintf("%v", v))
-		}
-		log.Debug().Msg(fmt.Sprint(printSQL))
-	}
-	// Execute the SQL query and return the iterator
-	rows, err := ds.dbx.Queryx(sql, values...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &SQLDataIterator{rows, nil, nil}, nil
+	return values, sql
 }
 
 // Close a connection to the SQL DB
@@ -235,4 +240,14 @@ func (di *SQLDataIterator) Value() pull.Row {
 // Error returns the iterator error
 func (di *SQLDataIterator) Error() error {
 	return di.err
+}
+
+func NewSQLDataSource(url, schema string, dbx *sqlx.DB, db *sql.DB, dialect commonsql.Dialect) *SQLDataSource {
+	return &SQLDataSource{
+		url:     url,
+		schema:  schema,
+		dbx:     dbx,
+		db:      db,
+		dialect: dialect,
+	}
 }

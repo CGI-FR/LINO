@@ -19,7 +19,6 @@ package pull
 
 import (
 	"encoding/json"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -191,23 +190,4 @@ func Compute() ExecutionStats {
 
 func Reset() {
 	over.MDC().Set("stats", &stats{FiltersCount: 0, LinesPerStepCount: map[string]int64{}, mut: &sync.Mutex{}})
-}
-
-// Get SQL query for columns part from a Table
-func (table Table) GetColumnNames() string {
-	// Check select * case
-	if table.ExportMode == ExportModeAll || len(table.Columns) == 0 {
-		return "*"
-	}
-
-	sqlColumns := &strings.Builder{}
-
-	for idx := int(0); idx < len(table.Columns); idx++ {
-		if idx > 0 {
-			sqlColumns.Write([]byte(", "))
-		}
-		sqlColumns.Write([]byte(" " + table.Columns[idx].Name))
-	}
-
-	return sqlColumns.String()
 }

@@ -14,6 +14,11 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.7.1]
+
+- `Fixed` panic during push on Oracle database with a `null` column value.
+- `Fixed` issue with SQL queries involving limit orders in SQL Server database.
+
 ## [2.7.0]
 
 - `Added` columns information and export type using the `lino table extract` command, columns and keys organized according to the database order.

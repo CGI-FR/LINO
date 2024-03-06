@@ -31,7 +31,7 @@ func (sd SQLServerDialect) Placeholder(position int) string {
 
 // Limit method is adjusted to be compatible with SQL Server
 func (sd SQLServerDialect) Limit(limit uint) string {
-	return fmt.Sprintf(" TOP %d", limit)
+	return fmt.Sprintf("TOP %d", limit)
 }
 
 // From clause

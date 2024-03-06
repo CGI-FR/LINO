@@ -115,41 +115,41 @@ func (ds *SQLDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSe
 // Version modifiée
 // RowReader generates a SQL query for reading rows from a table with optional filtering and limiting.
 func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, error) {
-	// String Builders
-	sqlSelect := &strings.Builder{}
-	sqlLimit := &strings.Builder{}
+	values, sql := ds.GetSelectSQLAndValues(source, filter)
+
+	if log.Logger.GetLevel() <= zerolog.DebugLevel {
+		printSQL := sql
+		for i, v := range values {
+			printSQL = strings.ReplaceAll(printSQL, ds.dialect.Placeholder(i+1), fmt.Sprintf("%v", v))
+		}
+		log.Debug().Msg(fmt.Sprint(printSQL))
+	}
+	// Execute the SQL query and return the iterator
+	rows, err := ds.dbx.Queryx(sql, values...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SQLDataIterator{rows, nil, nil}, nil
+}
+
+func (ds *SQLDataSource) GetSelectSQLAndValues(source pull.Table, filter pull.Filter) ([]interface{}, string) {
 	sqlWhere := &strings.Builder{}
 	sqlColumns := &strings.Builder{}
-	sqlFrom := &strings.Builder{}
 
-	// Build SELECT clause *******************************************
-	sqlSelect.Write([]byte("SELECT"))
-	if filter.Distinct {
-		sqlSelect.Write([]byte(" DISTINCT"))
-	}
+	// Build Columns clause *******************************************
 	if pcols := source.Columns; len(pcols) > 0 && source.ExportMode != pull.ExportModeAll {
 		for idx := int(0); idx < len(pcols); idx++ {
 			if idx > 0 {
-				sqlSelect.Write([]byte(", "))
+				sqlColumns.Write([]byte(", "))
 			}
-			sqlSelect.Write([]byte(" " + pcols[idx].Name))
+			sqlColumns.Write([]byte(" " + pcols[idx].Name))
 		}
 	} else {
 		sqlColumns.Write([]byte("*"))
 	}
 
-	// Build FROM clause *********************************************
-	sqlFrom.Write([]byte("FROM "))
-	sqlFrom.Write([]byte(ds.tableName(source)))
-
-	// Build LIMIT clause ********************************************
-	if filter.Limit > 0 {
-		fmt.Fprint(sqlLimit, ds.dialect.Limit(filter.Limit))
-	}
-
 	// Build WHERE clause ********************************************
-
-	sqlWhere.Write([]byte("WHERE "))
 	whereContentFlag := false
 	values := []interface{}{}
 	for key, value := range filter.Values {
@@ -175,23 +175,14 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 		sqlWhere.Write([]byte(" 1=1 "))
 	}
 
-	// Assemble the builders in order using the existing method
-	sql := ds.dialect.CreateSelect(sqlSelect.String(), sqlWhere.String(), sqlLimit.String(), sqlColumns.String(), sqlFrom.String())
-
-	if log.Logger.GetLevel() <= zerolog.DebugLevel {
-		printSQL := sql
-		for i, v := range values {
-			printSQL = strings.ReplaceAll(printSQL, ds.dialect.Placeholder(i+1), fmt.Sprintf("%v", v))
-		}
-		log.Debug().Msg(fmt.Sprint(printSQL))
+	// Assemble the builders in order using the existing method Select/SelectLimit
+	var sql string
+	if filter.Limit > 0 {
+		sql = ds.dialect.SelectLimit(ds.tableName(source), "", sqlWhere.String(), filter.Distinct, filter.Limit, sqlColumns.String())
+	} else {
+		sql = ds.dialect.Select(ds.tableName(source), "", sqlWhere.String(), filter.Distinct, sqlColumns.String())
 	}
-	// Execute the SQL query and return the iterator
-	rows, err := ds.dbx.Queryx(sql, values...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &SQLDataIterator{rows, nil, nil}, nil
+	return values, sql
 }
 
 // Close a connection to the SQL DB
@@ -249,4 +240,14 @@ func (di *SQLDataIterator) Value() pull.Row {
 // Error returns the iterator error
 func (di *SQLDataIterator) Error() error {
 	return di.err
+}
+
+func NewSQLDataSource(url, schema string, dbx *sqlx.DB, db *sql.DB, dialect commonsql.Dialect) *SQLDataSource {
+	return &SQLDataSource{
+		url:     url,
+		schema:  schema,
+		dbx:     dbx,
+		db:      db,
+		dialect: dialect,
+	}
 }

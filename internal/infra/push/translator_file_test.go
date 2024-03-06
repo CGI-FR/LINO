@@ -44,3 +44,10 @@ func TestTranslator(t *testing.T) {
 	assert.Equal(t, "key", translator.FindValue(driver.Key{TableName: "table2", ColumnName: "column2"}, "value"))
 	assert.Equal(t, "value", translator.FindValue(driver.Key{TableName: "table3", ColumnName: "column1"}, "value"))
 }
+
+func TestConvertValueWithNilValueDescriptor(t *testing.T) {
+	oracleDialect := push.OracleDialect{}
+	descriptor := push.ValueDescriptor{}
+	err := oracleDialect.ConvertValue("value", descriptor)
+	assert.Equal(t, "value", err)
+}

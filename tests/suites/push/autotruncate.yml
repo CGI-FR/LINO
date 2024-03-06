@@ -62,3 +62,7 @@ testcases:
           - result.code ShouldEqual 0
           - result.systemout ShouldEqual {"actor_id":1,"first_name":"VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY VÉRY 11","last_name":"GUINESS"}
           - result.systemerr ShouldBeEmpty
+
+  - name: truncate should not crash on null value
+    steps:
+      - script: echo '{"address_id":1,"address":"47 MySakila Drive","address2":null,"district":"Alberta","city_id":300,"postal_code":"","phone":""}' | lino push truncate dest --table address --autotruncate

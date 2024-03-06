@@ -65,4 +65,4 @@ testcases:
 
   - name: truncate should not crash on null value
     steps:
-      - script: echo '{"address_id":1,"address":"47 MySakila Drive","address2":null,"district":"Alberta","city_id":300,"postal_code":"","phone":""}' | lino push truncate dest --table address --autotruncate
+      - script: echo '{"address_id":1,"address":"47 MySakila Drive","address2":null,"district":"Alberta","city_id":300,"postal_code":"","phone":""}' | lino push update dest --table address --autotruncate

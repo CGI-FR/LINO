@@ -16,17 +16,18 @@ Types of changes
 
 ## [2.7.1]
 
-- `Fixed` panic during push on Oracle database with a `null` column value.
-- `Fixed` issue with SQL queries involving limit orders in SQL Server database.
+- `Fixed` panic during push on Oracle database with a `null` column value
+- `Fixed` issue with SQL queries involving limit orders in SQL Server database
+- `Fixed` panic when using autotruncate on a null value
 
 ## [2.7.0]
 
-- `Added` columns information and export type using the `lino table extract` command, columns and keys organized according to the database order.
-- `Added` flag `--only-tables` to `lino table extract` command. This flag allows for the extraction of table information exclusively, excluding columns. It has been included to maintain the previous behavior.
-- `Added` flag `--with-db-infos` to `lino table extract` command. This flag enables the extraction of information regarding column types, length, size, and precision if the column has been configured with these specifications.
-- `Added` flag `--autotruncate` to `lino push` command. This flag will enable a truncate on each value based each `dbinfo`.`length` parameters set in the table.yaml file for each columns.
-- `Added` property `dbinfo`.`bytes` to column definition in table.yaml file. Set it to true to truncate the value based on a maximum number of bytes and not characters (assuming utf-8 encoding for now).
-- `Added` flags `--max-length` and `--bytes` to `lino table add-column` command. Use it to edit the properties `dbinfo`.`length` and `dbinfo`.`bytes` of the table.yaml file.
+- `Added` columns information and export type using the `lino table extract` command, columns and keys organized according to the database order
+- `Added` flag `--only-tables` to `lino table extract` command. This flag allows for the extraction of table information exclusively, excluding columns. It has been included to maintain the previous behavior
+- `Added` flag `--with-db-infos` to `lino table extract` command. This flag enables the extraction of information regarding column types, length, size, and precision if the column has been configured with these specifications
+- `Added` flag `--autotruncate` to `lino push` command. This flag will enable a truncate on each value based each `dbinfo`.`length` parameters set in the table.yaml file for each columns
+- `Added` property `dbinfo`.`bytes` to column definition in table.yaml file. Set it to true to truncate the value based on a maximum number of bytes and not characters (assuming utf-8 encoding for now)
+- `Added` flags `--max-length` and `--bytes` to `lino table add-column` command. Use it to edit the properties `dbinfo`.`length` and `dbinfo`.`bytes` of the table.yaml file
 
 ## [2.6.1]
 

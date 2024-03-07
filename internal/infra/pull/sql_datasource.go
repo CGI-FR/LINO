@@ -25,8 +25,6 @@ import (
 	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/pull"
 	"github.com/jmoiron/sqlx"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/xo/dburl"
 )
 
@@ -117,13 +115,9 @@ func (ds *SQLDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSe
 func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, error) {
 	values, sql := ds.GetSelectSQLAndValues(source, filter)
 
-	if log.Logger.GetLevel() <= zerolog.DebugLevel {
-		printSQL := sql
-		for i, v := range values {
-			printSQL = strings.ReplaceAll(printSQL, ds.dialect.Placeholder(i+1), fmt.Sprintf("%v", v))
-		}
-		log.Debug().Msg(fmt.Sprint(printSQL))
-	}
+	// If log level is more than debug level, this function will log all SQL Query
+	commonsql.LogSQLQuery(sql, values, ds.dialect)
+
 	// Execute the SQL query and return the iterator
 	rows, err := ds.dbx.Queryx(sql, values...)
 	if err != nil {

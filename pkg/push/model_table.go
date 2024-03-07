@@ -186,7 +186,7 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 
 			// autotruncate
 			value, exists := result.GetValue(key)
-			if exists && col.Truncate() && col.Length() > 0 && value.GetFormat() == jsonline.String {
+			if exists && col.Truncate() && col.Length() > 0 && value.GetFormat() == jsonline.String && result.GetOrNil(key) != nil {
 				if col.LengthInBytes() {
 					result.Set(key, truncateUTF8String(result.GetString(key), int(col.Length())))
 				} else {

@@ -22,7 +22,7 @@ func TestCreateSelectMariadb(t *testing.T) {
 	// Check SQL query is correctly created
 	ds := infra.NewSQLDataSource("pg://server/name", "", nil, db, commonsql.MariadbDialect{})
 	_, sql := ds.GetSelectSQLAndValues(aTable, aFilter)
-	expectSQL := "SELECT * FROM CUSTOMERS WHERE  1=1   LIMIT 5"
+	expectSQL := "SELECT * FROM `CUSTOMERS` WHERE  1=1   LIMIT 5"
 	assert.Equal(t, expectSQL, sql)
 
 	// Check SQL query can correctly excute in MariaDB
@@ -56,7 +56,7 @@ func TestCreateSelectMariadbWithColumns(t *testing.T) {
 	// Check SQL query is correctly created
 	ds := infra.NewSQLDataSource("pg://server/name", "", nil, db, commonsql.MariadbDialect{})
 	_, sql := ds.GetSelectSQLAndValues(aTable, aFilter)
-	expectSQL := "SELECT  ID,  Name,  Age FROM CUSTOMERS WHERE  1=1   LIMIT 5"
+	expectSQL := "SELECT  `ID`,  `Name`,  `Age` FROM `CUSTOMERS` WHERE  1=1   LIMIT 5"
 	assert.Equal(t, expectSQL, sql)
 
 	// Check SQL query can correctly excute in MariaDB

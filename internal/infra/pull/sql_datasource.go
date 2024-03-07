@@ -80,17 +80,6 @@ func (ds *SQLDataSource) OpenWithDB(db *sql.DB) error {
 	return nil
 }
 
-// build table name with or without schema from dataconnector
-func (ds *SQLDataSource) tableName(source pull.Table) string {
-	if ds.schema == "" {
-		return string(source.Name)
-	}
-	if strings.Contains(string(source.Name), ".") {
-		return string(source.Name)
-	}
-	return ds.schema + "." + string(source.Name)
-}
-
 func (ds *SQLDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSet, error) {
 	reader, err := ds.RowReader(source, filter)
 	if err != nil {
@@ -113,6 +102,7 @@ func (ds *SQLDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSe
 // Version modifiée
 // RowReader generates a SQL query for reading rows from a table with optional filtering and limiting.
 func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.RowReader, error) {
+	// Get SELECT query and values
 	values, sql := ds.GetSelectSQLAndValues(source, filter)
 
 	// If log level is more than debug level, this function will log all SQL Query
@@ -128,7 +118,6 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 }
 
 func (ds *SQLDataSource) GetSelectSQLAndValues(source pull.Table, filter pull.Filter) ([]interface{}, string) {
-	sqlWhere := &strings.Builder{}
 	sqlColumns := &strings.Builder{}
 
 	// Build Columns clause *******************************************
@@ -137,44 +126,31 @@ func (ds *SQLDataSource) GetSelectSQLAndValues(source pull.Table, filter pull.Fi
 			if idx > 0 {
 				sqlColumns.Write([]byte(", "))
 			}
-			sqlColumns.Write([]byte(" " + pcols[idx].Name))
+			sqlColumns.Write([]byte(" " + ds.dialect.Quote(pcols[idx].Name)))
 		}
 	} else {
 		sqlColumns.Write([]byte("*"))
 	}
 
 	// Build WHERE clause ********************************************
-	whereContentFlag := false
-	values := []interface{}{}
-	for key, value := range filter.Values {
-		sqlWhere.Write([]byte(key))
-		values = append(values, value)
-		fmt.Fprint(sqlWhere, "=")
-		fmt.Fprint(sqlWhere, ds.dialect.Placeholder(len(values)))
-		if len(values) < len(filter.Values) {
-			sqlWhere.Write([]byte(" AND "))
-		}
-		whereContentFlag = true
+	sqlWhere, values := commonsql.GetWhereSQLAndValues(filter.Values, filter.Where, ds.dialect)
+	if len(sqlWhere) == 0 {
+		sqlWhere = " 1=1 "
 	}
 
-	if strings.TrimSpace(filter.Where) != "" {
-		if whereContentFlag {
-			sqlWhere.Write([]byte(" AND "))
-		}
-		fmt.Fprint(sqlWhere, filter.Where)
-		whereContentFlag = true
-	}
-
-	if !whereContentFlag {
-		sqlWhere.Write([]byte(" 1=1 "))
+	// If schema name is inclued in table name
+	if strings.Contains(string(source.Name), ".") {
+		parts := strings.Split(string(source.Name), ".")
+		ds.schema = parts[0]
+		source.Name = pull.TableName(parts[1])
 	}
 
 	// Assemble the builders in order using the existing method Select/SelectLimit
 	var sql string
 	if filter.Limit > 0 {
-		sql = ds.dialect.SelectLimit(ds.tableName(source), "", sqlWhere.String(), filter.Distinct, filter.Limit, sqlColumns.String())
+		sql = ds.dialect.SelectLimit(string(source.Name), ds.schema, sqlWhere, filter.Distinct, filter.Limit, sqlColumns.String())
 	} else {
-		sql = ds.dialect.Select(ds.tableName(source), "", sqlWhere.String(), filter.Distinct, sqlColumns.String())
+		sql = ds.dialect.Select(string(source.Name), ds.schema, sqlWhere, filter.Distinct, sqlColumns.String())
 	}
 	return values, sql
 }

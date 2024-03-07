@@ -35,10 +35,11 @@ func (od OracleDialect) Limit(limit uint) string {
 
 // From clause
 func (od OracleDialect) From(tableName string, schemaName string) string {
+	tableName = od.Quote(tableName)
 	if strings.TrimSpace(schemaName) == "" {
 		return fmt.Sprintf("FROM %s", tableName)
 	}
-
+	schemaName = od.Quote(schemaName)
 	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
 }
 

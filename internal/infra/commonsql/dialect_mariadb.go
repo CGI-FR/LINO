@@ -35,10 +35,11 @@ func (pd MariadbDialect) Limit(limit uint) string {
 
 // From clause
 func (pd MariadbDialect) From(tableName string, schemaName string) string {
+	tableName = pd.Quote(tableName)
 	if strings.TrimSpace(schemaName) == "" {
 		return fmt.Sprintf("FROM %s", tableName)
 	}
-
+	schemaName = pd.Quote(schemaName)
 	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
 }
 

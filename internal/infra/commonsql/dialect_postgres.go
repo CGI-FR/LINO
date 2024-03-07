@@ -35,10 +35,11 @@ func (pgd PostgresDialect) Limit(limit uint) string {
 
 // From clause
 func (pgd PostgresDialect) From(tableName string, schemaName string) string {
+	tableName = pgd.Quote(tableName)
 	if strings.TrimSpace(schemaName) == "" {
 		return fmt.Sprintf("FROM %s", tableName)
 	}
-
+	schemaName = pgd.Quote(schemaName)
 	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
 }
 
@@ -106,7 +107,7 @@ func (pgd PostgresDialect) Quote(id string) string {
 
 	sb.Grow(len(id) + 2)
 	sb.WriteRune('"')
-	sb.WriteString(id)
+	sb.WriteString(strings.TrimSpace(id))
 	sb.WriteRune('"')
 
 	return sb.String()

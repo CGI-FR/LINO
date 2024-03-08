@@ -63,6 +63,10 @@ func (pd MariadbDialect) Select(tableName string, schemaName string, where strin
 	}
 
 	if len(columns) > 0 {
+		query.Write([]byte(" "))
+		for i := range columns {
+			columns[i] = pd.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')
@@ -87,6 +91,10 @@ func (pd MariadbDialect) SelectLimit(tableName string, schemaName string, where 
 	}
 
 	if len(columns) > 0 {
+		query.Write([]byte(" "))
+		for i := range columns {
+			columns[i] = pd.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')

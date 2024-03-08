@@ -45,6 +45,7 @@ type Dialect interface {
 	CreateSelect(sel string, where string, limit string, columns string, from string) string
 }
 
+// Build WHERE clause with where key and value to a string
 func GetWhereSQLAndValues(filters map[string]any, where string, d Dialect) (string, []interface{}) {
 	values := []interface{}{}
 	sqlWhere := &strings.Builder{}
@@ -77,7 +78,7 @@ func GetWhereSQLAndValues(filters map[string]any, where string, d Dialect) (stri
 	return sqlWhere.String(), values
 }
 
-// When log level is more than debug level, function will log all the SQL Query
+// When log level is equal or more than debug level, function will log all the SQL Query
 func LogSQLQuery(sql string, values []interface{}, d Dialect) {
 	if log.Logger.GetLevel() <= zerolog.DebugLevel {
 		printSQL := sql

@@ -118,18 +118,13 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 }
 
 func (ds *SQLDataSource) GetSelectSQLAndValues(source pull.Table, filter pull.Filter) ([]interface{}, string) {
-	sqlColumns := &strings.Builder{}
+	sqlColumns := []string{}
 
 	// Build Columns clause *******************************************
 	if pcols := source.Columns; len(pcols) > 0 && source.ExportMode != pull.ExportModeAll {
 		for idx := int(0); idx < len(pcols); idx++ {
-			if idx > 0 {
-				sqlColumns.Write([]byte(", "))
-			}
-			sqlColumns.Write([]byte(" " + ds.dialect.Quote(pcols[idx].Name)))
+			sqlColumns = append(sqlColumns, pcols[idx].Name)
 		}
-	} else {
-		sqlColumns.Write([]byte("*"))
 	}
 
 	// Build WHERE clause ********************************************
@@ -148,9 +143,9 @@ func (ds *SQLDataSource) GetSelectSQLAndValues(source pull.Table, filter pull.Fi
 	// Assemble the builders in order using the existing method Select/SelectLimit
 	var sql string
 	if filter.Limit > 0 {
-		sql = ds.dialect.SelectLimit(string(source.Name), ds.schema, sqlWhere, filter.Distinct, filter.Limit, sqlColumns.String())
+		sql = ds.dialect.SelectLimit(string(source.Name), ds.schema, sqlWhere, filter.Distinct, filter.Limit, sqlColumns...)
 	} else {
-		sql = ds.dialect.Select(string(source.Name), ds.schema, sqlWhere, filter.Distinct, sqlColumns.String())
+		sql = ds.dialect.Select(string(source.Name), ds.schema, sqlWhere, filter.Distinct, sqlColumns...)
 	}
 	return values, sql
 }

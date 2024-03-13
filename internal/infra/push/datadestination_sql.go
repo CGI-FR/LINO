@@ -143,7 +143,7 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 	}
 	log.Debug().Msg("transaction committed")
 
-	log.Error().Msg("commit database transaction")
+	log.Info().Msg("close (commit) database transaction")
 
 	tx, err := dd.db.Begin()
 	if err != nil {

@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/pull"
@@ -30,13 +31,37 @@ import (
 	"github.com/xo/dburl"
 )
 
+func WithMaxLifetime(maxLifeTime time.Duration) pull.DataSourceOption {
+	return func(ds pull.DataSource) {
+		log.Info().Int64("maxLifetime", int64(maxLifeTime.Seconds())).Msg("setting database connection parameter")
+		ds.(*SQLDataSource).maxLifetime = maxLifeTime
+	}
+}
+
+func WithMaxOpenConns(maxOpenConns int) pull.DataSourceOption {
+	return func(ds pull.DataSource) {
+		log.Info().Int("maxOpenConns", maxOpenConns).Msg("setting database connection parameter")
+		ds.(*SQLDataSource).maxOpenConns = maxOpenConns
+	}
+}
+
+func WithMaxIdleConns(maxIdleConns int) pull.DataSourceOption {
+	return func(ds pull.DataSource) {
+		log.Info().Int("maxIdleConns", maxIdleConns).Msg("setting database connection parameter")
+		ds.(*SQLDataSource).maxIdleConns = maxIdleConns
+	}
+}
+
 // SQLDataSource to read in the pull process.
 type SQLDataSource struct {
-	url     string
-	schema  string
-	dbx     *sqlx.DB
-	db      *sql.DB
-	dialect commonsql.Dialect
+	url          string
+	schema       string
+	dbx          *sqlx.DB
+	db           *sql.DB
+	dialect      commonsql.Dialect
+	maxLifetime  time.Duration
+	maxOpenConns int
+	maxIdleConns int
 }
 
 // Open a connection to the SQL DB
@@ -45,6 +70,11 @@ func (ds *SQLDataSource) Open() error {
 	if err != nil {
 		return err
 	}
+
+	// database handle settings
+	db.SetConnMaxLifetime(ds.maxLifetime)
+	db.SetMaxOpenConns(ds.maxOpenConns)
+	db.SetMaxIdleConns(ds.maxIdleConns)
 
 	ds.db = db
 

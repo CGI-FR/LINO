@@ -14,10 +14,16 @@ func NewOracleDataSourceFactory() *OracleDataSourceFactory {
 }
 
 // New return a Oracle puller
-func (e *OracleDataSourceFactory) New(url string, schema string) pull.DataSource {
-	return &SQLDataSource{
+func (e *OracleDataSourceFactory) New(url string, schema string, options ...pull.DataSourceOption) pull.DataSource {
+	ds := &SQLDataSource{
 		url:     url,
 		schema:  schema,
 		dialect: commonsql.OracleDialect{},
 	}
+
+	for _, option := range options {
+		option(ds)
+	}
+
+	return ds
 }

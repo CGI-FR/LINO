@@ -38,7 +38,7 @@ func NewHTTPDataSourceFactory() *HTTPDataSourceFactory {
 }
 
 // New return a HTTP puller
-func (e *HTTPDataSourceFactory) New(url string, schema string) pull.DataSource {
+func (e *HTTPDataSourceFactory) New(url string, schema string, options ...pull.DataSourceOption) pull.DataSource {
 	return &HTTPDataSource{
 		url:    url,
 		schema: schema,

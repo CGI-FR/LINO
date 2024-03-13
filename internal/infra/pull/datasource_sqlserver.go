@@ -33,10 +33,16 @@ func NewSQLServerDataSourceFactory() *SQLServerDataSourceFactory {
 }
 
 // New return a SQLServer puller
-func (e *SQLServerDataSourceFactory) New(url string, schema string) pull.DataSource {
-	return &SQLDataSource{
+func (e *SQLServerDataSourceFactory) New(url string, schema string, options ...pull.DataSourceOption) pull.DataSource {
+	ds := &SQLDataSource{
 		url:     url,
 		schema:  schema,
 		dialect: commonsql.SQLServerDialect{},
 	}
+
+	for _, option := range options {
+		option(ds)
+	}
+
+	return ds
 }

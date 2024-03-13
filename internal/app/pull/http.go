@@ -114,7 +114,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 			return
 		}
 
-		datasource, err = getDataSource(datasourceName, w)
+		datasource, err = getDataSource(datasourceName, w, -1, -1, -1)
 		if err != nil {
 			log.Error().Err(err).Msg("")
 			w.WriteHeader(http.StatusNotFound)

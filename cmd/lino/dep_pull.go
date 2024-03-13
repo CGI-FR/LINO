@@ -20,6 +20,7 @@ package main
 import (
 	"io"
 	"os"
+	"time"
 
 	infra "github.com/cgi-fr/lino/internal/infra/pull"
 	domain "github.com/cgi-fr/lino/pkg/pull"
@@ -58,4 +59,16 @@ func pullKeyStoreFactory() func(file io.ReadCloser, keys []string) (domain.KeySt
 
 func traceListner(file *os.File) domain.TraceListener {
 	return infra.NewJSONTraceListener(file)
+}
+
+func maxLifeTime(maxLifetimeInSeconds int64) domain.DataSourceOption {
+	return infra.WithMaxLifetime(time.Duration(maxLifetimeInSeconds) * time.Second)
+}
+
+func maxOpenConns(maxOpenConns int) domain.DataSourceOption {
+	return infra.WithMaxOpenConns(maxOpenConns)
+}
+
+func maxIdleConns(maxIdleConns int) domain.DataSourceOption {
+	return infra.WithMaxIdleConns(maxIdleConns)
 }

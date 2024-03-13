@@ -69,7 +69,7 @@ func NewWSDataSourceFactory() *WSDataSourceFactory {
 }
 
 // New return a WS puller
-func (e *WSDataSourceFactory) New(url string, schema string) pull.DataSource {
+func (e *WSDataSourceFactory) New(url string, schema string, options ...pull.DataSourceOption) pull.DataSource {
 	return &WSDataSource{
 		url:    url,
 		schema: schema,

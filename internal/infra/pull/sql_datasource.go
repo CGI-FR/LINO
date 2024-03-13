@@ -71,7 +71,7 @@ func (ds *SQLDataSource) Open() error {
 		return err
 	}
 
-	log.Error().Msg("open database connection pool")
+	log.Info().Msg("open database connection pool")
 
 	// database handle settings
 	db.SetConnMaxLifetime(ds.maxLifetime)
@@ -164,7 +164,7 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 		return nil, err
 	}
 
-	log.Error().Msg("open database rows iterator")
+	log.Info().Msg("open database rows iterator")
 
 	return &SQLDataIterator{rows, nil, nil}, nil
 }
@@ -227,7 +227,7 @@ func (ds *SQLDataSource) Close() error {
 	if err != nil {
 		return err
 	}
-	log.Error().Msg("close database connection pool")
+	log.Info().Msg("close database connection pool")
 	return nil
 }
 
@@ -281,7 +281,7 @@ func (di *SQLDataIterator) Error() error {
 
 // Close returns the iterator
 func (di *SQLDataIterator) Close() error {
-	defer log.Error().Msg("close database rows iterator")
+	defer log.Info().Msg("close database rows iterator")
 	return di.rows.Close()
 }
 

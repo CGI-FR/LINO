@@ -115,7 +115,7 @@ func (dd *SQLDataDestination) Close() *push.Error {
 		errors = append(errors, &push.Error{Description: err2.Error()})
 	}
 
-	log.Error().Msg("close database connection pool")
+	log.Info().Msg("close database connection pool")
 
 	if len(errors) > 0 {
 		allErrors := &push.Error{}
@@ -150,7 +150,7 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 		return &push.Error{Description: err.Error()}
 	}
 
-	log.Error().Msg("open database transaction")
+	log.Info().Msg("open database transaction")
 
 	dd.tx = tx
 
@@ -167,7 +167,7 @@ func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode, disableConstr
 		return &push.Error{Description: err.Error()}
 	}
 
-	log.Error().Msg("open database connection pool")
+	log.Info().Msg("open database connection pool")
 
 	// database handle settings
 	db.SetConnMaxLifetime(dd.maxLifetime)
@@ -194,7 +194,7 @@ func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode, disableConstr
 	}
 	dd.tx = tx
 
-	log.Error().Msg("open database transaction")
+	log.Info().Msg("open database transaction")
 
 	for _, table := range plan.Tables() {
 		rw := NewSQLRowWriter(table, dd)
@@ -273,7 +273,7 @@ func (rw *SQLRowWriter) close() *push.Error {
 		if err != nil {
 			return &push.Error{Description: err.Error()}
 		}
-		log.Error().Msg("close database statement")
+		log.Info().Msg("close database statement")
 		rw.statement = nil
 		log.Debug().Msg(fmt.Sprintf("close statement %s", rw.dd.mode))
 	}
@@ -331,7 +331,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 	if err != nil {
 		return &push.Error{Description: err.Error()}
 	}
-	log.Error().Msg("open database statement")
+	log.Info().Msg("open database statement")
 	rw.statement = stmt
 	return nil
 }
@@ -431,9 +431,9 @@ func (rw *SQLRowWriter) disableConstraints() *push.Error {
 			return &push.Error{Description: err.Error()}
 		}
 
-		log.Error().Msg("open database rows iterator")
+		log.Info().Msg("open database rows iterator")
 
-		defer func() { result.Close(); log.Error().Msg("close database rows iterator") }()
+		defer func() { result.Close(); log.Info().Msg("close database rows iterator") }()
 
 		var tableName, constraintName string
 		for result.Next() {

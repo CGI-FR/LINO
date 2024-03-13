@@ -21,7 +21,7 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/sijms/go-ora/v2 v2.8.9
 	github.com/spf13/cobra v1.8.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/xo/dburl v0.21.1
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/term v0.18.0
@@ -43,7 +43,7 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

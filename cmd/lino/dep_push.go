@@ -19,6 +19,7 @@ package main
 
 import (
 	"io"
+	"time"
 
 	infra "github.com/cgi-fr/lino/internal/infra/push"
 	domain "github.com/cgi-fr/lino/pkg/push"
@@ -47,4 +48,16 @@ func pushRowExporterFactory() func(io.Writer) domain.RowWriter {
 
 func pushTranslator() domain.Translator {
 	return infra.NewFileTranslator()
+}
+
+func pushMaxLifeTime(maxLifetimeInSeconds int64) domain.DataDestinationOption {
+	return infra.WithMaxLifetime(time.Duration(maxLifetimeInSeconds) * time.Second)
+}
+
+func pushMaxOpenConns(maxOpenConns int) domain.DataDestinationOption {
+	return infra.WithMaxOpenConns(maxOpenConns)
+}
+
+func pushMaxIdleConns(maxIdleConns int) domain.DataDestinationOption {
+	return infra.WithMaxIdleConns(maxIdleConns)
 }

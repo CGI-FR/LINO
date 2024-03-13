@@ -43,6 +43,9 @@ func Test_getDataDestination(t *testing.T) {
 		func(io.ReadCloser) push.RowIterator { return &push.MockRowIterator{} },
 		func(io.Writer) push.RowWriter { return &push.MockRowWriter{} },
 		push.NewMockTranslator(),
+		maxLifeTimeOption,
+		maxOpenConnsOption,
+		maxIdleConnsOption,
 	)
 
 	type args struct {
@@ -63,7 +66,7 @@ func Test_getDataDestination(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := getDataDestination(tt.args.dataconnectorName)
+			got, got1 := getDataDestination(tt.args.dataconnectorName, -1, -1, -1)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getDataDestination() got = %v, want %v", got, tt.want)
 			}

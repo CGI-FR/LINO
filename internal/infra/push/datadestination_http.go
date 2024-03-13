@@ -38,7 +38,7 @@ func NewHTTPDataDestinationFactory() *HTTPDataDestinationFactory {
 }
 
 // New return a HTTP pusher
-func (e *HTTPDataDestinationFactory) New(url string, schema string) push.DataDestination {
+func (e *HTTPDataDestinationFactory) New(url string, schema string, options ...push.DataDestinationOption) push.DataDestination {
 	return NewHTTPDataDestination(url, schema)
 }
 

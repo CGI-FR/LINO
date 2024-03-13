@@ -45,6 +45,9 @@ var (
 	rowIteratorFactory       func(io.ReadCloser) push.RowIterator
 	rowExporterFactory       func(io.Writer) push.RowWriter
 	translator               push.Translator
+	maxLifeTimeOption        func(int64) push.DataDestinationOption
+	maxOpenConnsOption       func(int) push.DataDestinationOption
+	maxIdleConnsOption       func(int) push.DataDestinationOption
 )
 
 // Inject dependencies
@@ -57,6 +60,9 @@ func Inject(
 	rif func(io.ReadCloser) push.RowIterator,
 	ref func(io.Writer) push.RowWriter,
 	trnsltor push.Translator,
+	mltOpt func(int64) push.DataDestinationOption,
+	mocOpt func(int) push.DataDestinationOption,
+	micOpt func(int) push.DataDestinationOption,
 ) {
 	dataconnectorStorage = dbas
 	relStorage = rs
@@ -66,21 +72,26 @@ func Inject(
 	rowIteratorFactory = rif
 	rowExporterFactory = ref
 	translator = trnsltor
+	maxLifeTimeOption = mltOpt
+	maxOpenConnsOption = mocOpt
+	maxIdleConnsOption = micOpt
 }
 
 // NewCommand implements the cli pull command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	var (
-		commitSize         uint
-		disableConstraints bool
-		catchErrors        string
-		table              string
-		ingressDescriptor  string
-		rowExporter        push.RowWriter
-		pkTranslations     map[string]string
-		whereField         string
-		savepoint          string
-		autoTruncate       bool
+		commitSize                 uint
+		disableConstraints         bool
+		catchErrors                string
+		table                      string
+		ingressDescriptor          string
+		rowExporter                push.RowWriter
+		pkTranslations             map[string]string
+		whereField                 string
+		savepoint                  string
+		autoTruncate               bool
+		maxLifeTimeInSeconds       int64
+		maxOpenConns, maxIdleConns int
 	)
 
 	cmd := &cobra.Command{
@@ -106,6 +117,9 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Bool("disable-constraints", disableConstraints).
 				Str("catch-errors", catchErrors).
 				Str("table", table).
+				Int64("maxLifeTimeInSeconds", maxLifeTimeInSeconds).
+				Int("maxOpenConns", maxOpenConns).
+				Int("maxIdleConns", maxIdleConns).
 				Msg("Push mode")
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -122,7 +136,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				mode, _ = push.ParseMode(args[0])
 			}
 
-			datadestination, e1 := getDataDestination(dcDestination)
+			datadestination, e1 := getDataDestination(dcDestination, maxLifeTimeInSeconds, maxOpenConns, maxIdleConns)
 			if e1 != nil {
 				fmt.Fprintln(err, e1.Error())
 				os.Exit(1)
@@ -174,6 +188,9 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVar(&whereField, "using-pk-field", "__usingpk__", "Name of the data field that can be used as pk for update queries")
 	cmd.Flags().StringVar(&savepoint, "savepoint", "", "Name of a file to write primary keys of effectively processed lines (commit to database)")
 	cmd.Flags().BoolVarP(&autoTruncate, "autotruncate", "a", false, "Automatically truncate values to the maximum length defined in table.yaml")
+	cmd.Flags().Int64Var(&maxLifeTimeInSeconds, "conn-max-lifetime", -1, "sets the maximum amount of time (in seconds) a connection may be reused")
+	cmd.Flags().IntVar(&maxOpenConns, "conn-max-open", -1, "sets the maximum number of open connections to the database")
+	cmd.Flags().IntVar(&maxIdleConns, "conn-max-idle", -1, "sets the maximum number of connections in the idle connection pool")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
@@ -221,7 +238,7 @@ func loadTranslator(pkTranslations map[string]string) error {
 	return nil
 }
 
-func getDataDestination(dataconnectorName string) (push.DataDestination, *push.Error) {
+func getDataDestination(dataconnectorName string, maxLifeTimeInSeconds int64, maxOpenConns, maxIdleConns int) (push.DataDestination, *push.Error) {
 	alias, e1 := dataconnector.Get(dataconnectorStorage, dataconnectorName)
 	if e1 != nil {
 		return nil, &push.Error{Description: e1.Error()}
@@ -240,7 +257,21 @@ func getDataDestination(dataconnectorName string) (push.DataDestination, *push.E
 		return nil, &push.Error{Description: "no datadestination found for database type " + u.UnaliasedDriver}
 	}
 
-	return datadestinationFactory.New(u.URL.String(), alias.Schema), nil
+	options := []push.DataDestinationOption{}
+
+	if maxLifeTimeInSeconds >= 0 {
+		options = append(options, maxLifeTimeOption(maxLifeTimeInSeconds))
+	}
+
+	if maxOpenConns >= 0 {
+		options = append(options, maxOpenConnsOption(maxOpenConns))
+	}
+
+	if maxIdleConns >= 0 {
+		options = append(options, maxIdleConnsOption(maxIdleConns))
+	}
+
+	return datadestinationFactory.New(u.URL.String(), alias.Schema, options...), nil
 }
 
 func getPlan(idStorage id.Storage, autoTruncate bool) (push.Plan, *push.Error) {

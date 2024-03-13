@@ -35,8 +35,8 @@ func NewDb2DataDestinationFactory() *Db2DataDestinationFactory {
 }
 
 // New return a Db2 pusher
-func (e *Db2DataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, Db2Dialect{})
+func (e *Db2DataDestinationFactory) New(url string, schema string, options ...push.DataDestinationOption) push.DataDestination {
+	return NewSQLDataDestination(url, schema, Db2Dialect{}, options...)
 }
 
 // Db2Dialect inject oracle variations

@@ -34,7 +34,7 @@ import (
 
 type Action string
 
-//  "pull_open", "push_open", "push_data", "push_commit", "push_close"
+// "pull_open", "push_open", "push_data", "push_commit", "push_close"
 const (
 	PushOpen   Action = "push_open"
 	PushData   Action = "push_data"
@@ -77,7 +77,7 @@ func NewWebSocketDataDestinationFactory() *WebSocketDataDestinationFactory {
 }
 
 // New return a web socket pusher
-func (e *WebSocketDataDestinationFactory) New(url string, schema string) push.DataDestination {
+func (e *WebSocketDataDestinationFactory) New(url string, schema string, options ...push.DataDestinationOption) push.DataDestination {
 	return NewWebSocketDataDestination(url, schema)
 }
 

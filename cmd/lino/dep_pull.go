@@ -61,14 +61,14 @@ func traceListner(file *os.File) domain.TraceListener {
 	return infra.NewJSONTraceListener(file)
 }
 
-func maxLifeTime(maxLifetimeInSeconds int64) domain.DataSourceOption {
+func pullMaxLifeTime(maxLifetimeInSeconds int64) domain.DataSourceOption {
 	return infra.WithMaxLifetime(time.Duration(maxLifetimeInSeconds) * time.Second)
 }
 
-func maxOpenConns(maxOpenConns int) domain.DataSourceOption {
+func pullMaxOpenConns(maxOpenConns int) domain.DataSourceOption {
 	return infra.WithMaxOpenConns(maxOpenConns)
 }
 
-func maxIdleConns(maxIdleConns int) domain.DataSourceOption {
+func pullMaxIdleConns(maxIdleConns int) domain.DataSourceOption {
 	return infra.WithMaxIdleConns(maxIdleConns)
 }

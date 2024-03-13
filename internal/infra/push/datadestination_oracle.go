@@ -21,8 +21,8 @@ func NewOracleDataDestinationFactory() *OracleDataDestinationFactory {
 }
 
 // New return a Oracle pusher
-func (e *OracleDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, OracleDialect{})
+func (e *OracleDataDestinationFactory) New(url string, schema string, options ...push.DataDestinationOption) push.DataDestination {
+	return NewSQLDataDestination(url, schema, OracleDialect{}, options...)
 }
 
 // OracleDialect inject oracle variations

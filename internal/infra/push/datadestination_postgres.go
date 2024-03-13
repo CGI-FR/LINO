@@ -34,8 +34,8 @@ func NewPostgresDataDestinationFactory() *PostgresDataDestinationFactory {
 }
 
 // New return a Postgres pusher
-func (e *PostgresDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, PostgresDialect{})
+func (e *PostgresDataDestinationFactory) New(url string, schema string, options ...push.DataDestinationOption) push.DataDestination {
+	return NewSQLDataDestination(url, schema, PostgresDialect{}, options...)
 }
 
 // PostgresDialect inject postgres variations

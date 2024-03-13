@@ -69,7 +69,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode, ingressDesc
 		return
 	}
 
-	datadestination, err := getDataDestination(dcDestination)
+	datadestination, err := getDataDestination(dcDestination, -1, -1, -1)
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		w.WriteHeader(http.StatusNotFound)

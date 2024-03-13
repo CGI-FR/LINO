@@ -152,6 +152,8 @@ func (ds *WSDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSet
 		return nil, err
 	}
 
+	defer reader.Close()
+
 	result := pull.RowSet{}
 	for reader.Next() {
 		result = append(result, reader.Value())
@@ -288,4 +290,8 @@ func (rs *ResultStream) Value() pull.Row {
 
 func (rs *ResultStream) Error() error {
 	return rs.err
+}
+
+func (rs *ResultStream) Close() error {
+	return nil
 }

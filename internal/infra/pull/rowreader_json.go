@@ -68,3 +68,7 @@ func (jrr *JSONRowReader) Value() pull.Row {
 func (jrr *JSONRowReader) Error() error {
 	return jrr.err
 }
+
+func (jrr *JSONRowReader) Close() error {
+	return nil
+}

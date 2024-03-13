@@ -42,6 +42,7 @@ type RowReader interface {
 	Next() bool
 	Value() Row
 	Error() error
+	Close() error
 }
 
 // TraceListener receives diagnostic trace.

@@ -135,8 +135,9 @@ func init() {
 	}
 	dburl.Register(wsScheme)
 
+	dburl.Unregister("mysql")
 	mySQLScheme := dburl.Scheme{
-		Driver:    "mysql-test",
+		Driver:    "mysql",
 		Generator: genMySQL,
 		Transport: dburl.TransportAny,
 		Opaque:    false,

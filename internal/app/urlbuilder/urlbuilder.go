@@ -80,6 +80,15 @@ func genJDBCOracle(u *dburl.URL) (string, string, error) {
 	return go_ora.BuildJDBC("", "", u.Host, map[string]string{}), "", nil
 }
 
+func genMySQL(u *dburl.URL) (string, string, error) {
+	dsn, other, err := dburl.GenMysql(u)
+	if err != nil {
+		return dsn, other, err
+	}
+
+	return strings.ReplaceAll(dsn, "/", "?"), other, err
+}
+
 func init() {
 	oracleScheme := dburl.Scheme{
 		Driver:    "godror-raw",
@@ -125,6 +134,16 @@ func init() {
 		Override:  "",
 	}
 	dburl.Register(wsScheme)
+
+	mySQLScheme := dburl.Scheme{
+		Driver:    "mysql-test",
+		Generator: genMySQL,
+		Transport: dburl.TransportAny,
+		Opaque:    false,
+		Aliases:   []string{},
+		Override:  "",
+	}
+	dburl.Register(mySQLScheme)
 }
 
 func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {

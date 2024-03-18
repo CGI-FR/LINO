@@ -90,6 +90,7 @@ func (sd SQLServerDialect) SelectLimit(tableName string, schemaName string, wher
 	query.WriteRune(' ')
 
 	if len(columns) > 0 {
+		query.Write([]byte(" "))
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')

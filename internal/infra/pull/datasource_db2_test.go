@@ -56,7 +56,7 @@ func TestCreateSelectDb2WithColumns(t *testing.T) {
 	// Check SQL query is correctly created
 	ds := infra.NewSQLDataSource("pg://server/name", "", nil, db, commonsql.Db2Dialect{})
 	_, sql := ds.GetSelectSQLAndValues(aTable, aFilter)
-	expectSQL := "SELECT  ID,  Name,  Age FROM CUSTOMERS WHERE  1=1   FETCH FIRST 5 ROWS ONLY"
+	expectSQL := "SELECT  ID, Name, Age FROM CUSTOMERS WHERE  1=1   FETCH FIRST 5 ROWS ONLY"
 	assert.Equal(t, expectSQL, sql)
 
 	// Check SQL query can correctly excute in DB2

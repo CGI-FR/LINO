@@ -62,6 +62,10 @@ func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, 
 	}
 
 	if len(columns) > 0 {
+		query.Write([]byte(" "))
+		for i := range columns {
+			columns[i] = db2.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')
@@ -86,6 +90,10 @@ func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where str
 	}
 
 	if len(columns) > 0 {
+		query.Write([]byte(" "))
+		for i := range columns {
+			columns[i] = db2.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')

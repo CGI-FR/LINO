@@ -32,9 +32,17 @@ testcases:
 
   - name: pull all
     steps:
-      - script: lino pull --table customer --limit 0 http
+      - script: lino pull --table CUSTOMER --limit 0 http
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldContainSubstring "customer_id":1
           - result.systemout ShouldContainSubstring "customer_id":2
           - result.systemerr ShouldBeEmpty
+
+  - name: pull with lower case table name should return error
+    steps:
+      - script: lino pull --table customer --limit 0 http
+        assertions:
+          - result.code ShouldEqual 1
+          - result.systemerr ShouldContainSubstring not exist
+          - result.systemerr ShouldContainSubstring 'customer'

@@ -244,5 +244,20 @@ func getPullerPlan(idStorage id.Storage) (pull.Plan, pull.Table, error) {
 		return pull.Plan{}, pull.Table{}, err4
 	}
 
+	// Check startTable existe in table.yaml
+	tableExiste := false
+	for _, table := range tables {
+		if table.Name == string(startTable.Name) {
+			tableExiste = true
+
+			break
+		}
+	}
+
+	if !tableExiste {
+		err5 := fmt.Errorf("Table '%s' does not exist in table.yaml", string(startTable.Name))
+		return pull.Plan{}, pull.Table{}, err5
+	}
+
 	return plan, startTable, nil
 }

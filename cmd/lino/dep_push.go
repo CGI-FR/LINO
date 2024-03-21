@@ -31,6 +31,7 @@ func pushDataDestinationFactory() map[string]domain.DataDestinationFactory {
 		"godror":     infra.NewOracleDataDestinationFactory(),
 		"godror-raw": infra.NewOracleDataDestinationFactory(),
 		"mysql":      infra.NewMariadbDataDestinationFactory(),
+		"mymysql":    infra.NewMariadbDataDestinationFactory(),
 		"db2":        infra.NewDb2DataDestinationFactory(),
 		"http":       infra.NewHTTPDataDestinationFactory(),
 		"ws":         infra.NewWebSocketDataDestinationFactory(),

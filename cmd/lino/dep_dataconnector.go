@@ -32,6 +32,7 @@ func dataPingerFactory() map[string]domain.DataPingerFactory {
 		"godror":     infra.NewSQLDataPingerFactory(),
 		"godror-raw": infra.NewSQLDataPingerFactory(),
 		"mysql":      infra.NewSQLDataPingerFactory(),
+		"mymysql":    infra.NewSQLDataPingerFactory(),
 		"db2":        infra.NewSQLDataPingerFactory(),
 		"http":       infra.NewHTTPDataPingerFactory(),
 		"ws":         infra.NewWSDataPingerFactory(),

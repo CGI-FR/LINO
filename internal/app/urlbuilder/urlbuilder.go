@@ -159,16 +159,16 @@ func init() {
 	}
 	dburl.Register(wsScheme)
 
-	dburl.Unregister("mysql")
-	mySQLScheme := dburl.Scheme{
-		Driver:    "mysql",
-		Generator: genMySQL,
-		Transport: dburl.TransportAny,
-		Opaque:    false,
-		Aliases:   []string{},
-		Override:  "",
-	}
-	dburl.Register(mySQLScheme)
+	// dburl.Unregister("mysql")
+	// mySQLScheme := dburl.Scheme{
+	// 	Driver:    "mysql",
+	// 	Generator: genMySQL,
+	// 	Transport: dburl.TransportAny,
+	// 	Opaque:    false,
+	// 	Aliases:   []string{},
+	// 	Override:  "",
+	// }
+	// dburl.Register(mySQLScheme)
 }
 
 func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {

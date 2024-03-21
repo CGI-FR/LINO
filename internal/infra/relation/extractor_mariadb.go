@@ -22,7 +22,7 @@ import (
 	// import mariadb connector
 	"fmt"
 
-	_ "github.com/go-mysql-org/go-mysql/driver"
+	_ "github.com/ziutek/mymysql/godrv"
 
 	"github.com/cgi-fr/lino/pkg/relation"
 )

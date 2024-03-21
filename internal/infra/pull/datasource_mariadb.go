@@ -21,7 +21,7 @@ import (
 	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/pull"
 
-	_ "github.com/go-mysql-org/go-mysql/driver"
+	_ "github.com/ziutek/mymysql/godrv"
 )
 
 // MariadbDataSourceFactory exposes methods to create new Mariadb pullers.

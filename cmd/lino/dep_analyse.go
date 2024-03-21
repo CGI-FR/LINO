@@ -27,6 +27,7 @@ func analyseDataSourceFactory() map[string]infra.SQLExtractorFactory {
 		"godror":     infra.NewOracleExtractorFactory(),
 		"godror-raw": infra.NewOracleExtractorFactory(),
 		"mysql":      infra.NewMariaDBExtractorFactory(),
+		"mymysql":    infra.NewMariaDBExtractorFactory(),
 		"db2":        infra.NewDB2ExtractorFactory(),
 		"sqlserver":  infra.NewSQLServerExtractorFactory(),
 	}

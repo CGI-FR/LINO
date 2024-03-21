@@ -38,7 +38,7 @@ testcases:
       - script: lino pull -v 5 source --where "address_id > 13" --log-json
         assertions:
           - result.code ShouldEqual 0
-          - result.systemerr ShouldContainSubstring {"level":"info","limit":1,"filter":{},"diagnostic":false,"distinct":false,"filter-from-file":"","exclude-from-file":"","table":"","where":"address_id > 13","parallel":1,"message":"Pull mode"}
+          - result.systemerr ShouldContainSubstring {"level":"info","limit":1,"filter":{},"diagnostic":false,"distinct":false,"filter-from-file":"","exclude-from-file":"","table":"","where":"address_id > 13","parallel":1,
 
   - name: pull with filter from file and where clause
     steps:

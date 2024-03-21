@@ -36,10 +36,16 @@ func NewDb2DataSourceFactory() *Db2DataSourceFactory {
 }
 
 // New return a Db2 puller
-func (e *Db2DataSourceFactory) New(url string, schema string) pull.DataSource {
-	return &SQLDataSource{
+func (e *Db2DataSourceFactory) New(url string, schema string, options ...pull.DataSourceOption) pull.DataSource {
+	ds := &SQLDataSource{
 		url:     url,
 		schema:  schema,
 		dialect: commonsql.Db2Dialect{},
 	}
+
+	for _, option := range options {
+		option(ds)
+	}
+
+	return ds
 }

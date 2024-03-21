@@ -19,6 +19,7 @@ package main
 
 import (
 	"io"
+	"time"
 
 	infra "github.com/cgi-fr/lino/internal/infra/push"
 	domain "github.com/cgi-fr/lino/pkg/push"
@@ -30,6 +31,7 @@ func pushDataDestinationFactory() map[string]domain.DataDestinationFactory {
 		"godror":     infra.NewOracleDataDestinationFactory(),
 		"godror-raw": infra.NewOracleDataDestinationFactory(),
 		"mysql":      infra.NewMariadbDataDestinationFactory(),
+		"mymysql":    infra.NewMariadbDataDestinationFactory(),
 		"db2":        infra.NewDb2DataDestinationFactory(),
 		"http":       infra.NewHTTPDataDestinationFactory(),
 		"ws":         infra.NewWebSocketDataDestinationFactory(),
@@ -47,4 +49,16 @@ func pushRowExporterFactory() func(io.Writer) domain.RowWriter {
 
 func pushTranslator() domain.Translator {
 	return infra.NewFileTranslator()
+}
+
+func pushMaxLifeTime(maxLifetimeInSeconds int64) domain.DataDestinationOption {
+	return infra.WithMaxLifetime(time.Duration(maxLifetimeInSeconds) * time.Second)
+}
+
+func pushMaxOpenConns(maxOpenConns int) domain.DataDestinationOption {
+	return infra.WithMaxOpenConns(maxOpenConns)
+}
+
+func pushMaxIdleConns(maxIdleConns int) domain.DataDestinationOption {
+	return infra.WithMaxIdleConns(maxIdleConns)
 }

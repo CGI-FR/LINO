@@ -44,6 +44,9 @@ var (
 	pullExporterFactory  func(io.Writer) pull.RowExporter
 	rowReaderFactory     func(io.ReadCloser) pull.RowReader
 	keyStoreFactory      func(io.ReadCloser, []string) (pull.KeyStore, error)
+	maxLifeTimeOption    func(int64) pull.DataSourceOption
+	maxOpenConnsOption   func(int) pull.DataSourceOption
+	maxIdleConnsOption   func(int) pull.DataSourceOption
 )
 
 var traceListener pull.TraceListener
@@ -59,6 +62,9 @@ func Inject(
 	rrf func(io.ReadCloser) pull.RowReader,
 	ksf func(io.ReadCloser, []string) (pull.KeyStore, error),
 	tl pull.TraceListener,
+	mltOpt func(int64) pull.DataSourceOption,
+	mocOpt func(int) pull.DataSourceOption,
+	micOpt func(int) pull.DataSourceOption,
 ) {
 	dataconnectorStorage = dbas
 	relStorage = rs
@@ -69,6 +75,9 @@ func Inject(
 	rowReaderFactory = rrf
 	keyStoreFactory = ksf
 	traceListener = tl
+	maxLifeTimeOption = mltOpt
+	maxOpenConnsOption = mocOpt
+	maxIdleConnsOption = micOpt
 }
 
 // NewCommand implements the cli pull command
@@ -85,6 +94,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var diagnostic bool
 	var filters pull.RowReader
 	var parallel uint
+	var maxLifeTimeInSeconds int64
+	var maxOpenConns, maxIdleConns int
 
 	cmd := &cobra.Command{
 		Use:     "pull [DB Alias Name]",
@@ -103,6 +114,9 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Str("table", table).
 				Str("where", where).
 				Uint("parallel", parallel).
+				Int64("maxLifeTimeInSeconds", maxLifeTimeInSeconds).
+				Int("maxOpenConns", maxOpenConns).
+				Int("maxIdleConns", maxIdleConns).
 				Msg("Pull mode")
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -111,7 +125,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			startTime := time.Now()
 
-			datasource, e1 := getDataSource(args[0], out)
+			datasource, e1 := getDataSource(args[0], out, maxLifeTimeInSeconds, maxOpenConns, maxIdleConns)
 			if e1 != nil {
 				fmt.Fprintln(err, e1.Error())
 				os.Exit(1)
@@ -197,13 +211,16 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVarP(&where, "where", "w", "", "Advanced SQL where clause to filter")
 	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "pull content using ingress descriptor definition")
 	cmd.Flags().UintVarP(&parallel, "parallel", "p", 1, "number of parallel workers")
+	cmd.Flags().Int64Var(&maxLifeTimeInSeconds, "conn-max-lifetime", -1, "sets the maximum amount of time (in seconds) a connection may be reused")
+	cmd.Flags().IntVar(&maxOpenConns, "conn-max-open", -1, "sets the maximum number of open connections to the database")
+	cmd.Flags().IntVar(&maxIdleConns, "conn-max-idle", -1, "sets the maximum number of connections in the idle connection pool")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)
 	return cmd
 }
 
-func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, error) {
+func getDataSource(dataconnectorName string, out io.Writer, maxLifeTimeInSeconds int64, maxOpenConns, maxIdleConns int) (pull.DataSource, error) {
 	alias, e1 := dataconnector.Get(dataconnectorStorage, dataconnectorName)
 	if e1 != nil {
 		return nil, e1
@@ -219,7 +236,21 @@ func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, er
 		return nil, fmt.Errorf("no datasource found for database type")
 	}
 
-	return datasourceFactory.New(u.URL.String(), alias.Schema), nil
+	options := []pull.DataSourceOption{}
+
+	if maxLifeTimeInSeconds >= 0 {
+		options = append(options, maxLifeTimeOption(maxLifeTimeInSeconds))
+	}
+
+	if maxOpenConns >= 0 {
+		options = append(options, maxOpenConnsOption(maxOpenConns))
+	}
+
+	if maxIdleConns >= 0 {
+		options = append(options, maxIdleConnsOption(maxIdleConns))
+	}
+
+	return datasourceFactory.New(u.URL.String(), alias.Schema, options...), nil
 }
 
 func getPullerPlan(idStorage id.Storage) (pull.Plan, pull.Table, error) {

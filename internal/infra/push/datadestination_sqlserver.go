@@ -36,8 +36,8 @@ func NewSQLServerDataDestinationFactory() *SQLServerDataDestinationFactory {
 }
 
 // New return a SQLServer pusher
-func (e *SQLServerDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, SQLServerDialect{})
+func (e *SQLServerDataDestinationFactory) New(url string, schema string, options ...push.DataDestinationOption) push.DataDestination {
+	return NewSQLDataDestination(url, schema, SQLServerDialect{}, options...)
 }
 
 // SQLServerDialect inject SQLServer variations

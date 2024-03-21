@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.8.0]
+
+- `Added` flags `--conn-max-lifetime`, `--conn-max-open` and `--conn-max-idle` to `lino pull` and `lino push` commands
+
 ## [2.7.1]
 
 - `Fixed` panic during push on Oracle database with a `null` column value

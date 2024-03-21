@@ -20,6 +20,7 @@ package main
 import (
 	"io"
 	"os"
+	"time"
 
 	infra "github.com/cgi-fr/lino/internal/infra/pull"
 	domain "github.com/cgi-fr/lino/pkg/pull"
@@ -31,6 +32,7 @@ func pullDataSourceFactory() map[string]domain.DataSourceFactory {
 		"godror":     infra.NewOracleDataSourceFactory(),
 		"godror-raw": infra.NewOracleDataSourceFactory(),
 		"mysql":      infra.NewMariadbDataSourceFactory(),
+		"mymysql":    infra.NewMariadbDataSourceFactory(),
 		"db2":        infra.NewDb2DataSourceFactory(),
 		"http":       infra.NewHTTPDataSourceFactory(),
 		"ws":         infra.NewWSDataSourceFactory(),
@@ -58,4 +60,16 @@ func pullKeyStoreFactory() func(file io.ReadCloser, keys []string) (domain.KeySt
 
 func traceListner(file *os.File) domain.TraceListener {
 	return infra.NewJSONTraceListener(file)
+}
+
+func pullMaxLifeTime(maxLifetimeInSeconds int64) domain.DataSourceOption {
+	return infra.WithMaxLifetime(time.Duration(maxLifetimeInSeconds) * time.Second)
+}
+
+func pullMaxOpenConns(maxOpenConns int) domain.DataSourceOption {
+	return infra.WithMaxOpenConns(maxOpenConns)
+}
+
+func pullMaxIdleConns(maxIdleConns int) domain.DataSourceOption {
+	return infra.WithMaxIdleConns(maxIdleConns)
 }

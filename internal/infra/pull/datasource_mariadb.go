@@ -21,7 +21,7 @@ import (
 	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/pull"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/ziutek/mymysql/godrv"
 )
 
 // MariadbDataSourceFactory exposes methods to create new Mariadb pullers.
@@ -33,10 +33,16 @@ func NewMariadbDataSourceFactory() *MariadbDataSourceFactory {
 }
 
 // New return a Mariadb puller
-func (e *MariadbDataSourceFactory) New(url string, schema string) pull.DataSource {
-	return &SQLDataSource{
+func (e *MariadbDataSourceFactory) New(url string, schema string, options ...pull.DataSourceOption) pull.DataSource {
+	ds := &SQLDataSource{
 		url:     url,
 		schema:  schema,
 		dialect: commonsql.MariadbDialect{},
 	}
+
+	for _, option := range options {
+		option(ds)
+	}
+
+	return ds
 }

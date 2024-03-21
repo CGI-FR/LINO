@@ -38,7 +38,7 @@ func NewHTTPDataSourceFactory() *HTTPDataSourceFactory {
 }
 
 // New return a HTTP puller
-func (e *HTTPDataSourceFactory) New(url string, schema string) pull.DataSource {
+func (e *HTTPDataSourceFactory) New(url string, schema string, options ...pull.DataSourceOption) pull.DataSource {
 	return &HTTPDataSource{
 		url:    url,
 		schema: schema,
@@ -62,6 +62,8 @@ func (ds *HTTPDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowS
 	if err != nil {
 		return nil, err
 	}
+
+	defer reader.Close()
 
 	result := pull.RowSet{}
 	for reader.Next() {

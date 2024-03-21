@@ -22,9 +22,11 @@ type RowExporter interface {
 	Export(ExportedRow) error
 }
 
+type DataSourceOption func(DataSource)
+
 // DataSourceFactory exposes methods to create new datasources.
 type DataSourceFactory interface {
-	New(url string, schema string) DataSource
+	New(url string, schema string, options ...DataSourceOption) DataSource
 }
 
 // DataSource to read in the pull process.
@@ -40,6 +42,7 @@ type RowReader interface {
 	Next() bool
 	Value() Row
 	Error() error
+	Close() error
 }
 
 // TraceListener receives diagnostic trace.

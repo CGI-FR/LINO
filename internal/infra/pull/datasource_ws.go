@@ -69,7 +69,7 @@ func NewWSDataSourceFactory() *WSDataSourceFactory {
 }
 
 // New return a WS puller
-func (e *WSDataSourceFactory) New(url string, schema string) pull.DataSource {
+func (e *WSDataSourceFactory) New(url string, schema string, options ...pull.DataSourceOption) pull.DataSource {
 	return &WSDataSource{
 		url:    url,
 		schema: schema,
@@ -151,6 +151,8 @@ func (ds *WSDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSet
 	if err != nil {
 		return nil, err
 	}
+
+	defer reader.Close()
 
 	result := pull.RowSet{}
 	for reader.Next() {
@@ -288,4 +290,8 @@ func (rs *ResultStream) Value() pull.Row {
 
 func (rs *ResultStream) Error() error {
 	return rs.err
+}
+
+func (rs *ResultStream) Close() error {
+	return nil
 }

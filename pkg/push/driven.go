@@ -17,9 +17,11 @@
 
 package push
 
+type DataDestinationOption func(DataDestination)
+
 // DataDestinationFactory exposes methods to create new datadestinations.
 type DataDestinationFactory interface {
-	New(url string, schema string) DataDestination
+	New(url string, schema string, options ...DataDestinationOption) DataDestination
 }
 
 // DataDestination to write in the push process.

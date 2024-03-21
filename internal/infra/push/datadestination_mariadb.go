@@ -34,8 +34,8 @@ func NewMariadbDataDestinationFactory() *MariadbDataDestinationFactory {
 }
 
 // New return a Mariadb pusher
-func (e *MariadbDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, MariadbDialect{})
+func (e *MariadbDataDestinationFactory) New(url string, schema string, options ...push.DataDestinationOption) push.DataDestination {
+	return NewSQLDataDestination(url, schema, MariadbDialect{}, options...)
 }
 
 // MariadbDialect inject mariadb variations

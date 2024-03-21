@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/pull"
@@ -30,13 +31,37 @@ import (
 	"github.com/xo/dburl"
 )
 
+func WithMaxLifetime(maxLifeTime time.Duration) pull.DataSourceOption {
+	return func(ds pull.DataSource) {
+		log.Info().Int64("maxLifetime", int64(maxLifeTime.Seconds())).Msg("setting database connection parameter")
+		ds.(*SQLDataSource).maxLifetime = maxLifeTime
+	}
+}
+
+func WithMaxOpenConns(maxOpenConns int) pull.DataSourceOption {
+	return func(ds pull.DataSource) {
+		log.Info().Int("maxOpenConns", maxOpenConns).Msg("setting database connection parameter")
+		ds.(*SQLDataSource).maxOpenConns = maxOpenConns
+	}
+}
+
+func WithMaxIdleConns(maxIdleConns int) pull.DataSourceOption {
+	return func(ds pull.DataSource) {
+		log.Info().Int("maxIdleConns", maxIdleConns).Msg("setting database connection parameter")
+		ds.(*SQLDataSource).maxIdleConns = maxIdleConns
+	}
+}
+
 // SQLDataSource to read in the pull process.
 type SQLDataSource struct {
-	url     string
-	schema  string
-	dbx     *sqlx.DB
-	db      *sql.DB
-	dialect commonsql.Dialect
+	url          string
+	schema       string
+	dbx          *sqlx.DB
+	db           *sql.DB
+	dialect      commonsql.Dialect
+	maxLifetime  time.Duration
+	maxOpenConns int
+	maxIdleConns int
 }
 
 // Open a connection to the SQL DB
@@ -45,6 +70,13 @@ func (ds *SQLDataSource) Open() error {
 	if err != nil {
 		return err
 	}
+
+	log.Info().Msg("open database connection pool")
+
+	// database handle settings
+	db.SetConnMaxLifetime(ds.maxLifetime)
+	db.SetMaxOpenConns(ds.maxOpenConns)
+	db.SetMaxIdleConns(ds.maxIdleConns)
 
 	ds.db = db
 
@@ -99,6 +131,8 @@ func (ds *SQLDataSource) Read(source pull.Table, filter pull.Filter) (pull.RowSe
 		return nil, err
 	}
 
+	defer reader.Close()
+
 	result := pull.RowSet{}
 	for reader.Next() {
 		result = append(result, reader.Value())
@@ -129,6 +163,8 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 	if err != nil {
 		return nil, err
 	}
+
+	log.Info().Msg("open database rows iterator")
 
 	return &SQLDataIterator{rows, nil, nil}, nil
 }
@@ -191,6 +227,7 @@ func (ds *SQLDataSource) Close() error {
 	if err != nil {
 		return err
 	}
+	log.Info().Msg("close database connection pool")
 	return nil
 }
 
@@ -240,6 +277,12 @@ func (di *SQLDataIterator) Value() pull.Row {
 // Error returns the iterator error
 func (di *SQLDataIterator) Error() error {
 	return di.err
+}
+
+// Close returns the iterator
+func (di *SQLDataIterator) Close() error {
+	defer log.Info().Msg("close database rows iterator")
+	return di.rows.Close()
 }
 
 func NewSQLDataSource(url, schema string, dbx *sqlx.DB, db *sql.DB, dialect commonsql.Dialect) *SQLDataSource {

@@ -81,12 +81,36 @@ func genJDBCOracle(u *dburl.URL) (string, string, error) {
 }
 
 func genMySQL(u *dburl.URL) (string, string, error) {
-	dsn, other, err := dburl.GenMysql(u)
-	if err != nil {
-		return dsn, other, err
+	host, port, dbname := u.Hostname(), u.Port(), strings.TrimPrefix(u.Path, "/")
+	// build dsn
+	var dsn string
+	if u.User != nil {
+		if n := u.User.Username(); n != "" {
+			if p, ok := u.User.Password(); ok {
+				n += ":" + p
+			}
+			dsn += n + "@"
+		}
 	}
-
-	return strings.ReplaceAll(dsn, "/", "?"), other, err
+	// if host or proto is not empty
+	if u.Transport != "unix" {
+		if host == "" {
+			host = "localhost"
+		}
+		if port == "" {
+			port = "3306"
+		}
+	}
+	if port != "" {
+		port = ":" + port
+	}
+	// add proto and database
+	dsn += host + port + "/" + dbname
+	// query
+	if s := u.Query().Encode(); s != "" {
+		dsn += "?" + s
+	}
+	return dsn, "", nil
 }
 
 func init() {

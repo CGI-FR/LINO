@@ -80,39 +80,6 @@ func genJDBCOracle(u *dburl.URL) (string, string, error) {
 	return go_ora.BuildJDBC("", "", u.Host, map[string]string{}), "", nil
 }
 
-func genMySQL(u *dburl.URL) (string, string, error) {
-	host, port, dbname := u.Hostname(), u.Port(), strings.TrimPrefix(u.Path, "/")
-	// build dsn
-	var dsn string
-	if u.User != nil {
-		if n := u.User.Username(); n != "" {
-			if p, ok := u.User.Password(); ok {
-				n += ":" + p
-			}
-			dsn += n + "@"
-		}
-	}
-	// if host or proto is not empty
-	if u.Transport != "unix" {
-		if host == "" {
-			host = "localhost"
-		}
-		if port == "" {
-			port = "3306"
-		}
-	}
-	if port != "" {
-		port = ":" + port
-	}
-	// add proto and database
-	dsn += host + port + "/" + dbname
-	// query
-	if s := u.Query().Encode(); s != "" {
-		dsn += "?" + s
-	}
-	return dsn, "", nil
-}
-
 func init() {
 	oracleScheme := dburl.Scheme{
 		Driver:    "godror-raw",
@@ -158,17 +125,6 @@ func init() {
 		Override:  "",
 	}
 	dburl.Register(wsScheme)
-
-	// dburl.Unregister("mysql")
-	// mySQLScheme := dburl.Scheme{
-	// 	Driver:    "mysql",
-	// 	Generator: genMySQL,
-	// 	Transport: dburl.TransportAny,
-	// 	Opaque:    false,
-	// 	Aliases:   []string{},
-	// 	Override:  "",
-	// }
-	// dburl.Register(mySQLScheme)
 }
 
 func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {

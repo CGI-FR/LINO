@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [2.8.0]
+
+- `Added` flag `--watch` (short `-w`) to `lino push` command
+
 ## [2.7.1]
 
 - `Fixed` panic during push on Oracle database with a `null` column value

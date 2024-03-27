@@ -59,3 +59,8 @@ type Translator interface {
 	FindValue(key Key, value Value) Value
 	Load(keys []Key, rows RowIterator) *Error
 }
+
+type Observer interface {
+	Pushed()
+	Close()
+}

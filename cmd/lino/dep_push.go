@@ -48,3 +48,7 @@ func pushRowExporterFactory() func(io.Writer) domain.RowWriter {
 func pushTranslator() domain.Translator {
 	return infra.NewFileTranslator()
 }
+
+func pushObserver() domain.Observer {
+	return infra.NewObserver()
+}

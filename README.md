@@ -7,7 +7,7 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/CGI-FR/LINO)
 
 [![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/CGI-FR/LINO/blob/main/README.md)
-[![zh-cn](https://img.shields.io/badge/lang-chs-green.svg)](https://github.com/CGI-FR/LINO/blob/main/README.zh-cn.md)
+[![zh-cn](https://img.shields.io/badge/lang-zh-cn-green.svg)](https://github.com/CGI-FR/LINO/blob/main/README.zh-cn.md)
 
 # LINO : Large Input, Narrow Output
 

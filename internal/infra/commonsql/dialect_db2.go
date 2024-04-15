@@ -35,10 +35,11 @@ func (db2 Db2Dialect) Limit(limit uint) string {
 
 // From clause
 func (db2 Db2Dialect) From(tableName string, schemaName string) string {
+	tableName = db2.Quote(tableName)
 	if strings.TrimSpace(schemaName) == "" {
 		return fmt.Sprintf("FROM %s", tableName)
 	}
-
+	schemaName = db2.Quote(schemaName)
 	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
 }
 
@@ -62,6 +63,9 @@ func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, 
 	}
 
 	if len(columns) > 0 {
+		for i := range columns {
+			columns[i] = db2.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')
@@ -86,6 +90,9 @@ func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where str
 	}
 
 	if len(columns) > 0 {
+		for i := range columns {
+			columns[i] = db2.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')
@@ -102,7 +109,14 @@ func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where str
 }
 
 func (db2 Db2Dialect) Quote(id string) string {
-	return id
+	var sb strings.Builder
+
+	sb.Grow(len(id) + 2)
+	sb.WriteRune('"')
+	sb.WriteString(id)
+	sb.WriteRune('"')
+
+	return sb.String()
 }
 
 // CreateSelect generate a SQL request in the correct order.

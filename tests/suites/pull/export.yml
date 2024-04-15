@@ -118,3 +118,18 @@ testcases:
       - script: lino pull source --table film
         assertions:
           - result.systemout ShouldEqual {"film_id":1,"fulltext":"'academi':1 'battl':15 'canadian':20 'dinosaur':2 'drama':5 'epic':4 'feminist':8 'mad':11 'must':14 'rocki':21 'scientist':12 'teacher':17","rating":"PG","rental_rate":0.99,"replacement_cost":20.99,"special_features":"{\"Deleted Scenes\",\"Behind the Scenes\"}"}
+
+  - name: table name with uppercase should return error
+    steps:
+      - script: |-
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: film
+              keys:
+                - film_id
+          EOF
+      - script: lino pull source --table Film
+        assertions:
+          - result.code ShouldEqual 1
+          - result.systemerr ShouldContainSubstring Film

@@ -35,10 +35,11 @@ func (od OracleDialect) Limit(limit uint) string {
 
 // From clause
 func (od OracleDialect) From(tableName string, schemaName string) string {
+	tableName = od.Quote(tableName)
 	if strings.TrimSpace(schemaName) == "" {
 		return fmt.Sprintf("FROM %s", tableName)
 	}
-
+	schemaName = od.Quote(schemaName)
 	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
 }
 
@@ -62,6 +63,9 @@ func (od OracleDialect) Select(tableName string, schemaName string, where string
 	}
 
 	if len(columns) > 0 {
+		for i := range columns {
+			columns[i] = od.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')
@@ -86,6 +90,9 @@ func (od OracleDialect) SelectLimit(tableName string, schemaName string, where s
 	}
 
 	if len(columns) > 0 {
+		for i := range columns {
+			columns[i] = od.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')

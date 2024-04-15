@@ -45,46 +45,11 @@ type Dialect interface {
 	CreateSelect(sel string, where string, limit string, columns string, from string) string
 }
 
-func Select(d Dialect, columns []string, distinct bool, schema string, table string, filters map[string]any, where string, limit uint) string {
-	// String Builders
-	sqlSelect := &strings.Builder{}
-	sqlLimit := &strings.Builder{}
-	sqlWhere := &strings.Builder{}
-	sqlColumns := &strings.Builder{}
-	sqlFrom := &strings.Builder{}
-
-	// Build SELECT clause *******************************************
-	sqlSelect.WriteString("SELECT")
-	if distinct {
-		sqlSelect.WriteString(" DISTINCT")
-	}
-	if len(columns) > 0 {
-		for idx, column := range columns {
-			if idx > 0 {
-				sqlSelect.WriteString(", ")
-			}
-			sqlSelect.WriteString(" ")
-			sqlSelect.WriteString(column)
-		}
-	} else {
-		sqlColumns.WriteString("*")
-	}
-
-	// Build FROM clause *********************************************
-	sqlFrom.WriteString("FROM ")
-	if len(schema) > 0 {
-		sqlFrom.WriteString(schema)
-		sqlFrom.WriteString(".")
-	}
-	sqlFrom.WriteString(table)
-
-	// Build LIMIT clause ********************************************
-	if limit > 0 {
-		sqlLimit.WriteString(d.Limit(limit))
-	}
-
+// Build WHERE clause with where key and value to a string
+func GetWhereSQLAndValues(filters map[string]any, where string, d Dialect) (string, []interface{}) {
 	values := []interface{}{}
-	// Build WHERE clause ********************************************
+	sqlWhere := &strings.Builder{}
+
 	if len(filters) > 0 || len(where) > 0 {
 		whereContentFlag := false
 		for key, value := range filters {
@@ -110,16 +75,11 @@ func Select(d Dialect, columns []string, distinct bool, schema string, table str
 			sqlWhere.WriteString(" 1=1 ")
 		}
 	}
+	return sqlWhere.String(), values
+}
 
-	var sql string
-
-	// Assemble the builders in order using the existing method
-	if limit > 0 {
-		sql = d.SelectLimit(table, schema, sqlWhere.String(), distinct, limit, columns...)
-	} else {
-		sql = d.Select(table, schema, sqlWhere.String(), distinct, columns...)
-	}
-
+// When log level is equal or more than debug level, function will log all the SQL Query
+func LogSQLQuery(sql string, values []interface{}, d Dialect) {
 	if log.Logger.GetLevel() <= zerolog.DebugLevel {
 		printSQL := sql
 		for i, v := range values {
@@ -127,6 +87,4 @@ func Select(d Dialect, columns []string, distinct bool, schema string, table str
 		}
 		log.Debug().Msg(fmt.Sprint(printSQL))
 	}
-
-	return sql
 }

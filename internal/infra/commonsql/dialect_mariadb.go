@@ -35,10 +35,11 @@ func (pd MariadbDialect) Limit(limit uint) string {
 
 // From clause
 func (pd MariadbDialect) From(tableName string, schemaName string) string {
+	tableName = pd.Quote(tableName)
 	if strings.TrimSpace(schemaName) == "" {
 		return fmt.Sprintf("FROM %s", tableName)
 	}
-
+	schemaName = pd.Quote(schemaName)
 	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
 }
 
@@ -62,6 +63,9 @@ func (pd MariadbDialect) Select(tableName string, schemaName string, where strin
 	}
 
 	if len(columns) > 0 {
+		for i := range columns {
+			columns[i] = pd.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')
@@ -86,6 +90,9 @@ func (pd MariadbDialect) SelectLimit(tableName string, schemaName string, where 
 	}
 
 	if len(columns) > 0 {
+		for i := range columns {
+			columns[i] = pd.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')

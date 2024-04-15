@@ -9,7 +9,7 @@ require (
 	github.com/cgi-fr/jsonline v0.5.0
 	github.com/cgi-fr/rimo v0.4.0
 	github.com/docker/docker-credential-helpers v0.8.1
-	github.com/go-sql-driver/mysql v1.8.0
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ibmdb/go_ibm_db v0.4.5
@@ -19,10 +19,11 @@ require (
 	github.com/microsoft/go-mssqldb v1.7.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.32.0
-	github.com/sijms/go-ora/v2 v2.8.9
+	github.com/schollz/progressbar/v3 v3.14.2
+	github.com/sijms/go-ora/v2 v2.8.10
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
-	github.com/xo/dburl v0.21.1
+	github.com/xo/dburl v0.22.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/term v0.18.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -41,7 +42,9 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
+	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	golang.org/x/crypto v0.18.0 // indirect

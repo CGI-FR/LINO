@@ -45,6 +45,7 @@ var (
 	rowIteratorFactory       func(io.ReadCloser) push.RowIterator
 	rowExporterFactory       func(io.Writer) push.RowWriter
 	translator               push.Translator
+	observer                 push.Observer
 )
 
 // Inject dependencies
@@ -57,6 +58,7 @@ func Inject(
 	rif func(io.ReadCloser) push.RowIterator,
 	ref func(io.Writer) push.RowWriter,
 	trnsltor push.Translator,
+	obs push.Observer,
 ) {
 	dataconnectorStorage = dbas
 	relStorage = rs
@@ -66,6 +68,7 @@ func Inject(
 	rowIteratorFactory = rif
 	rowExporterFactory = ref
 	translator = trnsltor
+	observer = obs
 }
 
 // NewCommand implements the cli pull command
@@ -81,6 +84,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		whereField         string
 		savepoint          string
 		autoTruncate       bool
+		watch              bool
 	)
 
 	cmd := &cobra.Command{
@@ -152,7 +156,12 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator, whereField, savepoint, autoTruncate)
+			observers := []push.Observer{}
+			if watch {
+				observers = append(observers, observer)
+			}
+
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator, whereField, savepoint, autoTruncate, observers...)
 			if e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)
@@ -174,6 +183,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVar(&whereField, "using-pk-field", "__usingpk__", "Name of the data field that can be used as pk for update queries")
 	cmd.Flags().StringVar(&savepoint, "savepoint", "", "Name of a file to write primary keys of effectively processed lines (commit to database)")
 	cmd.Flags().BoolVarP(&autoTruncate, "autotruncate", "a", false, "Automatically truncate values to the maximum length defined in table.yaml")
+	cmd.Flags().BoolVarP(&watch, "watch", "w", false, "watch statistics about pushed lines")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

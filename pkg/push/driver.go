@@ -26,7 +26,15 @@ import (
 )
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, savepointPath string, autotruncate bool) (err *Error) {
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, savepointPath string, autotruncate bool, observers ...Observer) (err *Error) {
+	defer func() {
+		for _, observer := range observers {
+			if observer != nil {
+				observer.Close()
+			}
+		}
+	}()
+
 	err1 := destination.Open(plan, mode, disableConstraints)
 	if err1 != nil {
 		return err1
@@ -94,6 +102,11 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			IncCommitsCount()
 		}
 		IncInputLinesCount()
+		for _, observer := range observers {
+			if observer != nil {
+				observer.Pushed()
+			}
+		}
 	}
 
 	if ri.Error() != nil {

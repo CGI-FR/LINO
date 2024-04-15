@@ -18,6 +18,10 @@ Types of changes
 
 - `Fixed` issue table or column names were not correctly matched in terms of case sensitivity (lowercase or uppercase), but command still can excute without returning any values.
 
+## [2.8.0]
+
+- `Added` flag `--watch` (short `-w`) to `lino push` command
+
 ## [2.7.1]
 
 - `Fixed` panic during push on Oracle database with a `null` column value

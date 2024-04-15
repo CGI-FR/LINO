@@ -51,7 +51,7 @@ func TestCreateSelectPostgresWithColumns(t *testing.T) {
 	// Check SQL query is correctly created
 	ds := infra.NewSQLDataSource("pg://server/name", "", nil, db, commonsql.PostgresDialect{})
 	_, sql := ds.GetSelectSQLAndValues(aTable, aFilter)
-	expectSQL := "SELECT  \"Name\", \"Age\" FROM \"CUSTOMERS\" WHERE  1=1  LIMIT 5"
+	expectSQL := "SELECT \"Name\", \"Age\" FROM \"CUSTOMERS\" WHERE  1=1  LIMIT 5"
 	assert.Equal(t, expectSQL, sql)
 
 	// Check SQL query can correctly excute in Postgres

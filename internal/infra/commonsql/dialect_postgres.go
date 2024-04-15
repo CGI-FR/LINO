@@ -63,7 +63,6 @@ func (pgd PostgresDialect) Select(tableName string, schemaName string, where str
 	}
 
 	if len(columns) > 0 {
-		query.Write([]byte(" "))
 		for i := range columns {
 			columns[i] = pgd.Quote(columns[i])
 		}
@@ -91,7 +90,6 @@ func (pgd PostgresDialect) SelectLimit(tableName string, schemaName string, wher
 	}
 
 	if len(columns) > 0 {
-		query.Write([]byte(" "))
 		for i := range columns {
 			columns[i] = pgd.Quote(columns[i])
 		}

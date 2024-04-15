@@ -63,7 +63,6 @@ func (od OracleDialect) Select(tableName string, schemaName string, where string
 	}
 
 	if len(columns) > 0 {
-		query.Write([]byte(" "))
 		for i := range columns {
 			columns[i] = od.Quote(columns[i])
 		}
@@ -91,7 +90,6 @@ func (od OracleDialect) SelectLimit(tableName string, schemaName string, where s
 	}
 
 	if len(columns) > 0 {
-		query.Write([]byte(" "))
 		for i := range columns {
 			columns[i] = od.Quote(columns[i])
 		}

@@ -23,7 +23,7 @@ import (
 )
 
 // SQLServerDialect implement SQLServer SQL variations
-type SQLServerDialect struct{} //nolint:golint,revive
+type SQLServerDialect struct{} //nolint:revive
 
 func (sd SQLServerDialect) Placeholder(position int) string {
 	return fmt.Sprintf("@p%d", position)
@@ -36,10 +36,11 @@ func (sd SQLServerDialect) Limit(limit uint) string {
 
 // From clause
 func (sd SQLServerDialect) From(tableName string, schemaName string) string {
+	tableName = sd.Quote(tableName)
 	if strings.TrimSpace(schemaName) == "" {
 		return fmt.Sprintf("FROM %s", tableName)
 	}
-
+	schemaName = sd.Quote(schemaName)
 	return fmt.Sprintf("FROM %s.%s", schemaName, tableName)
 }
 
@@ -63,6 +64,9 @@ func (sd SQLServerDialect) Select(tableName string, schemaName string, where str
 	}
 
 	if len(columns) > 0 {
+		for i := range columns {
+			columns[i] = sd.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')
@@ -90,7 +94,9 @@ func (sd SQLServerDialect) SelectLimit(tableName string, schemaName string, wher
 	query.WriteRune(' ')
 
 	if len(columns) > 0 {
-		query.Write([]byte(" "))
+		for i := range columns {
+			columns[i] = sd.Quote(columns[i])
+		}
 		query.WriteString(strings.Join(columns, ", "))
 	} else {
 		query.WriteRune('*')
@@ -105,7 +111,14 @@ func (sd SQLServerDialect) SelectLimit(tableName string, schemaName string, wher
 }
 
 func (sd SQLServerDialect) Quote(id string) string {
-	return id
+	var sb strings.Builder
+
+	sb.Grow(len(id) + 2)
+	sb.WriteRune('[')
+	sb.WriteString(strings.TrimSpace(id))
+	sb.WriteRune(']')
+
+	return sb.String()
 }
 
 // CreateSelect generate a SQL request in the correct order

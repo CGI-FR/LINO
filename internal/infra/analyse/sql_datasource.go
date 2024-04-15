@@ -134,7 +134,6 @@ func (ds *SQLDataSource) Open() error {
 	// Get WHERE Clause query
 	sqlWhere, values := commonsql.GetWhereSQLAndValues(map[string]any{}, ds.where, ds.dialect)
 
-	// sql := commonsql.Select(ds.dialect, []string{ds.column}, false, ds.schema, ds.table, map[string]any{}, ds.where, ds.limit)
 	sql := ds.dialect.Select(ds.table, ds.schema, sqlWhere, false, ds.column)
 
 	// If log level is more than debug level, this function will log all SQL Query

@@ -33,6 +33,10 @@ func (d *Driver) Execute(query string) error {
 		return fmt.Errorf("%w", err)
 	}
 
+	if reader == nil {
+		return nil
+	}
+
 	for reader.Next() {
 		if err := d.writer.Write(reader.Value()); err != nil {
 			return fmt.Errorf("%w", err)

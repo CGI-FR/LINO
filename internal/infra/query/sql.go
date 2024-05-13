@@ -9,18 +9,48 @@ import (
 	"github.com/xo/dburl"
 )
 
-type DataReader struct{}
+type DataReader struct {
+	rows  *sqlx.Rows
+	value any
+	err   error
+}
 
 func (dr *DataReader) Next() bool {
+	if dr.rows == nil {
+		return false
+	}
+	if dr.rows.Next() {
+		columns, err := dr.rows.Columns()
+		if err != nil {
+			dr.err = err
+			return false
+		}
+
+		values, err := dr.rows.SliceScan()
+		if err != nil {
+			dr.err = err
+			return false
+		}
+
+		row := map[string]any{}
+		for i, column := range columns {
+			row[column] = values[i]
+		}
+		dr.value = row
+		return true
+	}
+	if dr.rows.Err() != nil {
+		dr.err = dr.rows.Err()
+	}
 	return false
 }
 
 func (dr *DataReader) Value() any {
-	return nil
+	return dr.value
 }
 
 func (dr *DataReader) Error() error {
-	return nil
+	return dr.err
 }
 
 type DataSource struct {
@@ -58,13 +88,14 @@ func (ds *DataSource) Close() error {
 }
 
 func (ds *DataSource) Query(query string) (query.DataReader, error) {
-	if _, err := ds.dbx.Exec(query); err != nil {
+	rows, err := ds.dbx.Queryx(query)
+	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
 	log.Info().Str("query", query).Msg("success executing SQL query")
 
-	return nil, nil
+	return &DataReader{rows, nil, nil}, nil
 }
 
 type DataSourceFactory struct{}

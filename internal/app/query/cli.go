@@ -64,7 +64,7 @@ func execute(cmd *cobra.Command, dataconnectorName string, querystr string) erro
 		return fmt.Errorf("no extractor found for database type")
 	}
 
-	driver := query.NewDriver(dataSourceFactory.New(u.URL.String()), nil)
+	driver := query.NewDriver(dataSourceFactory.New(u.URL.String()), infra.NewJSONWriter(cmd.OutOrStdout()))
 
 	if err := driver.Open(); err != nil {
 		return fmt.Errorf("%w", err)

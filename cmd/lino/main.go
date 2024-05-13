@@ -214,6 +214,7 @@ func initConfig() {
 	id.Inject(idStorageFile, relationStorage(), idExporter(), idJSONStorage(*os.Stdout))
 	pull.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pullDataSourceFactory(), pullRowExporterFactory(), pullRowReaderFactory(), pullKeyStoreFactory(), traceListner(os.Stderr))
 	push.Inject(dataconnectorStorage(), relationStorage(), tableStorage(), idStorageFactory(), pushDataDestinationFactory(), pushRowIteratorFactory(), pushRowExporterFactory(), pushTranslator(), pushObserver())
+	query.Inject(dataconnectorStorage(), queryDataSourceFactory())
 }
 
 func writeMetricsToFile(statsFile string, statsByte []byte) {

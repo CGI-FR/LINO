@@ -33,6 +33,7 @@ import (
 	"github.com/cgi-fr/lino/internal/app/id"
 	"github.com/cgi-fr/lino/internal/app/pull"
 	"github.com/cgi-fr/lino/internal/app/push"
+	"github.com/cgi-fr/lino/internal/app/query"
 	"github.com/cgi-fr/lino/internal/app/relation"
 	"github.com/cgi-fr/lino/internal/app/sequence"
 	"github.com/cgi-fr/lino/internal/app/table"
@@ -160,6 +161,7 @@ func init() {
 	rootCmd.AddCommand(push.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(http.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 	rootCmd.AddCommand(analyse.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
+	rootCmd.AddCommand(query.NewCommand("lino", os.Stderr, os.Stdout, os.Stdin))
 }
 
 func initConfig() {

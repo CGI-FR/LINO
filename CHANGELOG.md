@@ -16,7 +16,8 @@ Types of changes
 
 ## [3.0.0]
 
-- `Fixed` issue table or column names were not correctly matched in terms of case sensitivity (lowercase or uppercase), but command still can excute without returning any values.
+- `Changed` table or column names were not correctly matched in terms of case sensitivity (lowercase or uppercase) in table.yaml
+- `Added` new command `query` to execute any SQL query on any SQL datasource
 
 ## [2.8.0]
 

@@ -85,6 +85,9 @@ func getOptions(u *dburl.URL) map[string]string {
 
 	options := make(map[string]string, len(values))
 
+	// fix: we want the global timeout to be disabled, like it is for every other drivers
+	options["TIMEOUT"] = "0"
+
 	for key, vals := range values {
 		if len(vals) > 0 {
 			options[key] = vals[len(vals)-1]

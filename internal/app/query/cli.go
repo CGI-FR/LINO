@@ -3,7 +3,6 @@ package query
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/cgi-fr/lino/internal/app/urlbuilder"
 	infra "github.com/cgi-fr/lino/internal/infra/query"
@@ -28,22 +27,18 @@ func Inject(
 
 // NewCommand implements the cli analyse command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
-	var maxLifeTime time.Duration
-
 	cmd := &cobra.Command{
 		Use:     "query",
 		Short:   "Execute direct query",
 		Example: fmt.Sprintf("  %[1]s", fullName),
 		Args:    cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			if er := execute(cmd, args[0], args[1], maxLifeTime); er != nil {
+			if er := execute(cmd, args[0], args[1]); er != nil {
 				fmt.Fprintln(err, er.Error())
 				os.Exit(1)
 			}
 		},
 	}
-
-	cmd.Flags().DurationVarP(&maxLifeTime, "timeout", "t", 4*time.Minute, "sets the maximum amount of time a connection may be reused")
 
 	cmd.SetOut(out)
 	cmd.SetErr(err)
@@ -52,7 +47,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	return cmd
 }
 
-func execute(cmd *cobra.Command, dataconnectorName string, querystr string, maxLifeTime time.Duration) error {
+func execute(cmd *cobra.Command, dataconnectorName string, querystr string) error {
 	alias, e1 := dataconnector.Get(dataconnectorStorage, dataconnectorName)
 	if e1 != nil {
 		return e1
@@ -69,7 +64,7 @@ func execute(cmd *cobra.Command, dataconnectorName string, querystr string, maxL
 		return fmt.Errorf("no extractor found for database type")
 	}
 
-	driver := query.NewDriver(dataSourceFactory.New(u.URL.String(), maxLifeTime), infra.NewJSONWriter(cmd.OutOrStdout()))
+	driver := query.NewDriver(dataSourceFactory.New(u.URL.String()), infra.NewJSONWriter(cmd.OutOrStdout()))
 
 	if err := driver.Open(); err != nil {
 		return fmt.Errorf("%w", err)

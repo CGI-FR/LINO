@@ -2,7 +2,6 @@ package query
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/cgi-fr/lino/pkg/query"
 	"github.com/jmoiron/sqlx"
@@ -55,9 +54,8 @@ func (dr *DataReader) Error() error {
 }
 
 type DataSource struct {
-	url         string
-	dbx         *sqlx.DB
-	maxLifeTime time.Duration
+	url string
+	dbx *sqlx.DB
 }
 
 func (ds *DataSource) Open() error {
@@ -72,9 +70,6 @@ func (ds *DataSource) Open() error {
 	}
 
 	ds.dbx = sqlx.NewDb(db, u.UnaliasedDriver)
-
-	ds.dbx.SetConnMaxLifetime(ds.maxLifeTime)
-	ds.dbx.SetConnMaxIdleTime(ds.maxLifeTime)
 
 	err = ds.dbx.Ping()
 	if err != nil {
@@ -105,10 +100,9 @@ func (ds *DataSource) Query(query string) (query.DataReader, error) {
 
 type DataSourceFactory struct{}
 
-func (dsf DataSourceFactory) New(url string, maxLifeTime time.Duration) query.DataSource {
+func (dsf DataSourceFactory) New(url string) query.DataSource {
 	return &DataSource{
-		url:         url,
-		dbx:         nil,
-		maxLifeTime: maxLifeTime,
+		url: url,
+		dbx: nil,
 	}
 }

@@ -66,18 +66,32 @@ func GenOracleRaw(u *dburl.URL) (string, string, error) {
 
 func genJDBCOracle(u *dburl.URL) (string, string, error) {
 	if u.User == nil {
-		return go_ora.BuildJDBC("", "", u.Host, map[string]string{}), "", nil
+		return go_ora.BuildJDBC("", "", u.Host, getOptions(u)), "", nil
 	}
 
 	if un := u.User.Username(); len(un) > 0 {
 		if up, ok := u.User.Password(); ok {
-			return go_ora.BuildJDBC(u.User.Username(), up, u.Host, map[string]string{}), "", nil
+			return go_ora.BuildJDBC(u.User.Username(), up, u.Host, getOptions(u)), "", nil
 		} else {
-			return go_ora.BuildJDBC(u.User.Username(), "", u.Host, map[string]string{}), "", nil
+			return go_ora.BuildJDBC(u.User.Username(), "", u.Host, getOptions(u)), "", nil
 		}
 	}
 
-	return go_ora.BuildJDBC("", "", u.Host, map[string]string{}), "", nil
+	return go_ora.BuildJDBC("", "", u.Host, getOptions(u)), "", nil
+}
+
+func getOptions(u *dburl.URL) map[string]string {
+	values := u.Query()
+
+	options := make(map[string]string, len(values))
+
+	for key, vals := range values {
+		if len(vals) > 0 {
+			options[key] = vals[len(vals)-1]
+		}
+	}
+
+	return options
 }
 
 func init() {

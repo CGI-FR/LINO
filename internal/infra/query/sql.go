@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cgi-fr/lino/pkg/query"
 	"github.com/jmoiron/sqlx"
@@ -54,8 +55,9 @@ func (dr *DataReader) Error() error {
 }
 
 type DataSource struct {
-	url string
-	dbx *sqlx.DB
+	url         string
+	dbx         *sqlx.DB
+	maxLifeTime time.Duration
 }
 
 func (ds *DataSource) Open() error {
@@ -70,6 +72,8 @@ func (ds *DataSource) Open() error {
 	}
 
 	ds.dbx = sqlx.NewDb(db, u.UnaliasedDriver)
+
+	ds.dbx.SetConnMaxLifetime(ds.maxLifeTime)
 
 	err = ds.dbx.Ping()
 	if err != nil {
@@ -88,23 +92,22 @@ func (ds *DataSource) Close() error {
 }
 
 func (ds *DataSource) Query(query string) (query.DataReader, error) {
-	result, err := ds.dbx.Exec(query)
+	rows, err := ds.dbx.Queryx(query)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	if nbrows, err := result.RowsAffected(); err != nil {
-		log.Info().Str("query", query).Int64("rows", nbrows).Msg("success executing SQL query")
-	}
+	log.Info().Str("query", query).Msg("success executing SQL query")
 
-	return nil, nil
+	return &DataReader{rows, nil, nil}, nil
 }
 
 type DataSourceFactory struct{}
 
-func (dsf DataSourceFactory) New(url string) query.DataSource {
+func (dsf DataSourceFactory) New(url string, maxLifeTime time.Duration) query.DataSource {
 	return &DataSource{
-		url: url,
-		dbx: nil,
+		url:         url,
+		dbx:         nil,
+		maxLifeTime: maxLifeTime,
 	}
 }

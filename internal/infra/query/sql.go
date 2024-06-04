@@ -74,6 +74,7 @@ func (ds *DataSource) Open() error {
 	ds.dbx = sqlx.NewDb(db, u.UnaliasedDriver)
 
 	ds.dbx.SetConnMaxLifetime(ds.maxLifeTime)
+	ds.dbx.SetConnMaxIdleTime(ds.maxLifeTime)
 
 	err = ds.dbx.Ping()
 	if err != nil {

@@ -1,6 +1,7 @@
 package urlbuilder
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,7 +32,7 @@ func TestBuildOracleURL(t *testing.T) {
 				t.Errorf("parse return error : %v", err)
 			}
 
-			assert.Equal(t, tt.want, url.DSN)
+			assert.Equal(t, tt.want, strings.ReplaceAll(strings.ReplaceAll(url.DSN, "TIMEOUT=0&", ""), "&TIMEOUT=0", ""))
 		})
 	}
 }

@@ -88,14 +88,16 @@ func (ds *DataSource) Close() error {
 }
 
 func (ds *DataSource) Query(query string) (query.DataReader, error) {
-	rows, err := ds.dbx.Queryx(query)
+	result, err := ds.dbx.Exec(query)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	log.Info().Str("query", query).Msg("success executing SQL query")
+	if nbrows, err := result.RowsAffected(); err != nil {
+		log.Info().Str("query", query).Int64("rows", nbrows).Msg("success executing SQL query")
+	}
 
-	return &DataReader{rows, nil, nil}, nil
+	return nil, nil
 }
 
 type DataSourceFactory struct{}

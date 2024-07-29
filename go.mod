@@ -21,7 +21,7 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/schollz/progressbar/v3 v3.14.4
 	github.com/sijms/go-ora/v2 v2.8.19
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	github.com/xo/dburl v0.23.2
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d

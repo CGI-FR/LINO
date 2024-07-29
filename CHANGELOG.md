@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [3.0.2]
+
+- `Fixed` invalid length for DATE or NUMBER bind variable, bumping oracle driver to 2.8.19
+
 ## [3.0.1]
 
 - `Fixed` hidden global internal timeout of 240s with Oracle driver is now disabled by default

@@ -19,13 +19,13 @@ require (
 	github.com/microsoft/go-mssqldb v1.7.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.33.0
-	github.com/schollz/progressbar/v3 v3.14.4
+	github.com/schollz/progressbar/v3 v3.14.5
 	github.com/sijms/go-ora/v2 v2.8.19
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	github.com/xo/dburl v0.23.1
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	golang.org/x/term v0.20.0
+	golang.org/x/term v0.22.0
 	gopkg.in/yaml.v3 v3.0.1
 	nhooyr.io/websocket v1.8.11
 )
@@ -48,7 +48,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

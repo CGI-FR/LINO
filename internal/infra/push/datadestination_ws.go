@@ -27,14 +27,14 @@ import (
 	"time"
 
 	"github.com/cgi-fr/lino/pkg/push"
+	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
 	"github.com/rs/zerolog/log"
-	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wsjson"
 )
 
 type Action string
 
-//  "pull_open", "push_open", "push_data", "push_commit", "push_close"
+// "pull_open", "push_open", "push_data", "push_commit", "push_close"
 const (
 	PushOpen   Action = "push_open"
 	PushData   Action = "push_data"

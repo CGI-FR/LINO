@@ -27,8 +27,8 @@ import (
 	"time"
 
 	"github.com/cgi-fr/lino/pkg/relation"
-	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wsjson"
+	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
 )
 
 type action string

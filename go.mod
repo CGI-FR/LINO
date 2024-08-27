@@ -8,6 +8,7 @@ require (
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/cgi-fr/jsonline v0.5.0
 	github.com/cgi-fr/rimo v0.4.0
+	github.com/coder/websocket v1.8.12
 	github.com/docker/docker-credential-helpers v0.8.2
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/gorilla/mux v1.8.1
@@ -27,7 +28,6 @@ require (
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/term v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
-	nhooyr.io/websocket v1.8.11
 )
 
 require (

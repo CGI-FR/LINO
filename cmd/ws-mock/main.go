@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wsjson"
+	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
 )
 
 func main() {
@@ -290,7 +290,6 @@ func relations(ctx context.Context, c *websocket.Conn, v map[string]interface{})
 		"error": nil,
 		"next":  false,
 		"payload": []map[string]interface{}{
-
 			{
 				"name": "FK_EMP_PHOTO",
 				"parent": map[string]interface{}{

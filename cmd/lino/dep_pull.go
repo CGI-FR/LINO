@@ -38,9 +38,15 @@ func pullDataSourceFactory() map[string]domain.DataSourceFactory {
 	}
 }
 
-func pullRowExporterFactory() func(file io.Writer) domain.RowExporter {
-	return func(file io.Writer) domain.RowExporter {
-		return infra.NewJSONRowExporter(file)
+func pullRowExporterFactory(format string) func(file io.Writer) domain.RowExporter {
+	if format == "parquet" {
+		return func(file io.Writer) domain.RowExporter {
+			return infra.NewParquetRowExporter(file)
+		}
+	} else {
+		return func(file io.Writer) domain.RowExporter {
+			return infra.NewJSONRowExporter(file)
+		}
 	}
 }
 

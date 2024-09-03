@@ -113,6 +113,18 @@ func TestSimple(t *testing.T) {
 	LoadAndRunTest(t, "simple.yaml")
 }
 
+func TestSimpleSelect(t *testing.T) {
+	t.Parallel()
+
+	LoadAndRunTest(t, "simple_select.yaml")
+}
+
+func SkipTestKeyNotSelected(t *testing.T) {
+	t.Parallel()
+
+	LoadAndRunTest(t, "key_not_selected.yaml")
+}
+
 func TestSimpleWithExport(t *testing.T) {
 	t.Parallel()
 

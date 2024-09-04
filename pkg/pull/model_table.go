@@ -127,3 +127,31 @@ func (t *Table) addMissingColumns(columnNames ...string) {
 		}
 	}
 }
+
+func (t *Table) selectColumns(columnNames ...string) {
+	if len(columnNames) == 0 {
+		return
+	}
+
+	columns := []Column{}
+
+	if len(t.Columns) == 0 {
+		for _, columnName := range columnNames {
+			columns = append(columns, Column{Name: columnName})
+		}
+	} else {
+		for _, column := range t.Columns {
+			for _, columnName := range columnNames {
+				if column.Name == columnName {
+					columns = append(columns, column)
+				}
+			}
+		}
+	}
+
+	t.Columns = columns
+	log.Info().
+		Strs("columns", columnNames).
+		Interface("table", t.Name).
+		Msg("select only columns defined")
+}

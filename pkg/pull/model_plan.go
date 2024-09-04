@@ -28,6 +28,7 @@ func (plan Plan) buildGraph() Graph {
 	cached := map[TableName]bool{}
 
 	for _, relation := range plan.Relations {
+		relation.Foreign.Table.selectColumns(relation.Select...)
 		relation.Local.Table.addMissingColumns(relation.Local.Keys...)
 
 		cached[relation.Local.Table.Name] = true
@@ -37,12 +38,12 @@ func (plan Plan) buildGraph() Graph {
 
 		if len(relation.Foreign.Table.Columns) > 0 {
 			for _, follow := range relations[relation.Foreign.Table.Name] {
+				relation.Local.Table.selectColumns(follow.Select...)
 				relation.Foreign.Table.addMissingColumns(follow.Local.Keys...)
 			}
 		}
 
-		relationsWithMissingColumns[relation.Local.Table.Name] =
-			append(relationsWithMissingColumns[relation.Local.Table.Name], relation)
+		relationsWithMissingColumns[relation.Local.Table.Name] = append(relationsWithMissingColumns[relation.Local.Table.Name], relation)
 	}
 
 	return Graph{Relations: relationsWithMissingColumns, Components: plan.Components, Cached: cached}

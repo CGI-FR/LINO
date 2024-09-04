@@ -216,9 +216,7 @@ func (s *Step) follow(relation Relation, out ExportedRow, currentStep uint) erro
 
 	filter := createFilter(relation, out)
 
-	table := selectColumnTable(relation.Foreign.Table, relation.Select)
-
-	rows, err := s.p.datasource.Read(table, Filter{Limit: 0, Values: filter, Where: relation.Where})
+	rows, err := s.p.datasource.Read(relation.Foreign.Table, Filter{Limit: 0, Values: filter, Where: relation.Where})
 	IncFiltersCount()
 
 	if err != nil {
@@ -246,35 +244,6 @@ func (s *Step) follow(relation Relation, out ExportedRow, currentStep uint) erro
 	}
 
 	return nil
-}
-
-func selectColumnTable(table Table, selectedColumn []string) Table {
-	if len(selectedColumn) == 0 {
-		return table
-	}
-
-	columns := []Column{}
-
-	if len(table.Columns) == 0 {
-		for _, columnName := range selectedColumn {
-			columns = append(columns, Column{Name: columnName})
-		}
-	} else {
-		for _, column := range table.Columns {
-			for _, columnName := range selectedColumn {
-				if column.Name == columnName {
-					columns = append(columns, column)
-				}
-			}
-		}
-	}
-
-	return Table{
-		Name:       table.Name,
-		Keys:       table.Keys,
-		Columns:    columns,
-		ExportMode: table.ExportMode,
-	}
 }
 
 func (s *Step) removeDuplicates(table Table, rows ...Row) []ExportedRow {

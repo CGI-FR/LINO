@@ -117,7 +117,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, start, e2 := getPullerPlan(idStorageFactory(table, ingressDescriptor))
+			plan, start, startSelect, e2 := getPullerPlan(idStorageFactory(table, ingressDescriptor))
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(1)
@@ -175,7 +175,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			}
 
 			puller := pull.NewPullerParallel(plan, datasource, pullExporterFactory(out), tracer, parallel)
-			if e3 := puller.Pull(start, filter, filters, filtersEx); e3 != nil {
+			if e3 := puller.Pull(start, filter, startSelect, filters, filtersEx); e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the pull command")
 				os.Exit(1)
 			}
@@ -222,26 +222,26 @@ func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, er
 	return datasourceFactory.New(u.URL.String(), alias.Schema), nil
 }
 
-func getPullerPlan(idStorage id.Storage) (pull.Plan, pull.Table, error) {
-	ep, err1 := id.GetPullerPlan(idStorage)
+func getPullerPlan(idStorage id.Storage) (pull.Plan, pull.Table, []string, error) {
+	pp, err1 := id.GetPullerPlan(idStorage)
 	if err1 != nil {
-		return pull.Plan{}, pull.Table{}, err1
+		return pull.Plan{}, pull.Table{}, []string{}, err1
 	}
 
 	relations, err2 := relStorage.List()
 	if err2 != nil {
-		return pull.Plan{}, pull.Table{}, err2
+		return pull.Plan{}, pull.Table{}, []string{}, err2
 	}
 
 	tables, err3 := tabStorage.List()
 	if err3 != nil {
-		return pull.Plan{}, pull.Table{}, err3
+		return pull.Plan{}, pull.Table{}, []string{}, err3
 	}
 
-	builder := newBuilder(ep, relations, tables)
+	builder := newBuilder(pp, relations, tables)
 	plan, startTable, err4 := builder.plan()
 	if err4 != nil {
-		return pull.Plan{}, pull.Table{}, err4
+		return pull.Plan{}, pull.Table{}, []string{}, err4
 	}
 
 	// Check startTable existe in table.yaml
@@ -256,8 +256,8 @@ func getPullerPlan(idStorage id.Storage) (pull.Plan, pull.Table, error) {
 
 	if !tableExiste {
 		err5 := fmt.Errorf("Table '%s' does not exist in table.yaml", string(startTable.Name))
-		return pull.Plan{}, pull.Table{}, err5
+		return pull.Plan{}, pull.Table{}, []string{}, err5
 	}
 
-	return plan, startTable, nil
+	return plan, startTable, pp.Select(), nil
 }

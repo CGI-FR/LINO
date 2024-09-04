@@ -124,7 +124,8 @@ func (b builder) buildRelation(rel id.IngressRelation) ([]pull.Relation, error) 
 					Table: b.getTable(rel.Child().Name()),
 					Keys:  relyaml.Child.Keys,
 				},
-				Where: rel.WhereChild(),
+				Where:  rel.WhereChild(),
+				Select: rel.SelectChild(),
 			}
 		}
 		b.exrmap[name] = exrel
@@ -146,7 +147,8 @@ func (b builder) buildRelation(rel id.IngressRelation) ([]pull.Relation, error) 
 					Table: b.getTable(rel.Child().Name()),
 					Keys:  relyaml.Child.Keys,
 				},
-				Where: rel.WhereParent(),
+				Where:  rel.WhereParent(),
+				Select: rel.SelectParent(),
 			}
 		}
 		b.exrmap[name] = exrel

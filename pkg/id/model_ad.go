@@ -28,20 +28,40 @@ type idrelation struct {
 	lookUpChild  bool
 	whereParent  string
 	whereChild   string
+	selectParent []string
+	selectChild  []string
 }
 
 // NewIngressRelation initialize a new IngressRelation object
-func NewIngressRelation(rel Relation, lookUpParent bool, lookUpChild bool, whereParent string, whereChild string) IngressRelation {
-	return idrelation{Relation: rel, lookUpParent: lookUpParent, lookUpChild: lookUpChild, whereParent: whereParent, whereChild: whereChild}
+func NewIngressRelation(
+	rel Relation,
+	lookUpParent bool,
+	lookUpChild bool,
+	whereParent string,
+	whereChild string,
+	selectParent []string,
+	selectChild []string,
+) IngressRelation {
+	return idrelation{
+		Relation:     rel,
+		lookUpParent: lookUpParent,
+		lookUpChild:  lookUpChild,
+		whereParent:  whereParent,
+		whereChild:   whereChild,
+		selectParent: selectParent,
+		selectChild:  selectChild,
+	}
 }
 
-func (r idrelation) Name() string        { return r.Relation.Name() }
-func (r idrelation) Parent() Table       { return r.Relation.Parent() }
-func (r idrelation) Child() Table        { return r.Relation.Child() }
-func (r idrelation) LookUpParent() bool  { return r.lookUpParent }
-func (r idrelation) LookUpChild() bool   { return r.lookUpChild }
-func (r idrelation) WhereParent() string { return r.whereParent }
-func (r idrelation) WhereChild() string  { return r.whereChild }
+func (r idrelation) Name() string           { return r.Relation.Name() }
+func (r idrelation) Parent() Table          { return r.Relation.Parent() }
+func (r idrelation) Child() Table           { return r.Relation.Child() }
+func (r idrelation) LookUpParent() bool     { return r.lookUpParent }
+func (r idrelation) WhereParent() string    { return r.whereParent }
+func (r idrelation) SelectParent() []string { return r.selectParent }
+func (r idrelation) LookUpChild() bool      { return r.lookUpChild }
+func (r idrelation) WhereChild() string     { return r.whereChild }
+func (r idrelation) SelectChild() []string  { return r.selectChild }
 func (r idrelation) String() string {
 	switch {
 	case r.LookUpChild() && r.LookUpParent():
@@ -89,15 +109,19 @@ func (l idrelationList) String() string {
 }
 
 // NewIngressDescriptor initialize a new IngressDescriptor object
-func NewIngressDescriptor(start Table, relations IngressRelationList) IngressDescriptor {
-	return id{startTable: table{name: start.Name()}, relations: relations}
+func NewIngressDescriptor(start Table, selectColumns []string, relations IngressRelationList) IngressDescriptor {
+	return id{startTable: table{name: start.Name()}, selectColumns: selectColumns, relations: relations}
 }
 
 type id struct {
-	startTable table
-	relations  IngressRelationList
+	startTable    table
+	selectColumns []string
+	relations     IngressRelationList
 }
 
 func (id id) StartTable() Table              { return id.startTable }
+func (id id) Select() []string               { return id.selectColumns }
 func (id id) Relations() IngressRelationList { return id.relations }
-func (id id) String() string                 { return fmt.Sprintf("%v (%v)", id.startTable, id.relations) }
+func (id id) String() string {
+	return fmt.Sprintf("%v [%v] (%v)", id.startTable, id.selectColumns, id.relations)
+}

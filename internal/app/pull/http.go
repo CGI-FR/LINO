@@ -126,7 +126,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 			return
 		}
 
-		plan, start, e2 := getPullerPlan(idStorageFactory(query.Get("table"), ingressDescriptor))
+		plan, start, startSelect, e2 := getPullerPlan(idStorageFactory(query.Get("table"), ingressDescriptor))
 		if e2 != nil {
 			log.Error().Err(e2).Msg("")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -141,7 +141,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 		pullExporter := pullExporterFactory(w)
 		puller := pull.NewPuller(plan, datasource, pullExporter, pull.NoTraceListener{})
 
-		e3 := puller.Pull(start, pull.Filter{Limit: limit, Values: pull.Row{}, Where: where, Distinct: distinct}, nil, nil)
+		e3 := puller.Pull(start, pull.Filter{Limit: limit, Values: pull.Row{}, Where: where, Distinct: distinct}, startSelect, nil, nil)
 		if e3 != nil {
 			log.Error().Err(e3).Msg("")
 			w.WriteHeader(http.StatusInternalServerError)

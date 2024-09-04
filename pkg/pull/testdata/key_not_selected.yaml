@@ -30,7 +30,7 @@ plan:
   relations:
     - name: rel1
       cardinality: true # = many
-      select: [id_actor] # select only id column
+      select: [id_actor] # select only id_actor column
       local:
         table: *actors
         keys: [id]
@@ -39,6 +39,7 @@ plan:
         keys: [id_actor]
     - name: rel2
       cardinality: false # = single
+      select: [id] # select only id column
       local:
         table: *films_actors
         keys: [id_film]
@@ -52,14 +53,14 @@ executions:
       values: { "first_name": "Harrison" }
       where: ""
     result:
-      - '{"first_name":"Harrison","id":0,"last_name":"Ford","rel1":[{"id_actor":0,"id_film":0,"rel2":{"id":0}},{"id_actor":0,"id_film":1,"rel2":{"id":1}},{"id_actor":0,"id_film":2,"rel2":{"id":2}}]}'
+      - '{"first_name":"Harrison","id":0,"last_name":"Ford","rel1":[{"id_actor":0,"rel2":{"id":0}},{"id_actor":0,"rel2":{"id":1}},{"id_actor":0,"rel2":{"id":2}}]}'
   - start: *actors
     filter:
       limit: 0
       values: { "last_name": "Fisher" }
       where: ""
     result:
-      - '{"first_name":"Carrie","id":1,"last_name":"Fisher","rel1":[{"id_actor":1,"id_film":0,"rel2":{"id":0}},{"id_actor":1,"id_film":1,"rel2":{"id":1}}]}'
+      - '{"first_name":"Carrie","id":1,"last_name":"Fisher","rel1":[{"id_actor":1,"rel2":{"id":0}},{"id_actor":1,"rel2":{"id":1}}]}'
   - start: *actors
     filter:
       limit: 0

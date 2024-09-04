@@ -105,6 +105,7 @@ type PullerPlan interface {
 	Relations() IngressRelationList
 	Tables() TableList
 	String() string
+	Select() []string
 }
 
 // Error is the error type returned by the domain

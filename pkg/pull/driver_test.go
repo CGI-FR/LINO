@@ -32,6 +32,7 @@ import (
 type Execution struct {
 	Start  pull.Table
 	Filter pull.Filter
+	Select []string
 	Result []string
 }
 
@@ -73,7 +74,7 @@ func RunTest(t *testing.T, test *Test) {
 
 	for _, execution := range test.Executions {
 		collector.Reset()
-		assert.NoError(t, puller.Pull(execution.Start, execution.Filter, nil, nil))
+		assert.NoError(t, puller.Pull(execution.Start, execution.Filter, execution.Select, nil, nil))
 		assert.Len(t, collector.Result, len(execution.Result))
 
 		for i := 0; i < len(execution.Result); i++ {
@@ -93,7 +94,7 @@ func RunBench(b *testing.B, test *Test) {
 
 	for _, execution := range test.Executions {
 		collector.Reset()
-		assert.NoError(b, puller.Pull(execution.Start, execution.Filter, nil, nil))
+		assert.NoError(b, puller.Pull(execution.Start, execution.Filter, execution.Select, nil, nil))
 		assert.Len(b, collector.Result, len(execution.Result))
 	}
 }
@@ -129,6 +130,12 @@ func TestSimpleWithExport(t *testing.T) {
 	t.Parallel()
 
 	LoadAndRunTest(t, "simple_export.yaml")
+}
+
+func TestSelectOverrideColumns(t *testing.T) {
+	t.Parallel()
+
+	LoadAndRunTest(t, "select_override_columns.yaml")
 }
 
 func TestCycle(t *testing.T) {

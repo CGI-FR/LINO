@@ -325,7 +325,7 @@ func GetPullerPlan(storage Storage) (PullerPlan, *Error) {
 		log.Warn().Msg(err.Error())
 	}
 
-	return NewPullerPlan(steps, g.relations, g.tables), nil
+	return NewPullerPlan(steps, g.relations, g.tables, id.Select()), nil
 }
 
 // Export the puller plan.

@@ -149,6 +149,16 @@ func (t *Table) selectColumns(columnNames ...string) {
 		}
 	}
 
+	// there are no columns to override
+	if len(columns) == 0 {
+		log.Info().
+			Strs("select", columnNames).
+			Interface("columns", t.Columns).
+			Interface("table", t.Name).
+			Msg("there are no columns to override")
+		return
+	}
+
 	t.Columns = columns
 	log.Info().
 		Strs("columns", columnNames).

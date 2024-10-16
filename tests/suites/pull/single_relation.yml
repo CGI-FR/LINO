@@ -21,7 +21,7 @@ testcases:
     steps:
       # Clean working directory
       - script: rm -f *
-      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino dataconnector add source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
       - script: lino relation extract source
       - script: lino table extract source --only-tables
       - script: lino id create store
@@ -197,7 +197,7 @@ testcases:
       - script: lino pull source --limit 1
         assertions:
           - result.code ShouldEqual 0
-          - result.systemout ShouldEqual {"address_id":1,"last_update":"2006-02-15T09:57:12Z","manager_staff_id":1,"store_id":1,"staff_store_id_fkey":[{"last_name":"Hillyer","first_name":"Mike","email":"Mike.Hillyer@sakilastaff.com"}]}
+          - result.systemout ShouldEqual {"store_id":1,"manager_staff_id":1,"address_id":1,"last_update":"2006-02-15T09:57:12Z","staff_store_id_fkey":[{"first_name":"Mike","last_name":"Hillyer","email":"Mike.Hillyer@sakilastaff.com"}]}
           - result.systemerr ShouldBeEmpty
       - script: lino id set-child-lookup staff_store_id_fkey false
 

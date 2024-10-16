@@ -181,7 +181,6 @@ testcases:
       - script: lino dataconnector add source --schema public postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
       - script: lino relation extract source
       - script: lino table extract source --only-tables
-      - script: lino id create customer
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
       - script: lino -v 5 pull source --limit 1
         assertions:
@@ -191,6 +190,7 @@ testcases:
 
   - name: pull with custom select columns on child in ingress descriptor
     steps:
+      - script: lino id create store
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
       - script: lino id set-child-lookup staff_store_id_fkey true
       - script: lino id set-child-select staff_store_id_fkey last_name first_name email
@@ -203,6 +203,7 @@ testcases:
 
   - name: pull with custom select columns on parent in ingress descriptor
     steps:
+      - script: lino id create store
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
       - script: lino id set-parent-lookup store_address_id_fkey true
       - script: lino id set-parent-select store_address_id_fkey district address

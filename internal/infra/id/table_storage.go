@@ -38,5 +38,5 @@ func (s *TableStorage) Store(adef id.IngressDescriptor) *id.Error {
 
 // Read create new Ingress Descriptor with table as start table without relations
 func (s *TableStorage) Read() (id.IngressDescriptor, *id.Error) {
-	return id.NewIngressDescriptor(s.table, id.NewIngressRelationList([]id.IngressRelation{})), nil
+	return id.NewIngressDescriptor(s.table, []string{}, id.NewIngressRelationList([]id.IngressRelation{})), nil
 }

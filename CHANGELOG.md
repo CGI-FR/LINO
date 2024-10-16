@@ -14,6 +14,11 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [3.1.0]
+
+- `Added` possibility to filter columns via `select` property in ingress descriptors
+- `Added` commands `set-parent-select` and `set-child-select` to `lino id`
+
 ## [3.0.2]
 
 - `Fixed` invalid length for DATE or NUMBER bind variable, bumping oracle driver to 2.8.19

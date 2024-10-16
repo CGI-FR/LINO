@@ -76,7 +76,7 @@ LOOK_FOR_MATCHING_ROWS:
 		if len(source.Columns) == 0 {
 			result = append(result, row)
 		} else {
-			copyr := make(Row, len(row))
+			copyr := make(Row, len(source.Columns))
 			for _, columns := range source.Columns {
 				copyr[columns.Name] = row[columns.Name]
 			}

@@ -51,9 +51,11 @@ type RelationList interface {
 type IngressRelation interface {
 	Relation
 	LookUpChild() bool
-	LookUpParent() bool
 	WhereChild() string
+	SelectChild() []string
+	LookUpParent() bool
 	WhereParent() string
+	SelectParent() []string
 }
 
 // IngressRelationList involved in an puller plan.
@@ -67,6 +69,7 @@ type IngressRelationList interface {
 // IngressDescriptor from which the puller plan will be computed.
 type IngressDescriptor interface {
 	StartTable() Table
+	Select() []string
 	Relations() IngressRelationList
 	String() string
 }
@@ -102,6 +105,7 @@ type PullerPlan interface {
 	Relations() IngressRelationList
 	Tables() TableList
 	String() string
+	Select() []string
 }
 
 // Error is the error type returned by the domain

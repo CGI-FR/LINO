@@ -61,21 +61,23 @@ func (s step) String() string {
 }
 
 type pullerPlan struct {
-	len       uint
-	slice     []Step
-	relations IngressRelationList
-	tables    TableList
+	len         uint
+	slice       []Step
+	relations   IngressRelationList
+	tables      TableList
+	startSelect []string
 }
 
 // NewPullerPlan initialize a new PullerPlan object
-func NewPullerPlan(steps []Step, relations IngressRelationList, tables TableList) PullerPlan {
-	return pullerPlan{uint(len(steps)), steps, relations, tables}
+func NewPullerPlan(steps []Step, relations IngressRelationList, tables TableList, startSelect []string) PullerPlan {
+	return pullerPlan{uint(len(steps)), steps, relations, tables, startSelect}
 }
 
 func (l pullerPlan) Len() uint                      { return l.len }
 func (l pullerPlan) Step(idx uint) Step             { return l.slice[idx] }
 func (l pullerPlan) Relations() IngressRelationList { return l.relations }
 func (l pullerPlan) Tables() TableList              { return l.tables }
+func (l pullerPlan) Select() []string               { return l.startSelect }
 func (l pullerPlan) String() string {
 	switch l.len {
 	case 0:

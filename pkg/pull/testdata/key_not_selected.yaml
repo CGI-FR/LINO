@@ -1,0 +1,69 @@
+tables:
+  actors: &actors
+    name: actors
+    keys: [id]
+  films_actors: &films_actors
+    name: films_actors
+    keys: [id_film, id_actor]
+  films: &films
+    name: films
+    keys: [id]
+dataset:
+  actors:
+    - { "id": 0, "first_name": "Harrison", "last_name": "Ford" }
+    - { "id": 1, "first_name": "Carrie", "last_name": "Fisher" }
+  films_actors:
+    - { "id_film": 0, "id_actor": 0 }
+    - { "id_film": 0, "id_actor": 1 }
+    - { "id_film": 1, "id_actor": 0 }
+    - { "id_film": 1, "id_actor": 1 }
+    - { "id_film": 2, "id_actor": 0 }
+  films:
+    - { "id": 0, "title": "Star Wars: Episode IV – A New Hope" }
+    - { "id": 1, "title": "Star Wars : Episode V – The Empire Strikes Back" }
+    - { "id": 2, "title": "Indiana Jones and the Temple of Doom" }
+plan:
+  components:
+    actors: 0
+    films_actors: 1
+    films: 2
+  relations:
+    - name: rel1
+      cardinality: true # = many
+      select: [id_actor] # select only id_actor column
+      local:
+        table: *actors
+        keys: [id]
+      foreign:
+        table: *films_actors
+        keys: [id_actor]
+    - name: rel2
+      cardinality: false # = single
+      select: [id] # select only id column
+      local:
+        table: *films_actors
+        keys: [id_film]
+      foreign:
+        table: *films
+        keys: [id]
+executions:
+  - start: *actors
+    filter:
+      limit: 0
+      values: { "first_name": "Harrison" }
+      where: ""
+    result:
+      - '{"first_name":"Harrison","id":0,"last_name":"Ford","rel1":[{"id_actor":0,"rel2":{"id":0}},{"id_actor":0,"rel2":{"id":1}},{"id_actor":0,"rel2":{"id":2}}]}'
+  - start: *actors
+    filter:
+      limit: 0
+      values: { "last_name": "Fisher" }
+      where: ""
+    result:
+      - '{"first_name":"Carrie","id":1,"last_name":"Fisher","rel1":[{"id_actor":1,"rel2":{"id":0}},{"id_actor":1,"rel2":{"id":1}}]}'
+  - start: *actors
+    filter:
+      limit: 0
+      values: { "last_name": "Reeves" }
+      where: ""
+    result: []

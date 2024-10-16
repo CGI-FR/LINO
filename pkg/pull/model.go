@@ -72,6 +72,7 @@ type Relation struct {
 	Local       RelationTip
 	Foreign     RelationTip
 	Where       string
+	Select      []string
 }
 
 type RelationSet []Relation

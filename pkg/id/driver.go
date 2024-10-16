@@ -204,7 +204,7 @@ func SetChildSelect(relation string, columns []string, storage Storage) *Error {
 	for i := uint(0); i < id.Relations().Len(); i++ {
 		rel := id.Relations().Relation(i)
 		if rel.Name() == relation {
-			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), rel.WhereParent(), rel.WhereChild(), rel.SelectParent(), rel.SelectChild())
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), rel.WhereParent(), rel.WhereChild(), rel.SelectParent(), columns)
 		}
 		relations[i] = rel
 	}
@@ -264,7 +264,7 @@ func SetParentSelect(relation string, columns []string, storage Storage) *Error 
 	for i := uint(0); i < id.Relations().Len(); i++ {
 		rel := id.Relations().Relation(i)
 		if rel.Name() == relation {
-			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), rel.WhereParent(), rel.WhereChild(), rel.SelectParent(), rel.SelectChild())
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), rel.WhereParent(), rel.WhereChild(), columns, rel.SelectChild())
 		}
 		relations[i] = rel
 	}

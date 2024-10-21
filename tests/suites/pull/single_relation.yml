@@ -178,9 +178,10 @@ testcases:
 
     steps:
       - script: rm -f *
-      - script: lino dataconnector add source --schema public postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino dataconnector add source --schema public 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
       - script: lino relation extract source
       - script: lino table extract source --only-tables
+      - script: lino id create customer
       - script: sed -i "s/true/false/g" ingress-descriptor.yaml
       - script: lino -v 5 pull source --limit 1
         assertions:

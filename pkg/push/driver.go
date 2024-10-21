@@ -180,10 +180,11 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, tra
 	}
 
 	// remove not imported values from frow
-	columns := table.Columns()
-	for i := uint(0); i < columns.Len(); i++ {
-		if columns.Column(i).Import() == "no" {
-			delete(frow, columns.Column(i).Name())
+	if columns := table.Columns(); columns != nil {
+		for i := uint(0); i < columns.Len(); i++ {
+			if columns.Column(i).Import() == "no" {
+				delete(frow, columns.Column(i).Name())
+			}
 		}
 	}
 

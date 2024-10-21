@@ -125,3 +125,25 @@ testcases:
           - result.code ShouldEqual 0
           - result.systemout ShouldBeEmpty
           - result.systemerr ShouldBeEmpty
+
+  - name: import no
+    steps:
+      - script: lino table extract source --only-tables
+      - script: lino pull source --table customer --limit 0 | lino push truncate dest --table customer
+      - script: |-
+          cat  > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: customer
+              keys:
+                - customer_id
+              columns:
+                - name: "customer_id"
+                  import: "no"
+                - name: "first_name"
+          EOF
+      - script: lino pull source --table customer --filter customer_id=1 | lino push update dest --table customer -vdebug
+        assertions:
+          - result.systemerr ShoulContainsSubstring UPDATE customer SET first_name=$1 WHERE customer_id=$2
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty

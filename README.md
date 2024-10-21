@@ -267,6 +267,8 @@ To modify the `ingress-descriptor.yml`, some commands can be used instead of edi
 - `lino id set-parent-lookup <relation name> <true or false>` : modify the `lookup` property of the parent object
 - `lino id set-child-where <relation name> <where clause>` : modify the `where` property of the child object
 - `lino id set-parent-where <relation name> <where clause>` : modify the `where` property of the parent object
+- `lino id set-child-select <relation name> <column1> <column2> ...` : modify the `select` property of the child object
+- `lino id set-parent-select <relation name> <column1> <column2> ...` : modify the `select` property of the parent object
 - `lino id set-start-table <table name>` : modify the `startTable` property of the ingress descriptor
 
 Example:

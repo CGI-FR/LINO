@@ -24,6 +24,7 @@ func (g Graph) addMissingColumns(t Table) Table {
 
 	if len(t.Columns) > 0 {
 		for _, relation := range g.Relations[t.Name] {
+			t.selectColumns(relation.Select...)
 			t.addMissingColumns(relation.Local.Keys...)
 		}
 	}

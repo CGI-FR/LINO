@@ -34,6 +34,7 @@ type YAMLStructure struct {
 // YAMLIngressDescriptor defines how to store an ingress descriptor in YAML format.
 type YAMLIngressDescriptor struct {
 	StartTable string         `yaml:"startTable"`
+	Select     []string       `yaml:"select"`
 	Relations  []YAMLRelation `yaml:"relations"`
 }
 
@@ -46,9 +47,10 @@ type YAMLRelation struct {
 
 // YAMLTable defines how to store a table in YAML format.
 type YAMLTable struct {
-	Name   string `yaml:"name"`
-	Lookup bool   `yaml:"lookup"`
-	Where  string `yaml:"where,omitempty"`
+	Name   string   `yaml:"name"`
+	Lookup bool     `yaml:"lookup"`
+	Where  string   `yaml:"where,omitempty"`
+	Select []string `yaml:"select,omitempty"`
 }
 
 // YAMLStorage provides storage in a local YAML file
@@ -73,13 +75,14 @@ func (s *YAMLStorage) Store(id id.IngressDescriptor) *id.Error {
 		relation := list.Relation(i)
 		relations = append(relations, YAMLRelation{
 			Name:   relation.Name(),
-			Parent: YAMLTable{Name: relation.Parent().Name(), Lookup: relation.LookUpParent(), Where: relation.WhereParent()},
-			Child:  YAMLTable{Name: relation.Child().Name(), Lookup: relation.LookUpChild(), Where: relation.WhereChild()},
+			Parent: YAMLTable{Name: relation.Parent().Name(), Lookup: relation.LookUpParent(), Where: relation.WhereParent(), Select: relation.SelectParent()},
+			Child:  YAMLTable{Name: relation.Child().Name(), Lookup: relation.LookUpChild(), Where: relation.WhereChild(), Select: relation.SelectChild()},
 		})
 	}
 
 	structure.IngressDescriptor = YAMLIngressDescriptor{
 		StartTable: id.StartTable().Name(),
+		Select:     id.Select(),
 		Relations:  relations,
 	}
 
@@ -107,11 +110,13 @@ func (s *YAMLStorage) Read() (id.IngressDescriptor, *id.Error) {
 					id.NewTable(relation.Child.Name),
 				),
 				relation.Parent.Lookup, relation.Child.Lookup,
-				relation.Parent.Where, relation.Child.Where),
+				relation.Parent.Where, relation.Child.Where,
+				relation.Parent.Select, relation.Child.Select,
+			),
 		)
 	}
 
-	return id.NewIngressDescriptor(id.NewTable(structure.IngressDescriptor.StartTable), id.NewIngressRelationList(relations)), nil
+	return id.NewIngressDescriptor(id.NewTable(structure.IngressDescriptor.StartTable), structure.IngressDescriptor.Select, id.NewIngressRelationList(relations)), nil
 }
 
 func writeFile(structure *YAMLStructure, filename string) *id.Error {

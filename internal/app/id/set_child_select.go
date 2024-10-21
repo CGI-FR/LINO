@@ -21,37 +21,29 @@ import (
 	"fmt"
 	"os"
 
-	infra "github.com/cgi-fr/lino/internal/infra/id"
 	"github.com/cgi-fr/lino/pkg/id"
 	"github.com/spf13/cobra"
 )
 
-// newCreateCommand implements the cli id create command
-func newCreateCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
+// newSetChildSelectCommand implements the cli id set-child-select command
+func newSetChildSelectCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create [Start table]",
-		Short:   "Create ingress descriptor",
+		Use:     "set-child-select [relation] [column1] [column2] [column3] ...",
+		Short:   "set child select attribut for relation [relation] in ingress descriptor",
 		Long:    "",
-		Example: fmt.Sprintf("  %[1]s id create public.customer", fullName),
-		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("  %[1]s id set-child-select public.store store_id name", fullName),
+		Args:    cobra.MinimumNArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			table := args[0]
+			relation := args[0]
+			selectColumns := args[1:]
 
-			relations, e1 := relStorage.List()
-			if e1 != nil {
-				fmt.Fprintln(err, e1.Description)
-				os.Exit(1)
-			}
-
-			reader := infra.NewRelationReader(relations)
-
-			e := id.Create(table, []string{}, reader, idStorageFactory(ingressDescriptor))
+			e := id.SetChildSelect(relation, selectColumns, idStorageFactory(ingressDescriptor))
 			if e != nil {
 				fmt.Fprintln(err, e.Description)
 				os.Exit(1)
 			}
 
-			fmt.Fprintln(out, "successfully created ingress descriptor")
+			fmt.Fprintf(out, "successfully update relation %s in ingress descriptor\n", relation)
 		},
 	}
 	cmd.SetOut(out)

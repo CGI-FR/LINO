@@ -24,7 +24,7 @@ import (
 )
 
 // Create and store ingress descriptor for the given start table and relation set.
-func Create(startTable string, relReader RelationReader, storage Storage) *Error {
+func Create(startTable string, selectColumns []string, relReader RelationReader, storage Storage) *Error {
 	relations, err := relReader.Read()
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func Create(startTable string, relReader RelationReader, storage Storage) *Error
 	ingressRels := []IngressRelation{}
 	for i := uint(0); i < relations.Len(); i++ {
 		rel := relations.Relation(i)
-		ingressRels = append(ingressRels, NewIngressRelation(rel, false, false, "", ""))
+		ingressRels = append(ingressRels, NewIngressRelation(rel, false, false, "", "", []string{}, []string{}))
 	}
 
 	fullGraph := newGraph(NewIngressRelationList(ingressRels))
@@ -57,13 +57,13 @@ func Create(startTable string, relReader RelationReader, storage Storage) *Error
 	for i := uint(0); i < connectedGraph.relations.Len(); i++ {
 		rel := connectedGraph.relations.Relation(i)
 		if setLookUpChild.contains(rel.Name()) {
-			adrelations = append(adrelations, NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), false, true, rel.WhereParent(), rel.WhereChild()))
+			adrelations = append(adrelations, NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), false, true, rel.WhereParent(), rel.WhereChild(), rel.SelectParent(), rel.SelectChild()))
 		} else {
-			adrelations = append(adrelations, NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), false, false, rel.WhereParent(), rel.WhereChild()))
+			adrelations = append(adrelations, NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), false, false, rel.WhereParent(), rel.WhereChild(), rel.SelectParent(), rel.SelectChild()))
 		}
 	}
 
-	id := NewIngressDescriptor(NewTable(startTable), NewIngressRelationList(adrelations))
+	id := NewIngressDescriptor(NewTable(startTable), selectColumns, NewIngressRelationList(adrelations))
 
 	err = storage.Store(id)
 	if err != nil {
@@ -89,7 +89,7 @@ func SetStartTable(table Table, storage Storage) *Error {
 		return &Error{Description: fmt.Sprintf("Table %s doesn't exist", table.Name())}
 	}
 
-	updatedID := NewIngressDescriptor(table, id.Relations())
+	updatedID := NewIngressDescriptor(table, id.Select(), id.Relations())
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -114,12 +114,12 @@ func SetChildLookup(relation string, flag bool, storage Storage) *Error {
 	for i := uint(0); i < id.Relations().Len(); i++ {
 		rel := id.Relations().Relation(i)
 		if rel.Name() == relation {
-			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), flag, rel.WhereParent(), rel.WhereChild())
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), flag, rel.WhereParent(), rel.WhereChild(), rel.SelectParent(), rel.SelectChild())
 		}
 		relations[i] = rel
 	}
 
-	updatedID := NewIngressDescriptor(id.StartTable(), NewIngressRelationList(relations))
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -144,12 +144,12 @@ func SetParentLookup(relation string, flag bool, storage Storage) *Error {
 	for i := uint(0); i < id.Relations().Len(); i++ {
 		rel := id.Relations().Relation(i)
 		if rel.Name() == relation {
-			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), flag, rel.LookUpChild(), rel.WhereParent(), rel.WhereChild())
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), flag, rel.LookUpChild(), rel.WhereParent(), rel.WhereChild(), rel.SelectParent(), rel.SelectChild())
 		}
 		relations[i] = rel
 	}
 
-	updatedID := NewIngressDescriptor(id.StartTable(), NewIngressRelationList(relations))
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -174,12 +174,42 @@ func SetChildWhere(relation string, where string, storage Storage) *Error {
 	for i := uint(0); i < id.Relations().Len(); i++ {
 		rel := id.Relations().Relation(i)
 		if rel.Name() == relation {
-			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), rel.WhereParent(), where)
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), rel.WhereParent(), where, rel.SelectParent(), rel.SelectChild())
 		}
 		relations[i] = rel
 	}
 
-	updatedID := NewIngressDescriptor(id.StartTable(), NewIngressRelationList(relations))
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
+
+	err = storage.Store(updatedID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// SetChildSelect update child select relation's parameter in ingress descriptor
+func SetChildSelect(relation string, columns []string, storage Storage) *Error {
+	id, err := storage.Read()
+	if err != nil {
+		return err
+	}
+
+	if !id.Relations().Contains(relation) {
+		return &Error{Description: fmt.Sprintf("Relation %s doesn't exist", relation)}
+	}
+
+	relations := make([]IngressRelation, id.Relations().Len())
+
+	for i := uint(0); i < id.Relations().Len(); i++ {
+		rel := id.Relations().Relation(i)
+		if rel.Name() == relation {
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), rel.WhereParent(), rel.WhereChild(), rel.SelectParent(), columns)
+		}
+		relations[i] = rel
+	}
+
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -204,12 +234,42 @@ func SetParentWhere(relation string, where string, storage Storage) *Error {
 	for i := uint(0); i < id.Relations().Len(); i++ {
 		rel := id.Relations().Relation(i)
 		if rel.Name() == relation {
-			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), where, rel.WhereChild())
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), where, rel.WhereChild(), rel.SelectParent(), rel.SelectChild())
 		}
 		relations[i] = rel
 	}
 
-	updatedID := NewIngressDescriptor(id.StartTable(), NewIngressRelationList(relations))
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
+
+	err = storage.Store(updatedID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// SetParentSelect update parent select relation's parameter in ingress descriptor
+func SetParentSelect(relation string, columns []string, storage Storage) *Error {
+	id, err := storage.Read()
+	if err != nil {
+		return err
+	}
+
+	if !id.Relations().Contains(relation) {
+		return &Error{Description: fmt.Sprintf("Relation %s doesn't exist", relation)}
+	}
+
+	relations := make([]IngressRelation, id.Relations().Len())
+
+	for i := uint(0); i < id.Relations().Len(); i++ {
+		rel := id.Relations().Relation(i)
+		if rel.Name() == relation {
+			rel = NewIngressRelation(NewRelation(rel.Name(), rel.Parent(), rel.Child()), rel.LookUpParent(), rel.LookUpChild(), rel.WhereParent(), rel.WhereChild(), columns, rel.SelectChild())
+		}
+		relations[i] = rel
+	}
+
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -249,7 +309,7 @@ func GetPullerPlan(storage Storage) (PullerPlan, *Error) {
 		startRelationsList = sg.relations
 	}
 	steps := []Step{
-		NewStep(1, id.StartTable(), NewIngressRelation(NewRelation("", nil, nil), false, false, "", ""), startRelationsList, startTableList, startCycles, 0),
+		NewStep(1, id.StartTable(), NewIngressRelation(NewRelation("", nil, nil), false, false, "", "", []string{}, []string{}), startRelationsList, startTableList, startCycles, 0),
 	}
 	log.Debug().Msg(fmt.Sprintf("%v", steps[0]))
 
@@ -265,7 +325,7 @@ func GetPullerPlan(storage Storage) (PullerPlan, *Error) {
 		log.Warn().Msg(err.Error())
 	}
 
-	return NewPullerPlan(steps, g.relations, g.tables), nil
+	return NewPullerPlan(steps, g.relations, g.tables, id.Select()), nil
 }
 
 // Export the puller plan.

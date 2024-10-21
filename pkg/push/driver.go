@@ -175,9 +175,17 @@ func FilterRelation(row Row, relations map[string]Relation, whereField string) (
 // pushRow push a row in a specific table
 func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, translator Translator, whereField string) *Error {
 	frow, fwhere, frel, fInverseRel, err1 := FilterRelation(row, plan.RelationsFromTable(table), whereField)
-
 	if err1 != nil {
 		return err1
+	}
+
+	// remove not imported values from frow
+	if columns := table.Columns(); columns != nil {
+		for i := uint(0); i < columns.Len(); i++ {
+			if columns.Column(i).Import() == "no" {
+				delete(frow, columns.Column(i).Name())
+			}
+		}
 	}
 
 	rw, err2 := ds.RowWriter(table)

@@ -1,0 +1,35 @@
+# Copyright (C) 2021 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
+name: lino should not log into stdout
+testcases:
+  - name: prepare test
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      - script: lino dc add source --user-from-env VARTEST 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
+      - script: lino table extract source
+      - script: lino relation extract source
+      - script: lino id create store
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+
+  - name: lino should not log into stdout on pull command
+    steps:
+      - script: lino pull source
+        assertions:
+          - result.systemout ShouldNotContainSubstring missing environment variable VARTEST
+          - result.systemerr ShouldContainSubstring missing environment variable VARTEST

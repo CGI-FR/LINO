@@ -20,7 +20,7 @@ require (
 	github.com/microsoft/go-mssqldb v1.7.2
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.33.0
-	github.com/schollz/progressbar/v3 v3.16.1
+	github.com/schollz/progressbar/v3 v3.17.0
 	github.com/sijms/go-ora/v2 v2.8.22
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0

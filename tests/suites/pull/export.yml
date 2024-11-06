@@ -148,6 +148,6 @@ testcases:
                 - name: picture
                   export: presence
           EOF
-      - script: lino pull source --table staff --limit 0
+      - script: lino pull source --table staff --limit 0 | tr '\n' ' ' | sed 's/ *$//'
         assertions:
-          - result.systemout ShouldEqual {"staff_id":1,"picture":true}\n{"staff_id":2,"picture":null}
+          - result.systemout ShouldEqual {"staff_id":1,"picture":true} {"staff_id":2,"picture":null}

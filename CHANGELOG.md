@@ -19,6 +19,7 @@ Types of changes
 - `Added` possibility to filter columns via `select` property in ingress descriptors
 - `Added` commands `set-parent-select` and `set-child-select` to `lino id`
 - `Added` `import: no` option for columns in `tables.yaml` configuration
+- `Added` `export: presence` option for columns in `tables.yaml` configuration
 
 ## [3.0.2]
 

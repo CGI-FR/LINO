@@ -64,7 +64,11 @@ func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, 
 
 	if names := Names(columns); len(names) > 0 {
 		for i := range names {
-			names[i] = db2.Quote(names[i])
+			if columns[i].OnlyPresence {
+				names[i] = db2.selectPresence(names[i])
+			} else {
+				names[i] = db2.Quote(names[i])
+			}
 		}
 		query.WriteString(strings.Join(names, ", "))
 	} else {
@@ -91,7 +95,11 @@ func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where str
 
 	if names := Names(columns); len(names) > 0 {
 		for i := range names {
-			names[i] = db2.Quote(names[i])
+			if columns[i].OnlyPresence {
+				names[i] = db2.selectPresence(names[i])
+			} else {
+				names[i] = db2.Quote(names[i])
+			}
 		}
 		query.WriteString(strings.Join(names, ", "))
 	} else {
@@ -122,4 +130,8 @@ func (db2 Db2Dialect) Quote(id string) string {
 // CreateSelect generate a SQL request in the correct order.
 func (db2 Db2Dialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
+}
+
+func (db2 Db2Dialect) selectPresence(column string) string {
+	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 1 ELSE NULL END AS %s", db2.Quote(column), db2.Quote(column))
 }

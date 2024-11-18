@@ -133,5 +133,5 @@ func (pgd PostgresDialect) CreateSelect(sel string, where string, limit string, 
 }
 
 func (pgd PostgresDialect) selectPresence(column string) string {
-	return fmt.Sprintf("CASE WHEN (%s IS NULL) THEN NULL WHEN (%s IS NOT NULL) THEN TRUE END AS %s", pgd.Quote(column), pgd.Quote(column), pgd.Quote(column))
+	return fmt.Sprintf("CASE WHEN (%s IS NOT NULL) THEN TRUE ELSE NULL END AS %s", pgd.Quote(column), pgd.Quote(column))
 }

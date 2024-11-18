@@ -64,7 +64,11 @@ func (pd MariadbDialect) Select(tableName string, schemaName string, where strin
 
 	if names := Names(columns); len(names) > 0 {
 		for i := range names {
-			names[i] = pd.Quote(names[i])
+			if columns[i].OnlyPresence {
+				names[i] = pd.selectPresence(names[i])
+			} else {
+				names[i] = pd.Quote(names[i])
+			}
 		}
 		query.WriteString(strings.Join(names, ", "))
 	} else {
@@ -91,7 +95,11 @@ func (pd MariadbDialect) SelectLimit(tableName string, schemaName string, where 
 
 	if names := Names(columns); len(names) > 0 {
 		for i := range names {
-			names[i] = pd.Quote(names[i])
+			if columns[i].OnlyPresence {
+				names[i] = pd.selectPresence(names[i])
+			} else {
+				names[i] = pd.Quote(names[i])
+			}
 		}
 		query.WriteString(strings.Join(names, ", "))
 	} else {
@@ -122,4 +130,8 @@ func (sd MariadbDialect) Quote(id string) string {
 // CreateSelect generate a SQL request in the correct order.
 func (sd MariadbDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
+}
+
+func (sd MariadbDialect) selectPresence(column string) string {
+	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 'TRUE' ELSE NULL END AS %s", sd.Quote(column), sd.Quote(column))
 }

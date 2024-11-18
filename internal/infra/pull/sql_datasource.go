@@ -123,7 +123,7 @@ func (ds *SQLDataSource) GetSelectSQLAndValues(source pull.Table, filter pull.Fi
 	// Build Columns clause *******************************************
 	if pcols := source.Columns; len(pcols) > 0 && source.ExportMode != pull.ExportModeAll {
 		for idx := int(0); idx < len(pcols); idx++ {
-			sqlColumns = append(sqlColumns, commonsql.ColumnExportDefinition{Name: pcols[idx].Name})
+			sqlColumns = append(sqlColumns, commonsql.ColumnExportDefinition{Name: pcols[idx].Name, OnlyPresence: pcols[idx].Export == "presence"})
 		}
 	}
 

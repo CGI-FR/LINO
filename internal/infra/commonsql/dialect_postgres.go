@@ -64,7 +64,11 @@ func (pgd PostgresDialect) Select(tableName string, schemaName string, where str
 
 	if names := Names(columns); len(names) > 0 {
 		for i := range columns {
-			names[i] = pgd.Quote(names[i])
+			if columns[i].OnlyPresence {
+				names[i] = pgd.selectPresence(names[i])
+			} else {
+				names[i] = pgd.Quote(names[i])
+			}
 		}
 		query.WriteString(strings.Join(names, ", "))
 	} else {
@@ -91,7 +95,11 @@ func (pgd PostgresDialect) SelectLimit(tableName string, schemaName string, wher
 
 	if names := Names(columns); len(names) > 0 {
 		for i := range names {
-			names[i] = pgd.Quote(names[i])
+			if columns[i].OnlyPresence {
+				names[i] = pgd.selectPresence(names[i])
+			} else {
+				names[i] = pgd.Quote(names[i])
+			}
 		}
 		query.WriteString(strings.Join(names, ", "))
 	} else {
@@ -122,4 +130,8 @@ func (pgd PostgresDialect) Quote(id string) string {
 // CreateSelect generate a SQL request in the correct order.
 func (pgd PostgresDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
+}
+
+func (pgd PostgresDialect) selectPresence(column string) string {
+	return fmt.Sprintf("CASE WHEN (%s IS NULL) THEN NULL WHEN (%s IS NOT NULL) THEN TRUE END AS %s", pgd.Quote(column), pgd.Quote(column), pgd.Quote(column))
 }

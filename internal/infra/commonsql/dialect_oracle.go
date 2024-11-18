@@ -64,7 +64,11 @@ func (od OracleDialect) Select(tableName string, schemaName string, where string
 
 	if names := Names(columns); len(names) > 0 {
 		for i := range names {
-			names[i] = od.Quote(names[i])
+			if columns[i].OnlyPresence {
+				names[i] = od.selectPresence(names[i])
+			} else {
+				names[i] = od.Quote(names[i])
+			}
 		}
 		query.WriteString(strings.Join(names, ", "))
 	} else {
@@ -91,7 +95,11 @@ func (od OracleDialect) SelectLimit(tableName string, schemaName string, where s
 
 	if names := Names(columns); len(names) > 0 {
 		for i := range names {
-			names[i] = od.Quote(names[i])
+			if columns[i].OnlyPresence {
+				names[i] = od.selectPresence(names[i])
+			} else {
+				names[i] = od.Quote(names[i])
+			}
 		}
 		query.WriteString(strings.Join(names, ", "))
 	} else {
@@ -122,4 +130,8 @@ func (od OracleDialect) Quote(id string) string {
 // CreateSelect generate a SQL request in the correct order.
 func (od OracleDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
+}
+
+func (od OracleDialect) selectPresence(column string) string {
+	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN TRUE ELSE NULL END AS %s", od.Quote(column), od.Quote(column))
 }

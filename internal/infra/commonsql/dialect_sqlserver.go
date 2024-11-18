@@ -65,7 +65,11 @@ func (sd SQLServerDialect) Select(tableName string, schemaName string, where str
 
 	if names := Names(columns); len(names) > 0 {
 		for i := range columns {
-			names[i] = sd.Quote(names[i])
+			if columns[i].OnlyPresence {
+				names[i] = sd.selectPresence(names[i])
+			} else {
+				names[i] = sd.Quote(names[i])
+			}
 		}
 		query.WriteString(strings.Join(names, ", "))
 	} else {
@@ -95,7 +99,11 @@ func (sd SQLServerDialect) SelectLimit(tableName string, schemaName string, wher
 
 	if names := Names(columns); len(names) > 0 {
 		for i := range columns {
-			names[i] = sd.Quote(names[i])
+			if columns[i].OnlyPresence {
+				names[i] = sd.selectPresence(names[i])
+			} else {
+				names[i] = sd.Quote(names[i])
+			}
 		}
 		query.WriteString(strings.Join(names, ", "))
 	} else {
@@ -124,4 +132,8 @@ func (sd SQLServerDialect) Quote(id string) string {
 // CreateSelect generate a SQL request in the correct order
 func (sd SQLServerDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, limit, columns, from, where)
+}
+
+func (sd SQLServerDialect) selectPresence(column string) string {
+	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 1 ELSE NULL END AS %s", sd.Quote(column), sd.Quote(column))
 }

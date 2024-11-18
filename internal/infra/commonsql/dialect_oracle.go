@@ -53,7 +53,7 @@ func (od OracleDialect) Where(where string) string {
 }
 
 // Select clause
-func (od OracleDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+func (od OracleDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -62,11 +62,11 @@ func (od OracleDialect) Select(tableName string, schemaName string, where string
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
-		for i := range columns {
-			columns[i] = od.Quote(columns[i])
+	if names := Names(columns); len(names) > 0 {
+		for i := range names {
+			names[i] = od.Quote(names[i])
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -80,7 +80,7 @@ func (od OracleDialect) Select(tableName string, schemaName string, where string
 }
 
 // SelectLimit clause
-func (od OracleDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+func (od OracleDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -89,11 +89,11 @@ func (od OracleDialect) SelectLimit(tableName string, schemaName string, where s
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
-		for i := range columns {
-			columns[i] = od.Quote(columns[i])
+	if names := Names(columns); len(names) > 0 {
+		for i := range names {
+			names[i] = od.Quote(names[i])
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}

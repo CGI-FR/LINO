@@ -53,7 +53,7 @@ func (pgd PostgresDialect) Where(where string) string {
 }
 
 // Select clause
-func (pgd PostgresDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+func (pgd PostgresDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -62,11 +62,11 @@ func (pgd PostgresDialect) Select(tableName string, schemaName string, where str
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
+	if names := Names(columns); len(names) > 0 {
 		for i := range columns {
-			columns[i] = pgd.Quote(columns[i])
+			names[i] = pgd.Quote(names[i])
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -80,7 +80,7 @@ func (pgd PostgresDialect) Select(tableName string, schemaName string, where str
 }
 
 // SelectLimit clause
-func (pgd PostgresDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+func (pgd PostgresDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -89,11 +89,11 @@ func (pgd PostgresDialect) SelectLimit(tableName string, schemaName string, wher
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
-		for i := range columns {
-			columns[i] = pgd.Quote(columns[i])
+	if names := Names(columns); len(names) > 0 {
+		for i := range names {
+			names[i] = pgd.Quote(names[i])
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}

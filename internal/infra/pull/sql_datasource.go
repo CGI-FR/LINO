@@ -118,12 +118,12 @@ func (ds *SQLDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.
 }
 
 func (ds *SQLDataSource) GetSelectSQLAndValues(source pull.Table, filter pull.Filter) ([]interface{}, string) {
-	sqlColumns := []string{}
+	sqlColumns := []commonsql.ColumnExportDefinition{}
 
 	// Build Columns clause *******************************************
 	if pcols := source.Columns; len(pcols) > 0 && source.ExportMode != pull.ExportModeAll {
 		for idx := int(0); idx < len(pcols); idx++ {
-			sqlColumns = append(sqlColumns, pcols[idx].Name)
+			sqlColumns = append(sqlColumns, commonsql.ColumnExportDefinition{Name: pcols[idx].Name})
 		}
 	}
 

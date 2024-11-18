@@ -53,7 +53,7 @@ func (db2 Db2Dialect) Where(where string) string {
 }
 
 // Select clause
-func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -62,11 +62,11 @@ func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, 
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
-		for i := range columns {
-			columns[i] = db2.Quote(columns[i])
+	if names := Names(columns); len(names) > 0 {
+		for i := range names {
+			names[i] = db2.Quote(names[i])
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -80,7 +80,7 @@ func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, 
 }
 
 // SelectLimit clause
-func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -89,11 +89,11 @@ func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where str
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
-		for i := range columns {
-			columns[i] = db2.Quote(columns[i])
+	if names := Names(columns); len(names) > 0 {
+		for i := range names {
+			names[i] = db2.Quote(names[i])
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}

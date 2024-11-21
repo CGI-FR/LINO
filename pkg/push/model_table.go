@@ -176,17 +176,14 @@ func (t table) Import(row map[string]interface{}) (ImportedRow, *Error) {
 
 			format, _ := parseFormatWithType(col.Import())
 
-			if format == "file" {
+			if value, exists := result.GetValue(key); format == "file" && exists && value.GetFormat() == jsonline.String && value.Raw() != nil {
 				bytes, err := t.filecache.Load(result.GetString(key))
 				if err != nil {
 					return ImportedRow{}, &Error{Description: err.Error()}
 				}
 				result.SetValue(key, jsonline.NewValueAuto(bytes))
-			}
-
-			// autotruncate
-			value, exists := result.GetValue(key)
-			if exists && col.Truncate() && col.Length() > 0 && value.GetFormat() == jsonline.String && result.GetOrNil(key) != nil {
+			} else if exists && col.Truncate() && col.Length() > 0 && value.GetFormat() == jsonline.String && result.GetOrNil(key) != nil {
+				// autotruncate
 				if col.LengthInBytes() {
 					result.Set(key, truncateUTF8String(result.GetString(key), int(col.Length())))
 				} else {

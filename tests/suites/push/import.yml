@@ -125,6 +125,11 @@ testcases:
           - result.code ShouldEqual 0
           - result.systemout ShouldBeEmpty
           - result.systemerr ShouldBeEmpty
+      - script: lino pull --table staff source | jq -c '.picture=null' | lino push update --table staff dest
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
 
   - name: import no
     steps:

@@ -20,6 +20,7 @@ Types of changes
 - `Added` commands `set-parent-select` and `set-child-select` to `lino id`
 - `Added` `import: no` option for columns in `tables.yaml` configuration
 - `Added` `export: presence` option for columns in `tables.yaml` configuration
+- `Fixed` issue with `import: file` when data is null, will not fail anymore
 
 ## [3.0.2]
 

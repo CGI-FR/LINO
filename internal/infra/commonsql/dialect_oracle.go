@@ -133,5 +133,5 @@ func (od OracleDialect) CreateSelect(sel string, where string, limit string, col
 }
 
 func (od OracleDialect) selectPresence(column string) string {
-	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN TRUE ELSE NULL END AS %s", od.Quote(column), od.Quote(column))
+	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 'TRUE' ELSE NULL END AS %s", od.Quote(column), od.Quote(column))
 }

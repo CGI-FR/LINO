@@ -53,7 +53,7 @@ func (pd MariadbDialect) Where(where string) string {
 }
 
 // Select clause
-func (pd MariadbDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+func (pd MariadbDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -62,11 +62,15 @@ func (pd MariadbDialect) Select(tableName string, schemaName string, where strin
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
-		for i := range columns {
-			columns[i] = pd.Quote(columns[i])
+	if names := Names(columns); len(names) > 0 {
+		for i := range names {
+			if columns[i].OnlyPresence {
+				names[i] = pd.selectPresence(names[i])
+			} else {
+				names[i] = pd.Quote(names[i])
+			}
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -80,7 +84,7 @@ func (pd MariadbDialect) Select(tableName string, schemaName string, where strin
 }
 
 // SelectLimit clause
-func (pd MariadbDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+func (pd MariadbDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -89,11 +93,15 @@ func (pd MariadbDialect) SelectLimit(tableName string, schemaName string, where 
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
-		for i := range columns {
-			columns[i] = pd.Quote(columns[i])
+	if names := Names(columns); len(names) > 0 {
+		for i := range names {
+			if columns[i].OnlyPresence {
+				names[i] = pd.selectPresence(names[i])
+			} else {
+				names[i] = pd.Quote(names[i])
+			}
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -122,4 +130,8 @@ func (sd MariadbDialect) Quote(id string) string {
 // CreateSelect generate a SQL request in the correct order.
 func (sd MariadbDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
+}
+
+func (sd MariadbDialect) selectPresence(column string) string {
+	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 'TRUE' ELSE NULL END AS %s", sd.Quote(column), sd.Quote(column))
 }

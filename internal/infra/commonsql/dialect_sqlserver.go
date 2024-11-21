@@ -54,7 +54,7 @@ func (sd SQLServerDialect) Where(where string) string {
 }
 
 // Select clause
-func (sd SQLServerDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+func (sd SQLServerDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -63,11 +63,15 @@ func (sd SQLServerDialect) Select(tableName string, schemaName string, where str
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
+	if names := Names(columns); len(names) > 0 {
 		for i := range columns {
-			columns[i] = sd.Quote(columns[i])
+			if columns[i].OnlyPresence {
+				names[i] = sd.selectPresence(names[i])
+			} else {
+				names[i] = sd.Quote(names[i])
+			}
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -81,7 +85,7 @@ func (sd SQLServerDialect) Select(tableName string, schemaName string, where str
 }
 
 // SelectLimit clause
-func (sd SQLServerDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+func (sd SQLServerDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -93,11 +97,15 @@ func (sd SQLServerDialect) SelectLimit(tableName string, schemaName string, wher
 	query.WriteString(sd.Limit(limit))
 	query.WriteRune(' ')
 
-	if len(columns) > 0 {
+	if names := Names(columns); len(names) > 0 {
 		for i := range columns {
-			columns[i] = sd.Quote(columns[i])
+			if columns[i].OnlyPresence {
+				names[i] = sd.selectPresence(names[i])
+			} else {
+				names[i] = sd.Quote(names[i])
+			}
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -124,4 +132,8 @@ func (sd SQLServerDialect) Quote(id string) string {
 // CreateSelect generate a SQL request in the correct order
 func (sd SQLServerDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, limit, columns, from, where)
+}
+
+func (sd SQLServerDialect) selectPresence(column string) string {
+	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 1 ELSE NULL END AS %s", sd.Quote(column), sd.Quote(column))
 }

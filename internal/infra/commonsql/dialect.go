@@ -25,6 +25,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type ColumnExportDefinition struct {
+	Name         string
+	OnlyPresence bool
+}
+
+func Names(columns []ColumnExportDefinition) []string {
+	us := make([]string, len(columns))
+	for i := range columns {
+		us[i] = columns[i].Name
+	}
+	return us
+}
+
 type Dialect interface {
 	// Placeholder format variable in query
 	Placeholder(int) string
@@ -35,9 +48,9 @@ type Dialect interface {
 	// Where clause
 	Where(string) string
 	// Select clause
-	Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string
+	Select(tableName string, schemaName string, where string, distinct bool, columns ...ColumnExportDefinition) string
 	// SelectLimit clause
-	SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string
+	SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...ColumnExportDefinition) string
 	// Quote identifier
 	Quote(id string) string
 

@@ -53,7 +53,7 @@ func (db2 Db2Dialect) Where(where string) string {
 }
 
 // Select clause
-func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -62,11 +62,15 @@ func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, 
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
-		for i := range columns {
-			columns[i] = db2.Quote(columns[i])
+	if names := Names(columns); len(names) > 0 {
+		for i := range names {
+			if columns[i].OnlyPresence {
+				names[i] = db2.selectPresence(names[i])
+			} else {
+				names[i] = db2.Quote(names[i])
+			}
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -80,7 +84,7 @@ func (db2 Db2Dialect) Select(tableName string, schemaName string, where string, 
 }
 
 // SelectLimit clause
-func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -89,11 +93,15 @@ func (db2 Db2Dialect) SelectLimit(tableName string, schemaName string, where str
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
-		for i := range columns {
-			columns[i] = db2.Quote(columns[i])
+	if names := Names(columns); len(names) > 0 {
+		for i := range names {
+			if columns[i].OnlyPresence {
+				names[i] = db2.selectPresence(names[i])
+			} else {
+				names[i] = db2.Quote(names[i])
+			}
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -122,4 +130,8 @@ func (db2 Db2Dialect) Quote(id string) string {
 // CreateSelect generate a SQL request in the correct order.
 func (db2 Db2Dialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
+}
+
+func (db2 Db2Dialect) selectPresence(column string) string {
+	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 1 ELSE NULL END AS %s", db2.Quote(column), db2.Quote(column))
 }

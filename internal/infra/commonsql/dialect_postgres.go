@@ -53,7 +53,7 @@ func (pgd PostgresDialect) Where(where string) string {
 }
 
 // Select clause
-func (pgd PostgresDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...string) string {
+func (pgd PostgresDialect) Select(tableName string, schemaName string, where string, distinct bool, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -62,11 +62,15 @@ func (pgd PostgresDialect) Select(tableName string, schemaName string, where str
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
+	if names := Names(columns); len(names) > 0 {
 		for i := range columns {
-			columns[i] = pgd.Quote(columns[i])
+			if columns[i].OnlyPresence {
+				names[i] = pgd.selectPresence(names[i])
+			} else {
+				names[i] = pgd.Quote(names[i])
+			}
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -80,7 +84,7 @@ func (pgd PostgresDialect) Select(tableName string, schemaName string, where str
 }
 
 // SelectLimit clause
-func (pgd PostgresDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...string) string {
+func (pgd PostgresDialect) SelectLimit(tableName string, schemaName string, where string, distinct bool, limit uint, columns ...ColumnExportDefinition) string {
 	var query strings.Builder
 
 	query.WriteString("SELECT ")
@@ -89,11 +93,15 @@ func (pgd PostgresDialect) SelectLimit(tableName string, schemaName string, wher
 		query.WriteString("DISTINCT ")
 	}
 
-	if len(columns) > 0 {
-		for i := range columns {
-			columns[i] = pgd.Quote(columns[i])
+	if names := Names(columns); len(names) > 0 {
+		for i := range names {
+			if columns[i].OnlyPresence {
+				names[i] = pgd.selectPresence(names[i])
+			} else {
+				names[i] = pgd.Quote(names[i])
+			}
 		}
-		query.WriteString(strings.Join(columns, ", "))
+		query.WriteString(strings.Join(names, ", "))
 	} else {
 		query.WriteRune('*')
 	}
@@ -122,4 +130,8 @@ func (pgd PostgresDialect) Quote(id string) string {
 // CreateSelect generate a SQL request in the correct order.
 func (pgd PostgresDialect) CreateSelect(sel string, where string, limit string, columns string, from string) string {
 	return fmt.Sprintf("%s %s %s %s %s", sel, columns, from, where, limit)
+}
+
+func (pgd PostgresDialect) selectPresence(column string) string {
+	return fmt.Sprintf("CASE WHEN (%s IS NOT NULL) THEN TRUE ELSE NULL END AS %s", pgd.Quote(column), pgd.Quote(column))
 }

@@ -44,6 +44,8 @@ func (t *Table) initTemplate() {
 				t.template.WithTimestamp(key)
 			case "no":
 				t.template.WithHidden(key)
+			case "presence":
+				t.template.WithBoolean(key)
 			default:
 				t.template.WithAuto(key)
 			}
@@ -80,7 +82,7 @@ func (t *Table) export(row Row) ExportedRow {
 	switch t.ExportMode {
 	case ExportModeAll:
 		for k := range row {
-			if result.GetOrNil(k) == nil {
+			if _, present := result.Get(k); !present {
 				keys = append(keys, k)
 			}
 		}
@@ -91,6 +93,17 @@ func (t *Table) export(row Row) ExportedRow {
 
 	for _, k := range keys {
 		result.Set(k, row[k])
+	}
+
+	// check export=presence flags
+	if len(t.Columns) > 0 {
+		for _, col := range t.Columns {
+			if col.Export == "presence" {
+				if val, present := result.Get(col.Name); present && val != nil {
+					result.Set(col.Name, true)
+				}
+			}
+		}
 	}
 
 	return result

@@ -21,7 +21,7 @@ testcases:
     steps:
       # Clean working directory
       - script: rm -f *
-      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      - script: lino dataconnector add source 'postgresql://postgres:sakila@source:5432/postgres?sslmode=disable'
       - script: lino relation extract source
 
   - name: no configuration exports all columns in alphabetical order
@@ -133,3 +133,21 @@ testcases:
         assertions:
           - result.code ShouldEqual 1
           - result.systemerr ShouldContainSubstring Film
+
+  - name: export presence
+    steps:
+      - script: |-
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: staff
+              keys:
+                - staff_id
+              columns:
+                - name: staff_id
+                - name: picture
+                  export: presence
+          EOF
+      - script: lino pull source --table staff --limit 0 | tr '\n' ' ' | sed 's/ *$//'
+        assertions:
+          - result.systemout ShouldEqual {"staff_id":1,"picture":true} {"staff_id":2,"picture":null}

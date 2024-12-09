@@ -74,7 +74,7 @@ func RunTest(t *testing.T, test *Test) {
 
 	for _, execution := range test.Executions {
 		collector.Reset()
-		assert.NoError(t, puller.Pull(execution.Start, execution.Filter, execution.Select, nil, nil))
+		assert.NoError(t, puller.Pull(execution.Start, execution.Filter, execution.Select, nil, nil, nil))
 		assert.Len(t, collector.Result, len(execution.Result))
 
 		for i := 0; i < len(execution.Result); i++ {
@@ -94,7 +94,7 @@ func RunBench(b *testing.B, test *Test) {
 
 	for _, execution := range test.Executions {
 		collector.Reset()
-		assert.NoError(b, puller.Pull(execution.Start, execution.Filter, execution.Select, nil, nil))
+		assert.NoError(b, puller.Pull(execution.Start, execution.Filter, execution.Select, nil, nil, nil))
 		assert.Len(b, collector.Result, len(execution.Result))
 	}
 }

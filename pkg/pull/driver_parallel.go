@@ -61,8 +61,9 @@ func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, d
 	return puller
 }
 
-func (p *pullerParallel) Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore) error {
+func (p *pullerParallel) Pull(start Table, filter Filter, selectColumns []string, formats map[string]string, filterCohort RowReader, excluded KeyStore) error {
 	start.selectColumns(selectColumns...)
+	start.applyFormats(formats)
 	start = p.graph.addMissingColumns(start)
 
 	if err := p.datasource.Open(); err != nil {

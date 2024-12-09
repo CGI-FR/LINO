@@ -27,3 +27,10 @@ func NewIngressColumnFormatList(formats map[string]IngressColumnFormat) IngressC
 
 func (l idcolumnformatlist) Len() uint                             { return uint(len(l.formats)) }
 func (l idcolumnformatlist) Get(column string) IngressColumnFormat { return l.formats[column] }
+func (l idcolumnformatlist) Columns() []string {
+	columns := []string{}
+	for col := range l.formats {
+		columns = append(columns, col)
+	}
+	return columns
+}

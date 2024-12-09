@@ -178,3 +178,7 @@ func (t *Table) selectColumns(columnNames ...string) {
 		Interface("table", t.Name).
 		Msg("select only columns defined")
 }
+
+func (t *Table) applyFormats(formats map[string]string) {
+	// TODO
+}

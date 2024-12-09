@@ -73,6 +73,7 @@ type IngressColumnFormat interface {
 
 type IngressColumnFormatList interface {
 	Len() uint
+	Columns() []string
 	Get(column string) IngressColumnFormat
 	// Set(column string, format IngressColumnFormat)
 }
@@ -118,6 +119,7 @@ type PullerPlan interface {
 	Tables() TableList
 	String() string
 	Select() []string
+	Formats() IngressColumnFormatList
 }
 
 // Error is the error type returned by the domain

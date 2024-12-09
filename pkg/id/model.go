@@ -66,10 +66,22 @@ type IngressRelationList interface {
 	String() string
 }
 
+type IngressColumnFormat interface {
+	Import() string
+	Export() string
+}
+
+type IngressColumnFormatList interface {
+	Len() uint
+	Get(column string) IngressColumnFormat
+	// Set(column string, format IngressColumnFormat)
+}
+
 // IngressDescriptor from which the puller plan will be computed.
 type IngressDescriptor interface {
 	StartTable() Table
 	Select() []string
+	Formats() IngressColumnFormatList
 	Relations() IngressRelationList
 	String() string
 }

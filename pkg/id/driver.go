@@ -24,7 +24,7 @@ import (
 )
 
 // Create and store ingress descriptor for the given start table and relation set.
-func Create(startTable string, selectColumns []string, relReader RelationReader, storage Storage) *Error {
+func Create(startTable string, selectColumns []string, formats IngressColumnFormatList, relReader RelationReader, storage Storage) *Error {
 	relations, err := relReader.Read()
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func Create(startTable string, selectColumns []string, relReader RelationReader,
 		}
 	}
 
-	id := NewIngressDescriptor(NewTable(startTable), selectColumns, NewIngressRelationList(adrelations))
+	id := NewIngressDescriptor(NewTable(startTable), selectColumns, formats, NewIngressRelationList(adrelations))
 
 	err = storage.Store(id)
 	if err != nil {
@@ -89,7 +89,7 @@ func SetStartTable(table Table, storage Storage) *Error {
 		return &Error{Description: fmt.Sprintf("Table %s doesn't exist", table.Name())}
 	}
 
-	updatedID := NewIngressDescriptor(table, id.Select(), id.Relations())
+	updatedID := NewIngressDescriptor(table, id.Select(), id.Formats(), id.Relations())
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -119,7 +119,7 @@ func SetChildLookup(relation string, flag bool, storage Storage) *Error {
 		relations[i] = rel
 	}
 
-	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), id.Formats(), NewIngressRelationList(relations))
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -149,7 +149,7 @@ func SetParentLookup(relation string, flag bool, storage Storage) *Error {
 		relations[i] = rel
 	}
 
-	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), id.Formats(), NewIngressRelationList(relations))
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -179,7 +179,7 @@ func SetChildWhere(relation string, where string, storage Storage) *Error {
 		relations[i] = rel
 	}
 
-	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), id.Formats(), NewIngressRelationList(relations))
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -209,7 +209,7 @@ func SetChildSelect(relation string, columns []string, storage Storage) *Error {
 		relations[i] = rel
 	}
 
-	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), id.Formats(), NewIngressRelationList(relations))
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -239,7 +239,7 @@ func SetParentWhere(relation string, where string, storage Storage) *Error {
 		relations[i] = rel
 	}
 
-	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), id.Formats(), NewIngressRelationList(relations))
 
 	err = storage.Store(updatedID)
 	if err != nil {
@@ -269,7 +269,7 @@ func SetParentSelect(relation string, columns []string, storage Storage) *Error 
 		relations[i] = rel
 	}
 
-	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), NewIngressRelationList(relations))
+	updatedID := NewIngressDescriptor(id.StartTable(), id.Select(), id.Formats(), NewIngressRelationList(relations))
 
 	err = storage.Store(updatedID)
 	if err != nil {

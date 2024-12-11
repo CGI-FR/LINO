@@ -33,9 +33,15 @@ type YAMLStructure struct {
 
 // YAMLIngressDescriptor defines how to store an ingress descriptor in YAML format.
 type YAMLIngressDescriptor struct {
-	StartTable string         `yaml:"startTable"`
-	Select     []string       `yaml:"select"`
-	Relations  []YAMLRelation `yaml:"relations"`
+	StartTable string                `yaml:"startTable"`
+	Select     []string              `yaml:"select"`
+	Formats    map[string]YAMLFormat `yaml:"formats"`
+	Relations  []YAMLRelation        `yaml:"relations"`
+}
+
+type YAMLFormat struct {
+	imp string `yaml:"import"`
+	exp string `yaml:"export"`
 }
 
 // YAMLRelation defines how to store a relation in YAML format.
@@ -100,6 +106,11 @@ func (s *YAMLStorage) Read() (id.IngressDescriptor, *id.Error) {
 		return nil, err
 	}
 
+	formats := map[string]id.IngressColumnFormat{}
+	for name, format := range structure.IngressDescriptor.Formats {
+		formats[name] = id.NewIngressColumnFormat(format.imp, format.exp)
+	}
+
 	relations := []id.IngressRelation{}
 	for _, relation := range structure.IngressDescriptor.Relations {
 		relations = append(relations,
@@ -116,7 +127,7 @@ func (s *YAMLStorage) Read() (id.IngressDescriptor, *id.Error) {
 		)
 	}
 
-	return id.NewIngressDescriptor(id.NewTable(structure.IngressDescriptor.StartTable), structure.IngressDescriptor.Select, id.NewIngressRelationList(relations)), nil
+	return id.NewIngressDescriptor(id.NewTable(structure.IngressDescriptor.StartTable), structure.IngressDescriptor.Select, id.NewIngressColumnFormatList(formats), id.NewIngressRelationList(relations)), nil
 }
 
 func writeFile(structure *YAMLStructure, filename string) *id.Error {

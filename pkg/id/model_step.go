@@ -66,18 +66,20 @@ type pullerPlan struct {
 	relations   IngressRelationList
 	tables      TableList
 	startSelect []string
+	formats     IngressColumnFormatList
 }
 
 // NewPullerPlan initialize a new PullerPlan object
-func NewPullerPlan(steps []Step, relations IngressRelationList, tables TableList, startSelect []string) PullerPlan {
-	return pullerPlan{uint(len(steps)), steps, relations, tables, startSelect}
+func NewPullerPlan(steps []Step, relations IngressRelationList, tables TableList, startSelect []string, formats IngressColumnFormatList) PullerPlan {
+	return pullerPlan{uint(len(steps)), steps, relations, tables, startSelect, formats}
 }
 
-func (l pullerPlan) Len() uint                      { return l.len }
-func (l pullerPlan) Step(idx uint) Step             { return l.slice[idx] }
-func (l pullerPlan) Relations() IngressRelationList { return l.relations }
-func (l pullerPlan) Tables() TableList              { return l.tables }
-func (l pullerPlan) Select() []string               { return l.startSelect }
+func (l pullerPlan) Len() uint                        { return l.len }
+func (l pullerPlan) Step(idx uint) Step               { return l.slice[idx] }
+func (l pullerPlan) Relations() IngressRelationList   { return l.relations }
+func (l pullerPlan) Tables() TableList                { return l.tables }
+func (l pullerPlan) Select() []string                 { return l.startSelect }
+func (l pullerPlan) Formats() IngressColumnFormatList { return l.formats }
 func (l pullerPlan) String() string {
 	switch l.len {
 	case 0:

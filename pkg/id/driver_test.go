@@ -80,7 +80,7 @@ var adCreateTests = []struct {
 		}),
 		id.NewIngressDescriptor(
 			id.NewTable("A"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("B->A", false, false),
 			}),
@@ -99,7 +99,7 @@ var adCreateTests = []struct {
 		}),
 		id.NewIngressDescriptor(
 			id.NewTable("A"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("A->B", false, true),
 				adRelationString("B->C", false, true),
@@ -123,7 +123,7 @@ var adCreateTests = []struct {
 		}),
 		id.NewIngressDescriptor(
 			id.NewTable("A"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("A->B", false, true),
 				adRelationString("B->C", false, true),
@@ -144,7 +144,7 @@ func TestCreate(t *testing.T) {
 			}
 			storage := &MemoryStorage{}
 
-			err := id.Create(startTable, []string{}, relReader, storage)
+			err := id.Create(startTable, []string{}, nil, relReader, storage)
 
 			assert.Nil(t, err)
 
@@ -203,7 +203,7 @@ var adShowTests = []struct {
 	{
 		id.NewIngressDescriptor(
 			id.NewTable("A"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("A->B", false, true),
 			}),
@@ -217,7 +217,7 @@ var adShowTests = []struct {
 	{ // example 1
 		id.NewIngressDescriptor(
 			id.NewTable("I"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("C->O", false, true),
 				adRelationString("O->D", false, true),
@@ -232,7 +232,7 @@ var adShowTests = []struct {
 	{ // example 1
 		id.NewIngressDescriptor(
 			id.NewTable("I"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("C->O", false, true),
 				adRelationString("O->D", false, true),
@@ -247,7 +247,7 @@ var adShowTests = []struct {
 	{ // example 1 (table C)
 		id.NewIngressDescriptor(
 			id.NewTable("C"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("C->O", false, true),
 				adRelationString("O->D", false, true),
@@ -263,7 +263,7 @@ var adShowTests = []struct {
 	{ // example 1 (table D)
 		id.NewIngressDescriptor(
 			id.NewTable("D"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("C->O", false, true),
 				adRelationString("O->D", false, true),
@@ -277,7 +277,7 @@ var adShowTests = []struct {
 	{ // example 1 (table O)
 		id.NewIngressDescriptor(
 			id.NewTable("O"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("C->O", false, true),
 				adRelationString("O->D", false, true),
@@ -292,7 +292,7 @@ var adShowTests = []struct {
 	{ // example 2
 		id.NewIngressDescriptor(
 			id.NewTable("C"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("C->O", false, true),
 				adRelationString("O->D", false, true),
@@ -347,7 +347,7 @@ var adShowTests = []struct {
 	{ // example 3 Variant bis
 		id.NewIngressDescriptor(
 			id.NewTable("O"),
-			[]string{},
+			[]string{}, nil,
 			id.NewIngressRelationList([]id.IngressRelation{
 				adRelationString("C->O", true, false),
 			}),
@@ -397,49 +397,49 @@ var adShowTests = []struct {
 }
 
 func TestUpdateStartTable(t *testing.T) {
-	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("old"), []string{}, id.NewIngressRelationList([]id.IngressRelation{
+	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("old"), []string{}, nil, id.NewIngressRelationList([]id.IngressRelation{
 		adRelationString("old->new", false, true),
 	}))}
 
 	err := id.SetStartTable(id.NewTable("new"), storage)
 
 	assert.Nil(t, err)
-	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("new"), []string{}, id.NewIngressRelationList([]id.IngressRelation{
+	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("new"), []string{}, nil, id.NewIngressRelationList([]id.IngressRelation{
 		adRelationString("old->new", false, true),
 	})), storage.id)
 }
 
 func TestUpdateStartTableCheckTable(t *testing.T) {
-	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("old"), []string{}, id.NewIngressRelationList([]id.IngressRelation{}))}
+	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("old"), []string{}, nil, id.NewIngressRelationList([]id.IngressRelation{}))}
 
 	err := id.SetStartTable(id.NewTable("new"), storage)
 
 	assert.EqualError(t, err, "Table new doesn't exist")
-	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("old"), []string{}, id.NewIngressRelationList([]id.IngressRelation{})), storage.id)
+	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("old"), []string{}, nil, id.NewIngressRelationList([]id.IngressRelation{})), storage.id)
 }
 
 func TestUpdateParentLookup(t *testing.T) {
-	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("A"), []string{}, id.NewIngressRelationList([]id.IngressRelation{
+	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("A"), []string{}, nil, id.NewIngressRelationList([]id.IngressRelation{
 		adRelationString("A->B", false, true),
 	}))}
 
 	err := id.SetParentLookup("A_B", true, storage)
 
 	assert.Nil(t, err)
-	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("A"), []string{}, id.NewIngressRelationList([]id.IngressRelation{
+	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("A"), []string{}, nil, id.NewIngressRelationList([]id.IngressRelation{
 		adRelationString("A->B", true, true),
 	})), storage.id)
 }
 
 func TestUpdateChildLookup(t *testing.T) {
-	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("A"), []string{}, id.NewIngressRelationList([]id.IngressRelation{
+	storage := &MemoryStorage{id: id.NewIngressDescriptor(id.NewTable("A"), []string{}, nil, id.NewIngressRelationList([]id.IngressRelation{
 		adRelationString("A->B", false, true),
 	}))}
 
 	err := id.SetChildLookup("A_B", false, storage)
 
 	assert.Nil(t, err)
-	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("A"), []string{}, id.NewIngressRelationList([]id.IngressRelation{
+	assert.Equal(t, id.NewIngressDescriptor(id.NewTable("A"), []string{}, nil, id.NewIngressRelationList([]id.IngressRelation{
 		adRelationString("A->B", false, false),
 	})), storage.id)
 }

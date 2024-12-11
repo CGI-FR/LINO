@@ -109,19 +109,21 @@ func (l idrelationList) String() string {
 }
 
 // NewIngressDescriptor initialize a new IngressDescriptor object
-func NewIngressDescriptor(start Table, selectColumns []string, relations IngressRelationList) IngressDescriptor {
-	return id{startTable: table{name: start.Name()}, selectColumns: selectColumns, relations: relations}
+func NewIngressDescriptor(start Table, selectColumns []string, formats IngressColumnFormatList, relations IngressRelationList) IngressDescriptor {
+	return id{startTable: table{name: start.Name()}, selectColumns: selectColumns, formats: formats, relations: relations}
 }
 
 type id struct {
 	startTable    table
 	selectColumns []string
+	formats       IngressColumnFormatList
 	relations     IngressRelationList
 }
 
-func (id id) StartTable() Table              { return id.startTable }
-func (id id) Select() []string               { return id.selectColumns }
-func (id id) Relations() IngressRelationList { return id.relations }
+func (id id) StartTable() Table                { return id.startTable }
+func (id id) Select() []string                 { return id.selectColumns }
+func (id id) Formats() IngressColumnFormatList { return id.formats }
+func (id id) Relations() IngressRelationList   { return id.relations }
 func (id id) String() string {
 	return fmt.Sprintf("%v [%v] (%v)", id.startTable, id.selectColumns, id.relations)
 }

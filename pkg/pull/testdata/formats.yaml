@@ -1,0 +1,29 @@
+tables:
+  film: &film
+    name: film
+    keys: [film_id]
+    columns:
+      - name: title
+      - name: release_year
+dataset:
+  film:
+    - { "film_id": 1, "title": "ACADEMY DINOSAUR 1", "release_year": 2006 }
+    - { "film_id": 2, "title": "ACADEMY DINOSAUR 2" }
+    - { "film_id": 3, "title": "ACADEMY DINOSAUR 3", "release_year": 2021 }
+plan:
+  components:
+    film: 0
+  relations: []
+executions:
+  - start: *film
+    filter:
+      limit: 0
+      values: {}
+      where: ""
+    formats:
+      release_year: "presence"
+      title: "no"
+    result:
+      - '{"release_year":true}'
+      - '{"release_year":null}'
+      - '{"release_year":true}'

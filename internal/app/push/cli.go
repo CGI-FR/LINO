@@ -132,7 +132,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				os.Exit(1)
 			}
 
-			plan, e2 := getPlan(idStorageFactory(table, ingressDescriptor), autoTruncate)
+			plan, formats, e2 := getPlan(idStorageFactory(table, ingressDescriptor), autoTruncate)
 			if e2 != nil {
 				fmt.Fprintln(err, e2.Error())
 				os.Exit(2)
@@ -161,7 +161,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				observers = append(observers, observer)
 			}
 
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator, whereField, savepoint, autoTruncate, observers...)
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator, whereField, savepoint, autoTruncate, formats, observers...)
 			if e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)
@@ -253,20 +253,20 @@ func getDataDestination(dataconnectorName string) (push.DataDestination, *push.E
 	return datadestinationFactory.New(u.URL.String(), alias.Schema), nil
 }
 
-func getPlan(idStorage id.Storage, autoTruncate bool) (push.Plan, *push.Error) {
+func getPlan(idStorage id.Storage, autoTruncate bool) (push.Plan, map[string]string, *push.Error) {
 	id, err1 := idStorage.Read()
 	if err1 != nil {
-		return nil, &push.Error{Description: err1.Error()}
+		return nil, nil, &push.Error{Description: err1.Error()}
 	}
 
 	relations, err2 := relStorage.List()
 	if err2 != nil {
-		return nil, &push.Error{Description: err2.Error()}
+		return nil, nil, &push.Error{Description: err2.Error()}
 	}
 
 	tables, err3 := tabStorage.List()
 	if err3 != nil {
-		return nil, &push.Error{Description: err3.Error()}
+		return nil, nil, &push.Error{Description: err3.Error()}
 	}
 
 	rmap := map[string]relation.Relation{}
@@ -286,7 +286,14 @@ func getPlan(idStorage id.Storage, autoTruncate bool) (push.Plan, *push.Error) {
 		pushtmap: map[string]push.Table{},
 	}
 
-	return converter.getPlan(id, autoTruncate), nil
+	formats := map[string]string{}
+	if id.Formats() != nil {
+		for _, column := range id.Formats().Columns() {
+			formats[column] = id.Formats().Get(column).Export()
+		}
+	}
+
+	return converter.getPlan(id, autoTruncate), formats, nil
 }
 
 type idToPushConverter struct {

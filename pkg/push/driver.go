@@ -26,6 +26,7 @@ import (
 )
 
 // Push write rows to target table
+// nolint:gocyclo
 func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, savepointPath string, autotruncate bool, observers ...Observer) (err *Error) {
 	defer func() {
 		for _, observer := range observers {
@@ -43,6 +44,14 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 	defer func() {
 		er1 := destination.Close()
 		er2 := ri.Close()
+
+		if er1 != nil {
+			log.Warn().Msg(fmt.Sprintf("Failed to close data destination : %s", er1.Error()))
+		}
+
+		if er2 != nil {
+			log.Warn().Msg(fmt.Sprintf("Failed to close connection : %s", er1.Error()))
+		}
 
 		switch {
 		case er1 != nil && er2 == nil && err == nil:
@@ -108,6 +117,12 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 			}
 		}
 	}
+
+	log.Info().Msg("Final commit")
+	if errCommit := destination.Commit(); errCommit != nil {
+		return errCommit
+	}
+	IncCommitsCount()
 
 	if ri.Error() != nil {
 		return ri.Error()

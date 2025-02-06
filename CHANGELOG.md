@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [3.1.1]
+
+- `Fixed` final commit on push
+
 ## [3.1.0]
 
 - `Added` possibility to filter columns via `select` property in ingress descriptors

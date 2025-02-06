@@ -26,6 +26,7 @@ import (
 )
 
 // Push write rows to target table
+// nolint:gocyclo
 func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, savepointPath string, autotruncate bool, observers ...Observer) (err *Error) {
 	defer func() {
 		for _, observer := range observers {

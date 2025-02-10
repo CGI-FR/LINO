@@ -24,7 +24,7 @@ require (
 	github.com/sijms/go-ora/v2 v2.8.23
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
-	github.com/xo/dburl v0.23.2
+	github.com/xo/dburl v0.23.3
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/term v0.28.0
 	gopkg.in/yaml.v3 v3.0.1

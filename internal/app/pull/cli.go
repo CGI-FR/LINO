@@ -84,6 +84,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var initialFilters map[string]string
 	var diagnostic bool
 	var filters pull.RowReader
+	var scann bool
 	var parallel uint
 
 	cmd := &cobra.Command{
@@ -99,6 +100,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Bool("diagnostic", diagnostic).
 				Bool("distinct", distinct).
 				Str("filter-from-file", filefilter).
+				Bool("scann", scann).
 				Str("exclude-from-file", fileexclude).
 				Str("table", table).
 				Str("where", where).
@@ -133,19 +135,47 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				tracer = traceListener
 			}
 
-			switch filefilter {
-			case "":
-				filters = pull.NewOneEmptyRowReader()
-			case "-":
-				filters = rowReaderFactory(in)
-			default:
-				filterReader, e3 := os.Open(filefilter)
-				if e3 != nil {
-					fmt.Fprintln(err, e3.Error())
-					os.Exit(1)
+			var filtersIn pull.KeyStore
+			if scann {
+				switch filefilter {
+				case "":
+					filtersIn = nil
+				case "-":
+					var eks error
+					filtersIn, eks = keyStoreFactory(in, start.Keys)
+					if err != nil {
+						fmt.Fprintln(err, eks.Error())
+						os.Exit(1)
+					}
+				default:
+					filterReader, e3 := os.Open(filefilter)
+					if e3 != nil {
+						fmt.Fprintln(err, e3.Error())
+						os.Exit(1)
+					}
+					var eks error
+					filtersIn, eks = keyStoreFactory(filterReader, start.Keys)
+					if err != nil {
+						fmt.Fprintln(err, eks.Error())
+						os.Exit(1)
+					}
+					log.Trace().Str("file", filefilter).Msg("reading file")
 				}
-				filters = rowReaderFactory(filterReader)
-				log.Trace().Str("file", filefilter).Msg("reading file")
+			} else {
+				switch filefilter {
+				case "":
+					filters = pull.NewOneEmptyRowReader()
+				case "-":
+					filters = rowReaderFactory(in)
+				default:
+					filterReader, e3 := os.Open(filefilter)
+					if e3 != nil {
+						fmt.Fprintln(err, e3.Error())
+						os.Exit(1)
+					}
+					filters = rowReaderFactory(filterReader)
+					log.Trace().Str("file", filefilter).Msg("reading file")
+				}
 			}
 
 			var filtersEx pull.KeyStore
@@ -175,7 +205,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			}
 
 			puller := pull.NewPullerParallel(plan, datasource, pullExporterFactory(out), tracer, parallel)
-			if e3 := puller.Pull(start, filter, startSelect, filters, filtersEx); e3 != nil {
+			if e3 := puller.Pull(start, filter, startSelect, filters, filtersEx, filtersIn); e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the pull command")
 				os.Exit(1)
 			}
@@ -192,6 +222,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
 	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "select distinct values from start table")
 	cmd.Flags().StringVarP(&filefilter, "filter-from-file", "F", "", "Use file to filter start table")
+	cmd.Flags().BoolVarP(&scann, "scann", "s", false, "read all rows from start table and apply filter `filter-from-file` in memory")
 	cmd.Flags().StringVarP(&fileexclude, "exclude-from-file", "X", "", "Use file to filter out start table")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "pull content of table without relations instead of ingress descriptor definition")
 	cmd.Flags().StringVarP(&where, "where", "w", "", "Advanced SQL where clause to filter")

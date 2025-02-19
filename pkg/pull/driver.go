@@ -46,7 +46,7 @@ func NewStep(puller *puller, out ExportedRow, entry Relation) *Step {
 }
 
 type Puller interface {
-	Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore) error
+	Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore, included KeyStore) error
 }
 
 type puller struct {
@@ -65,7 +65,7 @@ func NewPuller(plan Plan, datasource DataSource, exporter RowExporter, diagnosti
 	}
 }
 
-func (p *puller) Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore) error {
+func (p *puller) Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore, included KeyStore) error {
 	start.selectColumns(selectColumns...)
 	start = p.graph.addMissingColumns(start)
 
@@ -78,9 +78,11 @@ func (p *puller) Pull(start Table, filter Filter, selectColumns []string, filter
 	Reset()
 
 	filters := []Filter{}
+	// If scann is on all rows are pulled and filter after
 	if filterCohort != nil {
 		for filterCohort.Next() {
 			fc := filterCohort.Value()
+
 			values := Row{}
 			for key, val := range fc {
 				values[key] = val
@@ -116,6 +118,10 @@ func (p *puller) Pull(start Table, filter Filter, selectColumns []string, filter
 			row := start.export(reader.Value())
 
 			if excluded != nil && excluded.Has(extract(row, start.Keys)) {
+				continue
+			}
+
+			if included != nil && !included.Has(extract(row, start.Keys)) {
 				continue
 			}
 

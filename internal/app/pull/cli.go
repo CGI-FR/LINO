@@ -143,7 +143,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				case "-":
 					var eks error
 					filtersIn, eks = keyStoreFactory(in, start.Keys)
-					if err != nil {
+					if eks != nil {
 						fmt.Fprintln(err, eks.Error())
 						os.Exit(1)
 					}
@@ -155,7 +155,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 					}
 					var eks error
 					filtersIn, eks = keyStoreFactory(filterReader, start.Keys)
-					if err != nil {
+					if eks != nil {
 						fmt.Fprintln(err, eks.Error())
 						os.Exit(1)
 					}

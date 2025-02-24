@@ -36,6 +36,7 @@ type pullerParallel struct {
 	outChan   chan ExportedRow
 	errors    []error
 	excluded  KeyStore
+	included  KeyStore
 }
 
 func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, diagnostic TraceListener, nbworkers uint) Puller { //nolint:lll
@@ -55,13 +56,14 @@ func NewPullerParallel(plan Plan, datasource DataSource, exporter RowExporter, d
 			outChan:   nil,
 			errors:    nil,
 			excluded:  nil,
+			included:  nil,
 		}
 	}
 
 	return puller
 }
 
-func (p *pullerParallel) Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore) error {
+func (p *pullerParallel) Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore, included KeyStore) error {
 	start.selectColumns(selectColumns...)
 	start = p.graph.addMissingColumns(start)
 
@@ -103,6 +105,7 @@ func (p *pullerParallel) Pull(start Table, filter Filter, selectColumns []string
 	p.outChan = make(chan ExportedRow)
 	p.errors = []error{}
 	p.excluded = excluded
+	p.included = included
 
 	wg := &sync.WaitGroup{}
 
@@ -169,6 +172,10 @@ LOOP:
 			out := start.export(row)
 
 			if p.excluded != nil && p.excluded.Has(extract(out, start.Keys)) {
+				continue
+			}
+
+			if p.included != nil && !p.included.Has(extract(out, start.Keys)) {
 				continue
 			}
 

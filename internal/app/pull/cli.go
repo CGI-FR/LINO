@@ -84,7 +84,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var initialFilters map[string]string
 	var diagnostic bool
 	var filters pull.RowReader
-	var scann bool
+	var scan bool
 	var parallel uint
 
 	cmd := &cobra.Command{
@@ -100,7 +100,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Bool("diagnostic", diagnostic).
 				Bool("distinct", distinct).
 				Str("filter-from-file", filefilter).
-				Bool("scann", scann).
+				Bool("scan", scan).
 				Str("exclude-from-file", fileexclude).
 				Str("table", table).
 				Str("where", where).
@@ -136,7 +136,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			}
 
 			var filtersIn pull.KeyStore
-			if scann {
+			if scan {
 				switch filefilter {
 				case "":
 					filtersIn = nil
@@ -222,7 +222,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().BoolVarP(&diagnostic, "diagnostic", "d", false, "Set diagnostic debug on")
 	cmd.Flags().BoolVarP(&distinct, "distinct", "D", false, "select distinct values from start table")
 	cmd.Flags().StringVarP(&filefilter, "filter-from-file", "F", "", "Use file to filter start table")
-	cmd.Flags().BoolVarP(&scann, "scann", "s", false, "read all rows from start table and apply filter `filter-from-file` in memory")
+	cmd.Flags().BoolVarP(&scan, "scan", "s", false, "read all rows from start table and apply filter `filter-from-file` in memory")
 	cmd.Flags().StringVarP(&fileexclude, "exclude-from-file", "X", "", "Use file to filter out start table")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "pull content of table without relations instead of ingress descriptor definition")
 	cmd.Flags().StringVarP(&where, "where", "w", "", "Advanced SQL where clause to filter")

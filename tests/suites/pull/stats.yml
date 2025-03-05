@@ -22,9 +22,9 @@ testcases:
       # Clean working directory
       - script: rm -f *
       - script: cp ../../httpmock/default.json ..
-      - script: sudo docker-compose -p lino stop httpmock
-      - script: sudo docker-compose -p lino rm -f httpmock
-      - script: sudo docker-compose -p lino up -d httpmock
+      - script: sudo docker compose -p lino stop httpmock
+      - script: sudo docker compose -p lino rm -f httpmock
+      - script: sudo docker compose -p lino up -d httpmock
       - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
       - script: lino relation extract source
       - script: lino table extract source --only-tables

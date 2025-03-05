@@ -21,7 +21,7 @@ testcases:
     steps:
       # Clean working directory
       - script: rm -f *
-      - script: sudo docker-compose -p lino stop source dest && sudo docker-compose -p lino rm -f source dest && sudo docker-compose -p lino up -d source dest && sudo docker-compose -p lino up -d --build lino
+      - script: sudo docker compose -p lino stop source dest && sudo docker compose -p lino rm -f source dest && sudo docker compose -p lino up -d source dest && sudo docker compose -p lino up -d --build lino
       # .devcontainer and lino http share same test workdir
       # edit yaml here is the same as in lino-http's container
       - script: lino dataconnector add --password-from-env PASSWORD source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable

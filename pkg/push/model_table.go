@@ -121,9 +121,9 @@ func (t *table) initTemplate() {
 		return
 	}
 
-	if l := int(t.columns.Len()); l > 0 {
+	if l := int(t.columns.Len()); l > 0 { //nolint:gosec
 		for idx := 0; idx < l; idx++ {
-			col := t.columns.Column(uint(idx))
+			col := t.columns.Column(uint(idx)) //nolint:gosec
 			key := col.Name()
 
 			format, typ := parseFormatWithType(col.Import())

@@ -68,7 +68,7 @@ func (b builder) plan() (pull.Plan, pull.Table, error) {
 
 	for stepidx, step := range b.smap {
 		log.Debug().Int("stepidx", stepidx+1).Stringer("step", step).Msg("building step")
-		plan.Components[pull.TableName(step.Entry().Name())] = uint(stepidx)
+		plan.Components[pull.TableName(step.Entry().Name())] = uint(stepidx) //nolint:gosec
 
 		log.Trace().
 			Int("stepidx", stepidx+1).

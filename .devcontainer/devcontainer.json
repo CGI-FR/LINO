@@ -68,12 +68,6 @@
             "gci",
             "--disable",
             "forbidigo",
-            "--disable",
-            "scopelint",
-            "--disable",
-            "interfacer",
-            "--disable",
-            "maligned",
         ],
         // Golang on save
         "go.buildOnSave": "workspace",
@@ -95,4 +89,3 @@
         "go.coverShowCounts": true,
     }
 }
-

@@ -18,6 +18,7 @@
 package pull
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -65,10 +66,10 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 
 		if query.Get("limit") != "" {
 			limit64, elimit := strconv.ParseUint(query.Get("limit"), 10, 32)
-			if elimit != nil {
-				log.Error().Msg("can't parse limit")
+			if elimit != nil || limit64 > math.MaxInt32 {
+				log.Error().Msg("can't parse limit or limit is too large")
 				w.WriteHeader(http.StatusBadRequest)
-				_, ew := w.Write([]byte("{\"error\" : \"param limit must be an positive integer\"}\n"))
+				_, ew := w.Write([]byte("{\"error\" : \"param limit must be a positive integer within the valid range\"}\n"))
 				if ew != nil {
 					log.Error().Msg("Write failed")
 					return

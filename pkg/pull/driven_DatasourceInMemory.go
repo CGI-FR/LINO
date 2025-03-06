@@ -19,6 +19,7 @@ package pull
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/rs/zerolog/log"
 )
@@ -84,7 +85,7 @@ LOOK_FOR_MATCHING_ROWS:
 			result = append(result, copyr)
 		}
 
-		if filter.Limit > 0 && len(result) >= int(filter.Limit) {
+		if filter.Limit > 0 && filter.Limit <= math.MaxInt32 && len(result) >= int(filter.Limit) { //nolint:gosec
 			break LOOK_FOR_MATCHING_ROWS
 		}
 	}

@@ -124,12 +124,14 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 		return 0, &table.Error{Description: err.Error()}
 	}
 
-	SQL := `SELECT COUNT(*) FROM ` + tableName
+	SQL := `SELECT COUNT(*) FROM ` + tableName //nolint:gosec
 
 	rows, err := db.Query(SQL)
 	if err != nil {
 		return 0, &table.Error{Description: err.Error()}
 	}
+
+	defer rows.Close()
 
 	var count int
 

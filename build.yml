@@ -54,7 +54,7 @@ properties:
       "gocritic",
       "whitespace",
     ]
-  lintersno: ["scopelint", "interfacer", "maligned", "forbidigo", "gci"] # List of linters to exclude on running the lint target
+  lintersno: ["forbidigo", "gci"] # List of linters to exclude on running the lint target
 
   # If true, do not upload release when publish target is used
   snapshot: false
@@ -229,6 +229,7 @@ targets:
     doc: "Examine source code and report suspicious constructs"
     depends: ["info", "refresh"]
     steps:
+      - $: 'killall golangci-lint || :'
       - if: len(linters) == 0
         then:
           - $: golangci-lint run --enable-all ={replace(join(appendpath("--disable", lintersno), " "), "/", " ")}
@@ -256,12 +257,12 @@ targets:
     doc: "Clean docker container"
     steps:
       - $: |
-          sudo docker-compose -p lino stop source
-          sudo docker-compose -p lino stop dest
-          sudo docker-compose -p lino rm -f source
-          sudo docker-compose -p lino rm -f dest
-          sudo docker-compose -p lino up -d source dest
-          sudo docker-compose -p lino up -d --build lino
+          sudo docker compose -p lino stop source
+          sudo docker compose -p lino stop dest
+          sudo docker compose -p lino rm -f source
+          sudo docker compose -p lino rm -f dest
+          sudo docker compose -p lino up -d source dest
+          sudo docker compose -p lino up -d --build lino
           mkdir -p ={TEST_WS_DIR}
           sudo chown vscode:vscode ={TEST_WS_DIR}
           sleep 60

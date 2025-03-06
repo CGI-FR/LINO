@@ -16,7 +16,3 @@
 # along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
 FROM ghcr.io/cgi-fr/lino-dev-container:v2.0.0
-
-RUN sudo curl -SL https://github.com/docker/compose/releases/download/v2.33.1/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
-RUN sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
-RUN docker compose version

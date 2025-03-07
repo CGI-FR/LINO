@@ -17,6 +17,7 @@ builds:
       - windows
     goarch:
       - amd64
+      - 386
     ldflags:
       - -s -w -X main.name={{ path.Base . }} {{env.Getenv "LDFLAGS"}}
 {{end}}
@@ -68,3 +69,7 @@ builds:
       - -tags=db2
     ldflags:
       - -s -w -X main.name=lino-db2 {{env.Getenv "LDFLAGS"}}
+
+archives:
+- id: lino
+  allow_different_binary_count: true

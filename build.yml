@@ -302,6 +302,7 @@ targets:
       - if: len(buildpaths) == 0
         then:
           - buildpaths = ['cmd/lino']
+      - print: 'Publishing build paths ={buildpaths}'
       - ldflags = ldflags + " -s -w" # Omit the DWARF symbol table. Omit the symbol table and debug information.
       - ldflags = ldflags + " -X main.version=" + tag + " -X main.commit=" + commit + " -X main.buildDate=" + date + " -X main.builtBy=" + by
       - $: (export LDFLAGS="={ldflags}"; export BUILDPATHS="={buildpaths}"; cat .goreleaser.template.yml | gomplate)

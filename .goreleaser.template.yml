@@ -30,8 +30,7 @@ builds:
     flags:
       - -tags=db2
     ldflags:
-      - -s -w -X main.name=lino-db2 -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
-      - -X main.tag={{.Env.VERSION}} -X main.buildDate={{.Env.BUILD_DATE}}
+      - -s -w -X main.name=lino-db2 {{env.Getenv "LDFLAGS"}}
 
   - id: "lino-db2-mingw64"
     main: ./cmd/lino
@@ -48,8 +47,7 @@ builds:
     flags:
       - -tags=db2
     ldflags:
-      - -s -w -X main.name=lino-db2 -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
-      - -X main.tag={{.Env.VERSION}} -X main.buildDate={{.Env.BUILD_DATE}}
+      - -s -w -X main.name=lino-db2 {{env.Getenv "LDFLAGS"}}
 
   - id: "lino-db2-mingw32"
     main: ./cmd/lino
@@ -66,5 +64,4 @@ builds:
     flags:
       - -tags=db2
     ldflags:
-      - -s -w -X main.name=lino-db2 -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
-      - -X main.tag={{.Env.VERSION}} -X main.buildDate={{.Env.BUILD_DATE}}
+      - -s -w -X main.name=lino-db2 {{env.Getenv "LDFLAGS"}}

@@ -1,3 +1,4 @@
+version: 2
 env:
   - GO111MODULE=on
   - CGO_ENABLED=0
@@ -14,6 +15,8 @@ builds:
       - darwin
       - linux
       - windows
+    goarch:
+      - amd64
     ldflags:
       - -s -w -X main.name={{ path.Base . }} {{env.Getenv "LDFLAGS"}}
 {{end}}

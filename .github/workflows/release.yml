@@ -52,4 +52,4 @@ jobs:
             vscode \
             neon -props "{tag: ${CI_ACTION_REF_NAME}, MODULE: github.com/${CI_REPOSITORY,,}, BY: ${CI_ACTOR}, latest: true}" publish docker-push
       - name: Test version
-        run: docker compose exec -T -u vscode vscode /workspace/dist/lino_linux_amd64_v1/lino --version
+        run: docker compose exec -T -u vscode vscode /workspace/bin/dist/cmd/lino_linux_amd64_v1/lino --version

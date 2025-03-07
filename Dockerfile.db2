@@ -37,7 +37,7 @@ ARG VERSION_MILLER=5.10.2
 ADD https://github.com/johnkerl/miller/releases/download/v${VERSION_MILLER}/mlr.linux.x86_64 /usr/bin/mlr
 RUN chmod +x /usr/bin/mlr
 
-COPY dist/lino-db2_linux_amd64_v1/lino-db2 /usr/bin/lino
+COPY bin/dist/lino-db2_linux_amd64_v1/lino-db2 /usr/bin/lino
 
 COPY --from=pimo /usr/bin/pimo /usr/bin/pimo
 

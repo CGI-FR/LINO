@@ -1,5 +1,6 @@
 env:
   - GO111MODULE=on
+  - CGO_ENABLED=0
 before:
   hooks:
     - go mod download
@@ -16,3 +17,54 @@ builds:
     ldflags:
       - -s -w -X main.name={{ path.Base . }} {{env.Getenv "LDFLAGS"}}
 {{end}}
+
+  - id: lino-db2
+    main: ./cmd/lino
+    goos:
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+    binary: lino-db2
+    flags:
+      - -tags=db2
+    ldflags:
+      - -s -w -X main.name=lino-db2 -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+      - -X main.tag={{.Env.VERSION}} -X main.buildDate={{.Env.BUILD_DATE}}
+
+  - id: "lino-db2-mingw64"
+    main: ./cmd/lino
+    goos:
+      - windows
+    goarch:
+      - "amd64"
+    env:
+      - CGO_ENABLED=1
+      - CXX_FOR_TARGET=x86_64-w64-mingw32-g++
+      - CC_FOR_TARGET=x86_64-w64-mingw32-gcc
+      - CC=x86_64-w64-mingw32-gcc-win32
+    binary: lino-db2
+    flags:
+      - -tags=db2
+    ldflags:
+      - -s -w -X main.name=lino-db2 -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+      - -X main.tag={{.Env.VERSION}} -X main.buildDate={{.Env.BUILD_DATE}}
+
+  - id: "lino-db2-mingw32"
+    main: ./cmd/lino
+    goos:
+      - windows
+    goarch:
+      - "386"
+    env:
+      - CGO_ENABLED=1
+      - CXX_FOR_TARGET=i686-w64-mingw32-g++
+      - CC_FOR_TARGET=i686-w64-mingw32-gcc
+      - CC=i686-w64-mingw32-gcc-win32
+    binary: lino-db2
+    flags:
+      - -tags=db2
+    ldflags:
+      - -s -w -X main.name=lino-db2 -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+      - -X main.tag={{.Env.VERSION}} -X main.buildDate={{.Env.BUILD_DATE}}

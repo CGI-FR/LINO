@@ -97,7 +97,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode, ingressDesc
 		}
 	}
 
-	plan, e2 := getPlan(idStorageFactory(query.Get("table"), ingressDescriptor), autoTruncate)
+	plan, formats, e2 := getPlan(idStorageFactory(query.Get("table"), ingressDescriptor), autoTruncate)
 	if e2 != nil {
 		log.Error().Err(e2).Msg("")
 		w.WriteHeader(http.StatusNotFound)
@@ -146,7 +146,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode, ingressDesc
 
 	log.Debug().Msg(fmt.Sprintf("call Push with mode %s", mode))
 
-	e3 := push.Push(rowIteratorFactory(r.Body), datadestination, plan, mode, commitSize, disableConstraints, push.NoErrorCaptureRowWriter{}, nil, query.Get("using-pk-field"), "", false)
+	e3 := push.Push(rowIteratorFactory(r.Body), datadestination, plan, mode, commitSize, disableConstraints, push.NoErrorCaptureRowWriter{}, nil, query.Get("using-pk-field"), "", false, formats)
 	if e3 != nil {
 		log.Error().Err(e3).Msg("")
 		w.WriteHeader(http.StatusNotFound)

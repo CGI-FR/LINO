@@ -178,3 +178,37 @@ func (t *Table) selectColumns(columnNames ...string) {
 		Interface("table", t.Name).
 		Msg("select only columns defined")
 }
+
+func (t *Table) applyFormats(formats map[string]string) {
+	t.template = jsonline.NewTemplate()
+
+	if len(t.Columns) > 0 {
+		for _, column := range t.Columns {
+			key := column.Name
+
+			exp := column.Export
+			if override, ok := formats[column.Name]; ok {
+				exp = override
+			}
+
+			switch exp {
+			case "string":
+				t.template.WithString(key)
+			case "numeric":
+				t.template.WithNumeric(key)
+			case "base64":
+				t.template.WithBinary(key)
+			case "datetime":
+				t.template.WithDateTime(key)
+			case "timestamp":
+				t.template.WithTimestamp(key)
+			case "no":
+				t.template.WithHidden(key)
+			case "presence":
+				t.template.WithBoolean(key)
+			default:
+				t.template.WithAuto(key)
+			}
+		}
+	}
+}

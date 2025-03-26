@@ -114,6 +114,27 @@ type ImportedRow struct {
 	jsonline.Row
 }
 
+func (t *table) applyFormats(formats map[string]string) {
+	if t.columns == nil {
+		return
+	}
+
+	if l := int(t.columns.Len()); l > 0 {
+		columns := []Column{}
+		for idx := 0; idx < l; idx++ {
+			col := t.columns.Column(uint(idx))
+			key := col.Name()
+
+			if format, exist := formats[key]; exist {
+				columns = append(columns, NewColumn(col.Name(), col.Export(), format, col.Length(), col.LengthInBytes(), col.Truncate()))
+			} else {
+				columns = append(columns, NewColumn(col.Name(), col.Export(), col.Import(), col.Length(), col.LengthInBytes(), col.Truncate()))
+			}
+		}
+		t.columns = NewColumnList(columns)
+	}
+}
+
 func (t *table) initTemplate() {
 	t.template = jsonline.NewTemplate()
 

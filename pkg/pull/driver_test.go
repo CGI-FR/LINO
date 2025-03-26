@@ -30,10 +30,11 @@ import (
 )
 
 type Execution struct {
-	Start  pull.Table
-	Filter pull.Filter
-	Select []string
-	Result []string
+	Start   pull.Table
+	Filter  pull.Filter
+	Select  []string
+	Formats map[string]string
+	Result  []string
 }
 
 type Test struct {
@@ -74,7 +75,7 @@ func RunTest(t *testing.T, test *Test) {
 
 	for _, execution := range test.Executions {
 		collector.Reset()
-		assert.NoError(t, puller.Pull(execution.Start, execution.Filter, execution.Select, nil, nil))
+		assert.NoError(t, puller.Pull(execution.Start, execution.Filter, execution.Select, execution.Formats, nil, nil))
 		assert.Len(t, collector.Result, len(execution.Result))
 
 		for i := 0; i < len(execution.Result); i++ {
@@ -94,7 +95,7 @@ func RunBench(b *testing.B, test *Test) {
 
 	for _, execution := range test.Executions {
 		collector.Reset()
-		assert.NoError(b, puller.Pull(execution.Start, execution.Filter, execution.Select, nil, nil))
+		assert.NoError(b, puller.Pull(execution.Start, execution.Filter, execution.Select, nil, nil, nil))
 		assert.Len(b, collector.Result, len(execution.Result))
 	}
 }
@@ -172,6 +173,12 @@ func TestBug1(t *testing.T) {
 	t.Parallel()
 
 	LoadAndRunTest(t, "bug1.yaml")
+}
+
+func TestFormats(t *testing.T) {
+	t.Parallel()
+
+	LoadAndRunTest(t, "formats.yaml")
 }
 
 func BenchmarkSimpleWithComponents(b *testing.B) {

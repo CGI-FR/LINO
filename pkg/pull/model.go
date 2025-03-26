@@ -73,6 +73,7 @@ type Relation struct {
 	Foreign     RelationTip
 	Where       string
 	Select      []string
+	Export      map[string]string // optional export mode for each column
 }
 
 type RelationSet []Relation

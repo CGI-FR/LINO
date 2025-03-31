@@ -242,6 +242,7 @@ func (rw *SQLRowWriter) close() *push.Error {
 		rw.statement = nil
 		log.Debug().Msg(fmt.Sprintf("close statement %s", rw.dd.mode))
 	}
+	rw.sqlLogger.Close()
 	return nil
 }
 
@@ -359,6 +360,8 @@ func (rw *SQLRowWriter) Write(row push.Row, where push.Row) *push.Error {
 		}
 	}
 	log.Trace().Stringer("headers", rw.headers).Str("table", rw.table.Name()).Msg(fmt.Sprint(values))
+
+	rw.sqlLogger.Write(values)
 
 	_, err2 := rw.statement.Exec(values...)
 	if err2 != nil {

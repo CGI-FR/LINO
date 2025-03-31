@@ -1,7 +1,8 @@
 package push
 
 import (
-	"io"
+	"encoding/csv"
+	"fmt"
 	"os"
 
 	"github.com/cgi-fr/lino/pkg/push"
@@ -42,23 +43,59 @@ func (s *SQLLogger) Open() error {
 }
 
 type SQLLoggerWriter struct {
-	table  push.Table
-	writer io.Writer
+	writer *csv.Writer
 }
 
 func (s *SQLLogger) OpenWriter(table push.Table, sqlquery string) *SQLLoggerWriter {
 	filename := s.folderPath + "/" + table.Name() + ".csv"
-	writer, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	writer, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Cannot open file %v for SQL logger", filename)
 	}
 
 	logger := &SQLLoggerWriter{
-		table:  table,
-		writer: writer, //nolint:mnd
+		writer: csv.NewWriter(writer),
 	}
 
-	writer.WriteString("# " + sqlquery + "\n")
+	if _, err := writer.WriteString("# " + sqlquery + "\n"); err != nil {
+		log.Warn().Err(err).Msgf("Cannot write into file %v for SQL logger", filename)
+	}
 
 	return logger
+}
+
+func (w *SQLLoggerWriter) Write(data []any) {
+	if w == nil {
+		// SQLLoggerWriter is not set.
+		return
+	}
+
+	// Write the data to the file in CSV format
+	if err := w.writer.Write(toStrings(data)); err != nil {
+		log.Warn().Err(err).Msgf("Cannot log SQL statement")
+	}
+}
+
+func toStrings(data []any) []string {
+	strings := make([]string, len(data))
+	for i, v := range data {
+		strings[i] = toString(v)
+	}
+	return strings
+}
+
+func toString(data any) string {
+	return fmt.Sprintf("%v", data)
+}
+
+func (w *SQLLoggerWriter) Close() {
+	if w == nil {
+		// SQLLoggerWriter is not set.
+		return
+	}
+
+	w.writer.Flush()
+	if err := w.writer.Error(); err != nil {
+		log.Warn().Err(err).Msgf("Cannot flush SQL logger")
+	}
 }

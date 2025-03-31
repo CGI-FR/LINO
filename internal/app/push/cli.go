@@ -134,7 +134,9 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			}
 
 			if logSQLTo != "" {
-				datadestination.SetLogFolder(logSQLTo)
+				if e := datadestination.OpenSQLLogger(logSQLTo); e != nil {
+					log.Warn().Err(e).Msg("error while opening SQL logger")
+				}
 			}
 
 			plan, e2 := getPlan(idStorageFactory(table, ingressDescriptor), autoTruncate)

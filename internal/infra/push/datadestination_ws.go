@@ -207,7 +207,7 @@ func (dd *WebSocketDataDestination) Commit() *push.Error {
 	return nil
 }
 
-func (dd *WebSocketDataDestination) SetLogFolder(folderPath string) {
+func (dd *WebSocketDataDestination) OpenSQLLogger(folderPath string) error {
 	panic("not implemented")
 }
 

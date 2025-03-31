@@ -94,7 +94,7 @@ func (dd *HTTPDataDestination) Commit() *push.Error {
 	return nil
 }
 
-func (dd *HTTPDataDestination) SetLogFolder(folderPath string) {
+func (dd *HTTPDataDestination) OpenSQLLogger(folderPath string) error {
 	panic("not implemented")
 }
 

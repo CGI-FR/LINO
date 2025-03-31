@@ -21,8 +21,7 @@ func NewSQLLogger(folderPath string) *SQLLogger {
 
 func (s *SQLLogger) Open() error {
 	if s == nil {
-		// SQLLogger is not set, it is ok to return no error
-		// because the caller will not use it.
+		// SQLLogger is not set.
 		return nil
 	}
 
@@ -47,6 +46,11 @@ type SQLLoggerWriter struct {
 }
 
 func (s *SQLLogger) OpenWriter(table push.Table, sqlquery string) *SQLLoggerWriter {
+	if s == nil {
+		// SQLLogger is not set.
+		return nil
+	}
+
 	filename := s.folderPath + "/" + table.Name() + ".csv"
 	writer, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 	if err != nil {

@@ -49,6 +49,29 @@ testcases:
           - result.systemout ShouldBeEmpty
           - result.systemerr ShouldBeEmpty
 
+  - name: log-sql feature
+    steps:
+      - script: lino pull source --limit 10 | lino push truncate -d dest --log-sql logs
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: cat logs/address.csv | wc -l
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual 11
+          - result.systemerr ShouldBeEmpty
+      - script: cat logs/city.csv | wc -l
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual 11
+          - result.systemerr ShouldBeEmpty
+      - script: cat logs/country.csv | wc -l
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldEqual 11
+          - result.systemerr ShouldBeEmpty
+
   - name: push delete
     steps:
       # Load store 1 with adress
@@ -67,27 +90,4 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldBeEmpty
-          - result.systemerr ShouldBeEmpty
-
-  - name: log-sql feature
-    steps:
-      - script: lino pull source --limit 10 | lino push truncate -d dest --log-sql logs
-        assertions:
-          - result.code ShouldEqual 0
-          - result.systemout ShouldBeEmpty
-          - result.systemerr ShouldBeEmpty
-      - script: cat logs/address.csv | wc -l
-        assertions:
-          - result.code ShouldEqual 0
-          - result.systemout ShouldEqual 10
-          - result.systemerr ShouldBeEmpty
-      - script: cat logs/city.csv | wc -l
-        assertions:
-          - result.code ShouldEqual 0
-          - result.systemout ShouldEqual 10
-          - result.systemerr ShouldBeEmpty
-      - script: cat logs/country.csv | wc -l
-        assertions:
-          - result.code ShouldEqual 0
-          - result.systemout ShouldEqual 10
           - result.systemerr ShouldBeEmpty

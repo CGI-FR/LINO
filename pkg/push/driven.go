@@ -27,6 +27,7 @@ type DataDestination interface {
 	Open(plan Plan, mode Mode, disableConstraints bool) *Error
 	Commit() *Error
 	RowWriter(table Table) (RowWriter, *Error)
+	SetLogFolder(folderPath string)
 	Close() *Error
 }
 

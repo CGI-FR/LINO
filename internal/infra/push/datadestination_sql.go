@@ -180,6 +180,10 @@ func (dd *SQLDataDestination) RowWriter(table push.Table) (push.RowWriter, *push
 	return rw, nil
 }
 
+func (dd *SQLDataDestination) SetLogFolder(folderPath string) {
+	panic("not implemented")
+}
+
 // SQLRowWriter write data to a SQL table.
 type SQLRowWriter struct {
 	table               push.Table

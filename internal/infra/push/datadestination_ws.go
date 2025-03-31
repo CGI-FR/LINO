@@ -207,6 +207,10 @@ func (dd *WebSocketDataDestination) Commit() *push.Error {
 	return nil
 }
 
+func (dd *WebSocketDataDestination) SetLogFolder(folderPath string) {
+	panic("not implemented")
+}
+
 // RowWriter return web socket table writer
 func (dd *WebSocketDataDestination) RowWriter(table push.Table) (push.RowWriter, *push.Error) {
 	return &WebSocketRowWriter{dd, table}, nil

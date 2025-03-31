@@ -20,7 +20,7 @@ testcases:
   - name: prepare test
     steps:
       # Clean working directory
-      - script: rm -f *
+      - script: rm -rf *
       - script: lino dataconnector add --read-only source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
       - script: lino relation extract source
       - script: lino table extract source --only-tables

@@ -38,6 +38,7 @@ type SQLDataDestination struct {
 	mode               push.Mode
 	disableConstraints bool
 	dialect            SQLDialect
+	sqlLogger          *SQLLogger
 }
 
 // NewSQLDataDestination creates a new SQL datadestination.
@@ -180,8 +181,14 @@ func (dd *SQLDataDestination) RowWriter(table push.Table) (push.RowWriter, *push
 	return rw, nil
 }
 
-func (dd *SQLDataDestination) SetLogFolder(folderPath string) {
-	panic("not implemented")
+func (dd *SQLDataDestination) OpenSQLLogger(folderPath string) error {
+	dd.sqlLogger = NewSQLLogger(folderPath)
+	if err := dd.sqlLogger.Open(); err != nil {
+		dd.sqlLogger = nil
+		return &push.Error{Description: err.Error()}
+	}
+
+	return nil
 }
 
 // SQLRowWriter write data to a SQL table.
@@ -192,6 +199,7 @@ type SQLRowWriter struct {
 	statement           *sql.Stmt
 	headers             ValueHeaders
 	disabledConstraints []SQLConstraint
+	sqlLogger           *SQLLoggerWriter
 }
 
 // NewSQLRowWriter creates a new SQL row writer.
@@ -289,6 +297,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 		return &push.Error{Description: err.Error()}
 	}
 	rw.statement = stmt
+	rw.sqlLogger = rw.dd.sqlLogger.OpenWriter(rw.table, prepareStmt)
 	return nil
 }
 

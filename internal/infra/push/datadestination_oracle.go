@@ -148,9 +148,13 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 
 		headers = append(headers, column)
 
-		sql.WriteString(column.name)
-		sql.WriteString("=")
-		sql.WriteString(d.Placeholder(index + 1))
+		if column.column.Preserve() == "null" {
+			sql.WriteString(fmt.Sprintf("%s = CASE WHEN %s IS NOT NULL THEN %s ELSE %s END", column.name, column.name, d.Placeholder(index+1), column.name))
+		} else {
+			sql.WriteString(column.name)
+			sql.WriteString("=")
+			sql.WriteString(d.Placeholder(index + 1))
+		}
 		if index+1 < len(selectValues) {
 			sql.WriteString(", ")
 		}

@@ -10,7 +10,7 @@ require (
 	github.com/cgi-fr/rimo v0.4.0
 	github.com/coder/websocket v1.8.12
 	github.com/docker/docker-credential-helpers v0.9.2
-	github.com/go-sql-driver/mysql v1.9.0
+	github.com/go-sql-driver/mysql v1.9.2
 	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ibmdb/go_ibm_db v0.5.2

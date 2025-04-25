@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [3.2.0]
+
+- `Added` flag `log-sql` (short `l`) to the push command
+
 ## [3.1.0]
 
 - `Added` possibility to filter columns via `select` property in ingress descriptors

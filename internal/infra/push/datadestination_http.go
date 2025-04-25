@@ -94,6 +94,10 @@ func (dd *HTTPDataDestination) Commit() *push.Error {
 	return nil
 }
 
+func (dd *HTTPDataDestination) OpenSQLLogger(folderPath string) error {
+	panic("not implemented")
+}
+
 // RowWriter return HTTP table writer
 func (dd *HTTPDataDestination) RowWriter(table push.Table) (push.RowWriter, *push.Error) {
 	rw, ok := dd.rowWriter[table.Name()]

@@ -85,6 +85,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		savepoint          string
 		autoTruncate       bool
 		watch              bool
+		logSQLTo           string
 	)
 
 	cmd := &cobra.Command{
@@ -130,6 +131,12 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			if e1 != nil {
 				fmt.Fprintln(err, e1.Error())
 				os.Exit(1)
+			}
+
+			if logSQLTo != "" {
+				if e := datadestination.OpenSQLLogger(logSQLTo); e != nil {
+					log.Warn().Err(e).Msg("error while opening SQL logger")
+				}
 			}
 
 			plan, e2 := getPlan(idStorageFactory(table, ingressDescriptor), autoTruncate)
@@ -184,6 +191,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVar(&savepoint, "savepoint", "", "Name of a file to write primary keys of effectively processed lines (commit to database)")
 	cmd.Flags().BoolVarP(&autoTruncate, "autotruncate", "a", false, "Automatically truncate values to the maximum length defined in table.yaml")
 	cmd.Flags().BoolVarP(&watch, "watch", "w", false, "watch statistics about pushed lines")
+	cmd.Flags().StringVarP(&logSQLTo, "log-sql", "l", "", "Log SQL requests and data to specified folder (1 file per table)")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

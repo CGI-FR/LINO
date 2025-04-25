@@ -138,6 +138,7 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 			for _, pk := range whereValues {
 				if column.name == pk.name {
 					isInWhere = true
+
 					break
 				}
 			}
@@ -148,9 +149,7 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 
 		headers = append(headers, column)
 
-		sql.WriteString(column.name)
-		sql.WriteString("=")
-		sql.WriteString(d.Placeholder(index + 1))
+		appendColumnToSQL(column, sql, d, index)
 		if index+1 < len(selectValues) {
 			sql.WriteString(", ")
 		}
@@ -158,7 +157,9 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 	if len(whereValues) > 0 {
 		sql.WriteString(" WHERE ")
 	} else {
-		return "", nil, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
+		return "", nil, &push.Error{
+			Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName),
+		}
 	}
 	for index, pk := range whereValues {
 		headers = append(headers, pk)
@@ -172,6 +173,47 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 	}
 
 	return sql.String(), headers, nil
+}
+
+func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d OracleDialect, index int) {
+	switch {
+	// preserve null
+	case column.column.Preserve() == "null":
+		sql.WriteString(column.name)
+		sql.WriteString(" = CASE WHEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" IS NOT NULL THEN ")
+		sql.WriteString(d.Placeholder(index + 1))
+		sql.WriteString(" ELSE ")
+		sql.WriteString(column.name)
+		sql.WriteString(" END")
+		// preserve empty string ""
+	case column.column.Preserve() == "empty":
+		sql.WriteString(column.name)
+		sql.WriteString(" = CASE WHEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" != '' THEN ")
+		sql.WriteString(d.Placeholder(index + 1))
+		sql.WriteString(" ELSE ")
+		sql.WriteString(column.name)
+		sql.WriteString(" END")
+		// preserve empty string "" or null or all space string
+	case column.column.Preserve() == "blank":
+		sql.WriteString(column.name)
+		sql.WriteString(" = CASE WHEN (")
+		sql.WriteString(column.name)
+		sql.WriteString(" IS NOT NULL) OR (TRIM(")
+		sql.WriteString(column.name)
+		sql.WriteString(") != '') THEN ")
+		sql.WriteString(d.Placeholder(index + 1))
+		sql.WriteString(" ELSE ")
+		sql.WriteString(column.name)
+		sql.WriteString(" END")
+	default:
+		sql.WriteString(column.name)
+		sql.WriteString("=")
+		sql.WriteString(d.Placeholder(index + 1))
+	}
 }
 
 // IsDuplicateError check if error is a duplicate error

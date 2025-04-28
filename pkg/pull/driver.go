@@ -46,7 +46,7 @@ func NewStep(puller *puller, out ExportedRow, entry Relation) *Step {
 }
 
 type Puller interface {
-	Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore) error
+	Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore, included KeyStore) error
 }
 
 type puller struct {
@@ -65,7 +65,7 @@ func NewPuller(plan Plan, datasource DataSource, exporter RowExporter, diagnosti
 	}
 }
 
-func (p *puller) Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore) error {
+func (p *puller) Pull(start Table, filter Filter, selectColumns []string, filterCohort RowReader, excluded KeyStore, included KeyStore) error {
 	start.selectColumns(selectColumns...)
 	start = p.graph.addMissingColumns(start)
 
@@ -81,6 +81,7 @@ func (p *puller) Pull(start Table, filter Filter, selectColumns []string, filter
 	if filterCohort != nil {
 		for filterCohort.Next() {
 			fc := filterCohort.Value()
+
 			values := Row{}
 			for key, val := range fc {
 				values[key] = val
@@ -103,6 +104,7 @@ func (p *puller) Pull(start Table, filter Filter, selectColumns []string, filter
 			Distinct: filter.Distinct,
 		})
 	}
+	log.Trace().Interface("included", included).Msg("filtrer")
 
 	for _, f := range filters {
 		IncFiltersCount()
@@ -114,8 +116,19 @@ func (p *puller) Pull(start Table, filter Filter, selectColumns []string, filter
 		for reader.Next() {
 			IncLinesPerStepCount(string(start.Name))
 			row := start.export(reader.Value())
-
+			log.Trace().Interface("row", row).Msg("read from DB")
+			row_keys := extract(row, start.Keys)
+			log.Trace().Interface("row_keys", row_keys).Msg("read from DB extract keys")
+			log.Trace().Interface("included", included).Msg("incl")
+			log.Trace().Interface("excluded", excluded).Msg("excluded")
 			if excluded != nil && excluded.Has(extract(row, start.Keys)) {
+				log.Trace().Interface("row", row).Msg("in excluded")
+				continue
+			}
+
+			if included != nil && !included.Has(extract(row, start.Keys)) {
+				log.Trace().Interface("row", row).Msg("not in included")
+
 				continue
 			}
 

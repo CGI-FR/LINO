@@ -142,7 +142,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 		pullExporter := pullExporterFactory(w)
 		puller := pull.NewPuller(plan, datasource, pullExporter, pull.NoTraceListener{})
 
-		e3 := puller.Pull(start, pull.Filter{Limit: limit, Values: pull.Row{}, Where: where, Distinct: distinct}, startSelect, nil, nil)
+		e3 := puller.Pull(start, pull.Filter{Limit: limit, Values: pull.Row{}, Where: where, Distinct: distinct}, startSelect, nil, nil, nil)
 		if e3 != nil {
 			log.Error().Err(e3).Msg("")
 			w.WriteHeader(http.StatusInternalServerError)

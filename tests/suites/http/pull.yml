@@ -68,10 +68,19 @@ testcases:
     steps:
       - type: http
         method: GET
-        url: http://lino:8000/api/v1/data/source?filter=address_id:1
+        url: http://lino:8000/api/v1/data/source?filter=address_id:2
         assertions:
           - result.statuscode ShouldEqual 200
-          - result.bodyjson.address_id ShouldEqual 1
+          - result.bodyjson.address_id ShouldEqual 2
+
+  - name: pull filter empty
+    steps:
+      - type: http
+        method: GET
+        url: http://lino:8000/api/v1/data/source?filter=address_id:impossible
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.body ShouldBeEmpty
 
   - name: pull filter multi values
     steps:

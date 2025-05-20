@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [3.2.1]
+
+ - `Fixed`Filter Parameter Not Working in "lino http" Command [#369](https://github.com/CGI-FR/LINO/issues/369)
+
 ## [3.2.0]
 
 - `Added` flag `log-sql` (short `l`) to the push command

@@ -77,7 +77,7 @@ testcases:
     steps:
       - type: http
         method: GET
-        url: http://lino:8000/api/v1/data/source?filter=address_id:impossible
+        url: http://lino:8000/api/v1/data/source?filter=address_id:99999
         assertions:
           - result.statuscode ShouldEqual 200
           - result.body ShouldBeEmpty

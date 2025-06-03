@@ -22,11 +22,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
-	"github.com/spf13/cobra"
-
 	"github.com/cgi-fr/lino/internal/app/pull"
 	"github.com/cgi-fr/lino/internal/app/push"
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
+	"github.com/spf13/cobra"
 )
 
 // NewCommand implements the cli http command
@@ -34,6 +34,10 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	var (
 		port              uint
 		ingressDescriptor string
+		enableCORS        bool
+		corsOrigins       []string
+		corsMethods       []string
+		corsHeaders       []string
 	)
 
 	cmd := &cobra.Command{
@@ -67,7 +71,18 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Methods(http.MethodPost).
 				HandlerFunc(push.TruncatHandlerFactory(ingressDescriptor))
 
-			http.Handle("/", r)
+			var handler http.Handler = r
+
+			if enableCORS {
+				c := cors.New(cors.Options{
+					AllowedOrigins: corsOrigins,
+					AllowedMethods: corsMethods,
+					AllowedHeaders: corsHeaders,
+				})
+				handler = c.Handler(r)
+			}
+
+			http.Handle("/", handler)
 			bind := fmt.Sprintf(":%d", port)
 			e1 := http.ListenAndServe(bind, nil) //nolint:gosec
 
@@ -79,6 +94,13 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	}
 	cmd.Flags().UintVarP(&port, "port", "p", 8000, "HTTP Port to bind")
 	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "Ingress descriptor filename")
+
+	// CORS flags
+	cmd.Flags().BoolVar(&enableCORS, "enable-cors", false, "Enable CORS support")
+	cmd.Flags().StringSliceVar(&corsOrigins, "cors-origins", []string{"*"}, "Allowed CORS origins (e.g. http://localhost:3000)")
+	cmd.Flags().StringSliceVar(&corsMethods, "cors-methods", []string{"GET", "POST", "OPTIONS", "DELETE"}, "Allowed CORS methods")
+	cmd.Flags().StringSliceVar(&corsHeaders, "cors-headers", []string{"Content-Type", "Authorization"}, "Allowed CORS headers")
+
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

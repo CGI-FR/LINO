@@ -19,6 +19,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/microsoft/go-mssqldb v1.8.0
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/rs/cors v1.11.1
 	github.com/rs/zerolog v1.33.0
 	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/sijms/go-ora/v2 v2.8.24

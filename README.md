@@ -603,10 +603,6 @@ Others HTTP methods are available in the tests [here](tests/suites/http/pull.yml
 ### CORS Configuration
 
 The HTTP server also supports Cross-Origin Resource Sharing (CORS), which is essential for managing resource access from different origins. You can enable and configure CORS to fit your needs:
-
-### CORS Configuration
-
-The HTTP server also supports Cross-Origin Resource Sharing (CORS), which is essential for managing resource access from different origins. You can enable and configure CORS to fit your needs:
 - `--cors-headers strings`: Allowed CORS headers (default `[Content-Type,Authorization]`)
 - `--cors-methods strings`: Allowed CORS methods (default `[GET,POST,OPTIONS,DELETE]`)
 - `--cors-origins strings`: Allowed CORS origins (e.g. `http://localhost:3000`) (default `[*]`)

@@ -89,7 +89,13 @@ services:
     environment:
       - PASSWORD=sakila
       - CGO_ENABLED=0
-    command: http
+    command:
+      - http
+      - --enable-cors
+      - --cors-origins
+      - http://localhost:3000
+      - --cors-methods
+      - GET
     expose:
       - 8000
     volumes:

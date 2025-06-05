@@ -24,6 +24,7 @@ import (
 
 	"github.com/cgi-fr/lino/internal/app/pull"
 	"github.com/cgi-fr/lino/internal/app/push"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
@@ -47,9 +48,9 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Example: fmt.Sprintf("  %[1]s http --port 8080", fullName),
 		Args:    cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			r := mux.NewRouter()
+			router := mux.NewRouter()
 
-			api := r.PathPrefix("/api/v1").Subrouter()
+			api := router.PathPrefix("/api/v1").Subrouter()
 
 			api.Path("/data/{dataSource}").
 				Methods(http.MethodGet).
@@ -71,19 +72,23 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				Methods(http.MethodPost).
 				HandlerFunc(push.TruncatHandlerFactory(ingressDescriptor))
 
-			var handler http.Handler = r
+			var handler http.Handler = router
 
 			if enableCORS {
-				c := cors.New(cors.Options{
+				fmt.Printf("enable cors :%s\n", corsOrigins)
+
+				corsHandler := cors.New(cors.Options{
 					AllowedOrigins: corsOrigins,
 					AllowedMethods: corsMethods,
 					AllowedHeaders: corsHeaders,
 				})
-				handler = c.Handler(r)
+				handler = corsHandler.Handler(router)
 			}
 
 			http.Handle("/", handler)
 			bind := fmt.Sprintf(":%d", port)
+			fmt.Printf("listen on :%d\n", port)
+
 			e1 := http.ListenAndServe(bind, nil) //nolint:gosec
 
 			if err != nil {

@@ -119,7 +119,7 @@ testcases:
           - result.statuscode ShouldEqual 200
           - result.bodyjson.address_id ShouldEqual 15
 
-  - name: pull whith good host header
+  - name: pull whith good Origin header
     steps:
       - type: http
         method: GET
@@ -131,7 +131,7 @@ testcases:
           - result.statuscode ShouldEqual 200
           - result.headers.Access-Control-Allow-Origin ShouldEqual http://localhost:3000
 
-  - name: pull with bad host header
+  - name: pull with bad Origin header
     steps:
       - type: http
         method: GET
@@ -147,9 +147,9 @@ testcases:
     steps:
       - type: http
         method: POST
-        url: http://lino:8000/api/v1/data/source?limit=1
+        url: http://lino:8000/api/v1/
         headers:
-          Origin: http://foo.com
+          Origin: http://localhost:3000
 
         assertions:
           - result.statuscode ShouldEqual 404

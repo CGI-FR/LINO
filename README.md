@@ -618,7 +618,7 @@ Download the last binary release in your path.
 ## Contributors
 
 * CGI France ✉[Contact support](mailto:LINO.fr@cgi.com)
-* Pôle Emploi
+* France Travail
 * BGPN - Groupe La Poste
 
 ## License

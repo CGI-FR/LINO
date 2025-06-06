@@ -568,6 +568,49 @@ $ lino pull source --limit 3 | jq '{ "manager": .customer_store_id_fkey.store_ma
 }
 ```
 
+## HTTP Sub-Command
+
+The `http` sub-command in LINO is used to start an HTTP server that facilitates the interaction with LINO's data management functionalities via HTTP requests. This allows users to pull and push data using common HTTP methods like `GET`, `POST`, and `PATCH`.
+
+To start the server, you can use the command:
+
+```bash
+lino http --port 8080
+```
+
+Where `--port` specifies the port on which the server will listen. The default port is `8000` if not specified.
+
+### Example of using the HTTP server:
+
+Start the Server:
+
+```bash
+lino http --port 8080
+```
+
+Make an HTTP GET Request to Pull Data:
+
+You can use curl or any other HTTP client to interact with the server. For instance, to pull data from the source, you would use:
+
+```bash
+curl http://localhost:8080/api/v1/data/source
+```
+
+This command retrieves data from the specified source via the LINO HTTP interface.
+
+Others HTTP methods are available in the tests [here](tests/suites/http/pull.yml)
+
+### CORS Configuration
+
+The HTTP server also supports Cross-Origin Resource Sharing (CORS), which is essential for managing resource access from different origins. You can enable and configure CORS to fit your needs:
+- `--cors-headers strings`: Allowed CORS headers (default `[Content-Type,Authorization]`)
+- `--cors-methods strings`: Allowed CORS methods (default `[GET,POST,OPTIONS,DELETE]`)
+- `--cors-origins strings`: Allowed CORS origins (e.g. `http://localhost:3000`) (default `[*]`)
+- `--enable-cors`: Enable CORS support
+
+These flags allow you to specify which headers, methods, and origins are allowed, providing flexible control over your server's security and accessibility.
+
+
 ## Installation
 
 Download the last binary release in your path.

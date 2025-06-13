@@ -1,0 +1,143 @@
+name: Test preserve modes behavior
+
+testcases:
+
+  - name: Setup default mode (no preserve)
+    steps:
+      # Clean working directory
+      - script: rm -f dataconnector.yaml
+      # Set up data connector
+      - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
+      # Wait for database available (10 retries)
+      - script: count=0; while ! lino dc ping dest; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
+      - script: lino table extract dest
+      - script: touch relations.yaml
+
+  - name: Push "new" with default mode — should update even if DB is NULL
+    steps:
+      - script: echo '{"address_id":1,"address2":null}' | lino push update --table address dest
+      - script: echo '{"address_id":1,"address2":"new"}' | lino push update --table address dest
+      - script: lino pull --table address dest -f address_id=1
+        assertions:
+          - result.systemoutjson.address2 ShouldEqual "new"
+
+  - name: Setup preserve null mode
+    steps:
+      - script: |
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: address
+              keys:
+                - address_id
+              columns:
+                - name: address_id
+                  export: numeric
+                - name: address2
+                  export: string
+                  dbinfo:
+                      preserve: "null"
+          EOF
+
+  - name: Preserve null DB NULL + JSON "new" → keep NULL
+    steps:
+      - script: echo '{"address_id":2,"address2":null}' | lino push update --table address dest
+      - script: lino pull --table address dest -f address_id=2
+        assertions:
+          - result.systemoutjson.address2 ShouldEqual ""
+      - script: echo '{"address_id":2,"address2":"new"}' | lino push update --table address dest
+      - script: lino pull --table address dest -f address_id=2
+        assertions:
+          - result.systemoutjson.address2 ShouldEqual ""
+
+  - name: Preserve null DB "old" + JSON "new" → update
+    steps:
+      - script: echo '{"address_id":3,"address2":"old"}' | lino push update --table address dest
+      - script: echo '{"address_id":3,"address2":"new"}' | lino push update --table address dest
+      - script: lino pull --table address dest -f address_id=3
+        assertions:
+          - result.systemoutjson.address2 ShouldEqual "new"
+
+  - name: Setup preserve empty mode
+    steps:
+      - script: |
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: address
+              keys:
+                - address_id
+              columns:
+                - name: address_id
+                  export: numeric
+                - name: address2
+                  export: string
+                  dbinfo:
+                    preserve: empty
+          EOF
+
+  - name: Preserve empty DB "" + JSON "new" → keep ""
+    steps:
+      - script: echo '{"address_id":4,"address2":""}' | lino push update --table address dest
+      - script: echo '{"address_id":4,"address2":"new"}' | lino push update --table address dest
+      - script: lino pull --table address dest -f address_id=4
+        assertions:
+          - result.systemoutjson.address2 ShouldEqual ""
+
+  - name: Preserve empty DB NULL + JSON "new" → update
+    steps:
+      - script: echo '{"address_id":5,"address2":null}' | lino push update --table address dest
+      - script: echo '{"address_id":5,"address2":"new"}' | lino push update --table address dest
+      - script: lino pull --table address dest -f address_id=5
+        assertions:
+          - result.systemoutjson.address2 ShouldEqual "new"
+
+  - name: Setup preserve blank mode
+    steps:
+      - script: |
+          cat > tables.yaml <<EOF
+          version: v1
+          tables:
+            - name: address
+              keys:
+                - address_id
+              columns:
+                - name: address_id
+                  export: numeric
+                - name: address2
+                  export: string
+                  dbinfo:
+                    preserve: blank
+          EOF
+
+  - name: Preserve blank DB NULL + JSON "new" → keep NULL
+    steps:
+      - script: echo '{"address_id":6,"address2":null}' | lino push update --table address dest
+      - script: echo '{"address_id":6,"address2":"new"}' | lino push update --table address dest
+      - script: lino pull --table address dest -f address_id=6
+        assertions:
+          - result.systemoutjson.address2 ShouldEqual ""
+
+  - name: Preserve blank DB "" + JSON "new" → keep ""
+    steps:
+      - script: echo '{"address_id":7,"address2":""}' | lino push update --table address dest
+      - script: echo '{"address_id":7,"address2":"new"}' | lino push update --table address dest
+      - script: lino pull --table address dest -f address_id=7
+        assertions:
+          - result.systemoutjson.address2 ShouldEqual ""
+
+  - name: Preserve blank DB "   " + JSON "new" → keep "   "
+    steps:
+      - script: echo '{"address_id":8,"address2":"   "}' | lino push update --table address dest
+      - script: echo '{"address_id":8,"address2":"new"}' | lino push update --table address dest
+      - script: lino pull --table address dest -f address_id=8 | jq  '.address2'
+        assertions:
+          - result.systemout ShouldEqual '"   "'
+
+  - name: Preserve blank DB "old" + JSON "new" → update
+    steps:
+      - script: echo '{"address_id":9,"address2":"old"}' | lino push update --table address dest
+      - script: echo '{"address_id":9,"address2":"new"}' | lino push update --table address dest
+      - script: lino pull --table address dest -f address_id=9
+        assertions:
+          - result.systemoutjson.address2 ShouldEqual "new"

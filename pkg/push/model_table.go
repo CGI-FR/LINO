@@ -89,6 +89,14 @@ func (l columnList) String() string {
 	return sb.String()
 }
 
+// Definition of the possible values for Preserve.
+const (
+	PreserveNothing string = "" // backward compatibility with lino v3.3.0 and below
+	PreserveNull    string = "null"
+	PreserveEmpty   string = "empty"
+	PreserveBlank   string = "blank"
+)
+
 type column struct {
 	name     string
 	exp      string

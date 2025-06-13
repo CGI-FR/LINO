@@ -175,10 +175,10 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 	return sql.String(), headers, nil
 }
 
-func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d OracleDialect, index int) {
+func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d SQLDialect, index int) *push.Error {
 	switch {
 	// preserve null
-	case column.column.Preserve() == "null":
+	case column.column.Preserve() == push.PreserveNull:
 		sql.WriteString(column.name)
 		sql.WriteString(" = CASE WHEN ")
 		sql.WriteString(column.name)
@@ -188,32 +188,39 @@ func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d OracleDia
 		sql.WriteString(column.name)
 		sql.WriteString(" END")
 		// preserve empty string ""
-	case column.column.Preserve() == "empty":
+	case column.column.Preserve() == push.PreserveEmpty:
 		sql.WriteString(column.name)
 		sql.WriteString(" = CASE WHEN ")
 		sql.WriteString(column.name)
-		sql.WriteString(" != '' THEN ")
-		sql.WriteString(d.Placeholder(index + 1))
-		sql.WriteString(" ELSE ")
+		sql.WriteString(" = '' THEN ")
 		sql.WriteString(column.name)
+		sql.WriteString(" ELSE ")
+		sql.WriteString(d.Placeholder(index + 1))
 		sql.WriteString(" END")
 		// preserve empty string "" or null or all space string
-	case column.column.Preserve() == "blank":
+	case column.column.Preserve() == push.PreserveBlank:
 		sql.WriteString(column.name)
 		sql.WriteString(" = CASE WHEN (")
 		sql.WriteString(column.name)
-		sql.WriteString(" IS NOT NULL) OR (TRIM(")
+		sql.WriteString(" IS NULL) OR (TRIM(")
 		sql.WriteString(column.name)
-		sql.WriteString(") != '') THEN ")
-		sql.WriteString(d.Placeholder(index + 1))
+		sql.WriteString(") = '') THEN ")
+		sql.WriteString(column.name)
 		sql.WriteString(" ELSE ")
-		sql.WriteString(column.name)
+		sql.WriteString(d.Placeholder(index + 1))
 		sql.WriteString(" END")
-	default:
+	case column.column.Preserve() == push.PreserveNothing:
 		sql.WriteString(column.name)
 		sql.WriteString("=")
 		sql.WriteString(d.Placeholder(index + 1))
+	default:
+		return &push.Error{
+			Description: fmt.Sprintf("Unsupported preserve value [%s] for column [%s]", column.column.Preserve(), column.name),
+		}
 	}
+
+	return nil
+
 }
 
 // IsDuplicateError check if error is a duplicate error

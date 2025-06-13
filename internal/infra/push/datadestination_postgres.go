@@ -114,12 +114,7 @@ func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueD
 
 		headers = append(headers, column)
 
-		sql.WriteString(column.name)
-		sql.WriteString("=")
-		sql.WriteString(d.Placeholder(index + 1))
-		if index+1 < len(selectValues) {
-			sql.WriteString(", ")
-		}
+		appendColumnToSQLPG(sql, column, d, index, len(selectValues))
 	}
 	if len(whereValues) > 0 {
 		sql.WriteString(" WHERE ")
@@ -138,6 +133,14 @@ func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueD
 	}
 
 	return sql.String(), headers, nil
+}
+
+func appendColumnToSQLPG(sql *strings.Builder, column ValueDescriptor, d PostgresDialect, index int, selectValuesSize int) {
+	appendColumnToSQL(column, sql, d, index)
+
+	if index+1 < selectValuesSize {
+		sql.WriteString(", ")
+	}
 }
 
 // IsDuplicateError check if error is a duplicate error

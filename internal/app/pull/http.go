@@ -36,7 +36,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 			datasourceName string
 			ok             bool
 			distinct       bool
-			filter         map[string]string
+			filter         pull.Row
 			limit          uint
 			where          string
 		)
@@ -45,7 +45,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 
 		query := r.URL.Query()
 
-		filter = map[string]string{}
+		filter = pull.Row{}
 
 		if query.Get("filter") != "" {
 			for _, f := range strings.Split(query.Get("filter"), ",") {
@@ -142,7 +142,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 		pullExporter := pullExporterFactory(w)
 		puller := pull.NewPuller(plan, datasource, pullExporter, pull.NoTraceListener{})
 
-		e3 := puller.Pull(start, pull.Filter{Limit: limit, Values: pull.Row{}, Where: where, Distinct: distinct}, startSelect, nil, nil)
+		e3 := puller.Pull(start, pull.Filter{Limit: limit, Values: filter, Where: where, Distinct: distinct}, startSelect, nil, nil)
 		if e3 != nil {
 			log.Error().Err(e3).Msg("")
 			w.WriteHeader(http.StatusInternalServerError)

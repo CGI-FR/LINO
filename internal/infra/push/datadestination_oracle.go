@@ -149,7 +149,11 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 
 		headers = append(headers, column)
 
-		appendColumnToSQL(column, sql, d, index)
+		errColumn := appendColumnToSQL(column, sql, d, index)
+		if errColumn != nil {
+			return "", nil, errColumn
+		}
+
 		if index+1 < len(selectValues) {
 			sql.WriteString(", ")
 		}
@@ -220,7 +224,6 @@ func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d SQLDialec
 	}
 
 	return nil
-
 }
 
 // IsDuplicateError check if error is a duplicate error

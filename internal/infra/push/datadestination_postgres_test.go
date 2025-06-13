@@ -40,10 +40,9 @@ func TestAppendColumnToSQLPGPreserveNothing(t *testing.T) {
 			push.PreserveNothing,
 		),
 	}
+	appendColumnToSQL(column, sql, PostgresDialect{}, 0)
 
-	appendColumnToSQLPG(sql, column, PostgresDialect{}, 0, 2)
-	assert.Equal(t, "column=$1, ", sql.String())
-
+	assert.Equal(t, "column=$1", sql.String())
 }
 
 func TestAppendColumnToSQLPGPreserveBlank(t *testing.T) {
@@ -62,10 +61,9 @@ func TestAppendColumnToSQLPGPreserveBlank(t *testing.T) {
 		),
 	}
 
-	appendColumnToSQLPG(sql, column, PostgresDialect{}, 0, 2)
+	appendColumnToSQL(column, sql, PostgresDialect{}, 0)
 
-	expected := "column = CASE WHEN (column IS NULL) OR (TRIM(column) = '') THEN column ELSE $1 END, "
+	expected := "column = CASE WHEN (column IS NULL) OR (TRIM(column) = '') THEN column ELSE $1 END"
 
 	assert.Equal(t, expected, sql.String())
-
 }

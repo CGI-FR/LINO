@@ -10,7 +10,6 @@ import (
 )
 
 func TestAppendColumnToSQLWithPreserveNothing(t *testing.T) {
-
 	column := ValueDescriptor{
 		name: "column",
 		column: push.NewColumn(
@@ -35,11 +34,9 @@ func TestAppendColumnToSQLWithPreserveNothing(t *testing.T) {
 	}
 	expectedSQL := "column=:v1"
 	assert.Equal(t, expectedSQL, sql.String())
-
 }
 
 func TestAppendColumnToSQLWithPreserveBlank(t *testing.T) {
-
 	column := ValueDescriptor{
 		name: "column",
 		column: push.NewColumn(
@@ -64,11 +61,9 @@ func TestAppendColumnToSQLWithPreserveBlank(t *testing.T) {
 	}
 	expectedSQL := "column = CASE WHEN (column IS NULL) OR (TRIM(column) = '') THEN column ELSE :v1 END"
 	assert.Equal(t, expectedSQL, sql.String())
-
 }
 
 func TestAppendColumnToSQLWithPreserveEmpty(t *testing.T) {
-
 	column := ValueDescriptor{
 		name: "column",
 		column: push.NewColumn(
@@ -93,11 +88,9 @@ func TestAppendColumnToSQLWithPreserveEmpty(t *testing.T) {
 	}
 	expectedSQL := "column = CASE WHEN column = '' THEN column ELSE :v1 END"
 	assert.Equal(t, expectedSQL, sql.String())
-
 }
 
 func TestAppendColumnToSQLWithPreserveNull(t *testing.T) {
-
 	column := ValueDescriptor{
 		name: "column",
 		column: push.NewColumn(
@@ -122,5 +115,4 @@ func TestAppendColumnToSQLWithPreserveNull(t *testing.T) {
 	}
 	expectedSQL := "column = CASE WHEN column IS NOT NULL THEN :v1 ELSE column END"
 	assert.Equal(t, expectedSQL, sql.String())
-
 }

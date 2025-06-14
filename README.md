@@ -385,8 +385,7 @@ Lino supports this behavior through the `preserve` setting, which can be configu
 columns:
   - name: address2
     export: string
-    dbinfo:
-      preserve: null
+    preserve: "null"
 ```
 
 With this setting, if the **current value in the database is `null`**, Lino will **skip the update for this column only**, even if the input JSON contains a non-null value. This allows you to maintain the integrity of `null` values that have semantic meaning.

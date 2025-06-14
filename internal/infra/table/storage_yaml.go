@@ -44,10 +44,11 @@ type YAMLTable struct {
 
 // YAMLColumn defines how to store a column in YAML format.
 type YAMLColumn struct {
-	Name   string     `yaml:"name"`
-	Export string     `yaml:"export,omitempty"`
-	Import string     `yaml:"import,omitempty"`
-	DBInfo YAMLDBInfo `yaml:"dbinfo,omitempty"`
+	Name     string     `yaml:"name"`
+	Export   string     `yaml:"export,omitempty"`
+	Import   string     `yaml:"import,omitempty"`
+	DBInfo   YAMLDBInfo `yaml:"dbinfo,omitempty"`
+	Preserve string     `yaml:"preserve,omitempty"`
 }
 
 // YAMLDBInfo defines how to store a column dbinfos in YAML format.
@@ -57,7 +58,6 @@ type YAMLDBInfo struct {
 	Size      int64  `yaml:"size,omitempty"`
 	Precision int64  `yaml:"precision,omitempty"`
 	ByteBased bool   `yaml:"bytes,omitempty"`
-	Preserve  string `yaml:"preserve,omitempty"`
 }
 
 // YAMLStorage provides storage in a local YAML file
@@ -79,7 +79,7 @@ func (s YAMLStorage) List() ([]table.Table, *table.Error) {
 	for _, ym := range list.Tables {
 		cols := []table.Column{}
 		for _, ymc := range ym.Columns {
-			cols = append(cols, table.Column{Name: ymc.Name, Export: ymc.Export, Import: ymc.Import, DBInfo: table.DBInfo(ymc.DBInfo)})
+			cols = append(cols, table.Column{Name: ymc.Name, Export: ymc.Export, Import: ymc.Import, DBInfo: table.DBInfo(ymc.DBInfo), Preserve: ymc.Preserve})
 		}
 
 		exportMode := table.ExportModeOnly

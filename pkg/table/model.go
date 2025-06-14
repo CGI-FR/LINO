@@ -24,15 +24,15 @@ type DBInfo struct {
 	Size      int64
 	Precision int64
 	ByteBased bool
-	Preserve  string
 }
 
 // Column holds the name of a column.
 type Column struct {
-	Name   string
-	Export string
-	Import string
-	DBInfo DBInfo
+	Name     string
+	Export   string
+	Import   string
+	DBInfo   DBInfo
+	Preserve string
 }
 
 type ExportMode byte

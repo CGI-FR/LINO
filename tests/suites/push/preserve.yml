@@ -42,8 +42,7 @@ testcases:
                   export: numeric
                 - name: address2
                   export: string
-                  dbinfo:
-                      preserve: "null"
+                  preserve: "null"
           EOF
 
   - name: Preserve null DB NULL + JSON "new" → keep NULL
@@ -79,8 +78,7 @@ testcases:
                   export: numeric
                 - name: address2
                   export: string
-                  dbinfo:
-                    preserve: empty
+                  preserve: empty
           EOF
 
   - name: Preserve empty DB "" + JSON "new" → keep ""
@@ -113,8 +111,7 @@ testcases:
                   export: numeric
                 - name: address2
                   export: string
-                  dbinfo:
-                    preserve: blank
+                  preserve: blank
           EOF
 
   - name: Preserve blank DB NULL + JSON "new" → keep NULL

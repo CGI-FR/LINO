@@ -1,11 +1,18 @@
 name: Test preserve modes behavior
 
 testcases:
-
   - name: Setup default mode (no preserve)
     steps:
       # Clean working directory
       - script: rm -f dataconnector.yaml
+      # Reset source database
+      - script: sudo docker compose -p lino stop source && sudo docker compose -p lino rm -f source && sudo docker compose -p lino up -d source
+        assertions:
+          - result.code ShouldEqual 0
+      # Reset dest database
+      - script: sudo docker compose -p lino stop dest && sudo docker compose -p lino rm -f dest && sudo docker compose -p lino up -d dest
+        assertions:
+          - result.code ShouldEqual 0
       # Set up data connector
       - script: lino dataconnector add dest postgresql://postgres:sakila@dest:5432/postgres?sslmode=disable
       # Wait for database available (10 retries)
@@ -15,7 +22,7 @@ testcases:
 
   - name: Push "new" with default mode — should update even if DB is NULL
     steps:
-      - script: echo '{"address_id":1,"address2":null}' | lino push update --table address dest
+      - script: lino query dest "UPDATE address SET address2=NULL where address_id=1"
       - script: echo '{"address_id":1,"address2":"new"}' | lino push update --table address dest
       - script: lino pull --table address dest -f address_id=1
         assertions:
@@ -41,7 +48,7 @@ testcases:
 
   - name: Preserve null DB NULL + JSON "new" → keep NULL
     steps:
-      - script: echo '{"address_id":2,"address2":null}' | lino push update --table address dest
+      - script: lino query dest "UPDATE address SET address2=NULL where address_id=2"
       - script: lino pull --table address dest -f address_id=2
         assertions:
           - result.systemoutjson.address2 ShouldEqual ""
@@ -52,7 +59,7 @@ testcases:
 
   - name: Preserve null DB "old" + JSON "new" → update
     steps:
-      - script: echo '{"address_id":3,"address2":"old"}' | lino push update --table address dest
+      - script: lino query dest "UPDATE address SET address2='old' where address_id=3"
       - script: echo '{"address_id":3,"address2":"new"}' | lino push update --table address dest
       - script: lino pull --table address dest -f address_id=3
         assertions:
@@ -78,7 +85,7 @@ testcases:
 
   - name: Preserve empty DB "" + JSON "new" → keep ""
     steps:
-      - script: echo '{"address_id":4,"address2":""}' | lino push update --table address dest
+      - script: lino query dest "UPDATE address SET address2='' where address_id=4"
       - script: echo '{"address_id":4,"address2":"new"}' | lino push update --table address dest
       - script: lino pull --table address dest -f address_id=4
         assertions:
@@ -86,7 +93,7 @@ testcases:
 
   - name: Preserve empty DB NULL + JSON "new" → update
     steps:
-      - script: echo '{"address_id":5,"address2":null}' | lino push update --table address dest
+      - script: lino query dest "UPDATE address SET address2=NULL where address_id=5"
       - script: echo '{"address_id":5,"address2":"new"}' | lino push update --table address dest
       - script: lino pull --table address dest -f address_id=5
         assertions:
@@ -112,7 +119,7 @@ testcases:
 
   - name: Preserve blank DB NULL + JSON "new" → keep NULL
     steps:
-      - script: echo '{"address_id":6,"address2":null}' | lino push update --table address dest
+      - script: lino query dest "UPDATE address SET address2=NULL where address_id=6"
       - script: echo '{"address_id":6,"address2":"new"}' | lino push update --table address dest
       - script: lino pull --table address dest -f address_id=6
         assertions:
@@ -120,7 +127,7 @@ testcases:
 
   - name: Preserve blank DB "" + JSON "new" → keep ""
     steps:
-      - script: echo '{"address_id":7,"address2":""}' | lino push update --table address dest
+      - script: lino query dest "UPDATE address SET address2='' where address_id=7"
       - script: echo '{"address_id":7,"address2":"new"}' | lino push update --table address dest
       - script: lino pull --table address dest -f address_id=7
         assertions:
@@ -128,7 +135,7 @@ testcases:
 
   - name: Preserve blank DB "   " + JSON "new" → keep "   "
     steps:
-      - script: echo '{"address_id":8,"address2":"   "}' | lino push update --table address dest
+      - script: lino query dest "UPDATE address SET address2='   ' where address_id=8"
       - script: echo '{"address_id":8,"address2":"new"}' | lino push update --table address dest
       - script: lino pull --table address dest -f address_id=8 | jq  '.address2'
         assertions:
@@ -136,7 +143,7 @@ testcases:
 
   - name: Preserve blank DB "old" + JSON "new" → update
     steps:
-      - script: echo '{"address_id":9,"address2":"old"}' | lino push update --table address dest
+      - script: lino query dest "UPDATE address SET address2='old' where address_id=9"
       - script: echo '{"address_id":9,"address2":"new"}' | lino push update --table address dest
       - script: lino pull --table address dest -f address_id=9
         assertions:

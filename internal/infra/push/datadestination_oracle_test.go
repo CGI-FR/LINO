@@ -28,7 +28,6 @@ func TestAppendColumnToSQLWithPreserveNothing(t *testing.T) {
 	d := OracleDialect{}
 	index := 0
 	err := appendColumnToSQL(column, sql, d, index)
-
 	if err != nil { // should not return an error
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -55,7 +54,6 @@ func TestAppendColumnToSQLWithPreserveBlank(t *testing.T) {
 	d := OracleDialect{}
 	index := 0
 	err := appendColumnToSQL(column, sql, d, index)
-
 	if err != nil { // should not return an error
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -82,7 +80,6 @@ func TestAppendColumnToSQLWithPreserveEmpty(t *testing.T) {
 	d := OracleDialect{}
 	index := 0
 	err := appendColumnToSQL(column, sql, d, index)
-
 	if err != nil { // should not return an error
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -109,7 +106,6 @@ func TestAppendColumnToSQLWithPreserveNull(t *testing.T) {
 	d := OracleDialect{}
 	index := 0
 	err := appendColumnToSQL(column, sql, d, index)
-
 	if err != nil { // should not return an error
 		t.Errorf("Expected no error, got %v", err)
 	}

@@ -115,9 +115,11 @@ func (d Db2Dialect) UpdateStatement(tableName string, selectValues []ValueDescri
 
 		headers = append(headers, column)
 
-		sql.WriteString(column.name)
-		sql.WriteString("=")
-		sql.WriteString(d.Placeholder(index + 1))
+		errColumn := appendColumnToSQL(column, sql, d, index)
+		if errColumn != nil {
+			return "", nil, errColumn
+		}
+
 		if index+1 < len(selectValues) {
 			sql.WriteString(", ")
 		}
@@ -171,4 +173,8 @@ func (d Db2Dialect) DisableConstraintStatement(tableName string, constraintName 
 
 func (d Db2Dialect) EnableConstraintStatement(tableName string, constraintName string) string {
 	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d Db2Dialect) SupportPreserve() bool {
+	return false
 }

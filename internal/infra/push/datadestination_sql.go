@@ -481,9 +481,65 @@ type SQLDialect interface {
 	ReadConstraintsStatement(tableName string) string
 	DisableConstraintStatement(tableName string, constraintName string) string
 	EnableConstraintStatement(tableName string, constraintName string) string
+
+	SupportPreserve() bool
 }
 
 type SQLConstraint struct {
 	tableName      string
 	constraintName string
+}
+
+func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d SQLDialect, index int) *push.Error {
+	switch {
+	// preserve nothing
+	case column.column == nil || column.column.Preserve() == push.PreserveNothing:
+		sql.WriteString(column.name)
+		sql.WriteString("=")
+		sql.WriteString(d.Placeholder(index + 1))
+
+	case !d.SupportPreserve():
+		return &push.Error{
+			Description: fmt.Sprintf("Unsupported preserve feature for this database %T", d),
+		}
+	// preserve null
+	case column.column.Preserve() == push.PreserveNull:
+		sql.WriteString(column.name)
+		sql.WriteString(" = CASE WHEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" IS NOT NULL THEN ")
+		sql.WriteString(d.Placeholder(index + 1))
+		sql.WriteString(" ELSE ")
+		sql.WriteString(column.name)
+		sql.WriteString(" END")
+		// preserve empty string ""
+	case column.column.Preserve() == push.PreserveEmpty:
+		sql.WriteString(column.name)
+		sql.WriteString(" = CASE WHEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" = '' THEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" ELSE ")
+		sql.WriteString(d.Placeholder(index + 1))
+		sql.WriteString(" END")
+		// preserve empty string "" or null or all space string
+	case column.column.Preserve() == push.PreserveBlank:
+		sql.WriteString(column.name)
+		sql.WriteString(" = CASE WHEN (")
+		sql.WriteString(column.name)
+		sql.WriteString(" IS NULL) OR (TRIM(")
+		sql.WriteString(column.name)
+		sql.WriteString(") = '') THEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" ELSE ")
+		sql.WriteString(d.Placeholder(index + 1))
+		sql.WriteString(" END")
+
+	default:
+		return &push.Error{
+			Description: fmt.Sprintf("Unsupported preserve value [%s] for column [%s]", column.column.Preserve(), column.name),
+		}
+	}
+
+	return nil
 }

@@ -25,28 +25,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAppendColumnToSQLPGPreserveNothing(t *testing.T) {
-	sql := &strings.Builder{}
-	column := ValueDescriptor{
-		name: "column",
-		column: push.NewColumn(
-			"column",
-			"",
-			"",
-			0,
-			false,
-			false,
-
-			push.PreserveNothing,
-		),
-	}
-	err := appendColumnToSQL(column, sql, PostgresDialect{}, 0)
-	assert.Nil(t, err)
-
-	assert.Equal(t, "column=$1", sql.String())
-}
-
-func TestAppendColumnToSQLPGPreserveBlank(t *testing.T) {
+func TestAppendColumnToSQLMariaDBWithPreserveBlank(t *testing.T) {
+	t.Parallel()
 	sql := &strings.Builder{}
 	column := ValueDescriptor{
 		name: "column",
@@ -62,25 +42,29 @@ func TestAppendColumnToSQLPGPreserveBlank(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, PostgresDialect{}, 0)
-	assert.Nil(t, err)
-
-	expected := "column = CASE WHEN (column IS NULL) OR (TRIM(column) = '') THEN column ELSE $1 END"
-
-	assert.Equal(t, expected, sql.String())
+	err := appendColumnToSQL(column, sql, MariadbDialect{}, 0)
+	assert.NotNil(t, err)
 }
 
-func TestAppendColumnToSQLPGWithNilColumn(t *testing.T) {
+func TestAppendColumnToSQLMariaDB(t *testing.T) {
+	t.Parallel()
 	sql := &strings.Builder{}
 	column := ValueDescriptor{
-		name:   "column",
-		column: nil,
+		name: "column",
+		column: push.NewColumn(
+			"column",
+			"",
+			"",
+			0,
+			false,
+			false,
+
+			push.PreserveNothing,
+		),
 	}
 
-	err := appendColumnToSQL(column, sql, PostgresDialect{}, 0)
+	err := appendColumnToSQL(column, sql, MariadbDialect{}, 0)
 	assert.Nil(t, err)
 
-	expected := "column=$1"
-
-	assert.Equal(t, expected, sql.String())
+	assert.Equal(t, "column=?", sql.String())
 }

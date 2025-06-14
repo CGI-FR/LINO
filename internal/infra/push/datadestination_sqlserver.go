@@ -109,9 +109,11 @@ func (d SQLServerDialect) UpdateStatement(tableName string, selectValues []Value
 
 		headers = append(headers, column)
 
-		sql.WriteString(column.name)
-		sql.WriteString("=")
-		sql.WriteString(d.Placeholder(index + 1))
+		errColumn := appendColumnToSQL(column, sql, d, index)
+		if errColumn != nil {
+			return "", nil, errColumn
+		}
+
 		if index+1 < len(selectValues) {
 			sql.WriteString(", ")
 		}
@@ -166,4 +168,8 @@ func (d SQLServerDialect) DisableConstraintStatement(tableName string, constrain
 
 func (d SQLServerDialect) EnableConstraintStatement(tableName string, constraintName string) string {
 	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d SQLServerDialect) SupportPreserve() bool {
+	return false
 }

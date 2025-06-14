@@ -112,9 +112,11 @@ func (d MariadbDialect) UpdateStatement(tableName string, selectValues []ValueDe
 
 		headers = append(headers, column)
 
-		sql.WriteString(column.name)
-		sql.WriteString("=")
-		sql.WriteString(d.Placeholder(index + 1))
+		errColumn := appendColumnToSQL(column, sql, d, index)
+		if errColumn != nil {
+			return "", nil, errColumn
+		}
+
 		if index+1 < len(selectValues) {
 			sql.WriteString(", ")
 		}
@@ -163,4 +165,8 @@ func (d MariadbDialect) DisableConstraintStatement(tableName string, constraintN
 
 func (d MariadbDialect) EnableConstraintStatement(tableName string, constraintName string) string {
 	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d MariadbDialect) SupportPreserve() bool {
+	return false
 }

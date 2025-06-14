@@ -113,10 +113,11 @@ func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueD
 		}
 
 		headers = append(headers, column)
+		errColumn := appendColumnToSQL(column, sql, PostgresDialect{}, index)
+		if errColumn != nil {
+			return "", nil, errColumn
+		}
 
-		sql.WriteString(column.name)
-		sql.WriteString("=")
-		sql.WriteString(d.Placeholder(index + 1))
 		if index+1 < len(selectValues) {
 			sql.WriteString(", ")
 		}
@@ -165,4 +166,8 @@ func (d PostgresDialect) DisableConstraintStatement(tableName string, constraint
 
 func (d PostgresDialect) EnableConstraintStatement(tableName string, constraintName string) string {
 	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d PostgresDialect) SupportPreserve() bool {
+	return true
 }

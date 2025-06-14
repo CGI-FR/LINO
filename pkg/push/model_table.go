@@ -89,6 +89,14 @@ func (l columnList) String() string {
 	return sb.String()
 }
 
+// Definition of the possible values for Preserve.
+const (
+	PreserveNothing string = "" // backward compatibility with lino v3.3.0 and below
+	PreserveNull    string = "null"
+	PreserveEmpty   string = "empty"
+	PreserveBlank   string = "blank"
+)
+
 type column struct {
 	name     string
 	exp      string
@@ -96,11 +104,12 @@ type column struct {
 	lgth     int64
 	inbytes  bool
 	truncate bool
+	preserve string
 }
 
 // NewColumn initialize a new Column object
-func NewColumn(name string, exp string, imp string, lgth int64, inbytes bool, truncate bool) Column {
-	return column{name, exp, imp, lgth, inbytes, truncate}
+func NewColumn(name string, exp string, imp string, lgth int64, inbytes bool, truncate bool, preserve string) Column {
+	return column{name, exp, imp, lgth, inbytes, truncate, preserve}
 }
 
 func (c column) Name() string        { return c.name }
@@ -109,6 +118,7 @@ func (c column) Import() string      { return c.imp }
 func (c column) Length() int64       { return c.lgth }
 func (c column) LengthInBytes() bool { return c.inbytes }
 func (c column) Truncate() bool      { return c.truncate }
+func (c column) Preserve() string    { return c.preserve }
 
 type ImportedRow struct {
 	jsonline.Row

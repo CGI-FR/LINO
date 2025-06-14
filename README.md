@@ -418,6 +418,8 @@ The table below summarizes how `preserve` behaves based on the current database 
 | **blank**  | `"   "`          | `"new"`    | `"   "`        | Preserve blank: spaces-only string preserved.                                                 |
 | **blank**  | `"old"`          | `"new"`    | `"new"`        | Not blank, update applies.                                                                    |
 
+⚠️ **Important:**
+This feature is only supported for Oracle and PostgreSQL databases.
 
 ### How to update primary key
 

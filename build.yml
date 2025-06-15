@@ -54,7 +54,7 @@ properties:
       "gocritic",
       "whitespace",
     ]
-  lintersno: ["forbidigo", "staticcheck"] # List of linters to exclude on running the lint target
+  lintersno: ["forbidigo", "gci"] # List of linters to exclude on running the lint target
 
   # If true, do not upload release when publish target is used
   snapshot: false

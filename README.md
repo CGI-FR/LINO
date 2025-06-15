@@ -375,6 +375,52 @@ tables:
           bytes: true
 ```
 
+### Preserving `null` Values in the Database
+
+In some use cases, it's important to **preserve `null` values that already exist in the database**, even when incoming data provides a new value. For example, a `null` might indicate intentionally missing or incomplete information that should not be overwritten automatically.
+
+Lino supports this behavior through the `preserve` setting, which can be configured per column in the `tables.yaml` file. To preserve `null` values, you can define:
+
+```yaml
+columns:
+  - name: address2
+    export: string
+    preserve: "null"
+```
+
+With this setting, if the **current value in the database is `null`**, Lino will **skip the update for this column only**, even if the input JSON contains a non-null value. This allows you to maintain the integrity of `null` values that have semantic meaning.
+
+⚠️ **Important:**
+Only the preserved column is skipped — other columns in the same record **will still be updated as usual** if their values change.
+
+The same logic applies to other preservation modes:
+
+* `preserve: empty` skips updates if the current DB value is an **empty string (`""`)**.
+* `preserve: blank` skips updates if the current DB value is **`null`**, **empty**, or consists of **only whitespace** (e.g. `"   "`).
+
+The table below summarizes how `preserve` behaves based on the current database value and the incoming JSON input:
+
+
+| Preserve   | Current DB Value | JSON Input  | Final DB Value | Explanation                                                                                      |
+|------------|------------------|-------------|----------------|------------------------------------------------------------------------------------------------|
+| **default**| `NULL`           | `"new"`    | `"new"`        | No preservation, update applies even if DB is null.                                            |
+| **default**| `""`             | `"new"`    | `"new"`        | No preservation, update applies even if DB is empty string.                                    |
+| **default**| `"   "`          | `"new"`    | `"new"`        | No preservation, update applies even if DB is blank spaces.                                    |
+| **default**| `"old"`          | `"new"`    | `"new"`        | Normal update applies.                                                                          |
+| **null**   | `NULL`           | `"new"`    | `NULL`         | Preserve null: keep DB null even if new value is real.                                         |
+| **null**   | `"   "`          | `"new"`    | `"new"`        | DB is not null, update applies.                                                                |
+| **null**   | `""`             | `"new"`    | `"new"`        | DB is not null, update applies.                                                                |
+| **empty**  | `""`             | `"new"`    | `""`           | Preserve empty string: keep empty string in DB, ignore new value.                              |
+| **empty**  | `NULL`           | `"new"`    | `"new"`        | DB is null, not empty string → update applies.                                                |
+| **empty**  | `"   "`          | `"new"`    | `"new"`        | DB is blank spaces, not empty string → update applies.                                        |
+| **blank**  | `NULL`           | `"new"`    | `NULL`         | Preserve blank: null is considered blank, preserve it.                                        |
+| **blank**  | `""`             | `"new"`    | `""`           | Preserve blank: empty string preserved.                                                       |
+| **blank**  | `"   "`          | `"new"`    | `"   "`        | Preserve blank: spaces-only string preserved.                                                 |
+| **blank**  | `"old"`          | `"new"`    | `"new"`        | Not blank, update applies.                                                                    |
+
+⚠️ **Important:**
+This feature is only supported for Oracle and PostgreSQL databases.
+
 ### How to update primary key
 
 Let's say you have this record in database :

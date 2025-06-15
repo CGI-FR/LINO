@@ -97,3 +97,7 @@ func (d Db2Dialect) DisableConstraintStatement(tableName string, constraintName 
 func (d Db2Dialect) EnableConstraintStatement(tableName string, constraintName string) string {
 	panic(fmt.Errorf("Not implemented"))
 }
+
+func (d Db2Dialect) SupportPreserve() bool {
+	return false
+}

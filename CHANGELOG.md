@@ -14,13 +14,17 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [3.4.0]
+
+- `Added` preserve NULL or empty functionality in "lino push update" command
+
 ## [3.3.0]
 
- - `Added` configurable CORS support to http command
+- `Added` configurable CORS support to http command
 
 ## [3.2.1]
 
- - `Fixed`Filter Parameter Not Working in "lino http" Command [#369](https://github.com/CGI-FR/LINO/issues/369)
+- `Fixed` Filter Parameter Not Working in "lino http" Command [#369](https://github.com/CGI-FR/LINO/issues/369)
 
 ## [3.2.0]
 

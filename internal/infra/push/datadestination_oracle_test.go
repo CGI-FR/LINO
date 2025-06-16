@@ -57,7 +57,7 @@ func TestAppendColumnToSQLWithPreserveBlank(t *testing.T) {
 	if err != nil { // should not return an error
 		t.Errorf("Expected no error, got %v", err)
 	}
-	expectedSQL := "column = CASE WHEN (column IS NULL) OR (TRIM(column) = '') THEN column ELSE :v1 END"
+	expectedSQL := "column = CASE WHEN column IS NULL THEN column WHEN TRIM(column) IS NULL THEN column ELSE :v1 END"
 	assert.Equal(t, expectedSQL, sql.String())
 }
 
@@ -80,11 +80,7 @@ func TestAppendColumnToSQLWithPreserveEmpty(t *testing.T) {
 	d := OracleDialect{}
 	index := 0
 	err := appendColumnToSQL(column, sql, d, index)
-	if err != nil { // should not return an error
-		t.Errorf("Expected no error, got %v", err)
-	}
-	expectedSQL := "column = CASE WHEN column = '' THEN column ELSE :v1 END"
-	assert.Equal(t, expectedSQL, sql.String())
+	assert.NotNil(t, err)
 }
 
 func TestAppendColumnToSQLWithPreserveNull(t *testing.T) {

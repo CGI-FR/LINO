@@ -167,6 +167,17 @@ func (d MariadbDialect) EnableConstraintStatement(tableName string, constraintNa
 	panic(fmt.Errorf("Not implemented"))
 }
 
-func (d MariadbDialect) SupportPreserve() bool {
-	return false
+func (d MariadbDialect) SupportPreserve() []string {
+	return []string{
+		string(push.PreserveNothing),
+	}
+}
+
+// BlankTest implements SQLDialect.
+func (d MariadbDialect) BlankTest(name string) string {
+	panic("unimplemented")
+}
+
+func (d MariadbDialect) EmptyTest(column string) string {
+	return fmt.Sprintf("%s = ''", column)
 }

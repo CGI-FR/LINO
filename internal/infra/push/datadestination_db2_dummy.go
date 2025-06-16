@@ -98,6 +98,17 @@ func (d Db2Dialect) EnableConstraintStatement(tableName string, constraintName s
 	panic(fmt.Errorf("Not implemented"))
 }
 
-func (d Db2Dialect) SupportPreserve() bool {
-	return false
+func (d Db2Dialect) SupportPreserve() []string {
+	return []string{
+		string(push.PreserveNothing),
+	}
+}
+
+// BlankTest implements SQLDialect.
+func (d Db2Dialect) BlankTest(name string) string {
+	panic("unimplemented")
+}
+
+func (d Db2Dialect) EmptyTest(name string) string {
+	panic("unimplemented")
 }

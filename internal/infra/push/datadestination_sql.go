@@ -20,6 +20,7 @@ package push
 import (
 	"database/sql"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/cgi-fr/lino/pkg/push"
@@ -482,7 +483,9 @@ type SQLDialect interface {
 	DisableConstraintStatement(tableName string, constraintName string) string
 	EnableConstraintStatement(tableName string, constraintName string) string
 
-	SupportPreserve() bool
+	SupportPreserve() []string
+	BlankTest(name string) string
+	EmptyTest(name string) string
 }
 
 type SQLConstraint struct {
@@ -491,6 +494,20 @@ type SQLConstraint struct {
 }
 
 func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d SQLDialect, index int) *push.Error {
+	// check if preserve is in supported values
+
+	preserveKind := push.PreserveNothing
+
+	if column.column != nil {
+		preserveKind = column.column.Preserve()
+	}
+
+	if !slices.Contains(d.SupportPreserve(), preserveKind) {
+		return &push.Error{
+			Description: fmt.Sprintf("Unsupported preserve value [%s] for column [%s]", column.column.Preserve(), column.name),
+		}
+	}
+
 	switch {
 	// preserve nothing
 	case column.column == nil || column.column.Preserve() == push.PreserveNothing:
@@ -498,10 +515,6 @@ func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d SQLDialec
 		sql.WriteString("=")
 		sql.WriteString(d.Placeholder(index + 1))
 
-	case !d.SupportPreserve():
-		return &push.Error{
-			Description: fmt.Sprintf("Unsupported preserve feature for this database %T", d),
-		}
 	// preserve null
 	case column.column.Preserve() == push.PreserveNull:
 		sql.WriteString(column.name)
@@ -516,8 +529,8 @@ func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d SQLDialec
 	case column.column.Preserve() == push.PreserveEmpty:
 		sql.WriteString(column.name)
 		sql.WriteString(" = CASE WHEN ")
-		sql.WriteString(column.name)
-		sql.WriteString(" = '' THEN ")
+		sql.WriteString(d.EmptyTest(column.name))
+		sql.WriteString(" THEN ")
 		sql.WriteString(column.name)
 		sql.WriteString(" ELSE ")
 		sql.WriteString(d.Placeholder(index + 1))
@@ -525,11 +538,14 @@ func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d SQLDialec
 		// preserve empty string "" or null or all space string
 	case column.column.Preserve() == push.PreserveBlank:
 		sql.WriteString(column.name)
-		sql.WriteString(" = CASE WHEN (")
+		sql.WriteString(" = CASE")
+		sql.WriteString(" WHEN ")
 		sql.WriteString(column.name)
-		sql.WriteString(" IS NULL) OR (TRIM(")
+		sql.WriteString(" IS NULL THEN ")
 		sql.WriteString(column.name)
-		sql.WriteString(") = '') THEN ")
+		sql.WriteString(" WHEN ")
+		sql.WriteString(d.BlankTest(column.name))
+		sql.WriteString(" THEN ")
 		sql.WriteString(column.name)
 		sql.WriteString(" ELSE ")
 		sql.WriteString(d.Placeholder(index + 1))

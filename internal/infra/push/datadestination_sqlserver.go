@@ -170,6 +170,17 @@ func (d SQLServerDialect) EnableConstraintStatement(tableName string, constraint
 	panic(fmt.Errorf("Not implemented"))
 }
 
-func (d SQLServerDialect) SupportPreserve() bool {
-	return false
+func (d SQLServerDialect) SupportPreserve() []string {
+	return []string{
+		string(push.PreserveNothing),
+	}
+}
+
+// BlankTest implements SQLDialect.
+func (d SQLServerDialect) BlankTest(name string) string {
+	panic("unimplemented")
+}
+
+func (d SQLServerDialect) EmptyTest(name string) string {
+	panic("unimplemented")
 }

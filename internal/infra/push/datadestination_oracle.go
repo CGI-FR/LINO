@@ -249,6 +249,19 @@ func (d OracleDialect) EnableConstraintStatement(tableName string, constraintNam
 	return sql.String()
 }
 
-func (d OracleDialect) SupportPreserve() bool {
-	return true
+func (d OracleDialect) SupportPreserve() []string {
+	return []string{
+		string(push.PreserveNothing),
+		string(push.PreserveNull),
+		string(push.PreserveBlank),
+	}
+}
+
+// BlankTest implements SQLDialect.
+func (d OracleDialect) BlankTest(column string) string {
+	return fmt.Sprintf("TRIM(%s) IS NULL", column)
+}
+
+func (d OracleDialect) EmptyTest(column string) string {
+	return fmt.Sprintf("%s IS NULL", column)
 }

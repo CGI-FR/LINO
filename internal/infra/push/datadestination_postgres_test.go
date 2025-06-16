@@ -65,7 +65,7 @@ func TestAppendColumnToSQLPGPreserveBlank(t *testing.T) {
 	err := appendColumnToSQL(column, sql, PostgresDialect{}, 0)
 	assert.Nil(t, err)
 
-	expected := "column = CASE WHEN (column IS NULL) OR (TRIM(column) = '') THEN column ELSE $1 END"
+	expected := "column = CASE WHEN column IS NULL THEN column WHEN TRIM(column) = '' THEN column ELSE $1 END"
 
 	assert.Equal(t, expected, sql.String())
 }

@@ -138,6 +138,7 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 			for _, pk := range whereValues {
 				if column.name == pk.name {
 					isInWhere = true
+
 					break
 				}
 			}
@@ -148,9 +149,11 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 
 		headers = append(headers, column)
 
-		sql.WriteString(column.name)
-		sql.WriteString("=")
-		sql.WriteString(d.Placeholder(index + 1))
+		errColumn := appendColumnToSQL(column, sql, d, index)
+		if errColumn != nil {
+			return "", nil, errColumn
+		}
+
 		if index+1 < len(selectValues) {
 			sql.WriteString(", ")
 		}
@@ -158,7 +161,9 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 	if len(whereValues) > 0 {
 		sql.WriteString(" WHERE ")
 	} else {
-		return "", nil, &push.Error{Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName)}
+		return "", nil, &push.Error{
+			Description: fmt.Sprintf("can't update table [%s] because no primary key is defined", tableName),
+		}
 	}
 	for index, pk := range whereValues {
 		headers = append(headers, pk)
@@ -242,4 +247,21 @@ func (d OracleDialect) EnableConstraintStatement(tableName string, constraintNam
 	sql.WriteString(" ENABLE CONSTRAINT ")
 	sql.WriteString(constraintName)
 	return sql.String()
+}
+
+func (d OracleDialect) SupportPreserve() []string {
+	return []string{
+		string(push.PreserveNothing),
+		string(push.PreserveNull),
+		string(push.PreserveBlank),
+	}
+}
+
+// BlankTest implements SQLDialect.
+func (d OracleDialect) BlankTest(column string) string {
+	return fmt.Sprintf("TRIM(%s) IS NULL", column)
+}
+
+func (d OracleDialect) EmptyTest(column string) string {
+	return fmt.Sprintf("%s IS NULL", column)
 }

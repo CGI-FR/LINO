@@ -48,6 +48,7 @@ type Column interface {
 	Length() int64
 	LengthInBytes() bool
 	Truncate() bool
+	Preserve() string
 }
 
 // Plan describe how to push data

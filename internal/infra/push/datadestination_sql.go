@@ -20,6 +20,7 @@ package push
 import (
 	"database/sql"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/cgi-fr/lino/pkg/push"
@@ -481,9 +482,80 @@ type SQLDialect interface {
 	ReadConstraintsStatement(tableName string) string
 	DisableConstraintStatement(tableName string, constraintName string) string
 	EnableConstraintStatement(tableName string, constraintName string) string
+
+	SupportPreserve() []string
+	BlankTest(name string) string
+	EmptyTest(name string) string
 }
 
 type SQLConstraint struct {
 	tableName      string
 	constraintName string
+}
+
+func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d SQLDialect, index int) *push.Error {
+	// check if preserve is in supported values
+
+	preserveKind := push.PreserveNothing
+
+	if column.column != nil {
+		preserveKind = column.column.Preserve()
+	}
+
+	if !slices.Contains(d.SupportPreserve(), preserveKind) {
+		return &push.Error{
+			Description: fmt.Sprintf("Unsupported preserve value [%s] for column [%s]", column.column.Preserve(), column.name),
+		}
+	}
+
+	switch {
+	// preserve nothing
+	case column.column == nil || column.column.Preserve() == push.PreserveNothing:
+		sql.WriteString(column.name)
+		sql.WriteString("=")
+		sql.WriteString(d.Placeholder(index + 1))
+
+	// preserve null
+	case column.column.Preserve() == push.PreserveNull:
+		sql.WriteString(column.name)
+		sql.WriteString(" = CASE WHEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" IS NOT NULL THEN ")
+		sql.WriteString(d.Placeholder(index + 1))
+		sql.WriteString(" ELSE ")
+		sql.WriteString(column.name)
+		sql.WriteString(" END")
+		// preserve empty string ""
+	case column.column.Preserve() == push.PreserveEmpty:
+		sql.WriteString(column.name)
+		sql.WriteString(" = CASE WHEN ")
+		sql.WriteString(d.EmptyTest(column.name))
+		sql.WriteString(" THEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" ELSE ")
+		sql.WriteString(d.Placeholder(index + 1))
+		sql.WriteString(" END")
+		// preserve empty string "" or null or all space string
+	case column.column.Preserve() == push.PreserveBlank:
+		sql.WriteString(column.name)
+		sql.WriteString(" = CASE")
+		sql.WriteString(" WHEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" IS NULL THEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" WHEN ")
+		sql.WriteString(d.BlankTest(column.name))
+		sql.WriteString(" THEN ")
+		sql.WriteString(column.name)
+		sql.WriteString(" ELSE ")
+		sql.WriteString(d.Placeholder(index + 1))
+		sql.WriteString(" END")
+
+	default:
+		return &push.Error{
+			Description: fmt.Sprintf("Unsupported preserve value [%s] for column [%s]", column.column.Preserve(), column.name),
+		}
+	}
+
+	return nil
 }

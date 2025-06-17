@@ -41,6 +41,15 @@ func (e *PostgresDataDestinationFactory) New(url string, schema string) push.Dat
 // PostgresDialect inject postgres variations
 type PostgresDialect struct{}
 
+// BlankTest implements SQLDialect.
+func (d PostgresDialect) BlankTest(column string) string {
+	return fmt.Sprintf("TRIM(%s) = ''", column)
+}
+
+func (d PostgresDialect) EmptyTest(column string) string {
+	return fmt.Sprintf("%s = ''", column)
+}
+
 // Placeholde return the variable format for postgres
 func (d PostgresDialect) Placeholder(position int) string {
 	return fmt.Sprintf("$%d", position)
@@ -113,10 +122,11 @@ func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueD
 		}
 
 		headers = append(headers, column)
+		errColumn := appendColumnToSQL(column, sql, PostgresDialect{}, index)
+		if errColumn != nil {
+			return "", nil, errColumn
+		}
 
-		sql.WriteString(column.name)
-		sql.WriteString("=")
-		sql.WriteString(d.Placeholder(index + 1))
 		if index+1 < len(selectValues) {
 			sql.WriteString(", ")
 		}
@@ -165,4 +175,13 @@ func (d PostgresDialect) DisableConstraintStatement(tableName string, constraint
 
 func (d PostgresDialect) EnableConstraintStatement(tableName string, constraintName string) string {
 	panic(fmt.Errorf("Not implemented"))
+}
+
+func (d PostgresDialect) SupportPreserve() []string {
+	return []string{
+		string(push.PreserveNothing),
+		string(push.PreserveNull),
+		string(push.PreserveEmpty),
+		string(push.PreserveBlank),
+	}
 }

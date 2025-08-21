@@ -661,6 +661,14 @@ These flags allow you to specify which headers, methods, and origins are allowed
 
 Download the last binary release in your path.
 
+**macOS users** Install via Homebrew:
+
+```bash
+brew tap CGI-FR/lino
+
+brew install lino
+```
+
 ## Contributors
 
 * CGI France ✉[Contact support](mailto:LINO.fr@cgi.com)

@@ -1,0 +1,65 @@
+name: Rebase Dependabot PRs
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - only list PRs without posting comments'
+        required: false
+        default: 'false'
+        type: boolean
+  schedule:
+    # Run weekly on Monday at 9 AM UTC to prevent PRs from getting too old
+    - cron: '0 9 * * 1'
+
+jobs:
+  rebase-dependabot-prs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find and rebase Dependabot PRs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: |
+          echo "Finding open Dependabot PRs..."
+          
+          # Get all open PRs created by dependabot[bot]
+          dependabot_prs=$(gh pr list --author "dependabot[bot]" --state open --json number,title,createdAt --jq '.[] | select(.createdAt | fromdateiso8601 < (now - 86400*7)) | {number: .number, title: .title, age: ((now - (.createdAt | fromdateiso8601)) / 86400 | floor)}')
+          
+          if [ -z "$dependabot_prs" ]; then
+            echo "No Dependabot PRs found that are older than 7 days."
+            exit 0
+          fi
+          
+          echo "Found Dependabot PRs older than 7 days:"
+          echo "$dependabot_prs" | jq -r '"PR #\(.number): \(.title) (age: \(.age) days)"'
+          
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run mode - would rebase the above PRs but not posting comments."
+            exit 0
+          fi
+          
+          # Rebase each PR by posting a comment
+          echo "$dependabot_prs" | jq -r '.number' | while read pr_number; do
+            if [ -n "$pr_number" ]; then
+              echo "Requesting rebase for PR #$pr_number..."
+              gh pr comment "$pr_number" --body "@dependabot rebase"
+              if [ $? -eq 0 ]; then
+                echo "✓ Rebase requested for PR #$pr_number"
+              else
+                echo "✗ Failed to request rebase for PR #$pr_number"
+              fi
+              # Add a small delay to avoid rate limiting
+              sleep 2
+            fi
+          done
+          
+          echo "Dependabot rebase requests completed."

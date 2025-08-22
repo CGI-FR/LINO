@@ -669,6 +669,10 @@ brew tap CGI-FR/lino
 brew install lino
 ```
 
+## Maintenance & Automation
+
+LINO includes automated dependency management through Dependabot. For managing Dependabot PRs that have had automatic rebasing disabled, see the [Dependabot Rebase Automation documentation](docs/dependabot-rebase.md).
+
 ## Contributors
 
 * CGI France ✉[Contact support](mailto:LINO.fr@cgi.com)

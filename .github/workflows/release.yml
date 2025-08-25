@@ -53,3 +53,32 @@ jobs:
             neon -props "{tag: ${CI_ACTION_REF_NAME}, MODULE: github.com/${CI_REPOSITORY,,}, BY: ${CI_ACTOR}, latest: true}" publish docker-push
       - name: Test version
         run: docker compose exec -T -u vscode vscode /workspace/bin/dist/cmd/lino_linux_amd64_v1/lino --version
+
+  homebrew:
+    name: Bump Homebrew formula
+    needs: build
+    if: github.event_name != 'push' || !contains(github.ref_name, '-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: FranzDiebold/github-env-vars-action@v2
+      - name: Extract version
+        id: extract-version
+        run: |
+          echo "tag-name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      - uses: mislav/bump-homebrew-formula-action@v3
+        with:
+          formula-name: lino
+          formula-path: Formula/lino.rb
+          homebrew-tap: CGI-FR/homebrew-lino
+          base-branch: main
+          download-url: >-
+            https://github.com/CGI-FR/LINO/releases/download/${{ steps.extract-version.outputs.tag-name }}/LINO_${{ steps.extract-version.outputs.version }}_darwin_amd64.tar.gz
+          commit-message: |
+            {{formulaName}} {{version}}
+
+            Created by https://github.com/mislav/bump-homebrew-formula-action
+        env:
+          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}

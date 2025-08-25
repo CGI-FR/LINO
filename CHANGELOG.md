@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [Unreleased]
+
+- `Added` automatic homebrew formula update in release workflow
+
 ## [3.4.0]
 
 - `Added` preserve NULL or empty functionality in "lino push update" command

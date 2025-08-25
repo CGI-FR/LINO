@@ -8,7 +8,7 @@ require (
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/cgi-fr/jsonline v0.5.0
 	github.com/cgi-fr/rimo v0.4.0
-	github.com/coder/websocket v1.8.12
+	github.com/coder/websocket v1.8.13
 	github.com/docker/docker-credential-helpers v0.9.3
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/gorilla/mux v1.8.1

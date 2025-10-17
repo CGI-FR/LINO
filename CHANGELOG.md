@@ -14,12 +14,12 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
-## [Unreleased]
-
-- `Added` automatic homebrew formula update in release workflow
-
 ## [3.4.0]
 
+- `Removed` db2 version of docker image
+- `Removed` oracle version of docker image
+- `Fixed` upgrade debian docker image
+- `Added` automatic homebrew formula update in release workflow
 - `Added` preserve NULL or empty functionality in "lino push update" command
 
 ## [3.3.0]

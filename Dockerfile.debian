@@ -17,10 +17,10 @@
 
 FROM cgifr/pimo:v1.8.0 AS pimo
 
-FROM debian:stable-20210816-slim
+FROM debian:stable-20250929-slim
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends less jq wget git postgresql-client && \
+    apt-get install -y --no-install-recommends git jq less postgresql-client wget && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     rm -r /var/cache/* /var/lib/apt/lists/*
@@ -41,16 +41,16 @@ ARG VERSION
 ARG REVISION
 
 # https://github.com/opencontainers/image-spec/blob/master/annotations.md
-LABEL org.opencontainers.image.created       "${BUILD_DATE}"
-LABEL org.opencontainers.image.authors       "CGI Lino <lino.fr@cgi.com>"
-LABEL org.opencontainers.image.url           "https://github.com/CGI-FR/LINO"
-LABEL org.opencontainers.image.documentation "https://github.com/CGI-FR/LINO/blob/main/README.md"
-LABEL org.opencontainers.image.source        "https://github.com/CGI-FR/LINO.git"
-LABEL org.opencontainers.image.version       "${VERSION}"
-LABEL org.opencontainers.image.revision      "${REVISION}"
-LABEL org.opencontainers.image.vendor        "CGI France"
-LABEL org.opencontainers.image.licenses      "GPL-3.0-only"
-LABEL org.opencontainers.image.ref.name      "cgi-lino"
-LABEL org.opencontainers.image.title         "CGI LINO"
-LABEL org.opencontainers.image.description   "LINO is a simple ETL (Extract Transform Load) tools to manage tests datas."
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL org.opencontainers.image.authors="CGI Lino <lino.fr@cgi.com>"
+LABEL org.opencontainers.image.url="https://github.com/CGI-FR/LINO"
+LABEL org.opencontainers.image.documentation="https://github.com/CGI-FR/LINO/blob/main/README.md"
+LABEL org.opencontainers.image.source="https://github.com/CGI-FR/LINO.git"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.revision="${REVISION}"
+LABEL org.opencontainers.image.vendor="CGI France"
+LABEL org.opencontainers.image.licenses="GPL-3.0-only"
+LABEL org.opencontainers.image.ref.name="cgi-lino"
+LABEL org.opencontainers.image.title="CGI LINO"
+LABEL org.opencontainers.image.description="LINO is a simple ETL (Extract Transform Load) tools to manage tests datas."
 

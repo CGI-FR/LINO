@@ -71,6 +71,19 @@ func Inject(
 	observer = obs
 }
 
+// parseArgument get dataconnector and mode from args
+func parseArguments(args []string) (string, push.Mode) {
+	dcDestination := args[0]
+	mode, _ := push.ParseMode("insert")
+
+	if len(args) == 2 {
+		dcDestination = args[1]
+		mode, _ = push.ParseMode(args[0])
+	}
+
+	return dcDestination, mode
+}
+
 // NewCommand implements the cli pull command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	var (
@@ -106,7 +119,11 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			return fmt.Errorf("accepts 1 or 2 args, received %d", len(args))
 		},
 		PreRun: func(cmd *cobra.Command, args []string) {
+			dcDestination, mode := parseArguments(args)
+
 			log.Info().
+				Str("dataconnector", dcDestination).
+				Str("mode", mode.String()).
 				Uint("commitSize", commitSize).
 				Bool("disable-constraints", disableConstraints).
 				Str("catch-errors", catchErrors).
@@ -119,13 +136,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			startTime := time.Now()
 
-			dcDestination := args[0]
-			mode, _ := push.ParseMode("insert")
-
-			if len(args) == 2 {
-				dcDestination = args[1]
-				mode, _ = push.ParseMode(args[0])
-			}
+			dcDestination, mode := parseArguments(args)
 
 			datadestination, e1 := getDataDestination(dcDestination)
 			if e1 != nil {

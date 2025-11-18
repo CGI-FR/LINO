@@ -93,7 +93,9 @@ func (ds *DataSource) Query(query string) (query.DataReader, error) {
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	log.Info().Str("query", query).Msg("success executing SQL query")
+	log.Info().
+		Str("query", query).
+		Msg("success executing SQL query")
 
 	return &DataReader{rows, nil, nil}, nil
 }

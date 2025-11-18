@@ -8,6 +8,7 @@ import (
 	infra "github.com/cgi-fr/lino/internal/infra/query"
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/cgi-fr/lino/pkg/query"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -28,10 +29,16 @@ func Inject(
 // NewCommand implements the cli analyse command
 func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "query",
+		Use:     "query [Data Connector Name] [Query]",
 		Short:   "Execute direct query",
-		Example: fmt.Sprintf("  %[1]s", fullName),
+		Example: fmt.Sprintf("  %[1]s query source 'select * from myTable'", fullName),
 		Args:    cobra.ExactArgs(2),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			log.Info().
+				Str("dataconnector", args[0]).
+				Str("query", args[1]).
+				Msg("Query")
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if er := execute(cmd, args[0], args[1]); er != nil {
 				fmt.Fprintln(err, er.Error())

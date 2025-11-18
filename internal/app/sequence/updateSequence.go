@@ -24,6 +24,7 @@ import (
 	"github.com/cgi-fr/lino/internal/app/urlbuilder"
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/cgi-fr/lino/pkg/sequence"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -35,6 +36,11 @@ func newUpdateCommand(fullName string, err *os.File, out *os.File, in *os.File) 
 		Long:    "",
 		Example: fmt.Sprintf("  %[1]s sequence update mydatabase", fullName),
 		Args:    cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			log.Info().
+				Str("dataconnector", args[0]).
+				Msg("Update sequence")
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			alias, e1 := dataconnector.Get(dataconnectorStorage, args[0])
 			if e1 != nil {

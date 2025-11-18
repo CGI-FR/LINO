@@ -52,6 +52,8 @@ type HTTPDataSource struct {
 	result io.ReadCloser
 }
 
+func (ds *HTTPDataSource) SafeUrl() string { return ds.url }
+
 // Open a connection to the HTTP DB
 func (ds *HTTPDataSource) Open() error {
 	return nil

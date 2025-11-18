@@ -20,6 +20,7 @@ package pull
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/cgi-fr/lino/internal/infra/commonsql"
@@ -35,6 +36,16 @@ type SQLDataSource struct {
 	dbx     *sqlx.DB
 	db      *sql.DB
 	dialect commonsql.Dialect
+}
+
+func (ds *SQLDataSource) SafeUrl() string {
+	u, err := url.Parse(ds.url)
+	if err != nil {
+		return "invalid URL"
+	}
+	// remove usename and password
+	u.User = nil
+	return u.String()
 }
 
 // Open a connection to the SQL DB

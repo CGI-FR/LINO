@@ -101,6 +101,11 @@ func NewWebSocketDataDestination(url string, schema string) *WebSocketDataDestin
 	}
 }
 
+// SafeUrl return the Websocket url
+func (dd *WebSocketDataDestination) SafeUrl() string {
+	return dd.url
+}
+
 func (dd *WebSocketDataDestination) SendMessageAndReadResult(msg CommandMessage) *push.Error {
 	ctx := context.Background()
 

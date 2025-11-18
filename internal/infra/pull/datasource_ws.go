@@ -89,6 +89,8 @@ type WSDataSource struct {
 	localDS  *WSDataSource
 }
 
+func (ds *WSDataSource) SafeUrl() string { return ds.url }
+
 // Open a connection to the WS DB
 func (ds *WSDataSource) Open() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)

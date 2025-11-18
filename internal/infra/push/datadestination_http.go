@@ -62,6 +62,11 @@ func NewHTTPDataDestination(url string, schema string) *HTTPDataDestination {
 	}
 }
 
+// SafeUrl return the http url
+func (dd *HTTPDataDestination) SafeUrl() string {
+	return dd.url
+}
+
 // Open HTTP Connection
 func (dd *HTTPDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Str("mode", mode.String()).Bool("disableConstraints", disableConstraints).Msg("open HTTP destination")

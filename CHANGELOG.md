@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [3.5.0]
+
+- `Added` logging opening DB connexion that use new SafeUrl for display connection URLs without user and password
+
 ## [3.4.0]
 
 - `Removed` db2 version of docker image

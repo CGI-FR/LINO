@@ -33,6 +33,8 @@ type DataSource interface {
 	RowReader(source Table, filter Filter) (RowReader, error)
 	Read(source Table, filter Filter) (RowSet, error)
 	Close() error
+	// SafeUrl return url without password or credential
+	SafeUrl() string
 }
 
 // RowReader over DataSource.

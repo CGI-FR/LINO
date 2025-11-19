@@ -94,6 +94,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Args:    cobra.ExactArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			log.Info().
+				Str("dataconnector", args[0]).
 				Uint("limit", limit).
 				Interface("filter", initialFilters).
 				Bool("diagnostic", diagnostic).

@@ -35,6 +35,11 @@ func newPingCommand(fullName string, err *os.File, out *os.File, in *os.File) *c
 		Long:    "",
 		Example: fmt.Sprintf("  %[1]s dataconnector ping source", fullName),
 		Args:    cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			log.Info().
+				Str("dataconnector", args[0]).
+				Msg("Ping")
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			dc, e := dataconnector.Get(storage, args[0])
 			if e != nil {

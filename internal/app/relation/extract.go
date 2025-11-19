@@ -24,17 +24,24 @@ import (
 	"github.com/cgi-fr/lino/internal/app/urlbuilder"
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/cgi-fr/lino/pkg/relation"
+	"github.com/rs/zerolog/log"
+
 	"github.com/spf13/cobra"
 )
 
 // newExtractCommand implements the cli relation extract command
 func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "extract [DB Alias Name]",
+		Use:     "extract [Data Connector Name]",
 		Short:   "Extract relations from database",
 		Long:    "",
 		Example: fmt.Sprintf("  %[1]s relation extract mydatabase", fullName),
 		Args:    cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			log.Info().
+				Str("dataconnector", args[0]).
+				Msg("Extract relation")
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			alias, e1 := dataconnector.Get(dataconnectorStorage, args[0])
 			if e1 != nil {

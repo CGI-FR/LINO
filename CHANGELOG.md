@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [3.5.0]
+
+- `Added` info messages to display data connector name on launch
+
 ## [3.4.0]
 
 - `Removed` db2 version of docker image

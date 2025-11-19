@@ -29,6 +29,8 @@ import (
 	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/cgi-fr/lino/pkg/table"
 	"github.com/spf13/cobra"
+
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -68,6 +70,15 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		Example: fmt.Sprintf("  %[1]s", fullName),
 		Aliases: []string{"rimo"},
 		Args:    cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			log.Info().
+				Str("dataconnector", args[0]).
+				Bool("distinct", distinct).
+				Uint("limit", limit).
+				Bool("excludePks", excludePks).
+				Uint("sampleSize", sampleSize).
+				Msg("Analyse")
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			dataConnector := args[0]
 			dataSource, primaryKeys, e0 := getDatasource(dataConnector)

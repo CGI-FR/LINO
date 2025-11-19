@@ -35,6 +35,10 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 		}
 	}()
 
+	log.Info().
+		Str("url", destination.SafeUrl()).
+		Msg("Open database")
+
 	err1 := destination.Open(plan, mode, disableConstraints)
 	if err1 != nil {
 		return err1

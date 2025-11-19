@@ -20,6 +20,7 @@ package push
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 
@@ -50,6 +51,16 @@ func NewSQLDataDestination(url string, schema string, dialect SQLDialect) *SQLDa
 		rowWriter: map[string]*SQLRowWriter{},
 		dialect:   dialect,
 	}
+}
+
+func (dd *SQLDataDestination) SafeUrl() string {
+	u, err := url.Parse(dd.url)
+	if err != nil {
+		return "invalid URL"
+	}
+	// remove usename and password
+	u.User = nil
+	return u.String()
 }
 
 // Close SQL connections

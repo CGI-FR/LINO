@@ -16,6 +16,7 @@ Types of changes
 
 ## [3.5.0]
 
+- `Added` logging opening DB connexion that use new SafeUrl for display connection URLs without user and password
 - `Added` info messages to display data connector name on launch
 
 ## [3.4.0]

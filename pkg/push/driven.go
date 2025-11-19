@@ -29,6 +29,7 @@ type DataDestination interface {
 	RowWriter(table Table) (RowWriter, *Error)
 	OpenSQLLogger(folderPath string) error
 	Close() *Error
+	SafeUrl() string
 }
 
 // RowWriter write row to destination table

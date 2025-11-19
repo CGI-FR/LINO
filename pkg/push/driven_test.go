@@ -57,6 +57,10 @@ type memoryDataDestination struct {
 	opened    bool
 }
 
+func (mdd *memoryDataDestination) SafeUrl() string {
+	return "mem://test"
+}
+
 func (mdd *memoryDataDestination) RowWriter(table push.Table) (push.RowWriter, *push.Error) {
 	return mdd.tables[table.Name()], nil
 }

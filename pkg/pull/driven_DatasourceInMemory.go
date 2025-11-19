@@ -32,8 +32,9 @@ func NewDataSourceInMemory(tables DataSet) DataSource {
 	return DataSourceInMemory{tables: tables}
 }
 
-func (ds DataSourceInMemory) Open() error  { return nil }
-func (ds DataSourceInMemory) Close() error { return nil }
+func (ds DataSourceInMemory) SafeUrl() string { return "mem://test" }
+func (ds DataSourceInMemory) Open() error     { return nil }
+func (ds DataSourceInMemory) Close() error    { return nil }
 
 func (ds DataSourceInMemory) Read(source Table, filter Filter) (RowSet, error) {
 	reader, err := ds.RowReader(source, filter)

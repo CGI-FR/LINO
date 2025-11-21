@@ -67,6 +67,11 @@ func (d Db2Dialect) InsertStatement(tableName string, selectValues []ValueDescri
 	panic(fmt.Errorf("Not implemented"))
 }
 
+// UpsertStatement
+func (d Db2Dialect) UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	panic(fmt.Errorf("Not implemented"))
+}
+
 // UpdateStatement
 func (d Db2Dialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	panic(fmt.Errorf("Not implemented"))

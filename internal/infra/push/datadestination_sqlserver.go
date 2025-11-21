@@ -87,6 +87,10 @@ func (d SQLServerDialect) InsertStatement(tableName string, selectValues []Value
 	return sql.String(), selectValues
 }
 
+func (d SQLServerDialect) UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	return "", nil, &push.Error{Description: "upsert not implemented for sqlserver"}
+}
+
 func (d SQLServerDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")

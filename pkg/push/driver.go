@@ -198,7 +198,7 @@ func pushRow(row Row, ds DataDestination, table Table, plan Plan, mode Mode, tra
 	}
 
 	var where Row
-	if mode == Delete || mode == Update {
+	if mode == Delete || mode == Update || mode == Upsert {
 		where = computeTranslatedKeys(row, table, translator)
 
 		for key, val := range fwhere {

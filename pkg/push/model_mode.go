@@ -27,7 +27,8 @@ const (
 	Insert
 	// Delete only existing row
 	Delete
-	// TODO Upsert insert and update on conflict
+	// Upsert insert and update on conflict
+	Upsert
 	// Update only existing row
 	Update
 	end
@@ -38,12 +39,12 @@ var modes = [...]string{
 	"truncate",
 	"insert",
 	"delete",
-	// "upsert",
+	"upsert",
 	"update",
 }
 
 // Modes list all modes string representation
-func Modes() [4]string {
+func Modes() [5]string {
 	return modes
 }
 

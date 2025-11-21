@@ -100,6 +100,49 @@ func (d PostgresDialect) InsertStatement(tableName string, selectValues []ValueD
 	return sql.String(), selectValues
 }
 
+func (d PostgresDialect) UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	protectedColumns := []string{}
+	for _, c := range selectValues {
+		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c.name))
+	}
+
+	sql := &strings.Builder{}
+	sql.WriteString("INSERT INTO ")
+	sql.WriteString(tableName)
+	sql.WriteString("(")
+	sql.WriteString(strings.Join(protectedColumns, ","))
+	sql.WriteString(") VALUES (")
+	for i := 1; i <= len(selectValues); i++ {
+		sql.WriteString(d.Placeholder(i))
+		if i < len(selectValues) {
+			sql.WriteString(", ")
+		}
+	}
+
+	if len(primaryKeys) > 0 {
+		sql.WriteString(") ON CONFLICT (")
+		sql.WriteString(strings.Join(primaryKeys, ","))
+		sql.WriteString(") DO UPDATE SET ")
+
+		first := true
+		for _, column := range selectValues {
+			// Skip primary keys in update set
+			if isAPrimaryKey(column.name, primaryKeys) {
+				continue
+			}
+			if !first {
+				sql.WriteString(", ")
+			}
+			sql.WriteString(fmt.Sprintf("\"%s\" = EXCLUDED.\"%s\"", column.name, column.name))
+			first = false
+		}
+	} else {
+		sql.WriteString(")")
+	}
+
+	return sql.String(), selectValues, nil
+}
+
 func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")

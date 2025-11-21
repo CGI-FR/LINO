@@ -91,6 +91,10 @@ func (d Db2Dialect) InsertStatement(tableName string, selectValues []ValueDescri
 	return sql.String(), selectValues
 }
 
+func (d Db2Dialect) UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	return "", nil, &push.Error{Description: "upsert not implemented for db2"}
+}
+
 // UpdateStatement
 func (d Db2Dialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}

@@ -124,6 +124,63 @@ func (d OracleDialect) InsertStatement(tableName string, selectValues []ValueDes
 	return sql.String(), selectValues
 }
 
+// UpsertStatement
+func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	sql := &strings.Builder{}
+	sql.WriteString("MERGE INTO ")
+	sql.WriteString(tableName)
+	sql.WriteString(" target USING (SELECT ")
+
+	for i, col := range selectValues {
+		if i > 0 {
+			sql.WriteString(", ")
+		}
+		sql.WriteString(d.Placeholder(i + 1))
+		sql.WriteString(" AS \"")
+		sql.WriteString(col.name)
+		sql.WriteString("\"")
+	}
+	sql.WriteString(" FROM dual) source ON (")
+
+	for i, pk := range primaryKeys {
+		if i > 0 {
+			sql.WriteString(" AND ")
+		}
+		sql.WriteString(fmt.Sprintf("target.\"%s\" = source.\"%s\"", pk, pk))
+	}
+	sql.WriteString(") WHEN MATCHED THEN UPDATE SET ")
+
+	first := true
+	for _, col := range selectValues {
+		if isAPrimaryKey(col.name, primaryKeys) {
+			continue
+		}
+		if !first {
+			sql.WriteString(", ")
+		}
+		sql.WriteString(fmt.Sprintf("target.\"%s\" = source.\"%s\"", col.name, col.name))
+		first = false
+	}
+
+	sql.WriteString(" WHEN NOT MATCHED THEN INSERT (")
+	for i, col := range selectValues {
+		if i > 0 {
+			sql.WriteString(", ")
+		}
+		sql.WriteString(fmt.Sprintf("\"%s\"", col.name))
+	}
+	sql.WriteString(") VALUES (")
+	for i, col := range selectValues {
+		if i > 0 {
+			sql.WriteString(", ")
+		}
+		sql.WriteString(fmt.Sprintf("source.\"%s\"", col.name))
+	}
+	sql.WriteString(")")
+
+	return sql.String(), selectValues, nil
+}
+
 // UpdateStatement
 func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}

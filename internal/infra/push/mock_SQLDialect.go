@@ -12,13 +12,13 @@ type MockSQLDialect struct {
 	mock.Mock
 }
 
-// ConvertValue provides a mock function with given fields: _a0
-func (_m *MockSQLDialect) ConvertValue(_a0 push.Value) push.Value {
-	ret := _m.Called(_a0)
+// ConvertValue provides a mock function with given fields: _a0, _a1
+func (_m *MockSQLDialect) ConvertValue(_a0 push.Value, _a1 ValueDescriptor) push.Value {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 push.Value
-	if rf, ok := ret.Get(0).(func(push.Value) push.Value); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(push.Value, ValueDescriptor) push.Value); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(push.Value)
@@ -56,18 +56,91 @@ func (_m *MockSQLDialect) EnableConstraintsStatement(tableName string) string {
 	return r0
 }
 
-// InsertStatement provides a mock function with given fields: tableName, columns, values, primaryKeys
-func (_m *MockSQLDialect) InsertStatement(tableName string, columns []string, values []string, primaryKeys []string) string {
-	ret := _m.Called(tableName, columns, values, primaryKeys)
+// InsertStatement provides a mock function with given fields: tableName, selectValues, primaryKeys
+func (_m *MockSQLDialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (string, []ValueDescriptor) {
+	ret := _m.Called(tableName, selectValues, primaryKeys)
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func(string, []string, []string, []string) string); ok {
-		r0 = rf(tableName, columns, values, primaryKeys)
+	if rf, ok := ret.Get(0).(func(string, []ValueDescriptor, []string) string); ok {
+		r0 = rf(tableName, selectValues, primaryKeys)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	return r0
+	var r1 []ValueDescriptor
+	if rf, ok := ret.Get(1).(func(string, []ValueDescriptor, []string) []ValueDescriptor); ok {
+		r1 = rf(tableName, selectValues, primaryKeys)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]ValueDescriptor)
+		}
+	}
+
+	return r0, r1
+}
+
+// UpsertStatement provides a mock function with given fields: tableName, selectValues, whereValues, primaryKeys
+func (_m *MockSQLDialect) UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (string, []ValueDescriptor, *push.Error) {
+	ret := _m.Called(tableName, selectValues, whereValues, primaryKeys)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string, []ValueDescriptor, []ValueDescriptor, []string) string); ok {
+		r0 = rf(tableName, selectValues, whereValues, primaryKeys)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 []ValueDescriptor
+	if rf, ok := ret.Get(1).(func(string, []ValueDescriptor, []ValueDescriptor, []string) []ValueDescriptor); ok {
+		r1 = rf(tableName, selectValues, whereValues, primaryKeys)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]ValueDescriptor)
+		}
+	}
+
+	var r2 *push.Error
+	if rf, ok := ret.Get(2).(func(string, []ValueDescriptor, []ValueDescriptor, []string) *push.Error); ok {
+		r2 = rf(tableName, selectValues, whereValues, primaryKeys)
+	} else {
+		if ret.Get(2) != nil {
+			r2 = ret.Get(2).(*push.Error)
+		}
+	}
+
+	return r0, r1, r2
+}
+
+// UpdateStatement provides a mock function with given fields: tableName, selectValues, whereValues, primaryKeys
+func (_m *MockSQLDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (string, []ValueDescriptor, *push.Error) {
+	ret := _m.Called(tableName, selectValues, whereValues, primaryKeys)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string, []ValueDescriptor, []ValueDescriptor, []string) string); ok {
+		r0 = rf(tableName, selectValues, whereValues, primaryKeys)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 []ValueDescriptor
+	if rf, ok := ret.Get(1).(func(string, []ValueDescriptor, []ValueDescriptor, []string) []ValueDescriptor); ok {
+		r1 = rf(tableName, selectValues, whereValues, primaryKeys)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]ValueDescriptor)
+		}
+	}
+
+	var r2 *push.Error
+	if rf, ok := ret.Get(2).(func(string, []ValueDescriptor, []ValueDescriptor, []string) *push.Error); ok {
+		r2 = rf(tableName, selectValues, whereValues, primaryKeys)
+	} else {
+		if ret.Get(2) != nil {
+			r2 = ret.Get(2).(*push.Error)
+		}
+	}
+
+	return r0, r1, r2
 }
 
 // IsDuplicateError provides a mock function with given fields: _a0
@@ -112,25 +185,102 @@ func (_m *MockSQLDialect) TruncateStatement(tableName string) string {
 	return r0
 }
 
-// UpdateStatement provides a mock function with given fields: tableName, columns, uValues, primaryKeys, pValues
-func (_m *MockSQLDialect) UpdateStatement(tableName string, columns []string, uValues []string, primaryKeys []string, pValues []string) (string, *push.Error) {
-	ret := _m.Called(tableName, columns, uValues, primaryKeys, pValues)
+// CanDisableIndividualConstraints provides a mock function with given fields:
+func (_m *MockSQLDialect) CanDisableIndividualConstraints() bool {
+	ret := _m.Called()
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func() bool); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// ReadConstraintsStatement provides a mock function with given fields: tableName
+func (_m *MockSQLDialect) ReadConstraintsStatement(tableName string) string {
+	ret := _m.Called(tableName)
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func(string, []string, []string, []string, []string) string); ok {
-		r0 = rf(tableName, columns, uValues, primaryKeys, pValues)
+	if rf, ok := ret.Get(0).(func(string) string); ok {
+		r0 = rf(tableName)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	var r1 *push.Error
-	if rf, ok := ret.Get(1).(func(string, []string, []string, []string, []string) *push.Error); ok {
-		r1 = rf(tableName, columns, uValues, primaryKeys, pValues)
+	return r0
+}
+
+// DisableConstraintStatement provides a mock function with given fields: tableName, constraintName
+func (_m *MockSQLDialect) DisableConstraintStatement(tableName string, constraintName string) string {
+	ret := _m.Called(tableName, constraintName)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string, string) string); ok {
+		r0 = rf(tableName, constraintName)
 	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*push.Error)
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// EnableConstraintStatement provides a mock function with given fields: tableName, constraintName
+func (_m *MockSQLDialect) EnableConstraintStatement(tableName string, constraintName string) string {
+	ret := _m.Called(tableName, constraintName)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string, string) string); ok {
+		r0 = rf(tableName, constraintName)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// SupportPreserve provides a mock function with given fields:
+func (_m *MockSQLDialect) SupportPreserve() []string {
+	ret := _m.Called()
+
+	var r0 []string
+	if rf, ok := ret.Get(0).(func() []string); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
 		}
 	}
 
-	return r0, r1
+	return r0
+}
+
+// BlankTest provides a mock function with given fields: name
+func (_m *MockSQLDialect) BlankTest(name string) string {
+	ret := _m.Called(name)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string) string); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// EmptyTest provides a mock function with given fields: name
+func (_m *MockSQLDialect) EmptyTest(name string) string {
+	ret := _m.Called(name)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string) string); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
 }

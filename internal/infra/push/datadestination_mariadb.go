@@ -89,6 +89,10 @@ func (d MariadbDialect) InsertStatement(tableName string, selectValues []ValueDe
 	return sql.String(), selectValues
 }
 
+func (d MariadbDialect) UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	return "", nil, &push.Error{Description: "upsert not implemented for mariadb"}
+}
+
 func (d MariadbDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")

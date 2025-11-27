@@ -18,7 +18,10 @@
 package push_test
 
 import (
+	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/stretchr/testify/assert"
@@ -47,7 +50,7 @@ func TestSimplePush(t *testing.T) {
 		B.Name(): {},
 		C.Name(): {},
 	}
-	dest := memoryDataDestination{tables, false, false, false}
+	dest := memoryDataDestination{tables, false, false, false, 0}
 
 	err := push.Push(&ri, &dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
 
@@ -86,7 +89,7 @@ func TestRelationPush(t *testing.T) {
 		B.Name(): {},
 		C.Name(): {},
 	}
-	dest := memoryDataDestination{tables, false, false, false}
+	dest := memoryDataDestination{tables, false, false, false, 0}
 
 	err := push.Push(&ri, &dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
 
@@ -135,7 +138,7 @@ func TestRelationPushWithEmptyRelation(t *testing.T) {
 		B.Name(): {},
 		C.Name(): {},
 	}
-	dest := memoryDataDestination{tables, false, false, false}
+	dest := memoryDataDestination{tables, false, false, false, 0}
 
 	err := push.Push(&ri, &dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
 
@@ -186,7 +189,7 @@ func TestInversseRelationPush(t *testing.T) {
 		B.Name(): {},
 		C.Name(): {},
 	}
-	dest := memoryDataDestination{tables, false, false, false}
+	dest := memoryDataDestination{tables, false, false, false, 0}
 
 	err := push.Push(&ri, &dest, plan, push.Insert, 5, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
 
@@ -208,4 +211,111 @@ func TestInversseRelationPush(t *testing.T) {
 	assert.Equal(t, 3, len(dest.tables[C.Name()].rows))
 	assert.Equal(t, 1, len(dest.tables[C.Name()].rows[0]))
 	assert.Equal(t, "1", dest.tables[C.Name()].rows[0]["history"])
+}
+
+func TestPushWithCommitTimeout(t *testing.T) {
+	A := makeTable("A")
+	plan := push.NewPlan(A, []push.Relation{})
+
+	// Iterator that returns 2 rows with a delay between them
+	ri := &delayedRowIterator{
+		rows: []push.Row{
+			{"name": "Row1"},
+			{"name": "Row2"},
+		},
+		delay: 200 * time.Millisecond,
+	}
+
+	tables := map[string]*rowWriter{A.Name(): {}}
+	dest := &memoryDataDestination{tables: tables}
+
+	// Commit size 10, but timeout 100ms. Should trigger commit after first row due to delay.
+	err := push.Push(ri, dest, plan, push.Insert, 10, 100*time.Millisecond, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+
+	assert.Nil(t, err)
+	// Should have 2 commits: 1 for timeout after first row, 1 final commit for second row
+	assert.Equal(t, 2, dest.commits, "Expected 2 commits: 1 timeout + 1 final")
+	assert.Equal(t, 2, len(dest.tables[A.Name()].rows))
+}
+
+func TestPushWithSavepoint(t *testing.T) {
+	tmpfile, err := os.CreateTemp("", "savepoint")
+	assert.Nil(t, err)
+	defer os.Remove(tmpfile.Name())
+	tmpfile.Close()
+
+	A := push.NewTable("A", []string{"id"}, nil)
+	plan := push.NewPlan(A, []push.Relation{})
+	ri := rowIterator{limit: 5, row: push.Row{"id": 1, "name": "John"}}
+
+	tables := map[string]*rowWriter{A.Name(): {}}
+	dest := &memoryDataDestination{tables: tables}
+
+	// Commit size 2, total 5 rows -> 2 intermediate commits
+	err = push.Push(&ri, dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", tmpfile.Name(), false)
+
+	assert.Nil(t, err)
+
+	content, err := os.ReadFile(tmpfile.Name())
+	assert.Nil(t, err)
+	lines := strings.Split(strings.TrimSpace(string(content)), "\n")
+
+	assert.GreaterOrEqual(t, len(lines), 4)
+}
+
+func TestPushWithObservers(t *testing.T) {
+	A := makeTable("A")
+	plan := push.NewPlan(A, []push.Relation{})
+	ri := rowIterator{limit: 5, row: push.Row{"name": "John"}}
+	tables := map[string]*rowWriter{A.Name(): {}}
+	dest := &memoryDataDestination{tables: tables}
+
+	obs := &mockObserver{}
+	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false, obs)
+
+	assert.Nil(t, err)
+	assert.Equal(t, 5, obs.pushedCount)
+	assert.True(t, obs.closed)
+}
+
+type delayedRowIterator struct {
+	rows  []push.Row
+	index int
+	delay time.Duration
+}
+
+func (i *delayedRowIterator) Next() bool {
+	if i.index >= len(i.rows) {
+		return false
+	}
+	if i.index > 0 {
+		time.Sleep(i.delay)
+	}
+	i.index++
+	return true
+}
+
+func (i *delayedRowIterator) Value() *push.Row {
+	return &i.rows[i.index-1]
+}
+
+func (i *delayedRowIterator) Error() *push.Error {
+	return nil
+}
+
+func (i *delayedRowIterator) Close() *push.Error {
+	return nil
+}
+
+type mockObserver struct {
+	pushedCount int
+	closed      bool
+}
+
+func (m *mockObserver) Pushed() {
+	m.pushedCount++
+}
+
+func (m *mockObserver) Close() {
+	m.closed = true
 }

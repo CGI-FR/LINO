@@ -184,6 +184,14 @@ loop:
 		}
 	}
 
+	// Final commit for any remaining uncommitted rows
+	if ctx.inputCount%ctx.cfg.CommitSize != 0 {
+		log.Info().Msg("Final commit")
+		if err := ctx.commit(); err != nil {
+			return err
+		}
+	}
+
 	log.Info().Msg("End of stream")
 	return nil
 }

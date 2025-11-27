@@ -1,6 +1,6 @@
 name: push upsert
 testcases:
-  - name: push upsert insert
+  - name: push upsert setup
     steps:
       # Clean working directory
       - script: rm -f *
@@ -17,39 +17,33 @@ testcases:
       # Set up config
       - script: lino relation extract source
       - script: lino table extract source --only-tables
+      - script: lino id create country
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+
+  - name: push upsert insert
+    steps:
       # Create a new store row
-      - script: echo '{"store_id":999, "manager_staff_id":1, "address_id":1, "last_update":"2006-02-15T04:57:12Z"}' > new_store.json
-      - script: lino push upsert source < new_store.json
+      - script: echo '{"country_id":999, "country":"goland" , "last_update":"2006-02-15T04:57:12Z"}' > new_country.jsonl
+      - script: lino push upsert source < new_country.jsonl
         assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldBeEmpty
-      - script: lino pull source --filter store_id=999
+      - script: lino pull source --filter country_id=999
         assertions:
           - result.code ShouldEqual 0
-          - result.systemout ShouldContainSubstring "store_id":999
+          - result.systemout ShouldContainSubstring "country_id":999
+          - result.systemout ShouldContainSubstring "country":"goland"
 
   - name: push upsert update
     steps:
-      # Clean working directory
-      - script: rm -f *
-      # Reset source database
-      - script: sudo docker compose -p lino stop source && sudo docker compose -p lino rm -f source && sudo docker compose -p lino up -d source
-        assertions:
-          - result.code ShouldEqual 0
-      # Set up data connector
-      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
-      # Wait for database available (10 retries)
-      - script: count=0; while ! lino dc ping source; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
-      # Set up config
-      - script: lino relation extract source
-      - script: lino table extract source --only-tables
       # Update existing store (id 1)
-      - script: echo '{"store_id":1, "manager_staff_id":2, "address_id":1, "last_update":"2006-02-15T04:57:12Z"}' > update_store.json
-      - script: lino push upsert source < update_store.json
+      - script: echo '{"country_id":1, "country":"goland" , "last_update":"2006-02-15T04:57:12Z"}' > update_country.jsonl
+
+      - script: lino push upsert source < update_country.jsonl
         assertions:
           - result.code ShouldEqual 0
           - result.systemerr ShouldBeEmpty
-      - script: lino pull source --filter store_id=1
+      - script: lino pull source --filter country_id=1
         assertions:
           - result.code ShouldEqual 0
-          - result.systemout ShouldContainSubstring "manager_staff_id":2
+          - result.systemout ShouldContainSubstring "country":"goland"

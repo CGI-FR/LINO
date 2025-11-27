@@ -382,6 +382,7 @@ func (rw *SQLRowWriter) Write(row push.Row, where push.Row) *push.Error {
 	rw.sqlLogger.Write(values)
 
 	_, err2 := rw.statement.Exec(values...)
+	log.Trace().AnErr("error", err2).Msg("push error")
 	if err2 != nil {
 		// reset statement after error
 		if err := rw.close(); err != nil {

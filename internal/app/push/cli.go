@@ -99,6 +99,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		autoTruncate       bool
 		watch              bool
 		logSQLTo           string
+		commitTimeout      time.Duration
 	)
 
 	cmd := &cobra.Command{
@@ -179,7 +180,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				observers = append(observers, observer)
 			}
 
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, disableConstraints, rowExporter, translator, whereField, savepoint, autoTruncate, observers...)
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, commitTimeout, disableConstraints, rowExporter, translator, whereField, savepoint, autoTruncate, observers...)
 			if e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)
@@ -193,6 +194,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		},
 	}
 	cmd.Flags().UintVarP(&commitSize, "commitSize", "c", 500, "Commit size")
+	cmd.Flags().DurationVar(&commitTimeout, "commit-timeout", 0, "Commit timeout (e.g. 5s, 1m). If set, a commit is triggered if no new row is received within this duration.")
 	cmd.Flags().BoolVarP(&disableConstraints, "disable-constraints", "d", false, "Disable constraint during push")
 	cmd.Flags().StringVarP(&catchErrors, "catch-errors", "e", "", "Catch errors and write line in file")
 	cmd.Flags().StringVarP(&table, "table", "t", "", "Table to writes json")

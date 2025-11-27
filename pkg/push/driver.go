@@ -21,12 +21,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, savepointPath string, autotruncate bool, observers ...Observer) (err *Error) {
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, commitTimeout time.Duration, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, savepointPath string, autotruncate bool, observers ...Observer) (err *Error) {
 	defer func() {
 		for _, observer := range observers {
 			if observer != nil {
@@ -75,46 +76,123 @@ func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, com
 		}
 	}()
 
-	i := uint(0)
-	for ri.Next() {
-		row := ri.Value()
+	rowChan := make(chan *Row)
+	errChan := make(chan *Error, 1)
+	quit := make(chan struct{})
+	defer close(quit)
 
-		err2 := pushRow(*row, destination, plan.FirstTable(), plan, mode, translator, whereField)
-		if err2 != nil {
-			err4 := catchError.Write(*row, nil)
-			if err4 != nil {
-				return &Error{Description: fmt.Sprintf("%s (%s)", err2.Error(), err4.Error())}
+	go func() {
+		defer close(rowChan)
+		for ri.Next() {
+			val := ri.Value()
+			// Shallow copy to avoid race conditions if iterator reuses map
+			newRow := make(Row, len(*val))
+			for k, v := range *val {
+				newRow[k] = v
 			}
-			log.Warn().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
-		}
-		i++
-		if savepointPath != "" {
-			committed = append(committed, extractValues(*row, plan.FirstTable().PrimaryKey()))
-		}
-		if i%commitSize == 0 {
-			log.Info().Msg("Intermediate commit")
-			errCommit := destination.Commit()
-			if errCommit != nil {
-				return errCommit
-			}
-			if savepointPath != "" {
-				if err := savepoint(savepointPath, committed); err != nil {
-					return err
-				}
-				committed = committed[:0] // clear slice without releasing memory
-			}
-			IncCommitsCount()
-		}
-		IncInputLinesCount()
-		for _, observer := range observers {
-			if observer != nil {
-				observer.Pushed()
+			select {
+			case rowChan <- &newRow:
+			case <-quit:
+				return
 			}
 		}
+		if e := ri.Error(); e != nil {
+			select {
+			case errChan <- e:
+			case <-quit:
+				return
+			}
+		}
+	}()
+
+	var timer *time.Timer
+	var timerCh <-chan time.Time
+
+	if commitTimeout > 0 {
+		timer = time.NewTimer(commitTimeout)
+		if !timer.Stop() {
+			select {
+			case <-timer.C:
+			default:
+			}
+		}
+		timerCh = timer.C
 	}
 
-	if ri.Error() != nil {
-		return ri.Error()
+	i := uint(0)
+
+loop:
+	for {
+		select {
+		case row, ok := <-rowChan:
+			if !ok {
+				select {
+				case e := <-errChan:
+					return e
+				default:
+				}
+				break loop
+			}
+
+			if commitTimeout > 0 {
+				if !timer.Stop() {
+					select {
+					case <-timer.C:
+					default:
+					}
+				}
+				timer.Reset(commitTimeout)
+			}
+
+			err2 := pushRow(*row, destination, plan.FirstTable(), plan, mode, translator, whereField)
+			if err2 != nil {
+				err4 := catchError.Write(*row, nil)
+				if err4 != nil {
+					return &Error{Description: fmt.Sprintf("%s (%s)", err2.Error(), err4.Error())}
+				}
+				log.Warn().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
+			}
+			i++
+			if savepointPath != "" {
+				committed = append(committed, extractValues(*row, plan.FirstTable().PrimaryKey()))
+			}
+			if i%commitSize == 0 {
+				log.Info().Msg("Intermediate commit")
+				errCommit := destination.Commit()
+				if errCommit != nil {
+					return errCommit
+				}
+				if savepointPath != "" {
+					if err := savepoint(savepointPath, committed); err != nil {
+						return err
+					}
+					committed = committed[:0] // clear slice without releasing memory
+				}
+				IncCommitsCount()
+			}
+			IncInputLinesCount()
+			for _, observer := range observers {
+				if observer != nil {
+					observer.Pushed()
+				}
+			}
+
+		case <-timerCh:
+			if i%commitSize != 0 {
+				log.Info().Msg("Timeout commit")
+				errCommit := destination.Commit()
+				if errCommit != nil {
+					return errCommit
+				}
+				if savepointPath != "" {
+					if err := savepoint(savepointPath, committed); err != nil {
+						return err
+					}
+					committed = committed[:0] // clear slice without releasing memory
+				}
+				IncCommitsCount()
+			}
+		}
 	}
 
 	log.Info().Msg("End of stream")

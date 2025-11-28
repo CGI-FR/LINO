@@ -1,6 +1,7 @@
 package push
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -249,6 +250,12 @@ func (d OracleDialect) ConvertValue(from push.Value, descriptor ValueDescriptor)
 		switch v := from.(type) {
 		case []byte:
 			return go_ora.Blob{Data: v, Valid: true}
+		}
+	}
+	if descriptor.column != nil && descriptor.column.Export() == "numeric" {
+		switch v := from.(type) {
+		case json.Number:
+			return v.String()
 		}
 	}
 	// FIXME: Workaround to parse time from json

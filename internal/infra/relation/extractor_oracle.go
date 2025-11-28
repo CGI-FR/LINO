@@ -25,31 +25,46 @@ func (e *OracleExtractorFactory) New(url string, schema string) relation.Extract
 type OracleDialect struct{}
 
 func (d OracleDialect) SQL(schema string) string {
-	SQL := `
-	SELECT
-	a.constraint_name name,
-	a.table_name child_table,
-	a.COLUMN_NAME child_key,
-	c_pk.table_name parent_table,
-	a_pk.COLUMN_NAME parent_key
-FROM all_cons_columns a
-JOIN all_constraints c ON a.owner = c.owner
-					  AND a.constraint_name = c.constraint_name
-JOIN all_constraints c_pk ON c.r_owner = c_pk.owner
-						 AND c.r_constraint_name = c_pk.constraint_name
-JOIN all_cons_columns a_pk ON c_pk.CONSTRAINT_NAME = a_pk.CONSTRAINT_NAME
-						  AND a.POSITION = a_pk.POSITION
-WHERE
-`
-
 	if schema == "" {
-		SQL += "a.owner = user"
+		schema = "user"
 	} else {
-		SQL += fmt.Sprintf("a.owner = '%s'", schema)
+		schema = fmt.Sprintf("'%s'", schema)
 	}
 
-	SQL += `
-ORDER by 1, 2 asc
+	SQL := `
+SELECT
+    fk.constraint_name    AS relation_name,
+    fk.table_name         AS child_table,
+    fk_cols.column_name   AS child_column,
+    pk.table_name         AS parent_table,
+    pk_cols.column_name   AS parent_column
+FROM
+    all_constraints fk
+-- 1. Récupérer le parent (en précisant le R_OWNER car le parent peut être dans un autre schéma)
+JOIN
+    all_constraints pk 
+    ON fk.r_constraint_name = pk.constraint_name 
+    AND fk.r_owner = pk.owner
+-- 2. Colonnes de l'enfant (Jointure sur NOM + OWNER)
+JOIN
+    all_cons_columns fk_cols 
+    ON fk.constraint_name = fk_cols.constraint_name 
+    AND fk.owner = fk_cols.owner
+-- 3. Colonnes du parent (Jointure sur NOM + OWNER)
+JOIN
+    all_cons_columns pk_cols 
+    ON pk.constraint_name = pk_cols.constraint_name 
+    AND pk.owner = pk_cols.owner
+WHERE
+    fk.constraint_type = 'R' -- foreignkey
+    AND fk_cols.position = pk_cols.position
+    -- FILTRE SUR LE PROPRIÉTAIRE ICI :
+    AND fk.owner = ` + schema + `
+ORDER BY
+    fk.table_name,
+    fk.constraint_name,
+    fk_cols.position
 `
+
 	return SQL
 }

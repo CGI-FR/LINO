@@ -19,6 +19,7 @@ package relation
 
 import (
 	"github.com/cgi-fr/lino/pkg/relation"
+	"github.com/rs/zerolog/log"
 	"github.com/xo/dburl"
 )
 
@@ -45,7 +46,6 @@ func NewSQLExtractor(url string, schema string, dialect Dialect) *SQLExtractor {
 // Extract relations from the database.
 func (e *SQLExtractor) Extract() ([]relation.Relation, *relation.Error) {
 	db, err := dburl.Open(e.url)
-
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}
 	}
@@ -56,7 +56,11 @@ func (e *SQLExtractor) Extract() ([]relation.Relation, *relation.Error) {
 		return nil, &relation.Error{Description: err.Error()}
 	}
 
-	rows, err := db.Query(e.dialect.SQL(e.schema))
+	sql := e.dialect.SQL(e.schema)
+
+	log.Debug().Msgf("Executing relation extraction SQL:\n%s", sql)
+
+	rows, err := db.Query(sql)
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}
 	}
@@ -71,29 +75,38 @@ func (e *SQLExtractor) Extract() ([]relation.Relation, *relation.Error) {
 		targetColumn string
 	)
 
+	currentRelation := relation.Relation{}
+
 	for rows.Next() {
 		err := rows.Scan(&relationName, &sourceTable, &sourceColumn, &targetTable, &targetColumn)
 		if err != nil {
 			return nil, &relation.Error{Description: err.Error()}
 		}
 
-		relation := relation.Relation{
-			Name: relationName,
-			Parent: relation.Table{
-				Name: targetTable,
-				Keys: []string{targetColumn},
-			},
-			Child: relation.Table{
-				Name: sourceTable,
-				Keys: []string{sourceColumn},
-			},
+		if currentRelation.Name != relationName {
+			relations = append(relations, currentRelation)
+			currentRelation = relation.Relation{
+				Name: relationName,
+				Parent: relation.Table{
+					Name: targetTable,
+					Keys: []string{targetColumn},
+				},
+				Child: relation.Table{
+					Name: sourceTable,
+					Keys: []string{sourceColumn},
+				},
+			}
+		} else {
+			currentRelation.Parent.Keys = append(currentRelation.Parent.Keys, targetColumn)
+			currentRelation.Child.Keys = append(currentRelation.Child.Keys, sourceColumn)
 		}
-		relations = append(relations, relation)
 	}
+	relations = append(relations, currentRelation)
+
 	err = rows.Err()
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}
 	}
 
-	return relations, nil
+	return relations[1:], nil
 }

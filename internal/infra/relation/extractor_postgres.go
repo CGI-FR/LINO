@@ -20,6 +20,7 @@ package relation
 import (
 
 	// import postgresql connector
+
 	"fmt"
 
 	_ "github.com/lib/pq"
@@ -64,5 +65,6 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
 	if schema != "" {
 		SQL += fmt.Sprintf("AND tc.table_schema = '%s'", schema)
 	}
+
 	return SQL
 }

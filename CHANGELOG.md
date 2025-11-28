@@ -14,8 +14,9 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
-## [3.5.1]
+## [3.6.0]
 
+- `Added` new push mode `upsert` to insert or update rows based on primary keys
 - `Fixed` relations extraction with Oracle database create duplicated relations
 
 ## [3.5.0]

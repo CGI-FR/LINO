@@ -449,6 +449,18 @@ lino push update source --table actor <<<'{"actor_id":998,"last_name":"CHASE","_
 
 The `__usingpk__` field can also be used with an ingress descriptor at any level in the data. The name of this field can be changed to another value with the `--using-pk-field` flag.
 
+### Upsert
+
+The `upsert` mode allows to insert new rows or update existing ones based on the primary key.
+
+```bash
+$ lino push upsert dest < data.jsonl
+```
+
+If a row with the same primary key already exists in the destination table, it will be updated with the new values. If it does not exist, it will be inserted.
+
+**Note:** This feature is currently supported for PostgreSQL and Oracle databases.
+
 ### How to recover from error
 
 Use options `lino pull --exclude-from-file` (shortcut `-X`) and `lino push --savepoint` combined to handle error recovery. The process will restart where it failed if an error has interrupted it in a previous run.

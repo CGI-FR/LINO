@@ -299,6 +299,12 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 			return pusherr
 		}
 
+	case rw.dd.mode == push.Upsert:
+		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpsertStatement(rw.tableName(), selectValues, whereValues, rw.table.PrimaryKey())
+		if pusherr != nil {
+			return pusherr
+		}
+
 	default: // Insert:
 		prepareStmt, rw.headers = rw.dd.dialect.InsertStatement(rw.tableName(), selectValues, rw.table.PrimaryKey())
 	}
@@ -376,6 +382,7 @@ func (rw *SQLRowWriter) Write(row push.Row, where push.Row) *push.Error {
 	rw.sqlLogger.Write(values)
 
 	_, err2 := rw.statement.Exec(values...)
+	log.Trace().AnErr("error", err2).Msg("push error")
 	if err2 != nil {
 		// reset statement after error
 		if err := rw.close(); err != nil {
@@ -483,6 +490,7 @@ type SQLDialect interface {
 	EnableConstraintsStatement(tableName string) string
 	TruncateStatement(tableName string) string
 	InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor)
+	UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error)
 	UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error)
 	IsDuplicateError(error) bool
 	ConvertValue(push.Value, ValueDescriptor) push.Value

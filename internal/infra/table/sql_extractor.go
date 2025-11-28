@@ -63,6 +63,8 @@ func (e *SQLExtractor) Extract(onlyTables bool, withDBInfos bool) ([]table.Table
 	}
 	SQL := e.dialect.SQL(e.schema)
 
+	log.Debug().Msgf("Executing SQL to extract tables: %s", SQL)
+
 	rows, err := db.Query(SQL)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}

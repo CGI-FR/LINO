@@ -18,6 +18,7 @@ Types of changes
 
 - `Added` new push mode `upsert` to insert or update rows based on primary keys
 - `Fixed` relations extraction with Oracle database create duplicated relations
+- `Fixed` push column exported as numeric with Oracle database
 
 ## [3.5.0]
 

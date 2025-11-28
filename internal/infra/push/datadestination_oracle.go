@@ -253,6 +253,7 @@ func (d OracleDialect) ConvertValue(from push.Value, descriptor ValueDescriptor)
 		}
 	}
 	if descriptor.column != nil && descriptor.column.Export() == "numeric" {
+		//nolint:gocritic
 		switch v := from.(type) {
 		case json.Number:
 			return v.String()

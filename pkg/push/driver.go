@@ -19,6 +19,7 @@ package push
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -119,17 +120,8 @@ func (ctx *pushContext) cleanup(ri RowIterator, err *Error) *Error {
 	er1 := ctx.destination.Close()
 	er2 := ri.Close()
 
-	switch {
-	case er1 != nil && er2 == nil && err == nil:
-		return er1
-	case er2 != nil && er1 == nil && err == nil:
-		return er2
-	case err != nil:
-		return err
-	case er1 != nil || er2 != nil:
-		return &Error{Description: fmt.Sprintf("multiple errors: [%s], [%s], [%s]", err, er1, er2)}
-	}
-	return nil
+	// Use helper that aggregates multiple *Error into a single *Error using errors.Join
+	return combineErrors(err, er1, er2)
 }
 
 func (ctx *pushContext) processLoop(ri RowIterator) *Error {
@@ -272,12 +264,43 @@ func (ctx *pushContext) commit() *Error {
 	}
 	if ctx.cfg.SavepointPath != "" {
 		if err := savepoint(ctx.cfg.SavepointPath, ctx.committed); err != nil {
-			return err
+			// Restore previous behavior: log savepoint failures but do not make them fatal.
+			log.Error().Msgf("Savepoint failure, %d lines committed unsaved: %v", len(ctx.committed), err)
+			for _, unsaved := range ctx.committed {
+				log.Warn().Interface("value", unsaved).Msg("Unsaved committed value")
+			}
+			// clear committed slice (we consider them committed to the destination even if savepoint failed)
+			ctx.committed = ctx.committed[:0]
+		} else {
+			ctx.committed = ctx.committed[:0]
 		}
-		ctx.committed = ctx.committed[:0]
 	}
 	IncCommitsCount()
 	return nil
+}
+
+// combineErrors aggregates multiple *Error values into a single *Error.
+// It uses errors.Join for multi-error aggregation and preserves single errors.
+func combineErrors(errs ...*Error) *Error {
+	var nonNil []error
+	for _, e := range errs {
+		if e != nil {
+			nonNil = append(nonNil, e)
+		}
+	}
+	switch len(nonNil) {
+	case 0:
+		return nil
+	case 1:
+		// If it's already our *Error type, return it as-is
+		if single, ok := nonNil[0].(*Error); ok {
+			return single
+		}
+		return &Error{Description: nonNil[0].Error()}
+	default:
+		joined := errors.Join(nonNil...)
+		return &Error{Description: joined.Error()}
+	}
 }
 
 // FilterRelation split values and relations to follow

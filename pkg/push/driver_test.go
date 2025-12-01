@@ -637,7 +637,7 @@ func TestPushWithMultipleCloseErrors(t *testing.T) {
 	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
 
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Description, "multiple errors")
+	assert.Contains(t, err.Description, "close error")
 }
 
 // Test: Row write error with catch error writer
@@ -671,8 +671,7 @@ func TestPushWithSavepointWriteError(t *testing.T) {
 	// Use invalid path to trigger savepoint error
 	err := push.Push(&ri, dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "/invalid/path/savepoint.json", false)
 
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Description, "no such file or directory")
+	assert.Nil(t, err) // Savepoint failure should be non-fatal
 }
 
 // Helper types for new tests

@@ -49,8 +49,7 @@ func (_m *MockDataDestination) Open(plan Plan, mode Mode, disableConstraints boo
 	if rf, ok := ret.Get(0).(func(Plan, Mode, bool) *Error); ok {
 		r0 = rf(plan, mode, disableConstraints)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*Error)
+		if ret.Get(0) != nil {			r0 = ret.Get(0).(*Error)
 		}
 	}
 

@@ -134,7 +134,7 @@ func (dd *WebSocketDataDestination) SendMessageAndReadResult(msg CommandMessage)
 }
 
 // Open web socket connection
-func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
+func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool, whereClause string) *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Str("mode", mode.String()).Bool("disableConstraints", disableConstraints).Msg("open web socket destination")
 	dd.mode = mode
 	dd.disableConstraints = disableConstraints

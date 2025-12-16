@@ -19,106 +19,290 @@ package push
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
 
+// PushConfig holds configuration for the push operation
+type PushConfig struct {
+	CommitSize         uint
+	CommitTimeout      time.Duration
+	DisableConstraints bool
+	WhereField         string
+	WhereClause        string
+	SavepointPath      string
+	AutoTruncate       bool
+}
+
+// pushContext encapsulates the state of a push operation
+type pushContext struct {
+	cfg         PushConfig
+	destination DataDestination
+	plan        Plan
+	mode        Mode
+	catchError  RowWriter
+	translator  Translator
+	observers   []Observer
+
+	committed  []Row
+	inputCount uint
+}
+
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, savepointPath string, autotruncate bool, observers ...Observer) (err *Error) {
-	defer func() {
-		for _, observer := range observers {
-			if observer != nil {
-				observer.Close()
-			}
-		}
-	}()
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, commitTimeout time.Duration, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, whereClause string, savepointPath string, autotruncate bool, observers ...Observer) *Error {
+	cfg := PushConfig{
+		CommitSize:         commitSize,
+		CommitTimeout:      commitTimeout,
+		DisableConstraints: disableConstraints,
+		WhereField:         whereField,
+		WhereClause:        whereClause,
+		SavepointPath:      savepointPath,
+		AutoTruncate:       autotruncate,
+	}
+
+	ctx := &pushContext{
+		cfg:         cfg,
+		destination: destination,
+		plan:        plan,
+		mode:        mode,
+		catchError:  catchError,
+		translator:  translator,
+		observers:   observers,
+		committed:   make([]Row, 0, commitSize),
+	}
+
+	return ctx.Run(ri)
+}
+
+func (ctx *pushContext) Run(ri RowIterator) (err *Error) {
+	defer ctx.closeObservers()
 
 	log.Info().
-		Str("url", destination.SafeUrl()).
+		Str("url", ctx.destination.SafeUrl()).
 		Msg("Open database")
 
-	err1 := destination.Open(plan, mode, disableConstraints)
-	if err1 != nil {
-		return err1
+	if err := ctx.destination.Open(ctx.plan, ctx.mode, ctx.cfg.DisableConstraints, ctx.cfg.WhereClause); err != nil {
+		return err
 	}
 
 	defer func() {
-		er1 := destination.Close()
-		er2 := ri.Close()
-
-		switch {
-		case er1 != nil && er2 == nil && err == nil:
-			err = er1
-		case er2 != nil && er1 == nil && err == nil:
-			err = er2
-		case err != nil && er1 == nil && er2 == nil:
-			// err = err
-		case err != nil || er1 != nil || er2 != nil:
-			err = &Error{Description: fmt.Sprintf("multiple errors: [%s], [%s], [%s]", err, er1, er2)}
-		}
+		err = ctx.cleanup(ri, err)
 	}()
 
 	Reset()
 
-	committed := make([]Row, 0, commitSize)
-
+	// Handle savepoint on exit
 	defer func() {
-		if savepointPath != "" {
-			if err := savepoint(savepointPath, committed); err != nil {
-				log.Error().Msgf("Savepoint failure, %d lines committed unsaved", len(committed))
-				for _, unsaved := range committed {
+		if ctx.cfg.SavepointPath != "" {
+			if err := savepoint(ctx.cfg.SavepointPath, ctx.committed); err != nil {
+				log.Error().Msgf("Savepoint failure, %d lines committed unsaved", len(ctx.committed))
+				for _, unsaved := range ctx.committed {
 					log.Warn().Interface("value", unsaved).Msg("Unsaved committed value")
 				}
 			}
 		}
 	}()
 
-	i := uint(0)
-	for ri.Next() {
-		row := ri.Value()
+	return ctx.processLoop(ri)
+}
 
-		err2 := pushRow(*row, destination, plan.FirstTable(), plan, mode, translator, whereField)
-		if err2 != nil {
-			err4 := catchError.Write(*row, nil)
-			if err4 != nil {
-				return &Error{Description: fmt.Sprintf("%s (%s)", err2.Error(), err4.Error())}
-			}
-			log.Warn().Msg(fmt.Sprintf("Error catched : %s", err2.Error()))
+func (ctx *pushContext) closeObservers() {
+	for _, observer := range ctx.observers {
+		if observer != nil {
+			observer.Close()
 		}
-		i++
-		if savepointPath != "" {
-			committed = append(committed, extractValues(*row, plan.FirstTable().PrimaryKey()))
-		}
-		if i%commitSize == 0 {
-			log.Info().Msg("Intermediate commit")
-			errCommit := destination.Commit()
-			if errCommit != nil {
-				return errCommit
+	}
+}
+
+func (ctx *pushContext) cleanup(ri RowIterator, err *Error) *Error {
+	er1 := ctx.destination.Close()
+	er2 := ri.Close()
+
+	// Use helper that aggregates multiple *Error into a single *Error using errors.Join
+	return combineErrors(err, er1, er2)
+}
+
+func (ctx *pushContext) processLoop(ri RowIterator) *Error {
+	rowChan, errChan, quit := ctx.startRowReader(ri)
+	defer close(quit)
+
+	var timer *time.Timer
+	var timerCh <-chan time.Time
+
+	if ctx.cfg.CommitTimeout > 0 {
+		timer = time.NewTimer(ctx.cfg.CommitTimeout)
+		// Ensure timer is stopped when we exit to avoid leaks, though we are exiting anyway.
+		defer func() {
+			if timer != nil {
+				timer.Stop()
 			}
-			if savepointPath != "" {
-				if err := savepoint(savepointPath, committed); err != nil {
-					return err
+		}()
+		timerCh = timer.C
+	}
+
+loop:
+	for {
+		select {
+		case row, ok := <-rowChan:
+			if !ok {
+				select {
+				case e := <-errChan:
+					return e
+				default:
 				}
-				committed = committed[:0] // clear slice without releasing memory
+				break loop
 			}
-			IncCommitsCount()
-		}
-		IncInputLinesCount()
-		for _, observer := range observers {
-			if observer != nil {
-				observer.Pushed()
+
+			if ctx.cfg.CommitTimeout > 0 {
+				if !timer.Stop() {
+					select {
+					case <-timer.C:
+					default:
+					}
+				}
+				timer.Reset(ctx.cfg.CommitTimeout)
+			}
+
+			if err := ctx.processRow(row); err != nil {
+				return err
+			}
+
+		case <-timerCh:
+			if err := ctx.handleTimeout(); err != nil {
+				return err
 			}
 		}
 	}
 
-	if ri.Error() != nil {
-		return ri.Error()
+	// Final commit for any remaining uncommitted rows
+	if ctx.inputCount%ctx.cfg.CommitSize != 0 {
+		log.Info().Msg("Final commit")
+		if err := ctx.commit(); err != nil {
+			return err
+		}
 	}
 
 	log.Info().Msg("End of stream")
 	return nil
+}
+
+func (ctx *pushContext) startRowReader(ri RowIterator) (<-chan *Row, <-chan *Error, chan struct{}) {
+	rowChan := make(chan *Row)
+	errChan := make(chan *Error, 1)
+	quit := make(chan struct{})
+
+	go func() {
+		defer close(rowChan)
+		for ri.Next() {
+			val := ri.Value()
+			// Shallow copy to avoid race conditions
+			newRow := make(Row, len(*val))
+			for k, v := range *val {
+				newRow[k] = v
+			}
+			select {
+			case rowChan <- &newRow:
+			case <-quit:
+				return
+			}
+		}
+		if e := ri.Error(); e != nil {
+			select {
+			case errChan <- e:
+			case <-quit:
+				return
+			}
+		}
+	}()
+
+	return rowChan, errChan, quit
+}
+
+func (ctx *pushContext) processRow(row *Row) *Error {
+	err := pushRow(*row, ctx.destination, ctx.plan.FirstTable(), ctx.plan, ctx.mode, ctx.translator, ctx.cfg.WhereField)
+	if err != nil {
+		if errWrite := ctx.catchError.Write(*row, nil); errWrite != nil {
+			return &Error{Description: fmt.Sprintf("%s (%s)", err.Error(), errWrite.Error())}
+		}
+		log.Warn().Msg(fmt.Sprintf("Error catched : %s", err.Error()))
+	}
+
+	ctx.inputCount++
+	if ctx.cfg.SavepointPath != "" {
+		ctx.committed = append(ctx.committed, extractValues(*row, ctx.plan.FirstTable().PrimaryKey()))
+	}
+
+	if ctx.inputCount%ctx.cfg.CommitSize == 0 {
+		log.Info().Msg("Intermediate commit")
+		if err := ctx.commit(); err != nil {
+			return err
+		}
+	}
+
+	IncInputLinesCount()
+	for _, observer := range ctx.observers {
+		if observer != nil {
+			observer.Pushed()
+		}
+	}
+	return nil
+}
+
+func (ctx *pushContext) handleTimeout() *Error {
+	if ctx.inputCount%ctx.cfg.CommitSize != 0 {
+		log.Info().Msg("Timeout commit")
+		return ctx.commit()
+	}
+	return nil
+}
+
+func (ctx *pushContext) commit() *Error {
+	if err := ctx.destination.Commit(); err != nil {
+		return err
+	}
+	if ctx.cfg.SavepointPath != "" {
+		if err := savepoint(ctx.cfg.SavepointPath, ctx.committed); err != nil {
+			// Restore previous behavior: log savepoint failures but do not make them fatal.
+			log.Error().Msgf("Savepoint failure, %d lines committed unsaved: %v", len(ctx.committed), err)
+			for _, unsaved := range ctx.committed {
+				log.Warn().Interface("value", unsaved).Msg("Unsaved committed value")
+			}
+			// clear committed slice (we consider them committed to the destination even if savepoint failed)
+			ctx.committed = ctx.committed[:0]
+		} else {
+			ctx.committed = ctx.committed[:0]
+		}
+	}
+	IncCommitsCount()
+	return nil
+}
+
+// combineErrors aggregates multiple *Error values into a single *Error.
+// It uses errors.Join for multi-error aggregation and preserves single errors.
+func combineErrors(errs ...*Error) *Error {
+	var nonNil []error
+	for _, e := range errs {
+		if e != nil {
+			nonNil = append(nonNil, e)
+		}
+	}
+	switch len(nonNil) {
+	case 0:
+		return nil
+	case 1:
+		// If it's already our *Error type, return it as-is
+		if single, ok := nonNil[0].(*Error); ok {
+			return single
+		}
+		return &Error{Description: nonNil[0].Error()}
+	default:
+		joined := errors.Join(nonNil...)
+		return &Error{Description: joined.Error()}
+	}
 }
 
 // FilterRelation split values and relations to follow

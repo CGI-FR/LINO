@@ -14,6 +14,14 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [Unreleased]
+
+- `Added` flag `--where` (short `-w`) to `lino push update` command. This flag allows to specify a SQL WHERE clause to filter the rows to update.
+
+## [3.7.0]
+
+- `Added` flag `--commit-timeout` to `lino push` command. This flag allows to trigger a commit if no new row is received within the specified duration
+
 ## [3.6.0]
 
 - `Added` new push mode `upsert` to insert or update rows based on primary keys

@@ -33,6 +33,7 @@ type PushConfig struct {
 	CommitTimeout      time.Duration
 	DisableConstraints bool
 	WhereField         string
+	WhereClause        string
 	SavepointPath      string
 	AutoTruncate       bool
 }
@@ -52,12 +53,13 @@ type pushContext struct {
 }
 
 // Push write rows to target table
-func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, commitTimeout time.Duration, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, savepointPath string, autotruncate bool, observers ...Observer) *Error {
+func Push(ri RowIterator, destination DataDestination, plan Plan, mode Mode, commitSize uint, commitTimeout time.Duration, disableConstraints bool, catchError RowWriter, translator Translator, whereField string, whereClause string, savepointPath string, autotruncate bool, observers ...Observer) *Error {
 	cfg := PushConfig{
 		CommitSize:         commitSize,
 		CommitTimeout:      commitTimeout,
 		DisableConstraints: disableConstraints,
 		WhereField:         whereField,
+		WhereClause:        whereClause,
 		SavepointPath:      savepointPath,
 		AutoTruncate:       autotruncate,
 	}
@@ -83,7 +85,7 @@ func (ctx *pushContext) Run(ri RowIterator) (err *Error) {
 		Str("url", ctx.destination.SafeUrl()).
 		Msg("Open database")
 
-	if err := ctx.destination.Open(ctx.plan, ctx.mode, ctx.cfg.DisableConstraints); err != nil {
+	if err := ctx.destination.Open(ctx.plan, ctx.mode, ctx.cfg.DisableConstraints, ctx.cfg.WhereClause); err != nil {
 		return err
 	}
 

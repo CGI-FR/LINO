@@ -94,7 +94,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		ingressDescriptor  string
 		rowExporter        push.RowWriter
 		pkTranslations     map[string]string
-		whereField         string
+		usingPkField       string
+		whereClause        string
 		savepoint          string
 		autoTruncate       bool
 		watch              bool
@@ -180,7 +181,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				observers = append(observers, observer)
 			}
 
-			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, commitTimeout, disableConstraints, rowExporter, translator, whereField, savepoint, autoTruncate, observers...)
+			e3 := push.Push(rowIteratorFactory(in), datadestination, plan, mode, commitSize, commitTimeout, disableConstraints, rowExporter, translator, usingPkField, whereClause, savepoint, autoTruncate, observers...)
 			if e3 != nil {
 				log.Fatal().AnErr("error", e3).Msg("Fatal error stop the push command")
 				os.Exit(1)
@@ -200,11 +201,12 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 	cmd.Flags().StringVarP(&table, "table", "t", "", "Table to writes json")
 	cmd.Flags().StringVarP(&ingressDescriptor, "ingress-descriptor", "i", "ingress-descriptor.yaml", "Ingress descriptor filename")
 	cmd.Flags().StringToStringVar(&pkTranslations, "pk-translation", map[string]string{}, "list of dictionaries old value / new value for primary key update")
-	cmd.Flags().StringVar(&whereField, "using-pk-field", "__usingpk__", "Name of the data field that can be used as pk for update queries")
+	cmd.Flags().StringVar(&usingPkField, "using-pk-field", "__usingpk__", "Name of the data field that can be used as pk for update queries")
 	cmd.Flags().StringVar(&savepoint, "savepoint", "", "Name of a file to write primary keys of effectively processed lines (commit to database)")
 	cmd.Flags().BoolVarP(&autoTruncate, "autotruncate", "a", false, "Automatically truncate values to the maximum length defined in table.yaml")
 	cmd.Flags().BoolVarP(&watch, "watch", "w", false, "watch statistics about pushed lines")
 	cmd.Flags().StringVarP(&logSQLTo, "log-sql", "l", "", "Log SQL requests and data to specified folder (1 file per table)")
+	cmd.Flags().StringVarP(&whereClause, "where", "W", "", "WHERE clause to add to the update query")
 	cmd.SetOut(out)
 	cmd.SetErr(err)
 	cmd.SetIn(in)

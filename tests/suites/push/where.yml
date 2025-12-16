@@ -1,0 +1,74 @@
+# Copyright (C) 2021 CGI France
+#
+# This file is part of LINO.
+#
+# LINO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LINO is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LINO.  If not, see <http:#www.gnu.org/licenses/>.
+
+name: push update where
+testcases:
+  - name: push update where clause
+    steps:
+      # Clean working directory
+      - script: rm -f *
+      # Reset source database
+      - script: sudo docker compose -p lino stop source && sudo docker compose -p lino rm -f source && sudo docker compose -p lino up -d source
+        assertions:
+          - result.code ShouldEqual 0
+      # Set up data connector
+      - script: lino dataconnector add source postgresql://postgres:sakila@source:5432/postgres?sslmode=disable
+      # Wait for database available (10 retries)
+      - script: count=0; while ! lino dc ping source; do echo wait $count; ((count++)) && ((count>=10)) && break; sleep 1; done
+        assertions:
+          - result.code ShouldEqual 0
+      # Set up config and ingress descriptor
+      - script: lino relation extract source
+      - script: lino table extract source --only-tables
+      - script: lino id create store
+      - script: sed -i "s/true/false/g" ingress-descriptor.yaml
+      # Begin test
+      - script: lino pull source --filter store_id=1 > store.json
+      - script: cat store.json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring "address_id":1
+          - result.systemout ShouldContainSubstring "store_id":1
+          - result.systemerr ShouldBeEmpty
+      
+      # Test 1: Update with matching WHERE clause
+      - script: sed -i 's/"address_id":1/"address_id":2/g' store.json
+      - script: lino push update source --where "manager_staff_id = 1" < store.json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: lino pull source --filter store_id=1
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring "address_id":2
+          - result.systemout ShouldContainSubstring "store_id":1
+          - result.systemerr ShouldBeEmpty
+
+      # Test 2: Update with non-matching WHERE clause
+      - script: sed -i 's/"address_id":2/"address_id":3/g' store.json
+      - script: lino push update source --where "manager_staff_id = 999" < store.json
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty
+          - result.systemerr ShouldBeEmpty
+      - script: lino pull source --filter store_id=1
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring "address_id":2
+          - result.systemout ShouldNotContainSubstring "address_id":3
+          - result.systemerr ShouldBeEmpty

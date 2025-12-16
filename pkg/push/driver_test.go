@@ -53,7 +53,7 @@ func TestSimplePush(t *testing.T) {
 	}
 	dest := memoryDataDestination{tables, false, false, false, 0}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, true, dest.closed)
@@ -92,7 +92,7 @@ func TestRelationPush(t *testing.T) {
 	}
 	dest := memoryDataDestination{tables, false, false, false, 0}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	// no error
 	assert.Nil(t, err)
@@ -141,7 +141,7 @@ func TestRelationPushWithEmptyRelation(t *testing.T) {
 	}
 	dest := memoryDataDestination{tables, false, false, false, 0}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, &dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	// no error
 	assert.Nil(t, err)
@@ -192,7 +192,7 @@ func TestInversseRelationPush(t *testing.T) {
 	}
 	dest := memoryDataDestination{tables, false, false, false, 0}
 
-	err := push.Push(&ri, &dest, plan, push.Insert, 5, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, &dest, plan, push.Insert, 5, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	// no error
 	assert.Nil(t, err)
@@ -231,7 +231,7 @@ func TestPushWithCommitTimeout(t *testing.T) {
 	dest := &memoryDataDestination{tables: tables}
 
 	// Commit size 10, but timeout 100ms. Should trigger commit after first row due to delay.
-	err := push.Push(ri, dest, plan, push.Insert, 10, 100*time.Millisecond, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Insert, 10, 100*time.Millisecond, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	// Should have 2 commits: 1 for timeout after first row, 1 final commit for second row
@@ -253,7 +253,7 @@ func TestPushWithSavepoint(t *testing.T) {
 	dest := &memoryDataDestination{tables: tables}
 
 	// Commit size 2, total 5 rows -> 2 intermediate commits
-	err = push.Push(&ri, dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", tmpfile.Name(), false)
+	err = push.Push(&ri, dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", tmpfile.Name(), false)
 
 	assert.Nil(t, err)
 
@@ -272,7 +272,7 @@ func TestPushWithObservers(t *testing.T) {
 	dest := &memoryDataDestination{tables: tables}
 
 	obs := &mockObserver{}
-	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false, obs)
+	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false, obs)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 5, obs.pushedCount)
@@ -329,7 +329,7 @@ func TestPushWithEmptyIterator(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(dest.tables[A.Name()].rows))
@@ -344,7 +344,7 @@ func TestPushWithExactCommitSize(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(&ri, dest, plan, push.Insert, 5, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Insert, 5, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 5, len(dest.tables[A.Name()].rows))
@@ -360,7 +360,7 @@ func TestPushWithCommitSizeOne(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(&ri, dest, plan, push.Insert, 1, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Insert, 1, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(dest.tables[A.Name()].rows))
@@ -378,7 +378,7 @@ func TestPushWithIteratorError(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "iterator error", err.Description)
@@ -391,7 +391,7 @@ func TestPushWithDestinationOpenError(t *testing.T) {
 	ri := rowIterator{limit: 5, row: push.Row{"name": "John"}}
 	dest := &errorDataDestination{failOnOpen: true}
 
-	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "open error", err.Description)
@@ -408,7 +408,7 @@ func TestPushWithCommitError(t *testing.T) {
 		commitToFail: 1,
 	}
 
-	err := push.Push(&ri, dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "commit error", err.Description)
@@ -431,7 +431,7 @@ func TestPushWithMultipleTimeouts(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(ri, dest, plan, push.Insert, 10, 100*time.Millisecond, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Insert, 10, 100*time.Millisecond, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(dest.tables[A.Name()].rows))
@@ -456,7 +456,7 @@ func TestPushTimeoutWithExactCommitSize(t *testing.T) {
 	dest := &memoryDataDestination{tables: tables}
 
 	// commitSize = 2, so after 2 rows we hit the size limit
-	err := push.Push(ri, dest, plan, push.Insert, 2, 100*time.Millisecond, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Insert, 2, 100*time.Millisecond, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(dest.tables[A.Name()].rows))
@@ -513,7 +513,7 @@ func (d *errorDataDestination) SafeUrl() string {
 	return "mem://error-test"
 }
 
-func (d *errorDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
+func (d *errorDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool, whereClause string) *push.Error {
 	if d.failOnOpen {
 		return &push.Error{Description: "open error"}
 	}
@@ -566,7 +566,7 @@ func TestPushUpdateModeWithTranslator(t *testing.T) {
 		},
 	}
 
-	err := push.Push(&ri, dest, plan, push.Update, 10, 0, true, push.NoErrorCaptureRowWriter{}, translator, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Update, 10, 0, true, push.NoErrorCaptureRowWriter{}, translator, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(dest.tables[A.Name()].rows))
@@ -580,7 +580,7 @@ func TestPushDeleteMode(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(&ri, dest, plan, push.Delete, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Delete, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(dest.tables[A.Name()].rows))
@@ -596,7 +596,7 @@ func TestPushWithDestinationCloseError(t *testing.T) {
 		failOnClose: true,
 	}
 
-	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "close error", err.Description)
@@ -614,7 +614,7 @@ func TestPushWithIteratorCloseError(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "close error", err.Description)
@@ -634,7 +634,7 @@ func TestPushWithMultipleCloseErrors(t *testing.T) {
 		failOnClose: true,
 	}
 
-	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Description, "close error")
@@ -654,7 +654,7 @@ func TestPushWithRowWriteError(t *testing.T) {
 	// Catch error writer
 	errorWriter := &captureRowWriter{}
 
-	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, errorWriter, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Insert, 10, 0, true, errorWriter, nil, "", "", "", false)
 
 	assert.Nil(t, err) // Should not fail, errors are caught
 	assert.Equal(t, 2, len(errorWriter.rows), "Should have caught 2 errors")
@@ -669,7 +669,7 @@ func TestPushWithSavepointWriteError(t *testing.T) {
 	dest := &memoryDataDestination{tables: tables}
 
 	// Use invalid path to trigger savepoint error
-	err := push.Push(&ri, dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "/invalid/path/savepoint.json", false)
+	err := push.Push(&ri, dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "/invalid/path/savepoint.json", "", false)
 
 	assert.Nil(t, err) // Savepoint failure should be non-fatal
 }
@@ -724,7 +724,7 @@ func (d *errorWriterDataDestination) SafeUrl() string {
 	return "mem://error-writer-test"
 }
 
-func (d *errorWriterDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
+func (d *errorWriterDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool, whereClause string) *push.Error {
 	d.opened = true
 	return nil
 }
@@ -772,7 +772,7 @@ func TestPushWithInvalidRelationArrayElement(t *testing.T) {
 	dest := &memoryDataDestination{tables: tables}
 	errorWriter := &captureRowWriter{}
 
-	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, errorWriter, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, errorWriter, nil, "", "", "", false)
 
 	assert.Nil(t, err) // Error should be caught
 	assert.Equal(t, 1, len(errorWriter.rows))
@@ -798,7 +798,7 @@ func TestPushWithInvalidRelationType(t *testing.T) {
 	dest := &memoryDataDestination{tables: tables}
 	errorWriter := &captureRowWriter{}
 
-	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, errorWriter, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, errorWriter, nil, "", "", "", false)
 
 	assert.Nil(t, err) // Error should be caught
 	assert.Equal(t, 1, len(errorWriter.rows))
@@ -821,7 +821,7 @@ func TestPushWithWhereField(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(ri, dest, plan, push.Update, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "__usingpk__", "", false)
+	err := push.Push(ri, dest, plan, push.Update, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "__usingpk__", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(dest.tables[A.Name()].rows))
@@ -849,7 +849,7 @@ func TestPushWithNoImportColumns(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Insert, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(dest.tables[A.Name()].rows))
@@ -866,7 +866,7 @@ func TestPushTruncateMode(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(&ri, dest, plan, push.Truncate, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Truncate, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(dest.tables[A.Name()].rows))
@@ -892,7 +892,7 @@ func TestPushUpdateModeWithRelations(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}, B.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(ri, dest, plan, push.Update, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Update, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(dest.tables[A.Name()].rows))
@@ -919,7 +919,7 @@ func TestPushDeleteModeWithRelations(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}, B.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(ri, dest, plan, push.Delete, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Delete, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(dest.tables[A.Name()].rows))
@@ -951,7 +951,7 @@ func TestPushUpdateModeWithInverseRelations(t *testing.T) {
 	tables := map[string]*rowWriter{A.Name(): {}, B.Name(): {}, C.Name(): {}}
 	dest := &memoryDataDestination{tables: tables}
 
-	err := push.Push(ri, dest, plan, push.Update, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(ri, dest, plan, push.Update, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(dest.tables[A.Name()].rows))
@@ -995,7 +995,7 @@ func TestStatsComputation(t *testing.T) {
 
 	push.Reset()
 
-	err := push.Push(&ri, dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Insert, 2, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 
@@ -1020,7 +1020,7 @@ func TestDeleteStats(t *testing.T) {
 
 	push.Reset()
 
-	err := push.Push(&ri, dest, plan, push.Delete, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", false)
+	err := push.Push(&ri, dest, plan, push.Delete, 10, 0, true, push.NoErrorCaptureRowWriter{}, nil, "", "", "", false)
 
 	assert.Nil(t, err)
 

@@ -24,7 +24,7 @@ type DataDestinationFactory interface {
 
 // DataDestination to write in the push process.
 type DataDestination interface {
-	Open(plan Plan, mode Mode, disableConstraints bool) *Error
+	Open(plan Plan, mode Mode, disableConstraints bool, whereClause string) *Error
 	Commit() *Error
 	RowWriter(table Table) (RowWriter, *Error)
 	OpenSQLLogger(folderPath string) error

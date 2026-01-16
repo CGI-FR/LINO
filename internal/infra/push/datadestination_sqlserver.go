@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 
 	_ "github.com/microsoft/go-mssqldb"
@@ -37,11 +38,13 @@ func NewSQLServerDataDestinationFactory() *SQLServerDataDestinationFactory {
 
 // New return a SQLServer pusher
 func (e *SQLServerDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, SQLServerDialect{})
+	return NewSQLDataDestination(url, schema, SQLServerDialect{innerDialect: commonsql.SQLServerDialect{}})
 }
 
 // SQLServerDialect inject SQLServer variations
-type SQLServerDialect struct{}
+type SQLServerDialect struct {
+	innerDialect commonsql.Dialect
+}
 
 // Placeholde return the variable format for SQLServer
 func (d SQLServerDialect) Placeholder(position int) string {
@@ -50,17 +53,17 @@ func (d SQLServerDialect) Placeholder(position int) string {
 
 // EnableConstraintsStatement generate statments to activate constraintes
 func (d SQLServerDialect) EnableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf("ALTER TABLE %s CHECK CONSTRAINT ALL", tableName)
+	return d.innerDialect.EnableConstraintsStatement(tableName)
 }
 
 // DisableConstraintsStatement generate statments to deactivate constraintes
 func (d SQLServerDialect) DisableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf("ALTER TABLE %s NOCHECK CONSTRAINT ALL", tableName)
+	return d.innerDialect.DisableConstraintsStatement(tableName)
 }
 
 // TruncateStatement generate statement to truncate table content for SQL Server
 func (d SQLServerDialect) TruncateStatement(tableName string) string {
-	return fmt.Sprintf("DELETE FROM %s", tableName)
+	return d.innerDialect.TruncateStatement(tableName)
 }
 
 // InsertStatement generates an insert statement for SQL Server
@@ -182,9 +185,9 @@ func (d SQLServerDialect) SupportPreserve() []string {
 
 // BlankTest implements SQLDialect.
 func (d SQLServerDialect) BlankTest(name string) string {
-	panic("unimplemented")
+	return d.innerDialect.BlankTest(name)
 }
 
 func (d SQLServerDialect) EmptyTest(name string) string {
-	panic("unimplemented")
+	return d.innerDialect.EmptyTest(name)
 }

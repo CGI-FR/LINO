@@ -135,3 +135,28 @@ func (sd MariadbDialect) CreateSelect(sel string, where string, limit string, co
 func (sd MariadbDialect) selectPresence(column string) string {
 	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 'TRUE' ELSE NULL END AS %s", sd.Quote(column), sd.Quote(column))
 }
+
+// BlankTest implements SQLDialect.
+func (d MariadbDialect) BlankTest(column string) string {
+	panic("unimplemented")
+}
+
+// EmptyTest implements SQLDialect.
+func (d MariadbDialect) EmptyTest(column string) string {
+	return fmt.Sprintf("%s = ''", column)
+}
+
+// EnableConstraintsStatement generate statments to activate constraintes
+func (d MariadbDialect) EnableConstraintsStatement(tableName string) string {
+	return "SET GLOBAL FOREIGN_KEY_CHECKS=1"
+}
+
+// DisableConstraintsStatement generate statments to deactivate constraintes
+func (d MariadbDialect) DisableConstraintsStatement(tableName string) string {
+	return "SET GLOBAL FOREIGN_KEY_CHECKS=0"
+}
+
+// TruncateStatement generate statement to truncat table content
+func (d MariadbDialect) TruncateStatement(tableName string) string {
+	return fmt.Sprintf("TRUNCATE TABLE %s", d.Quote(tableName))
+}

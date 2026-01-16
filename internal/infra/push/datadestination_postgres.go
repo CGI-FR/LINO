@@ -168,7 +168,7 @@ func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueD
 		}
 
 		headers = append(headers, column)
-		errColumn := appendColumnToSQL(column, sql, PostgresDialect{}, index)
+		errColumn := appendColumnToSQL(column, sql, PostgresDialect{innerDialect: commonsql.PostgresDialect{}}, index)
 		if errColumn != nil {
 			return "", nil, errColumn
 		}

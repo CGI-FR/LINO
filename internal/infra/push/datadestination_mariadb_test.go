@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/stretchr/testify/assert"
 )
@@ -42,7 +43,7 @@ func TestAppendColumnToSQLMariaDBWithPreserveBlank(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, MariadbDialect{}, 0)
+	err := appendColumnToSQL(column, sql, MariadbDialect{innerDialect: commonsql.MariadbDialect{}}, 0)
 	assert.NotNil(t, err)
 }
 
@@ -63,7 +64,7 @@ func TestAppendColumnToSQLMariaDB(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, MariadbDialect{}, 0)
+	err := appendColumnToSQL(column, sql, MariadbDialect{innerDialect: commonsql.MariadbDialect{}}, 0)
 	assert.Nil(t, err)
 
 	assert.Equal(t, "column=?", sql.String())

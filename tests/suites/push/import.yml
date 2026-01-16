@@ -149,6 +149,6 @@ testcases:
           EOF
       - script: lino pull source --table customer --filter customer_id=1 | lino push update dest --table customer -vdebug
         assertions:
-          - result.systemerr ShouldContainSubstring UPDATE "customer" SET first_name=$1 WHERE customer_id=$2
+          - result.systemerr ShouldContainSubstring UPDATE \\"customer\\" SET first_name=$1 WHERE customer_id=$2
           - result.code ShouldEqual 0
           - result.systemout ShouldBeEmpty

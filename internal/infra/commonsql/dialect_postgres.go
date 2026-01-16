@@ -148,15 +148,27 @@ func (pgd PostgresDialect) EmptyTest(column string) string {
 
 // EnableConstraintsStatement generate statments to activate constraintes
 func (pgd PostgresDialect) EnableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL", pgd.Quote(tableName))
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		return fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL", pgd.Quote(tableName))
+	}
+	return fmt.Sprintf("ALTER TABLE %s.%s ENABLE TRIGGER ALL", pgd.Quote(schemaAndTable[0]), pgd.Quote(schemaAndTable[1]))
 }
 
 // DisableConstraintsStatement generate statments to deactivate constraintes
 func (pgd PostgresDialect) DisableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf("ALTER TABLE %s DISABLE TRIGGER ALL", pgd.Quote(tableName))
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		return fmt.Sprintf("ALTER TABLE %s DISABLE TRIGGER ALL", pgd.Quote(tableName))
+	}
+	return fmt.Sprintf("ALTER TABLE %s.%s DISABLE TRIGGER ALL", pgd.Quote(schemaAndTable[0]), pgd.Quote(schemaAndTable[1]))
 }
 
 // TruncateStatement generate statement to truncat table content
 func (pgd PostgresDialect) TruncateStatement(tableName string) string {
-	return fmt.Sprintf("TRUNCATE TABLE %s CASCADE", pgd.Quote(tableName))
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		return fmt.Sprintf("TRUNCATE TABLE %s CASCADE", pgd.Quote(tableName))
+	}
+	return fmt.Sprintf("TRUNCATE TABLE %s.%s CASCADE", pgd.Quote(schemaAndTable[0]), pgd.Quote(schemaAndTable[1]))
 }

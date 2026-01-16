@@ -26,7 +26,7 @@ func TestAppendColumnToSQLWithPreserveNothing(t *testing.T) {
 	}
 
 	sql := &strings.Builder{}
-	d := OracleDialect{}
+	d := OracleDialect{innerDialect: commonsql.OracleDialect{}}
 	index := 0
 	err := appendColumnToSQL(column, sql, d, index)
 	if err != nil { // should not return an error
@@ -78,7 +78,7 @@ func TestAppendColumnToSQLWithPreserveEmpty(t *testing.T) {
 	}
 
 	sql := &strings.Builder{}
-	d := OracleDialect{}
+	d := OracleDialect{innerDialect: commonsql.OracleDialect{}}
 	index := 0
 	err := appendColumnToSQL(column, sql, d, index)
 	assert.NotNil(t, err)
@@ -100,7 +100,7 @@ func TestAppendColumnToSQLWithPreserveNull(t *testing.T) {
 	}
 
 	sql := &strings.Builder{}
-	d := OracleDialect{}
+	d := OracleDialect{innerDialect: commonsql.OracleDialect{}}
 	index := 0
 	err := appendColumnToSQL(column, sql, d, index)
 	if err != nil { // should not return an error

@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 	_ "github.com/sijms/go-ora/v2"
 	"github.com/stretchr/testify/assert"
@@ -51,13 +52,13 @@ func TestAppendColumnToSQLWithPreserveBlank(t *testing.T) {
 	}
 
 	sql := &strings.Builder{}
-	d := OracleDialect{}
+	d := OracleDialect{innerDialect: commonsql.OracleDialect{}}
 	index := 0
 	err := appendColumnToSQL(column, sql, d, index)
 	if err != nil { // should not return an error
 		t.Errorf("Expected no error, got %v", err)
 	}
-	expectedSQL := "column = CASE WHEN column IS NULL THEN column WHEN TRIM(column) IS NULL THEN column ELSE :v1 END"
+	expectedSQL := "column = CASE WHEN column IS NULL THEN column WHEN TRIM(\"column\") IS NULL THEN column ELSE :v1 END"
 	assert.Equal(t, expectedSQL, sql.String())
 }
 

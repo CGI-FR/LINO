@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,7 +41,7 @@ func TestAppendColumnToSQLPGPreserveNothing(t *testing.T) {
 			push.PreserveNothing,
 		),
 	}
-	err := appendColumnToSQL(column, sql, PostgresDialect{}, 0)
+	err := appendColumnToSQL(column, sql, PostgresDialect{innerDialect: commonsql.PostgresDialect{}}, 0)
 	assert.Nil(t, err)
 
 	assert.Equal(t, "column=$1", sql.String())
@@ -62,10 +63,10 @@ func TestAppendColumnToSQLPGPreserveBlank(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, PostgresDialect{}, 0)
+	err := appendColumnToSQL(column, sql, PostgresDialect{innerDialect: commonsql.PostgresDialect{}}, 0)
 	assert.Nil(t, err)
 
-	expected := "column = CASE WHEN column IS NULL THEN column WHEN TRIM(column) = '' THEN column ELSE $1 END"
+	expected := "column = CASE WHEN column IS NULL THEN column WHEN TRIM(\"column\") = '' THEN column ELSE $1 END"
 
 	assert.Equal(t, expected, sql.String())
 }
@@ -77,7 +78,7 @@ func TestAppendColumnToSQLPGWithNilColumn(t *testing.T) {
 		column: nil,
 	}
 
-	err := appendColumnToSQL(column, sql, PostgresDialect{}, 0)
+	err := appendColumnToSQL(column, sql, PostgresDialect{innerDialect: commonsql.PostgresDialect{}}, 0)
 	assert.Nil(t, err)
 
 	expected := "column=$1"

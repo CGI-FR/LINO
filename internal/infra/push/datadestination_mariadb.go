@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/lib/pq"
 )
@@ -35,11 +36,13 @@ func NewMariadbDataDestinationFactory() *MariadbDataDestinationFactory {
 
 // New return a Mariadb pusher
 func (e *MariadbDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, MariadbDialect{})
+	return NewSQLDataDestination(url, schema, MariadbDialect{innerDialect: commonsql.MariadbDialect{}})
 }
 
 // MariadbDialect inject mariadb variations
-type MariadbDialect struct{}
+type MariadbDialect struct {
+	innerDialect commonsql.Dialect
+}
 
 // Placeholde return the variable format for mariadb
 func (d MariadbDialect) Placeholder(position int) string {
@@ -48,17 +51,17 @@ func (d MariadbDialect) Placeholder(position int) string {
 
 // EnableConstraintsStatement generate statments to activate constraintes
 func (d MariadbDialect) EnableConstraintsStatement(tableName string) string {
-	return "SET GLOBAL FOREIGN_KEY_CHECKS=1"
+	return d.innerDialect.EnableConstraintsStatement(tableName)
 }
 
 // DisableConstraintsStatement generate statments to deactivate constraintes
 func (d MariadbDialect) DisableConstraintsStatement(tableName string) string {
-	return "SET GLOBAL FOREIGN_KEY_CHECKS=0"
+	return d.innerDialect.DisableConstraintsStatement(tableName)
 }
 
 // TruncateStatement generate statement to truncat table content (ON DELETE CASCADE must be set to TRUNCATE child tables)
 func (d MariadbDialect) TruncateStatement(tableName string) string {
-	return fmt.Sprintf("TRUNCATE TABLE %s", tableName)
+	return d.innerDialect.TruncateStatement(tableName)
 }
 
 // InsertStatement  generate insert statement
@@ -179,9 +182,9 @@ func (d MariadbDialect) SupportPreserve() []string {
 
 // BlankTest implements SQLDialect.
 func (d MariadbDialect) BlankTest(name string) string {
-	panic("unimplemented")
+	return d.innerDialect.BlankTest(name)
 }
 
 func (d MariadbDialect) EmptyTest(column string) string {
-	return fmt.Sprintf("%s = ''", column)
+	return d.innerDialect.EmptyTest(column)
 }

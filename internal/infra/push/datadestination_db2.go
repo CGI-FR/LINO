@@ -28,6 +28,7 @@ import (
 	// import db2 connector
 	_ "github.com/ibmdb/go_ibm_db"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 )
 
@@ -41,11 +42,13 @@ func NewDb2DataDestinationFactory() *Db2DataDestinationFactory {
 
 // New return a Db2 pusher
 func (e *Db2DataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, Db2Dialect{})
+	return NewSQLDataDestination(url, schema, Db2Dialect{innerDialect: commonsql.Db2Dialect{}})
 }
 
 // Db2Dialect inject oracle variations
-type Db2Dialect struct{}
+type Db2Dialect struct {
+	innerDialect commonsql.Dialect
+}
 
 // Placeholde return the variable format for postgres
 func (d Db2Dialect) Placeholder(position int) string {
@@ -54,17 +57,17 @@ func (d Db2Dialect) Placeholder(position int) string {
 
 // EnableConstraintsStatement generate statments to activate constraintes
 func (d Db2Dialect) EnableConstraintsStatement(tableName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	return d.innerDialect.EnableConstraintsStatement(tableName)
 }
 
 // DisableConstraintsStatement generate statments to deactivate constraintes
 func (d Db2Dialect) DisableConstraintsStatement(tableName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	return d.innerDialect.DisableConstraintsStatement(tableName)
 }
 
 // TruncateStatement generate statement to truncat table content
 func (d Db2Dialect) TruncateStatement(tableName string) string {
-	return fmt.Sprintf("TRUNCATE TABLE %s IMMEDIATE", tableName)
+	return d.innerDialect.TruncateStatement(tableName)
 }
 
 // InsertStatement generate insert statement
@@ -187,9 +190,9 @@ func (d Db2Dialect) SupportPreserve() []string {
 
 // BlankTest implements SQLDialect.
 func (d Db2Dialect) BlankTest(name string) string {
-	panic("unimplemented")
+	return d.innerDialect.BlankTest(name)
 }
 
 func (d Db2Dialect) EmptyTest(name string) string {
-	panic("unimplemented")
+	return d.innerDialect.EmptyTest(name)
 }

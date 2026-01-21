@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 	"github.com/lib/pq"
 )
@@ -35,39 +36,41 @@ func NewPostgresDataDestinationFactory() *PostgresDataDestinationFactory {
 
 // New return a Postgres pusher
 func (e *PostgresDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, PostgresDialect{})
+	return NewSQLDataDestination(url, schema, PostgresDialect{innerDialect: commonsql.PostgresDialect{}})
 }
 
 // PostgresDialect inject postgres variations
-type PostgresDialect struct{}
+type PostgresDialect struct {
+	innerDialect commonsql.Dialect
+}
 
 // BlankTest implements SQLDialect.
 func (d PostgresDialect) BlankTest(column string) string {
-	return fmt.Sprintf("TRIM(%s) = ''", column)
+	return d.innerDialect.BlankTest(column)
 }
 
 func (d PostgresDialect) EmptyTest(column string) string {
-	return fmt.Sprintf("%s = ''", column)
+	return d.innerDialect.EmptyTest(column)
 }
 
 // Placeholde return the variable format for postgres
 func (d PostgresDialect) Placeholder(position int) string {
-	return fmt.Sprintf("$%d", position)
+	return d.innerDialect.Placeholder(position)
 }
 
 // EnableConstraintsStatement generate statments to activate constraintes
 func (d PostgresDialect) EnableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL", tableName)
+	return d.innerDialect.EnableConstraintsStatement(tableName)
 }
 
 // DisableConstraintsStatement generate statments to deactivate constraintes
 func (d PostgresDialect) DisableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf("ALTER TABLE %s DISABLE TRIGGER ALL", tableName)
+	return d.innerDialect.DisableConstraintsStatement(tableName)
 }
 
 // TruncateStatement generate statement to truncat table content
 func (d PostgresDialect) TruncateStatement(tableName string) string {
-	return fmt.Sprintf("TRUNCATE TABLE %s CASCADE", tableName)
+	return d.innerDialect.TruncateStatement(tableName)
 }
 
 // InsertStatement  generate insert statement
@@ -77,9 +80,15 @@ func (d PostgresDialect) InsertStatement(tableName string, selectValues []ValueD
 		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c.name))
 	}
 
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("INSERT INTO ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString("(")
 	sql.WriteString(strings.Join(protectedColumns, ","))
 	sql.WriteString(") VALUES (")
@@ -106,9 +115,15 @@ func (d PostgresDialect) UpsertStatement(tableName string, selectValues []ValueD
 		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", c.name))
 	}
 
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("INSERT INTO ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString("(")
 	sql.WriteString(strings.Join(protectedColumns, ","))
 	sql.WriteString(") VALUES (")
@@ -144,9 +159,15 @@ func (d PostgresDialect) UpsertStatement(tableName string, selectValues []ValueD
 }
 
 func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" SET ")
 
 	for index, column := range selectValues {
@@ -165,7 +186,7 @@ func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueD
 		}
 
 		headers = append(headers, column)
-		errColumn := appendColumnToSQL(column, sql, PostgresDialect{}, index)
+		errColumn := appendColumnToSQL(column, sql, PostgresDialect{innerDialect: commonsql.PostgresDialect{}}, index)
 		if errColumn != nil {
 			return "", nil, errColumn
 		}

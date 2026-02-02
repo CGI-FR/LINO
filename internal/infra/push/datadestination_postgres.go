@@ -73,6 +73,11 @@ func (d PostgresDialect) TruncateStatement(tableName string) string {
 	return d.innerDialect.TruncateStatement(tableName)
 }
 
+// Quote generate quoted identifier for SQL statement
+func (d PostgresDialect) Quote(id string) string {
+	return d.innerDialect.Quote(id)
+}
+
 // InsertStatement  generate insert statement
 func (d PostgresDialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
 	protectedColumns := []string{}

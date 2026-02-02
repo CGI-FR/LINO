@@ -52,6 +52,11 @@ func (d OracleDialect) TruncateStatement(tableName string) string {
 	return d.innerDialect.TruncateStatement(tableName)
 }
 
+// Quote generate quoted identifier for SQL statement
+func (d OracleDialect) Quote(id string) string {
+	return d.innerDialect.Quote(id)
+}
+
 // InsertStatement generate insert statement
 func (d OracleDialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
 	protectedColumns := []string{}

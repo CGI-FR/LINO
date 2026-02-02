@@ -27,6 +27,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func QuotedSQLServer(d SQLDialect, name string) string {
+	return d.Quote(name)
+}
+
 func TestAppendColumnToSQLMSSQLServerWithPreserveBlank(t *testing.T) {
 	t.Parallel()
 	sql := &strings.Builder{}
@@ -65,8 +69,10 @@ func TestAppendColumnToSQLMSSQLServer(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, SQLServerDialect{innerDialect: commonsql.SQLServerDialect{}}, 0)
+	d := SQLServerDialect{innerDialect: commonsql.SQLServerDialect{}}
+	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	assert.Equal(t, "column=@p1", sql.String())
+	q := QuotedSQLServer(d, "column")
+	assert.Equal(t, q+"=@p1", sql.String())
 }

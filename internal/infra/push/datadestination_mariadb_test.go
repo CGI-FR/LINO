@@ -26,6 +26,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func QuotedMaria(d SQLDialect, name string) string {
+	return d.Quote(name)
+}
+
 func TestAppendColumnToSQLMariaDBWithPreserveBlank(t *testing.T) {
 	t.Parallel()
 	sql := &strings.Builder{}
@@ -64,8 +68,11 @@ func TestAppendColumnToSQLMariaDB(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, MariadbDialect{innerDialect: commonsql.MariadbDialect{}}, 0)
+	d := MariadbDialect{innerDialect: commonsql.MariadbDialect{}}
+
+	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	assert.Equal(t, "column=?", sql.String())
+	q := QuotedMaria(d, "column")
+	assert.Equal(t, q+"=?", sql.String())
 }

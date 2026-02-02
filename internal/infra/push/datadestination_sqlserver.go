@@ -66,6 +66,11 @@ func (d SQLServerDialect) TruncateStatement(tableName string) string {
 	return d.innerDialect.TruncateStatement(tableName)
 }
 
+// Quote generate quoted identifier for SQL statement
+func (d SQLServerDialect) Quote(id string) string {
+	return d.innerDialect.Quote(id)
+}
+
 // InsertStatement generates an insert statement for SQL Server
 func (d SQLServerDialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
 	protectedColumns := []string{}

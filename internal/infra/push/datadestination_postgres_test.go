@@ -26,10 +26,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func QuotedPostgres(d SQLDialect, name string) string {
-	return d.Quote(name)
-}
-
 func TestAppendColumnToSQLPGPreserveNothing(t *testing.T) {
 	sql := &strings.Builder{}
 	column := ValueDescriptor{
@@ -49,7 +45,7 @@ func TestAppendColumnToSQLPGPreserveNothing(t *testing.T) {
 	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	expected := QuotedPostgres(d, "column") + "=$1"
+	expected := "\"column\"=$1"
 	assert.Equal(t, expected, sql.String())
 }
 
@@ -72,12 +68,12 @@ func TestAppendColumnToSQLPGPreserveBlank(t *testing.T) {
 	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	q := QuotedPostgres(d, "column")
-	expected := q +
-		" = CASE WHEN " + q +
-		" IS NULL THEN " + q +
-		" WHEN TRIM(" + q +
-		") = '' THEN " + q +
+	c := "\"column\""
+	expected := c +
+		" = CASE WHEN " + c +
+		" IS NULL THEN " + c +
+		" WHEN TRIM(" + c +
+		") = '' THEN " + c +
 		" ELSE $1 END"
 
 	assert.Equal(t, expected, sql.String())
@@ -94,7 +90,7 @@ func TestAppendColumnToSQLPGWithNilColumn(t *testing.T) {
 	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	expected := QuotedPostgres(d, "column") + "=$1"
+	expected := "\"column\"=$1"
 
 	assert.Equal(t, expected, sql.String())
 }

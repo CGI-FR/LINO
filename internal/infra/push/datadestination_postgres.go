@@ -208,7 +208,7 @@ func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueD
 	for index, pk := range whereValues {
 		headers = append(headers, pk)
 
-		sql.WriteString(pk.name)
+		sql.WriteString(d.innerDialect.Quote(pk.name))
 		sql.WriteString("=")
 		sql.WriteString(d.Placeholder(len(selectValues) + index + 1))
 		if index+1 < len(whereValues) {

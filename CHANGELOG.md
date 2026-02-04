@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [3.6.2]
+
+- `Fixed` quoting column names in UPDATE during push (PostgreSql)
+
 ## [3.6.1]
 
 - `Fixed` push to tables with special characters in their names (PostgreSQL)

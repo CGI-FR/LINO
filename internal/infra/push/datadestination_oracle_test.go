@@ -32,7 +32,7 @@ func TestAppendColumnToSQLWithPreserveNothing(t *testing.T) {
 	if err != nil { // should not return an error
 		t.Errorf("Expected no error, got %v", err)
 	}
-	expectedSQL := "column=:v1"
+	expectedSQL := "\"column\"=:v1"
 	assert.Equal(t, expectedSQL, sql.String())
 }
 
@@ -58,7 +58,14 @@ func TestAppendColumnToSQLWithPreserveBlank(t *testing.T) {
 	if err != nil { // should not return an error
 		t.Errorf("Expected no error, got %v", err)
 	}
-	expectedSQL := "column = CASE WHEN column IS NULL THEN column WHEN TRIM(\"column\") IS NULL THEN column ELSE :v1 END"
+	c := "\"column\""
+	expectedSQL := c +
+		" = CASE WHEN " + c +
+		" IS NULL THEN " + c +
+		" WHEN TRIM(" + c +
+		") IS NULL THEN " + c +
+		" ELSE :v1 END"
+
 	assert.Equal(t, expectedSQL, sql.String())
 }
 
@@ -106,6 +113,10 @@ func TestAppendColumnToSQLWithPreserveNull(t *testing.T) {
 	if err != nil { // should not return an error
 		t.Errorf("Expected no error, got %v", err)
 	}
-	expectedSQL := "column = CASE WHEN column IS NOT NULL THEN :v1 ELSE column END"
+	c := "\"column\""
+	expectedSQL := c +
+		" = CASE WHEN " + c +
+		" IS NOT NULL THEN :v1 ELSE " + c +
+		" END"
 	assert.Equal(t, expectedSQL, sql.String())
 }

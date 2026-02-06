@@ -64,8 +64,10 @@ func TestAppendColumnToSQLMariaDB(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, MariadbDialect{innerDialect: commonsql.MariadbDialect{}}, 0)
+	d := MariadbDialect{innerDialect: commonsql.MariadbDialect{}}
+
+	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	assert.Equal(t, "column=?", sql.String())
+	assert.Equal(t, "`column`=?", sql.String())
 }

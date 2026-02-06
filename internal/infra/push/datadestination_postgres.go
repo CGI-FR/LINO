@@ -73,6 +73,11 @@ func (d PostgresDialect) TruncateStatement(tableName string) string {
 	return d.innerDialect.TruncateStatement(tableName)
 }
 
+// Quote generate quoted identifier for SQL statement
+func (d PostgresDialect) Quote(id string) string {
+	return d.innerDialect.Quote(id)
+}
+
 // InsertStatement  generate insert statement
 func (d PostgresDialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
 	protectedColumns := []string{}
@@ -203,7 +208,7 @@ func (d PostgresDialect) UpdateStatement(tableName string, selectValues []ValueD
 	for index, pk := range whereValues {
 		headers = append(headers, pk)
 
-		sql.WriteString(pk.name)
+		sql.WriteString(d.innerDialect.Quote(pk.name))
 		sql.WriteString("=")
 		sql.WriteString(d.Placeholder(len(selectValues) + index + 1))
 		if index+1 < len(whereValues) {

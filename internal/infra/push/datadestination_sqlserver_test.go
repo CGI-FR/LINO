@@ -65,8 +65,9 @@ func TestAppendColumnToSQLMSSQLServer(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, SQLServerDialect{innerDialect: commonsql.SQLServerDialect{}}, 0)
+	d := SQLServerDialect{innerDialect: commonsql.SQLServerDialect{}}
+	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	assert.Equal(t, "column=@p1", sql.String())
+	assert.Equal(t, "[column]=@p1", sql.String())
 }

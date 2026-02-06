@@ -41,10 +41,12 @@ func TestAppendColumnToSQLPGPreserveNothing(t *testing.T) {
 			push.PreserveNothing,
 		),
 	}
-	err := appendColumnToSQL(column, sql, PostgresDialect{innerDialect: commonsql.PostgresDialect{}}, 0)
+	d := PostgresDialect{innerDialect: commonsql.PostgresDialect{}}
+	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	assert.Equal(t, "column=$1", sql.String())
+	expected := "\"column\"=$1"
+	assert.Equal(t, expected, sql.String())
 }
 
 func TestAppendColumnToSQLPGPreserveBlank(t *testing.T) {
@@ -62,11 +64,17 @@ func TestAppendColumnToSQLPGPreserveBlank(t *testing.T) {
 			push.PreserveBlank,
 		),
 	}
-
-	err := appendColumnToSQL(column, sql, PostgresDialect{innerDialect: commonsql.PostgresDialect{}}, 0)
+	d := PostgresDialect{innerDialect: commonsql.PostgresDialect{}}
+	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	expected := "column = CASE WHEN column IS NULL THEN column WHEN TRIM(\"column\") = '' THEN column ELSE $1 END"
+	c := "\"column\""
+	expected := c +
+		" = CASE WHEN " + c +
+		" IS NULL THEN " + c +
+		" WHEN TRIM(" + c +
+		") = '' THEN " + c +
+		" ELSE $1 END"
 
 	assert.Equal(t, expected, sql.String())
 }
@@ -78,10 +86,11 @@ func TestAppendColumnToSQLPGWithNilColumn(t *testing.T) {
 		column: nil,
 	}
 
-	err := appendColumnToSQL(column, sql, PostgresDialect{innerDialect: commonsql.PostgresDialect{}}, 0)
+	d := PostgresDialect{innerDialect: commonsql.PostgresDialect{}}
+	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	expected := "column=$1"
+	expected := "\"column\"=$1"
 
 	assert.Equal(t, expected, sql.String())
 }

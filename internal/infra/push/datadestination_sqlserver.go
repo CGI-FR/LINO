@@ -78,9 +78,15 @@ func (d SQLServerDialect) InsertStatement(tableName string, selectValues []Value
 		protectedColumns = append(protectedColumns, fmt.Sprintf("[%s]", value.name))
 	}
 
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("INSERT INTO ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString("(")
 	sql.WriteString(strings.Join(protectedColumns, ","))
 	sql.WriteString(") VALUES (")
@@ -100,9 +106,15 @@ func (d SQLServerDialect) UpsertStatement(tableName string, selectValues []Value
 }
 
 func (d SQLServerDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" SET ")
 
 	for index, column := range selectValues {

@@ -64,9 +64,15 @@ func (d OracleDialect) InsertStatement(tableName string, selectValues []ValueDes
 		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", value.name))
 	}
 
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("INSERT INTO ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString("(")
 	sql.WriteString(strings.Join(protectedColumns, ","))
 	sql.WriteString(") VALUES (")
@@ -83,9 +89,15 @@ func (d OracleDialect) InsertStatement(tableName string, selectValues []ValueDes
 
 // UpsertStatement
 func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("MERGE INTO ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" target USING (SELECT ")
 
 	for i, col := range selectValues {
@@ -93,9 +105,8 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 			sql.WriteString(", ")
 		}
 		sql.WriteString(d.Placeholder(i + 1))
-		sql.WriteString(" AS \"")
-		sql.WriteString(col.name)
-		sql.WriteString("\"")
+		sql.WriteString(" AS ")
+		sql.WriteString(d.innerDialect.Quote(col.name))
 	}
 	sql.WriteString(" FROM dual) source ON (")
 
@@ -103,7 +114,7 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 		if i > 0 {
 			sql.WriteString(" AND ")
 		}
-		sql.WriteString(fmt.Sprintf("target.\"%s\" = source.\"%s\"", pk, pk))
+		sql.WriteString(fmt.Sprintf("target.%s = source.%s", d.innerDialect.Quote(pk), d.innerDialect.Quote(pk)))
 	}
 	sql.WriteString(") WHEN MATCHED THEN UPDATE SET ")
 
@@ -115,7 +126,7 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 		if !first {
 			sql.WriteString(", ")
 		}
-		sql.WriteString(fmt.Sprintf("target.\"%s\" = source.\"%s\"", col.name, col.name))
+		sql.WriteString(fmt.Sprintf("target.%s = source.%s", d.innerDialect.Quote(col.name), d.innerDialect.Quote(col.name)))
 		first = false
 	}
 
@@ -124,14 +135,14 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 		if i > 0 {
 			sql.WriteString(", ")
 		}
-		sql.WriteString(fmt.Sprintf("\"%s\"", col.name))
+		sql.WriteString(d.innerDialect.Quote(col.name))
 	}
 	sql.WriteString(") VALUES (")
 	for i, col := range selectValues {
 		if i > 0 {
 			sql.WriteString(", ")
 		}
-		sql.WriteString(fmt.Sprintf("source.\"%s\"", col.name))
+		sql.WriteString(fmt.Sprintf("source.%s", d.innerDialect.Quote(col.name)))
 	}
 	sql.WriteString(")")
 
@@ -142,7 +153,12 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")
-	sql.WriteString(tableName)
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" SET ")
 
 	for index, column := range selectValues {
@@ -182,7 +198,7 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 	for index, pk := range whereValues {
 		headers = append(headers, pk)
 
-		sql.WriteString(pk.name)
+		sql.WriteString(d.innerDialect.Quote(pk.name))
 		sql.WriteString("=")
 		sql.WriteString(d.Placeholder(len(selectValues) + index + 1))
 		if index+1 < len(whereValues) {
@@ -255,7 +271,12 @@ func (d OracleDialect) ReadConstraintsStatement(tableName string) string {
 func (d OracleDialect) DisableConstraintStatement(tableName string, constraintName string) string {
 	sql := &strings.Builder{}
 	sql.WriteString("ALTER TABLE ")
-	sql.WriteString(tableName)
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" DISABLE CONSTRAINT ")
 	sql.WriteString(constraintName)
 	return sql.String()
@@ -264,7 +285,12 @@ func (d OracleDialect) DisableConstraintStatement(tableName string, constraintNa
 func (d OracleDialect) EnableConstraintStatement(tableName string, constraintName string) string {
 	sql := &strings.Builder{}
 	sql.WriteString("ALTER TABLE ")
-	sql.WriteString(tableName)
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" ENABLE CONSTRAINT ")
 	sql.WriteString(constraintName)
 	return sql.String()

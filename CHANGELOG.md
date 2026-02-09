@@ -16,7 +16,8 @@ Types of changes
 
 ## [3.6.2]
 
-- `Fixed` quoting column names in UPDATE during push (PostgreSql)
+- `Fixed` quoting column names in UPDATE during push (PostgreSQL)
+- `Fixed` quoting table names in UPDATE and INSERT during push (Oracle, SQL Server)
 
 ## [3.6.1]
 

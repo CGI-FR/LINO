@@ -16,6 +16,7 @@ Types of changes
 
 ## [3.7.0]
 
+- `Added` logging opening DB connexion for `lino query` command that use new SafeURL for display connection URLs without user and password
 - `Added` flag `--commit-timeout` to `lino push` command. This flag allows to trigger a commit if no new row is received within the specified duration
 
 ## [3.6.2]

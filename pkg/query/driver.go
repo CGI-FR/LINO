@@ -1,6 +1,10 @@
 package query
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/rs/zerolog/log"
+)
 
 type Driver struct {
 	datasource DataSource
@@ -12,6 +16,9 @@ func NewDriver(datasource DataSource, writer DataWriter) *Driver {
 }
 
 func (d *Driver) Open() error {
+	log.Info().
+		Str("url", d.datasource.SafeURL()).
+		Msg("Open database")
 	if err := d.datasource.Open(); err != nil {
 		return fmt.Errorf("%w", err)
 	}

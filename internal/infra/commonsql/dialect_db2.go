@@ -135,3 +135,28 @@ func (db2 Db2Dialect) CreateSelect(sel string, where string, limit string, colum
 func (db2 Db2Dialect) selectPresence(column string) string {
 	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 1 ELSE NULL END AS %s", db2.Quote(column), db2.Quote(column))
 }
+
+// BlankTest
+func (db2 Db2Dialect) BlankTest(column string) string {
+	panic("unimplemented")
+}
+
+// EmptyTest
+func (db2 Db2Dialect) EmptyTest(column string) string {
+	panic("unimplemented")
+}
+
+// EnableConstraintsStatement generate statments to activate constraintes
+func (db2 Db2Dialect) EnableConstraintsStatement(tableName string) string {
+	panic("unimplemented")
+}
+
+// DisableConstraintsStatement generate statments to deactivate constraintes
+func (db2 Db2Dialect) DisableConstraintsStatement(tableName string) string {
+	panic("unimplemented")
+}
+
+// TruncateStatement generate statement to truncat table content
+func (db2 Db2Dialect) TruncateStatement(tableName string) string {
+	return fmt.Sprintf("TRUNCATE TABLE %s IMMEDIATE", db2.Quote(tableName))
+}

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 
 	// import Oracle connector
@@ -23,82 +24,37 @@ func NewOracleDataDestinationFactory() *OracleDataDestinationFactory {
 
 // New return a Oracle pusher
 func (e *OracleDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, OracleDialect{})
+	return NewSQLDataDestination(url, schema, OracleDialect{innerDialect: commonsql.OracleDialect{}})
 }
 
 // OracleDialect inject oracle variations
-type OracleDialect struct{}
+type OracleDialect struct {
+	innerDialect commonsql.Dialect
+}
 
-// Placeholde return the variable format for postgres
+// Placeholder return the variable format for oracle
 func (d OracleDialect) Placeholder(position int) string {
 	return fmt.Sprintf(":v%d", position)
 }
 
 // DisableConstraintsStatement generate statement to deactivate constraints
 func (d OracleDialect) DisableConstraintsStatement(tableName string) string {
-	schemaAndTable := strings.Split(tableName, ".")
-	sql := &strings.Builder{}
-	sql.WriteString(
-		`BEGIN
-		 FOR c IN(
-		 SELECT c.owner, c.table_name, c.constraint_name
-		 FROM user_constraints c
-		 CONNECT BY PRIOR c.constraint_name = c.r_constraint_name
-		 START WITH c.constraint_name IN (
-			SELECT c.constraint_name
-			FROM user_constraints c
-		 	WHERE c.status = 'ENABLED' AND c.table_name = '`)
-	if len(schemaAndTable) == 2 {
-		sql.WriteString(schemaAndTable[1])
-		sql.WriteString("' AND c.owner = '")
-		sql.WriteString(schemaAndTable[0])
-		sql.WriteString("'")
-	} else {
-		sql.WriteString(schemaAndTable[0])
-		sql.WriteString("' AND c.owner = sys_context( 'userenv', 'current_schema' )")
-	}
-	sql.WriteString(`)
-		LOOP
-			dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" disable constraint ' || c.constraint_name);
-		END LOOP;
-	END;`)
-	return sql.String()
+	return d.innerDialect.DisableConstraintsStatement(tableName)
 }
 
 // EnableConstraintsStatement generate statments to activate constraintes
 func (d OracleDialect) EnableConstraintsStatement(tableName string) string {
-	schemaAndTable := strings.Split(tableName, ".")
-	sql := &strings.Builder{}
-	sql.WriteString(
-		`BEGIN
-		 FOR c IN(
-		 SELECT c.owner, c.table_name, c.constraint_name
-		 FROM user_constraints c
-		 CONNECT BY PRIOR c.constraint_name = c.r_constraint_name
-		 START WITH c.constraint_name IN (
-			SELECT c.constraint_name
-			FROM user_constraints c
-		 	WHERE c.status = 'DISABLED' AND c.table_name = '`)
-	if len(schemaAndTable) == 2 {
-		sql.WriteString(schemaAndTable[1])
-		sql.WriteString("' AND c.owner = '")
-		sql.WriteString(schemaAndTable[0])
-		sql.WriteString("'")
-	} else {
-		sql.WriteString(schemaAndTable[0])
-		sql.WriteString("' AND c.owner = sys_context( 'userenv', 'current_schema' )")
-	}
-	sql.WriteString(`)
-		LOOP
-			dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" disable constraint ' || c.constraint_name);
-		END LOOP;
-	END;`)
-	return sql.String()
+	return d.innerDialect.EnableConstraintsStatement(tableName)
 }
 
 // TruncateStatement generate statement to truncat table content
 func (d OracleDialect) TruncateStatement(tableName string) string {
-	return fmt.Sprintf("TRUNCATE TABLE %s", tableName)
+	return d.innerDialect.TruncateStatement(tableName)
+}
+
+// Quote generate quoted identifier for SQL statement
+func (d OracleDialect) Quote(id string) string {
+	return d.innerDialect.Quote(id)
 }
 
 // InsertStatement generate insert statement
@@ -108,9 +64,15 @@ func (d OracleDialect) InsertStatement(tableName string, selectValues []ValueDes
 		protectedColumns = append(protectedColumns, fmt.Sprintf("\"%s\"", value.name))
 	}
 
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("INSERT INTO ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString("(")
 	sql.WriteString(strings.Join(protectedColumns, ","))
 	sql.WriteString(") VALUES (")
@@ -127,9 +89,15 @@ func (d OracleDialect) InsertStatement(tableName string, selectValues []ValueDes
 
 // UpsertStatement
 func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("MERGE INTO ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" target USING (SELECT ")
 
 	for i, col := range selectValues {
@@ -137,9 +105,8 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 			sql.WriteString(", ")
 		}
 		sql.WriteString(d.Placeholder(i + 1))
-		sql.WriteString(" AS \"")
-		sql.WriteString(col.name)
-		sql.WriteString("\"")
+		sql.WriteString(" AS ")
+		sql.WriteString(d.innerDialect.Quote(col.name))
 	}
 	sql.WriteString(" FROM dual) source ON (")
 
@@ -147,7 +114,7 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 		if i > 0 {
 			sql.WriteString(" AND ")
 		}
-		sql.WriteString(fmt.Sprintf("target.\"%s\" = source.\"%s\"", pk, pk))
+		sql.WriteString(fmt.Sprintf("target.%s = source.%s", d.innerDialect.Quote(pk), d.innerDialect.Quote(pk)))
 	}
 	sql.WriteString(") WHEN MATCHED THEN UPDATE SET ")
 
@@ -159,7 +126,7 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 		if !first {
 			sql.WriteString(", ")
 		}
-		sql.WriteString(fmt.Sprintf("target.\"%s\" = source.\"%s\"", col.name, col.name))
+		sql.WriteString(fmt.Sprintf("target.%s = source.%s", d.innerDialect.Quote(col.name), d.innerDialect.Quote(col.name)))
 		first = false
 	}
 
@@ -168,14 +135,14 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 		if i > 0 {
 			sql.WriteString(", ")
 		}
-		sql.WriteString(fmt.Sprintf("\"%s\"", col.name))
+		sql.WriteString(d.innerDialect.Quote(col.name))
 	}
 	sql.WriteString(") VALUES (")
 	for i, col := range selectValues {
 		if i > 0 {
 			sql.WriteString(", ")
 		}
-		sql.WriteString(fmt.Sprintf("source.\"%s\"", col.name))
+		sql.WriteString(fmt.Sprintf("source.%s", d.innerDialect.Quote(col.name)))
 	}
 	sql.WriteString(")")
 
@@ -186,7 +153,12 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")
-	sql.WriteString(tableName)
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" SET ")
 
 	for index, column := range selectValues {
@@ -226,7 +198,7 @@ func (d OracleDialect) UpdateStatement(tableName string, selectValues []ValueDes
 	for index, pk := range whereValues {
 		headers = append(headers, pk)
 
-		sql.WriteString(pk.name)
+		sql.WriteString(d.innerDialect.Quote(pk.name))
 		sql.WriteString("=")
 		sql.WriteString(d.Placeholder(len(selectValues) + index + 1))
 		if index+1 < len(whereValues) {
@@ -299,7 +271,12 @@ func (d OracleDialect) ReadConstraintsStatement(tableName string) string {
 func (d OracleDialect) DisableConstraintStatement(tableName string, constraintName string) string {
 	sql := &strings.Builder{}
 	sql.WriteString("ALTER TABLE ")
-	sql.WriteString(tableName)
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" DISABLE CONSTRAINT ")
 	sql.WriteString(constraintName)
 	return sql.String()
@@ -308,7 +285,12 @@ func (d OracleDialect) DisableConstraintStatement(tableName string, constraintNa
 func (d OracleDialect) EnableConstraintStatement(tableName string, constraintName string) string {
 	sql := &strings.Builder{}
 	sql.WriteString("ALTER TABLE ")
-	sql.WriteString(tableName)
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" ENABLE CONSTRAINT ")
 	sql.WriteString(constraintName)
 	return sql.String()
@@ -324,9 +306,9 @@ func (d OracleDialect) SupportPreserve() []string {
 
 // BlankTest implements SQLDialect.
 func (d OracleDialect) BlankTest(column string) string {
-	return fmt.Sprintf("TRIM(%s) IS NULL", column)
+	return d.innerDialect.BlankTest(column)
 }
 
 func (d OracleDialect) EmptyTest(column string) string {
-	return fmt.Sprintf("%s IS NULL", column)
+	return d.innerDialect.EmptyTest(column)
 }

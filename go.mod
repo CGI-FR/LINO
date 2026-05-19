@@ -8,26 +8,26 @@ require (
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/cgi-fr/jsonline v0.5.0
 	github.com/cgi-fr/rimo v0.4.0
-	github.com/coder/websocket v1.8.13
-	github.com/docker/docker-credential-helpers v0.9.4
+	github.com/coder/websocket v1.8.14
+	github.com/docker/docker-credential-helpers v0.9.5
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/ibmdb/go_ibm_db v0.5.2
+	github.com/ibmdb/go_ibm_db v0.5.4
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.11.2
 	github.com/mattn/go-isatty v0.0.20
-	github.com/microsoft/go-mssqldb v1.9.3
+	github.com/microsoft/go-mssqldb v1.9.6
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/cors v1.11.1
 	github.com/rs/zerolog v1.34.0
-	github.com/schollz/progressbar/v3 v3.18.0
+	github.com/schollz/progressbar/v3 v3.19.0
 	github.com/sijms/go-ora/v2 v2.9.0
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	github.com/xo/dburl v0.23.8
+	github.com/xo/dburl v0.24.2
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	golang.org/x/term v0.37.0
+	golang.org/x/term v0.40.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -48,10 +48,11 @@ require (
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

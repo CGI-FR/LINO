@@ -18,6 +18,15 @@ Types of changes
 
 - `Added` flag `--commit-timeout` to `lino push` command. This flag allows to trigger a commit if no new row is received within the specified duration
 
+## [3.6.2]
+
+- `Fixed` quoting column names in UPDATE during push (PostgreSQL)
+- `Fixed` quoting table names in UPDATE and INSERT during push (Oracle, SQL Server)
+
+## [3.6.1]
+
+- `Fixed` push to tables with special characters in their names (PostgreSQL)
+
 ## [3.6.0]
 
 - `Added` new push mode `upsert` to insert or update rows based on primary keys

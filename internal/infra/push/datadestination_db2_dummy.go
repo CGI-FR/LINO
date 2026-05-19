@@ -47,6 +47,11 @@ func (d Db2Dialect) Placeholder(position int) string {
 	return "?"
 }
 
+// Quote generate quoted identifier for SQL statement
+func (d Db2Dialect) Quote(id string) string {
+	return id
+}
+
 // EnableConstraintsStatement generate statments to activate constraintes
 func (d Db2Dialect) EnableConstraintsStatement(tableName string) string {
 	panic(fmt.Errorf("Not implemented"))

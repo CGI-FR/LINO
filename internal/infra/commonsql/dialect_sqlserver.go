@@ -137,3 +137,28 @@ func (sd SQLServerDialect) CreateSelect(sel string, where string, limit string, 
 func (sd SQLServerDialect) selectPresence(column string) string {
 	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 1 ELSE NULL END AS %s", sd.Quote(column), sd.Quote(column))
 }
+
+// BlankTest implements SQLDialect.
+func (sd SQLServerDialect) BlankTest(column string) string {
+	return fmt.Sprintf("LTRIM(RTRIM(%s)) = ''", column)
+}
+
+// EmptyTest implements SQLDialect.
+func (sd SQLServerDialect) EmptyTest(column string) string {
+	return fmt.Sprintf("%s IS NULL", column)
+}
+
+// EnableConstraintsStatement generate statments to activate constraintes
+func (sd SQLServerDialect) EnableConstraintsStatement(tableName string) string {
+	return fmt.Sprintf("ALTER TABLE %s CHECK CONSTRAINT ALL", sd.Quote(tableName))
+}
+
+// DisableConstraintsStatement generate statments to deactivate constraintes
+func (sd SQLServerDialect) DisableConstraintsStatement(tableName string) string {
+	return fmt.Sprintf("ALTER TABLE %s NOCHECK CONSTRAINT ALL", sd.Quote(tableName))
+}
+
+// TruncateStatement generate statement to truncat table content
+func (sd SQLServerDialect) TruncateStatement(tableName string) string {
+	return fmt.Sprintf("TRUNCATE TABLE %s", sd.Quote(tableName))
+}

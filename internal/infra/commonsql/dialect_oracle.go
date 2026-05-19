@@ -135,3 +135,84 @@ func (od OracleDialect) CreateSelect(sel string, where string, limit string, col
 func (od OracleDialect) selectPresence(column string) string {
 	return fmt.Sprintf("CASE WHEN %s IS NOT NULL THEN 'TRUE' ELSE NULL END AS %s", od.Quote(column), od.Quote(column))
 }
+
+// BlankTest generate a SQL test to check if a column is blank (spaces only)
+func (od OracleDialect) BlankTest(column string) string {
+	return fmt.Sprintf("TRIM(%s) IS NULL", od.Quote(column))
+}
+
+// EmptyTest generate a SQL test to check if a column is empty (zero length)
+func (od OracleDialect) EmptyTest(column string) string {
+	return fmt.Sprintf("%s IS NULL", od.Quote(column))
+}
+
+// EnableConstraintsStatement generate statments to activate constraintes
+func (od OracleDialect) EnableConstraintsStatement(tableName string) string {
+	schemaAndTable := strings.Split(tableName, ".")
+	sql := &strings.Builder{}
+	sql.WriteString(
+		`BEGIN
+		 FOR c IN(
+		 SELECT c.owner, c.table_name, c.constraint_name
+		 FROM user_constraints c
+		 CONNECT BY PRIOR c.constraint_name = c.r_constraint_name
+		 START WITH c.constraint_name IN (
+			SELECT c.constraint_name
+			FROM user_constraints c
+		 	WHERE c.status = 'DISABLED' AND c.table_name = '`)
+	if len(schemaAndTable) == 2 {
+		sql.WriteString(schemaAndTable[1])
+		sql.WriteString("' AND c.owner = '")
+		sql.WriteString(schemaAndTable[0])
+		sql.WriteString("'")
+	} else {
+		sql.WriteString(schemaAndTable[0])
+		sql.WriteString("' AND c.owner = sys_context( 'userenv', 'current_schema' )")
+	}
+	sql.WriteString(`)
+		LOOP
+			dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" disable constraint ' || c.constraint_name);
+		END LOOP;
+	END;`)
+	return sql.String()
+}
+
+// DisableConstraintsStatement generate statments to deactivate constraintes
+func (od OracleDialect) DisableConstraintsStatement(tableName string) string {
+	schemaAndTable := strings.Split(tableName, ".")
+	sql := &strings.Builder{}
+	sql.WriteString(
+		`BEGIN
+		 FOR c IN(
+		 SELECT c.owner, c.table_name, c.constraint_name
+		 FROM user_constraints c
+		 CONNECT BY PRIOR c.constraint_name = c.r_constraint_name
+		 START WITH c.constraint_name IN (
+			SELECT c.constraint_name
+			FROM user_constraints c
+		 	WHERE c.status = 'ENABLED' AND c.table_name = '`)
+	if len(schemaAndTable) == 2 {
+		sql.WriteString(schemaAndTable[1])
+		sql.WriteString("' AND c.owner = '")
+		sql.WriteString(schemaAndTable[0])
+		sql.WriteString("'")
+	} else {
+		sql.WriteString(schemaAndTable[0])
+		sql.WriteString("' AND c.owner = sys_context( 'userenv', 'current_schema' )")
+	}
+	sql.WriteString(`)
+		LOOP
+			dbms_utility.exec_ddl_statement('alter table "' || c.owner || '"."' || c.table_name || '" disable constraint ' || c.constraint_name);
+		END LOOP;
+	END;`)
+	return sql.String()
+}
+
+// TruncateStatement generate statement to truncat table content
+func (od OracleDialect) TruncateStatement(tableName string) string {
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 2 {
+		return fmt.Sprintf("TRUNCATE TABLE %s.%s", od.Quote(schemaAndTable[0]), od.Quote(schemaAndTable[1]))
+	}
+	return fmt.Sprintf("TRUNCATE TABLE %s", od.Quote(tableName))
+}

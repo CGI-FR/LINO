@@ -345,6 +345,14 @@ Each line is a filter and `lino` apply it to the start table to extract data.
 
 The `push` sub-command import a **json** line stream (jsonline format http://jsonlines.org/) in each table, following the ingress descriptor defined in current directory.
 
+### Commit Timeout
+
+Use the `--commit-timeout` flag to specify a duration (e.g. `5s`, `1m`) after which a commit is triggered if no new row is received. This is useful for streaming applications where data might arrive slowly.
+
+```bash
+$ lino push insert dest --commit-timeout 5s
+```
+
 ### Autotruncate values
 
 Use the `autotruncate` flag to automatically truncate string values that overflows the maximum length accepted by the database.

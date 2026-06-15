@@ -135,3 +135,40 @@ func (pgd PostgresDialect) CreateSelect(sel string, where string, limit string, 
 func (pgd PostgresDialect) selectPresence(column string) string {
 	return fmt.Sprintf("CASE WHEN (%s IS NOT NULL) THEN TRUE ELSE NULL END AS %s", pgd.Quote(column), pgd.Quote(column))
 }
+
+// BlankTest implements SQLDialect.
+func (pgd PostgresDialect) BlankTest(column string) string {
+	return fmt.Sprintf("TRIM(%s) = ''", pgd.Quote(column))
+}
+
+// EmptyTest implements SQLDialect.
+func (pgd PostgresDialect) EmptyTest(column string) string {
+	return fmt.Sprintf("%s = ''", pgd.Quote(column))
+}
+
+// EnableConstraintsStatement generate statments to activate constraintes
+func (pgd PostgresDialect) EnableConstraintsStatement(tableName string) string {
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		return fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL", pgd.Quote(tableName))
+	}
+	return fmt.Sprintf("ALTER TABLE %s.%s ENABLE TRIGGER ALL", pgd.Quote(schemaAndTable[0]), pgd.Quote(schemaAndTable[1]))
+}
+
+// DisableConstraintsStatement generate statments to deactivate constraintes
+func (pgd PostgresDialect) DisableConstraintsStatement(tableName string) string {
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		return fmt.Sprintf("ALTER TABLE %s DISABLE TRIGGER ALL", pgd.Quote(tableName))
+	}
+	return fmt.Sprintf("ALTER TABLE %s.%s DISABLE TRIGGER ALL", pgd.Quote(schemaAndTable[0]), pgd.Quote(schemaAndTable[1]))
+}
+
+// TruncateStatement generate statement to truncat table content
+func (pgd PostgresDialect) TruncateStatement(tableName string) string {
+	schemaAndTable := strings.Split(tableName, ".")
+	if len(schemaAndTable) == 1 {
+		return fmt.Sprintf("TRUNCATE TABLE %s CASCADE", pgd.Quote(tableName))
+	}
+	return fmt.Sprintf("TRUNCATE TABLE %s.%s CASCADE", pgd.Quote(schemaAndTable[0]), pgd.Quote(schemaAndTable[1]))
+}

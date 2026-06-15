@@ -24,6 +24,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 	_ "github.com/ibmdb/go_ibm_db"
 	"github.com/stretchr/testify/assert"
@@ -45,6 +46,6 @@ func TestAppendColumnToSQLWithPreserveBlank(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, Db2Dialect{}, 0)
+	err := appendColumnToSQL(column, sql, Db2Dialect{innerDialect: commonsql.Db2Dialect{}}, 0)
 	assert.NotNil(t, err)
 }

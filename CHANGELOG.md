@@ -14,13 +14,20 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
-## [Unreleased]
+## [3.7.0]
 
 - `Added` flag `--where` (short `-w`) to `lino push update` command. This flag allows to specify a SQL WHERE clause to filter the rows to update.
 
-## [3.7.0]
-
 - `Added` flag `--commit-timeout` to `lino push` command. This flag allows to trigger a commit if no new row is received within the specified duration
+
+## [3.6.2]
+
+- `Fixed` quoting column names in UPDATE during push (PostgreSQL)
+- `Fixed` quoting table names in UPDATE and INSERT during push (Oracle, SQL Server)
+
+## [3.6.1]
+
+- `Fixed` push to tables with special characters in their names (PostgreSQL)
 
 ## [3.6.0]
 

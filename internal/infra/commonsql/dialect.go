@@ -54,6 +54,18 @@ type Dialect interface {
 	// Quote identifier
 	Quote(id string) string
 
+	// BlankTest generate a SQL test to check if a column is blank (spaces only)
+	BlankTest(column string) string
+	// EmptyTest generate a SQL test to check if a column is empty (zero length)
+	EmptyTest(column string) string
+
+	// EnableConstraintsStatement generate statments to activate constraintes
+	EnableConstraintsStatement(tableName string) string
+	// DisableConstraintsStatement generate statments to deactivate constraintes
+	DisableConstraintsStatement(tableName string) string
+	// TruncateStatement generate statement to truncat table content
+	TruncateStatement(tableName string) string
+
 	// Deprecated
 	CreateSelect(sel string, where string, limit string, columns string, from string) string
 }

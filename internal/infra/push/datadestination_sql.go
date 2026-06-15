@@ -391,8 +391,8 @@ func (rw *SQLRowWriter) Write(row push.Row, where push.Row) *push.Error {
 	rw.sqlLogger.Write(values)
 
 	_, err2 := rw.statement.Exec(values...)
-	log.Trace().AnErr("error", err2).Msg("push error")
 	if err2 != nil {
+		log.Trace().AnErr("error", err2).Msg("push error")
 		// reset statement after error
 		if err := rw.close(); err != nil {
 			return &push.Error{Description: err.Error() + "\noriginal error :\n" + err2.Error()}
@@ -505,6 +505,7 @@ type SQLDialect interface {
 	ConvertValue(push.Value, ValueDescriptor) push.Value
 
 	CanDisableIndividualConstraints() bool
+	Quote(id string) string
 
 	// ReadConstraintsStatement create a query that returns tableName and constraintName
 	ReadConstraintsStatement(tableName string) string
@@ -539,42 +540,42 @@ func appendColumnToSQL(column ValueDescriptor, sql *strings.Builder, d SQLDialec
 	switch {
 	// preserve nothing
 	case column.column == nil || column.column.Preserve() == push.PreserveNothing:
-		sql.WriteString(column.name)
+		sql.WriteString(d.Quote(column.name))
 		sql.WriteString("=")
 		sql.WriteString(d.Placeholder(index + 1))
 
 	// preserve null
 	case column.column.Preserve() == push.PreserveNull:
-		sql.WriteString(column.name)
+		sql.WriteString(d.Quote(column.name))
 		sql.WriteString(" = CASE WHEN ")
-		sql.WriteString(column.name)
+		sql.WriteString(d.Quote(column.name))
 		sql.WriteString(" IS NOT NULL THEN ")
 		sql.WriteString(d.Placeholder(index + 1))
 		sql.WriteString(" ELSE ")
-		sql.WriteString(column.name)
+		sql.WriteString(d.Quote(column.name))
 		sql.WriteString(" END")
 		// preserve empty string ""
 	case column.column.Preserve() == push.PreserveEmpty:
-		sql.WriteString(column.name)
+		sql.WriteString(d.Quote(column.name))
 		sql.WriteString(" = CASE WHEN ")
 		sql.WriteString(d.EmptyTest(column.name))
 		sql.WriteString(" THEN ")
-		sql.WriteString(column.name)
+		sql.WriteString(d.Quote(column.name))
 		sql.WriteString(" ELSE ")
 		sql.WriteString(d.Placeholder(index + 1))
 		sql.WriteString(" END")
 		// preserve empty string "" or null or all space string
 	case column.column.Preserve() == push.PreserveBlank:
-		sql.WriteString(column.name)
+		sql.WriteString(d.Quote(column.name))
 		sql.WriteString(" = CASE")
 		sql.WriteString(" WHEN ")
-		sql.WriteString(column.name)
+		sql.WriteString(d.Quote(column.name))
 		sql.WriteString(" IS NULL THEN ")
-		sql.WriteString(column.name)
+		sql.WriteString(d.Quote(column.name))
 		sql.WriteString(" WHEN ")
 		sql.WriteString(d.BlankTest(column.name))
 		sql.WriteString(" THEN ")
-		sql.WriteString(column.name)
+		sql.WriteString(d.Quote(column.name))
 		sql.WriteString(" ELSE ")
 		sql.WriteString(d.Placeholder(index + 1))
 		sql.WriteString(" END")

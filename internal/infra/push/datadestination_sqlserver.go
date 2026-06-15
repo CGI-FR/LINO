@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 
 	_ "github.com/microsoft/go-mssqldb"
@@ -37,11 +38,13 @@ func NewSQLServerDataDestinationFactory() *SQLServerDataDestinationFactory {
 
 // New return a SQLServer pusher
 func (e *SQLServerDataDestinationFactory) New(url string, schema string) push.DataDestination {
-	return NewSQLDataDestination(url, schema, SQLServerDialect{})
+	return NewSQLDataDestination(url, schema, SQLServerDialect{innerDialect: commonsql.SQLServerDialect{}})
 }
 
 // SQLServerDialect inject SQLServer variations
-type SQLServerDialect struct{}
+type SQLServerDialect struct {
+	innerDialect commonsql.Dialect
+}
 
 // Placeholde return the variable format for SQLServer
 func (d SQLServerDialect) Placeholder(position int) string {
@@ -50,17 +53,22 @@ func (d SQLServerDialect) Placeholder(position int) string {
 
 // EnableConstraintsStatement generate statments to activate constraintes
 func (d SQLServerDialect) EnableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf("ALTER TABLE %s CHECK CONSTRAINT ALL", tableName)
+	return d.innerDialect.EnableConstraintsStatement(tableName)
 }
 
 // DisableConstraintsStatement generate statments to deactivate constraintes
 func (d SQLServerDialect) DisableConstraintsStatement(tableName string) string {
-	return fmt.Sprintf("ALTER TABLE %s NOCHECK CONSTRAINT ALL", tableName)
+	return d.innerDialect.DisableConstraintsStatement(tableName)
 }
 
 // TruncateStatement generate statement to truncate table content for SQL Server
 func (d SQLServerDialect) TruncateStatement(tableName string) string {
-	return fmt.Sprintf("DELETE FROM %s", tableName)
+	return d.innerDialect.TruncateStatement(tableName)
+}
+
+// Quote generate quoted identifier for SQL statement
+func (d SQLServerDialect) Quote(id string) string {
+	return d.innerDialect.Quote(id)
 }
 
 // InsertStatement generates an insert statement for SQL Server
@@ -70,9 +78,15 @@ func (d SQLServerDialect) InsertStatement(tableName string, selectValues []Value
 		protectedColumns = append(protectedColumns, fmt.Sprintf("[%s]", value.name))
 	}
 
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("INSERT INTO ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString("(")
 	sql.WriteString(strings.Join(protectedColumns, ","))
 	sql.WriteString(") VALUES (")
@@ -92,9 +106,15 @@ func (d SQLServerDialect) UpsertStatement(tableName string, selectValues []Value
 }
 
 func (d SQLServerDialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
+	schemaAndTable := strings.Split(tableName, ".")
+
 	sql := &strings.Builder{}
 	sql.WriteString("UPDATE ")
-	sql.WriteString(tableName)
+	if len(schemaAndTable) == 1 {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]))
+	} else {
+		sql.WriteString(d.innerDialect.Quote(schemaAndTable[0]) + "." + d.innerDialect.Quote(schemaAndTable[1]))
+	}
 	sql.WriteString(" SET ")
 
 	for index, column := range selectValues {
@@ -182,9 +202,9 @@ func (d SQLServerDialect) SupportPreserve() []string {
 
 // BlankTest implements SQLDialect.
 func (d SQLServerDialect) BlankTest(name string) string {
-	panic("unimplemented")
+	return d.innerDialect.BlankTest(name)
 }
 
 func (d SQLServerDialect) EmptyTest(name string) string {
-	panic("unimplemented")
+	return d.innerDialect.EmptyTest(name)
 }

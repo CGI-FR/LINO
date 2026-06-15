@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 	_ "github.com/microsoft/go-mssqldb"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +44,7 @@ func TestAppendColumnToSQLMSSQLServerWithPreserveBlank(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, SQLServerDialect{}, 0)
+	err := appendColumnToSQL(column, sql, SQLServerDialect{innerDialect: commonsql.SQLServerDialect{}}, 0)
 	assert.NotNil(t, err)
 }
 
@@ -64,8 +65,9 @@ func TestAppendColumnToSQLMSSQLServer(t *testing.T) {
 		),
 	}
 
-	err := appendColumnToSQL(column, sql, SQLServerDialect{}, 0)
+	d := SQLServerDialect{innerDialect: commonsql.SQLServerDialect{}}
+	err := appendColumnToSQL(column, sql, d, 0)
 	assert.Nil(t, err)
 
-	assert.Equal(t, "column=@p1", sql.String())
+	assert.Equal(t, "[column]=@p1", sql.String())
 }

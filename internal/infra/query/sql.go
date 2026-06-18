@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/cgi-fr/lino/pkg/query"
 	"github.com/jmoiron/sqlx"
@@ -85,6 +86,16 @@ func (ds *DataSource) Close() error {
 	}
 
 	return nil
+}
+
+func (ds *DataSource) SafeURL() string {
+	u, err := url.Parse(ds.url)
+	if err != nil {
+		return "invalid URL"
+	}
+	// remove usename and password
+	u.User = nil
+	return u.String()
 }
 
 func (ds *DataSource) Query(query string) (query.DataReader, error) {

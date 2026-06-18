@@ -41,6 +41,8 @@ type SQLDataDestination struct {
 	disableConstraints bool
 	dialect            SQLDialect
 	sqlLogger          *SQLLogger
+	whereClause        string
+	startTableName     string
 }
 
 // NewSQLDataDestination creates a new SQL datadestination.
@@ -134,9 +136,13 @@ func (dd *SQLDataDestination) Commit() *push.Error {
 }
 
 // Open SQL Connection
-func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
+func (dd *SQLDataDestination) Open(plan push.Plan, mode push.Mode, disableConstraints bool, whereClause string) *push.Error {
 	dd.mode = mode
 	dd.disableConstraints = disableConstraints
+	dd.whereClause = whereClause
+	if plan.FirstTable() != nil {
+		dd.startTableName = plan.FirstTable().Name()
+	}
 
 	db, err := dburl.Open(dd.url)
 	if err != nil {
@@ -297,6 +303,9 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), selectValues, whereValues, rw.table.PrimaryKey())
 		if pusherr != nil {
 			return pusherr
+		}
+		if rw.dd.whereClause != "" && rw.tableName() == rw.dd.startTableName {
+			prepareStmt += " AND (" + rw.dd.whereClause + ")"
 		}
 
 	case rw.dd.mode == push.Upsert:

@@ -70,7 +70,7 @@ func (mdd *memoryDataDestination) OpenSQLLogger(string) error {
 	return nil
 }
 
-func (mdd *memoryDataDestination) Open(pla push.Plan, mode push.Mode, disableConstraints bool) *push.Error {
+func (mdd *memoryDataDestination) Open(pla push.Plan, mode push.Mode, disableConstraints bool, where string) *push.Error {
 	mdd.opened = true
 	return nil
 }

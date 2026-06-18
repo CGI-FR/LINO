@@ -469,6 +469,27 @@ If a row with the same primary key already exists in the destination table, it w
 
 **Note:** This feature is currently supported for PostgreSQL and Oracle databases.
 
+### Update with where clause
+
+The `update` mode allows to update existing rows. You can use the `--where` flag (or `-w`) to specify a SQL WHERE clause. The update will only be performed if the condition matches.
+
+```bash
+$ lino push update dest --where "last_update > '2023-01-01'" < data.jsonl
+```
+
+The clause is added to the update query with an `AND` operator, combining it with the primary key condition.
+
+**Important:** The `--where` clause is applied **only** to the start table of the push operation. If the push operation involves multiple tables (via recursion in the ingress descriptor), the condition will not be applied to child or parent tables.
+
+#### Difference with `__usingpk__`
+
+* `__usingpk__` is used to target a specific row to update when the primary key itself is being modified. It provides the "old" primary key to locate the record.
+* `--where` is used to add a logical condition to the update. It is useful for:
+    * **Optimistic locking**: Update only if the record hasn't changed since last read (e.g. `version = 1`).
+    * **Business rules**: Update only if the record is in a specific state (e.g. `status = 'PENDING'`).
+
+Both can be used together. `__usingpk__` identifies *which* row to try to update, and `--where` adds an additional check to decide *if* the update should proceed.
+
 ### How to recover from error
 
 Use options `lino pull --exclude-from-file` (shortcut `-X`) and `lino push --savepoint` combined to handle error recovery. The process will restart where it failed if an error has interrupted it in a previous run.

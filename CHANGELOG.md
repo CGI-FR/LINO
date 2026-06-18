@@ -16,6 +16,8 @@ Types of changes
 
 ## [3.7.0]
 
+- `Added` flag `--where` (short `-w`) to `lino push update` command. This flag allows to specify a SQL WHERE clause to filter the rows to update.
+
 - `Added` flag `--commit-timeout` to `lino push` command. This flag allows to trigger a commit if no new row is received within the specified duration
 
 ## [3.6.2]

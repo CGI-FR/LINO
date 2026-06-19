@@ -142,14 +142,14 @@ func getExtractor(dataconnectorName string, out io.Writer) (analyse.ExtractorFac
 		return nil, e1
 	}
 	if alias == nil {
-		return nil, fmt.Errorf("data connector %s not found", dataconnectorName)
+		return nil, fmt.Errorf("Data Connector %s not found", dataconnectorName) //nolint:staticcheck
 	}
 
 	u := urlbuilder.BuildURL(alias, out)
 
 	datasourceFactory, ok := extractorFactories[u.UnaliasedDriver]
 	if !ok {
-		return nil, fmt.Errorf("no extractor found for database type")
+		return nil, fmt.Errorf("No extractor found for database type") //nolint:staticcheck
 	}
 
 	return datasourceFactory.New(u.URL.String(), alias.Schema), nil

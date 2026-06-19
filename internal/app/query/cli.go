@@ -61,14 +61,14 @@ func execute(cmd *cobra.Command, dataconnectorName string, querystr string) erro
 	}
 
 	if alias == nil {
-		return fmt.Errorf("data connector %s not found", dataconnectorName)
+		return fmt.Errorf("Data Connector %s not found", dataconnectorName) //nolint:staticcheck
 	}
 
 	u := urlbuilder.BuildURL(alias, cmd.OutOrStdout())
 
 	dataSourceFactory, ok := dataSourceFactories[u.UnaliasedDriver]
 	if !ok {
-		return fmt.Errorf("no extractor found for database type")
+		return fmt.Errorf("No extractor found for database type") //nolint:staticcheck
 	}
 
 	driver := query.NewDriver(dataSourceFactory.New(u.URL.String()), infra.NewJSONWriter(cmd.OutOrStdout()))

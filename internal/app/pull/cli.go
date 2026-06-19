@@ -210,14 +210,14 @@ func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, er
 		return nil, e1
 	}
 	if alias == nil {
-		return nil, fmt.Errorf("data connector %s not found", dataconnectorName)
+		return nil, fmt.Errorf("Data Connector %s not found", dataconnectorName) //nolint:staticcheck
 	}
 
 	u := urlbuilder.BuildURL(alias, out)
 
 	datasourceFactory, ok := dataSourceFactories[u.UnaliasedDriver]
 	if !ok {
-		return nil, fmt.Errorf("no datasource found for database type")
+		return nil, fmt.Errorf("No datasource found for database type") //nolint:staticcheck
 	}
 
 	return datasourceFactory.New(u.URL.String(), alias.Schema), nil

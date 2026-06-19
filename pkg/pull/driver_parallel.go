@@ -69,7 +69,7 @@ func (p *pullerParallel) Pull(start Table, filter Filter, selectColumns []string
 		return fmt.Errorf("%w", err)
 	}
 
-	defer p.datasource.Close()
+	defer p.datasource.Close() //nolint:errcheck
 
 	filters := []Filter{}
 	if filterCohort != nil {

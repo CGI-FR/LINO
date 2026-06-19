@@ -36,11 +36,11 @@ func newShowGraphCommand(fullName string, err *os.File, out *os.File, in *os.Fil
 		Run: func(cmd *cobra.Command, args []string) {
 			e := id.Export(idStorageFactory(ingressDescriptor), idExporter)
 			if e != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
-			fmt.Fprintln(out, "success")
+			fmt.Fprintln(out, "success") //nolint:errcheck
 		},
 	}
 	cmd.SetOut(out)

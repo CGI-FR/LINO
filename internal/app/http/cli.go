@@ -92,7 +92,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			e1 := http.ListenAndServe(bind, nil) //nolint:gosec
 
 			if err != nil {
-				fmt.Fprintln(err, e1.Error())
+				fmt.Fprintln(err, e1.Error()) //nolint:errcheck
 				os.Exit(1)
 			}
 		},

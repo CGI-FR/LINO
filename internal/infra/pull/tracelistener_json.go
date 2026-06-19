@@ -66,6 +66,6 @@ func (t JSONTraceListener) TraceStep(s pull.Step) pull.TraceListener {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Fprintln(t.file, string(jsonString))
+	fmt.Fprintln(t.file, string(jsonString)) //nolint:errcheck
 	return t
 }

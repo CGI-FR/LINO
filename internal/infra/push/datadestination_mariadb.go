@@ -168,15 +168,15 @@ func (d MariadbDialect) CanDisableIndividualConstraints() bool {
 }
 
 func (d MariadbDialect) ReadConstraintsStatement(tableName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d MariadbDialect) DisableConstraintStatement(tableName string, constraintName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d MariadbDialect) EnableConstraintStatement(tableName string, constraintName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d MariadbDialect) SupportPreserve() []string {

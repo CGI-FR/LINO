@@ -39,11 +39,11 @@ func newRemoveColumnCommand(fullName string, err *os.File, out *os.File, in *os.
 
 			_, e1 := table.RemoveColumn(tableStorage, tableName, columnName)
 			if e1 != nil {
-				fmt.Fprintln(err, e1.Description)
+				fmt.Fprintln(err, e1.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
-			fmt.Fprintf(out, "successfully removed column %v from %v table\n", columnName, tableName)
+			fmt.Fprintf(out, "successfully removed column %v from %v table\n", columnName, tableName) //nolint:errcheck
 		},
 	}
 	cmd.SetOut(out)

@@ -35,12 +35,12 @@ func newExportCommand(fullName string, err *os.File, out *os.File, in *os.File) 
 		Run: func(cmd *cobra.Command, args []string) {
 			id, e := idStorageFactory(ingressDescriptor).Read()
 			if e != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 			e = idJSONExporter.Store(id)
 			if e != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 		},

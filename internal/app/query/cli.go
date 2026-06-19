@@ -41,7 +41,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if er := execute(cmd, args[0], args[1]); er != nil {
-				fmt.Fprintln(err, er.Error())
+				fmt.Fprintln(err, er.Error()) //nolint:errcheck
 				os.Exit(1)
 			}
 		},
@@ -61,7 +61,7 @@ func execute(cmd *cobra.Command, dataconnectorName string, querystr string) erro
 	}
 
 	if alias == nil {
-		return fmt.Errorf("Data Connector %s not found", dataconnectorName)
+		return fmt.Errorf("data connector %s not found", dataconnectorName)
 	}
 
 	u := urlbuilder.BuildURL(alias, cmd.OutOrStdout())
@@ -77,7 +77,7 @@ func execute(cmd *cobra.Command, dataconnectorName string, querystr string) erro
 		return fmt.Errorf("%w", err)
 	}
 
-	defer driver.Close()
+	defer driver.Close() //nolint:errcheck
 
 	if err := driver.Execute(querystr); err != nil {
 		return fmt.Errorf("%w", err)

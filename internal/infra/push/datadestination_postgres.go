@@ -153,7 +153,7 @@ func (d PostgresDialect) UpsertStatement(tableName string, selectValues []ValueD
 			if !first {
 				sql.WriteString(", ")
 			}
-			sql.WriteString(fmt.Sprintf("\"%s\" = EXCLUDED.\"%s\"", column.name, column.name))
+			sql.WriteString(fmt.Sprintf("\"%s\" = EXCLUDED.\"%s\"", column.name, column.name)) //nolint:staticcheck
 			first = false
 		}
 	} else {
@@ -235,15 +235,15 @@ func (d PostgresDialect) CanDisableIndividualConstraints() bool {
 }
 
 func (d PostgresDialect) ReadConstraintsStatement(tableName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d PostgresDialect) DisableConstraintStatement(tableName string, constraintName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d PostgresDialect) EnableConstraintStatement(tableName string, constraintName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d PostgresDialect) SupportPreserve() []string {

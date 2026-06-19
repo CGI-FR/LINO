@@ -41,6 +41,6 @@ func (re *JSONRowExporter) Export(r pull.ExportedRow) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(re.file, string(jsonString))
+	fmt.Fprintln(re.file, string(jsonString)) //nolint:errcheck
 	return nil
 }

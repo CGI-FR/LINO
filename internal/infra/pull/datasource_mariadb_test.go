@@ -17,7 +17,7 @@ func TestCreateSelectMariadb(t *testing.T) {
 
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	assert.Nil(t, err)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	// Check SQL query is correctly created
 	ds := infra.NewSQLDataSource("pg://server/name", "", nil, db, commonsql.MariadbDialect{})
@@ -51,7 +51,7 @@ func TestCreateSelectMariadbWithColumns(t *testing.T) {
 
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	assert.Nil(t, err)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	// Check SQL query is correctly created
 	ds := infra.NewSQLDataSource("pg://server/name", "", nil, db, commonsql.MariadbDialect{})

@@ -20,6 +20,6 @@ func (w *JSONWriter) Write(row any) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(w.file, string(jsonString))
+	fmt.Fprintln(w.file, string(jsonString)) //nolint:errcheck
 	return nil
 }

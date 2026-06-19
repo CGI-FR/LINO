@@ -242,8 +242,8 @@ func TestPushWithCommitTimeout(t *testing.T) {
 func TestPushWithSavepoint(t *testing.T) {
 	tmpfile, err := os.CreateTemp("", "savepoint")
 	assert.Nil(t, err)
-	defer os.Remove(tmpfile.Name())
-	tmpfile.Close()
+	defer os.Remove(tmpfile.Name()) //nolint:errcheck
+	tmpfile.Close()                 //nolint:errcheck,gosec
 
 	A := push.NewTable("A", []string{"id"}, nil)
 	plan := push.NewPlan(A, []push.Relation{})

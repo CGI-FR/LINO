@@ -147,7 +147,7 @@ func init() {
 func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 	u, e2 := dburl.Parse(dc.URL)
 	if e2 != nil {
-		fmt.Fprintln(out, e2.Error())
+		fmt.Fprintln(out, e2.Error()) //nolint:errcheck
 		os.Exit(3)
 	}
 	// get user from env
@@ -155,8 +155,8 @@ func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 		userFromEnv := os.Getenv(dc.User.ValueFromEnv)
 		if userFromEnv == "" {
 			if out != nil {
-				fmt.Fprintf(out, "warn: missing environment variable %s", dc.User.ValueFromEnv)
-				fmt.Fprintln(out)
+				fmt.Fprintf(out, "warn: missing environment variable %s", dc.User.ValueFromEnv) //nolint:errcheck
+				fmt.Fprintln(out)                                                               //nolint:errcheck
 			}
 		} else {
 			u.User = url.User(userFromEnv)
@@ -170,8 +170,8 @@ func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 		passwordFromEnv := os.Getenv(dc.Password.ValueFromEnv)
 		if passwordFromEnv == "" {
 			if out != nil {
-				fmt.Fprintf(out, "warn: missing environment variable %s", dc.Password.ValueFromEnv)
-				fmt.Fprintln(out)
+				fmt.Fprintf(out, "warn: missing environment variable %s", dc.Password.ValueFromEnv) //nolint:errcheck
+				fmt.Fprintln(out)                                                                   //nolint:errcheck
 			}
 		} else {
 			u.User = url.UserPassword(u.User.Username(), passwordFromEnv)
@@ -196,7 +196,7 @@ func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
 
 func StorePassword(u *dburl.URL, password string, out io.Writer) error {
 	store := defaultCredentialsStore()
-	creds := &credentials.Credentials{ServerURL: u.URL.String(), Username: u.URL.User.Username(), Secret: password}
+	creds := &credentials.Credentials{ServerURL: u.URL.String(), Username: u.User.Username(), Secret: password}
 	err := client.Store(store, creds)
 	if err != nil {
 		// failed to use credential store backend
@@ -204,8 +204,8 @@ func StorePassword(u *dburl.URL, password string, out io.Writer) error {
 			return err
 		}
 		// fall back to local storage
-		fmt.Fprintf(out, "warn: password will be stored unencrypted in %s, configure a credential helper to remove this warning. See https://github.com/docker/docker-credential-helpers", localstorage.GetFileLocation())
-		fmt.Fprintln(out)
+		fmt.Fprintf(out, "warn: password will be stored unencrypted in %s, configure a credential helper to remove this warning. See https://github.com/docker/docker-credential-helpers", localstorage.GetFileLocation()) //nolint:errcheck
+		fmt.Fprintln(out)                                                                                                                                                                                                  //nolint:errcheck
 		return localstorage.Store(creds)
 	}
 	return nil

@@ -44,11 +44,11 @@ func newAddColumnCommand(fullName string, err *os.File, out *os.File, in *os.Fil
 
 			_, e1 := table.AddOrUpdateColumn(tableStorage, tableName, columnName, exportType, importType, maxLength, byteBased)
 			if e1 != nil {
-				fmt.Fprintln(err, e1.Description)
+				fmt.Fprintln(err, e1.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
-			fmt.Fprintf(out, "successfully added column %v to %v table\n", columnName, tableName)
+			fmt.Fprintf(out, "successfully added column %v to %v table\n", columnName, tableName) //nolint:errcheck
 		},
 	}
 	cmd.SetOut(out)

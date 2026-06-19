@@ -39,7 +39,7 @@ func newCreateCommand(fullName string, err *os.File, out *os.File, in *os.File) 
 
 			relations, e1 := relStorage.List()
 			if e1 != nil {
-				fmt.Fprintln(err, e1.Description)
+				fmt.Fprintln(err, e1.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
@@ -47,11 +47,11 @@ func newCreateCommand(fullName string, err *os.File, out *os.File, in *os.File) 
 
 			e := id.Create(table, []string{}, reader, idStorageFactory(ingressDescriptor))
 			if e != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
-			fmt.Fprintln(out, "successfully created ingress descriptor")
+			fmt.Fprintln(out, "successfully created ingress descriptor") //nolint:errcheck
 		},
 	}
 	cmd.SetOut(out)

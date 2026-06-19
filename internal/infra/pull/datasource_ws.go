@@ -201,7 +201,7 @@ func (ds *WSDataSource) RowReader(source pull.Table, filter pull.Filter) (pull.R
 
 	go func() {
 		<-ds.stop
-		ds.localDS.Close()
+		ds.localDS.Close() //nolint:errcheck,gosec
 	}()
 
 	if err := ds.localDS.Open(); err != nil {
@@ -240,7 +240,7 @@ func (ds *WSDataSource) Close() error {
 	if ds.conn != nil {
 		log.Trace().Msg("Close WS")
 
-		ds.conn.Close(websocket.StatusNormalClosure, "")
+		ds.conn.Close(websocket.StatusNormalClosure, "") //nolint:errcheck,gosec
 	}
 
 	return nil
@@ -258,7 +258,7 @@ func (rs *ResultStream) Next() bool {
 	lastMessage := <-rs.payloadStream
 
 	if lastMessage.Error == "Error" {
-		rs.err = fmt.Errorf("Receive error from web socket server : %s ", string(lastMessage.Payload))
+		rs.err = fmt.Errorf("receive error from web socket server : %s ", string(lastMessage.Payload))
 		return false
 	}
 	if lastMessage.Id == "" {
@@ -266,7 +266,7 @@ func (rs *ResultStream) Next() bool {
 	}
 
 	if !lastMessage.Next {
-		log.Trace().Str("Id", lastMessage.Id).Msg("End of web socket stream")
+		log.Trace().Str("Id", lastMessage.Id).Msg("end of web socket stream")
 		return false
 	}
 

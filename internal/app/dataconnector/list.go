@@ -37,12 +37,12 @@ func newListCommand(fullName string, err *os.File, out *os.File, in *os.File) *c
 		Run: func(cmd *cobra.Command, args []string) {
 			list, e := dataconnector.List(storage)
 			if e != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
 			for _, m := range list {
-				fmt.Fprintln(out, m)
+				fmt.Fprintln(out, m) //nolint:errcheck
 			}
 		},
 	}

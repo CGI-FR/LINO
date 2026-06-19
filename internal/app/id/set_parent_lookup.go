@@ -37,17 +37,17 @@ func newSetParentLookupCommand(fullName string, err *os.File, out *os.File, in *
 			relation := args[0]
 			flag := args[1] == "true"
 			if !flag && args[1] != "false" {
-				fmt.Fprintln(err, "flag must be 'true' or 'false'")
+				fmt.Fprintln(err, "flag must be 'true' or 'false'") //nolint:errcheck
 				os.Exit(1)
 			}
 
 			e := id.SetParentLookup(relation, flag, idStorageFactory(ingressDescriptor))
 			if e != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
-			fmt.Fprintf(out, "successfully update relation %s in ingress descriptor\n", relation)
+			fmt.Fprintf(out, "successfully update relation %s in ingress descriptor\n", relation) //nolint:errcheck
 		},
 	}
 	cmd.SetOut(out)

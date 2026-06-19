@@ -28,7 +28,7 @@ func (s *SQLLogger) Open() error {
 	// Check if the folder exists
 	if _, err := os.Stat(s.folderPath); os.IsNotExist(err) {
 		// Create the folder if it doesn't exist
-		if err := os.MkdirAll(s.folderPath, 0o755); err != nil { //nolint:mnd
+		if err := os.MkdirAll(s.folderPath, 0o755); err != nil { //nolint:mnd,gosec
 			return err
 		}
 	}
@@ -52,7 +52,7 @@ func (s *SQLLogger) OpenWriter(table push.Table, sqlquery string) *SQLLoggerWrit
 	}
 
 	filename := s.folderPath + "/" + table.Name() + ".csv"
-	writer, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+	writer, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644) //nolint:gosec
 	if err != nil {
 		log.Warn().Err(err).Msgf("Cannot open file %v for SQL logger", filename)
 	}

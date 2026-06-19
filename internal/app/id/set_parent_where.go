@@ -39,11 +39,11 @@ func newSetParentWhereCommand(fullName string, err *os.File, out *os.File, in *o
 
 			e := id.SetParentWhere(relation, where, idStorageFactory(ingressDescriptor))
 			if e != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
-			fmt.Fprintf(out, "successfully update relation %s in ingress descriptor\n", relation)
+			fmt.Fprintf(out, "successfully update relation %s in ingress descriptor\n", relation) //nolint:errcheck
 		},
 	}
 	cmd.SetOut(out)

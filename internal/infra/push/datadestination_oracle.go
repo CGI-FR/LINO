@@ -10,8 +10,8 @@ import (
 	"github.com/cgi-fr/lino/pkg/push"
 
 	// import Oracle connector
-	_ "github.com/sijms/go-ora/v2"
-	go_ora "github.com/sijms/go-ora/v2"
+	_ "github.com/sijms/go-ora/v2"      //nolint:staticcheck
+	go_ora "github.com/sijms/go-ora/v2" //nolint:staticcheck
 )
 
 // OracleDataDestinationFactory exposes methods to create new Oracle extractors.
@@ -114,7 +114,7 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 		if i > 0 {
 			sql.WriteString(" AND ")
 		}
-		sql.WriteString(fmt.Sprintf("target.%s = source.%s", d.innerDialect.Quote(pk), d.innerDialect.Quote(pk)))
+		sql.WriteString(fmt.Sprintf("target.%s = source.%s", d.innerDialect.Quote(pk), d.innerDialect.Quote(pk))) //nolint:staticcheck
 	}
 	sql.WriteString(") WHEN MATCHED THEN UPDATE SET ")
 
@@ -126,7 +126,7 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 		if !first {
 			sql.WriteString(", ")
 		}
-		sql.WriteString(fmt.Sprintf("target.%s = source.%s", d.innerDialect.Quote(col.name), d.innerDialect.Quote(col.name)))
+		sql.WriteString(fmt.Sprintf("target.%s = source.%s", d.innerDialect.Quote(col.name), d.innerDialect.Quote(col.name))) //nolint:staticcheck
 		first = false
 	}
 
@@ -142,7 +142,7 @@ func (d OracleDialect) UpsertStatement(tableName string, selectValues []ValueDes
 		if i > 0 {
 			sql.WriteString(", ")
 		}
-		sql.WriteString(fmt.Sprintf("source.%s", d.innerDialect.Quote(col.name)))
+		sql.WriteString(fmt.Sprintf("source.%s", d.innerDialect.Quote(col.name))) //nolint:staticcheck
 	}
 	sql.WriteString(")")
 

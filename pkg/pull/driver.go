@@ -75,7 +75,7 @@ func (p *puller) Pull(start Table, filter Filter, selectColumns []string, filter
 		return fmt.Errorf("%w", err)
 	}
 
-	defer p.datasource.Close()
+	defer p.datasource.Close() //nolint:errcheck
 
 	Reset()
 

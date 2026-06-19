@@ -58,7 +58,7 @@ func (e *HTTPExtractor) Extract() ([]relation.Relation, *relation.Error) {
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}

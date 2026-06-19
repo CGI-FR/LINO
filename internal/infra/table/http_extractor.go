@@ -59,7 +59,7 @@ func (e *HTTPExtractor) Extract(onlyTables bool, withDBInfos bool) ([]table.Tabl
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
@@ -100,7 +100,7 @@ func (e *HTTPExtractor) Count(tableName string) (int, *table.Error) {
 		return 0, &table.Error{Description: fmt.Sprintf("HTTP request returned status code %d", resp.StatusCode)}
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return 0, &table.Error{Description: err.Error()}

@@ -114,13 +114,13 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			datasource, e1 := getDataSource(args[0], out)
 			if e1 != nil {
-				fmt.Fprintln(err, e1.Error())
+				fmt.Fprintln(err, e1.Error()) //nolint:errcheck
 				os.Exit(1)
 			}
 
 			plan, start, startSelect, e2 := getPullerPlan(idStorageFactory(table, ingressDescriptor))
 			if e2 != nil {
-				fmt.Fprintln(err, e2.Error())
+				fmt.Fprintln(err, e2.Error()) //nolint:errcheck
 				os.Exit(1)
 			}
 
@@ -140,9 +140,9 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			case "-":
 				filters = rowReaderFactory(in)
 			default:
-				filterReader, e3 := os.Open(filefilter)
+				filterReader, e3 := os.Open(filefilter) //nolint:gosec
 				if e3 != nil {
-					fmt.Fprintln(err, e3.Error())
+					fmt.Fprintln(err, e3.Error()) //nolint:errcheck
 					os.Exit(1)
 				}
 				filters = rowReaderFactory(filterReader)
@@ -151,14 +151,14 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			var filtersEx pull.KeyStore
 			if len(fileexclude) > 0 {
-				filterReader, e3 := os.Open(fileexclude)
+				filterReader, e3 := os.Open(fileexclude) //nolint:gosec
 				if e3 != nil {
-					fmt.Fprintln(err, e3.Error())
+					fmt.Fprintln(err, e3.Error()) //nolint:errcheck
 					os.Exit(1)
 				}
 				filtersEx, e3 = keyStoreFactory(filterReader, start.Keys)
 				if e3 != nil {
-					fmt.Fprintln(err, e3.Error())
+					fmt.Fprintln(err, e3.Error()) //nolint:errcheck
 					os.Exit(1)
 				}
 				log.Trace().Str("file", fileexclude).Msg("reading file")
@@ -210,7 +210,7 @@ func getDataSource(dataconnectorName string, out io.Writer) (pull.DataSource, er
 		return nil, e1
 	}
 	if alias == nil {
-		return nil, fmt.Errorf("Data Connector %s not found", dataconnectorName)
+		return nil, fmt.Errorf("data connector %s not found", dataconnectorName)
 	}
 
 	u := urlbuilder.BuildURL(alias, out)
@@ -256,7 +256,7 @@ func getPullerPlan(idStorage id.Storage) (pull.Plan, pull.Table, []string, error
 	}
 
 	if !tableExiste {
-		err5 := fmt.Errorf("Table '%s' does not exist in table.yaml", string(startTable.Name))
+		err5 := fmt.Errorf("table '%s' does not exist in table.yaml", string(startTable.Name))
 		return pull.Plan{}, pull.Table{}, []string{}, err5
 	}
 

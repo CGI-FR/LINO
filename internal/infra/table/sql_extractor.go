@@ -55,7 +55,7 @@ func (e *SQLExtractor) Extract(onlyTables bool, withDBInfos bool) ([]table.Table
 	if err != nil {
 		return nil, &table.Error{Description: err.Error()}
 	}
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	err = db.Ping()
 	if err != nil {
@@ -119,7 +119,7 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 	if err != nil {
 		return 0, &table.Error{Description: err.Error()}
 	}
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	err = db.Ping()
 	if err != nil {
@@ -133,7 +133,7 @@ func (e *SQLExtractor) Count(tableName string) (int, *table.Error) {
 		return 0, &table.Error{Description: err.Error()}
 	}
 
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var count int
 
@@ -160,7 +160,7 @@ func (e *SQLExtractor) ColumnInfo(db *sql.DB, tableName string, withDBInfos bool
 		log.Warn().Msg("Cannot scan columns informations for table: " + tableName)
 		return []table.Column{}, nil
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	// Retrieve column information
 	columnTypes, err := rows.ColumnTypes()

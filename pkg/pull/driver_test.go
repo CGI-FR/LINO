@@ -49,7 +49,7 @@ func ToJSON(r pull.Row) string {
 }
 
 func LoadTest(filename string) (*Test, error) {
-	yamlFile, err := os.ReadFile("testdata/" + filename)
+	yamlFile, err := os.ReadFile("testdata/" + filename) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf(": %w", err)
 	}

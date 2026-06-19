@@ -50,13 +50,13 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 
 			u, e2 := dburl.Parse(urlin)
 			if e2 != nil {
-				fmt.Fprintln(err, e2.Error())
+				fmt.Fprintln(err, e2.Error()) //nolint:errcheck
 				os.Exit(3)
 			}
 
 			password, isset := u.User.Password()
 			if isset {
-				fmt.Fprintln(err, "warn: password should not be included in URI, use --password-from-env or --password")
+				fmt.Fprintln(err, "warn: password should not be included in URI, use --password-from-env or --password") //nolint:errcheck
 				u.User = url.User(u.User.Username())
 			}
 
@@ -71,10 +71,10 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 				case username != "":
 					password = askPassword()
 				case flagUserFromEnv != "":
-					fmt.Fprintln(err, "error: cannot use --password with --user-from-env, use --password-from-env or specify a username")
+					fmt.Fprintln(err, "error: cannot use --password with --user-from-env, use --password-from-env or specify a username") //nolint:errcheck
 					os.Exit(1)
 				default:
-					fmt.Fprintln(err, "error: cannot use --password with empty username, use --password-from-env or specify a username")
+					fmt.Fprintln(err, "error: cannot use --password with empty username, use --password-from-env or specify a username") //nolint:errcheck
 					os.Exit(1)
 				}
 			}
@@ -82,7 +82,7 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 			if password != "" {
 				e3 := urlbuilder.StorePassword(u, password, err)
 				if e3 != nil {
-					fmt.Fprintln(err, e3.Error())
+					fmt.Fprintln(err, e3.Error()) //nolint:errcheck
 					os.Exit(3)
 				}
 			}
@@ -104,12 +104,12 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 
 			e := dataconnector.Add(storage, &alias)
 			if e != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
-			fmt.Fprintf(out, "successfully added dataconnector")
-			fmt.Fprintln(out)
+			fmt.Fprintf(out, "successfully added dataconnector") //nolint:errcheck
+			fmt.Fprintln(out)                                    //nolint:errcheck
 		},
 	}
 	cmd.Flags().BoolVarP(&flagReadonly, "read-only", "r", false, "Write protection flag that prevents modification")
@@ -126,9 +126,9 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 
 func askPassword() string {
 	if term.IsTerminal(int(os.Stdin.Fd())) {
-		os.Stdout.Write([]byte("enter password: "))
+		os.Stdout.Write([]byte("enter password: ")) //nolint:errcheck,gosec
 		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
-		os.Stdout.Write([]byte("\n"))
+		os.Stdout.Write([]byte("\n")) //nolint:errcheck,gosec
 		if err != nil {
 			os.Exit(1)
 		}

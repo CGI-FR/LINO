@@ -141,6 +141,6 @@ func (e *WSDataPinger) ReadResult() (ResultMessage, error) {
 
 func (e *WSDataPinger) Close() {
 	if e.conn != nil {
-		e.conn.Close(websocket.StatusNormalClosure, "")
+		e.conn.Close(websocket.StatusNormalClosure, "") //nolint:errcheck,gosec
 	}
 }

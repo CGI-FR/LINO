@@ -54,58 +54,58 @@ func (d Db2Dialect) Quote(id string) string {
 
 // EnableConstraintsStatement generate statments to activate constraintes
 func (d Db2Dialect) EnableConstraintsStatement(tableName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 // DisableConstraintsStatement generate statments to deactivate constraintes
 func (d Db2Dialect) DisableConstraintsStatement(tableName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 // TruncateStatement generate statement to truncat table content
 func (d Db2Dialect) TruncateStatement(tableName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 // InsertStatement generate insert statement
 func (d Db2Dialect) InsertStatement(tableName string, selectValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor) {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 // UpsertStatement
 func (d Db2Dialect) UpsertStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 // UpdateStatement
 func (d Db2Dialect) UpdateStatement(tableName string, selectValues []ValueDescriptor, whereValues []ValueDescriptor, primaryKeys []string) (statement string, headers []ValueDescriptor, err *push.Error) {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 // IsDuplicateError check if error is a duplicate error
 func (d Db2Dialect) IsDuplicateError(err error) bool {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 // ConvertValue before load
 func (d Db2Dialect) ConvertValue(from push.Value, descriptor ValueDescriptor) push.Value {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d Db2Dialect) CanDisableIndividualConstraints() bool {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d Db2Dialect) ReadConstraintsStatement(tableName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d Db2Dialect) DisableConstraintStatement(tableName string, constraintName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d Db2Dialect) EnableConstraintStatement(tableName string, constraintName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d Db2Dialect) SupportPreserve() []string {

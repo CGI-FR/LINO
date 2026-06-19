@@ -44,12 +44,12 @@ func newStatusCommand(fullName string, err *os.File, out *os.File, in *os.File) 
 		Run: func(cmd *cobra.Command, args []string) {
 			alias, e1 := dataconnector.Get(dataconnectorStorage, args[0])
 			if e1 != nil {
-				fmt.Fprintln(err, e1.Description)
+				fmt.Fprintln(err, e1.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
 			if alias == nil {
-				fmt.Fprintln(err, "no dataconnector named "+args[0])
+				fmt.Fprintln(err, "no dataconnector named "+args[0]) //nolint:errcheck
 				os.Exit(1)
 			}
 
@@ -57,7 +57,7 @@ func newStatusCommand(fullName string, err *os.File, out *os.File, in *os.File) 
 
 			factory, ok := sequenceUpdatorFactories[u.UnaliasedDriver]
 			if !ok {
-				fmt.Fprintln(err, "no extractor found for database type")
+				fmt.Fprintln(err, "no extractor found for database type") //nolint:errcheck
 				os.Exit(1)
 			}
 
@@ -65,11 +65,11 @@ func newStatusCommand(fullName string, err *os.File, out *os.File, in *os.File) 
 
 			sequences, e3 := sequence.Status(sequenceStorage, extractor)
 			if e3 != nil {
-				fmt.Fprintln(err, e3.Description)
+				fmt.Fprintln(err, e3.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 			for _, seq := range sequences {
-				fmt.Fprintln(out, seq.Name, seq.Value)
+				fmt.Fprintln(out, seq.Name, seq.Value) //nolint:errcheck
 			}
 		},
 	}

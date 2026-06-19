@@ -181,7 +181,7 @@ func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disable
 
 	msg := CommandMessage{Action: PushOpen, Payload: data}
 	if err := dd.SendMessageAndReadResult(msg); err != nil {
-		dd.Close()
+		dd.Close() //nolint:errcheck
 		return err
 	}
 
@@ -191,7 +191,7 @@ func (dd *WebSocketDataDestination) Open(plan push.Plan, mode push.Mode, disable
 // Close web socket connection
 func (dd *WebSocketDataDestination) Close() *push.Error {
 	log.Debug().Str("url", dd.url).Str("schema", dd.schema).Msg("close web socket destination")
-	defer dd.conn.Close(websocket.StatusNormalClosure, "")
+	defer dd.conn.Close(websocket.StatusNormalClosure, "") //nolint:errcheck
 	msg := CommandMessage{Action: PushClose, Payload: json.RawMessage([]byte("{}"))}
 	if err := dd.SendMessageAndReadResult(msg); err != nil {
 		return err

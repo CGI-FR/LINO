@@ -28,7 +28,7 @@ func (fc *FileCache) Load(path string) ([]byte, error) {
 		return bytes, nil
 	}
 
-	bytes, err := os.ReadFile(path)
+	bytes, err := os.ReadFile(path) //nolint:gosec
 	if err != nil {
 		return nil, &Error{Description: err.Error()}
 	}

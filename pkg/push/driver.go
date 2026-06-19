@@ -468,11 +468,11 @@ func computeTranslatedKeys(row Row, table Table, translator Translator) Row {
 }
 
 func savepoint(savepointPath string, committed []Row) *Error {
-	f, err := os.OpenFile(savepointPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	f, err := os.OpenFile(savepointPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600) //nolint:gosec
 	if err != nil {
 		return &Error{Description: err.Error()}
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	for _, row := range committed {
 		bytes, err := json.Marshal(row)

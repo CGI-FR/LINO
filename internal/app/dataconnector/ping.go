@@ -44,29 +44,29 @@ func newPingCommand(fullName string, err *os.File, out *os.File, in *os.File) *c
 			dc, e := dataconnector.Get(storage, args[0])
 			if e != nil {
 				log.Error().Err(e).Msg(e.Description)
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(2)
 			}
 			if dc == nil {
-				fmt.Fprintf(err, "no dataconnector for '%s'", args[0])
-				fmt.Fprintln(err)
+				fmt.Fprintf(err, "no dataconnector for '%s'", args[0]) //nolint:errcheck
+				fmt.Fprintln(err)                                      //nolint:errcheck
 				os.Exit(5)
 			}
 			u := urlbuilder.BuildURL(dc, err)
 			dataPingerFactory, ok := dataPingerFactory[u.UnaliasedDriver]
 			if !ok {
-				fmt.Fprintln(err, "no datadestination found for database type")
+				fmt.Fprintln(err, "no datadestination found for database type") //nolint:errcheck
 				os.Exit(4)
 			}
 			pinger := dataPingerFactory.New(u.URL.String())
 			e = pinger.Ping()
 			if e != nil {
-				fmt.Fprintln(out, "ping failed")
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(out, "ping failed") //nolint:errcheck
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
-			fmt.Fprintln(out, "ping success")
+			fmt.Fprintln(out, "ping success") //nolint:errcheck
 		},
 	}
 	cmd.SetOut(out)

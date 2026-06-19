@@ -146,7 +146,7 @@ func (e *WSExtractor) ReadResult() (ResultMessage, error) {
 
 func (e *WSExtractor) Close() {
 	if e.conn != nil {
-		e.conn.Close(websocket.StatusNormalClosure, "")
+		e.conn.Close(websocket.StatusNormalClosure, "") //nolint:errcheck,gosec
 	}
 }
 

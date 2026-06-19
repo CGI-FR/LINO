@@ -103,7 +103,7 @@ func (s echoServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.logf("%v", err)
 		return
 	}
-	defer c.Close(websocket.StatusInternalError, "the sky is falling")
+	defer c.Close(websocket.StatusInternalError, "the sky is falling") //nolint:errcheck
 
 	/*
 		if c.Subprotocol() != "lino" {

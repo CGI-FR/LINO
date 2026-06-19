@@ -45,12 +45,12 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 		Run: func(cmd *cobra.Command, args []string) {
 			alias, e1 := dataconnector.Get(dataconnectorStorage, args[0])
 			if e1 != nil {
-				fmt.Fprintln(err, e1.Description)
+				fmt.Fprintln(err, e1.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
 			if alias == nil {
-				fmt.Fprintln(err, "no dataconnector named "+args[0])
+				fmt.Fprintln(err, "no dataconnector named "+args[0]) //nolint:errcheck
 				os.Exit(1)
 			}
 
@@ -58,7 +58,7 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 
 			factory, ok := relationExtractorFactories[u.UnaliasedDriver]
 			if !ok {
-				fmt.Fprintln(err, "no extractor found for database type")
+				fmt.Fprintln(err, "no extractor found for database type") //nolint:errcheck
 				os.Exit(1)
 			}
 
@@ -66,17 +66,17 @@ func newExtractCommand(fullName string, err *os.File, out *os.File, in *os.File)
 
 			e2 := relation.Extract(extractor, relationStorage)
 			if e2 != nil {
-				fmt.Fprintln(err, e2.Description)
+				fmt.Fprintln(err, e2.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
 			relations, e2 := relationStorage.List()
 			if e2 != nil {
-				fmt.Fprintln(err, e2.Description)
+				fmt.Fprintln(err, e2.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
-			fmt.Fprintf(out, "lino finds %v relations from constraints\n", len(relations))
+			fmt.Fprintf(out, "lino finds %v relations from constraints\n", len(relations)) //nolint:errcheck
 		},
 	}
 	cmd.SetOut(out)

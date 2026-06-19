@@ -24,8 +24,8 @@ import (
 	"github.com/cgi-fr/lino/internal/infra/commonsql"
 	"github.com/cgi-fr/lino/pkg/push"
 
-	_ "github.com/microsoft/go-mssqldb"
-	mssql "github.com/microsoft/go-mssqldb"
+	_ "github.com/microsoft/go-mssqldb"     //nolint:staticcheck
+	mssql "github.com/microsoft/go-mssqldb" //nolint:staticcheck
 )
 
 // SQLServerDataDestinationFactory exposes methods to create new SQLServer pullers.
@@ -183,15 +183,15 @@ func (d SQLServerDialect) CanDisableIndividualConstraints() bool {
 }
 
 func (d SQLServerDialect) ReadConstraintsStatement(tableName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d SQLServerDialect) DisableConstraintStatement(tableName string, constraintName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d SQLServerDialect) EnableConstraintStatement(tableName string, constraintName string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d SQLServerDialect) SupportPreserve() []string {

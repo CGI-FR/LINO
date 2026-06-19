@@ -142,7 +142,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			datadestination, e1 := getDataDestination(dcDestination)
 			if e1 != nil {
-				fmt.Fprintln(err, e1.Error())
+				fmt.Fprintln(err, e1.Error()) //nolint:errcheck
 				os.Exit(1)
 			}
 
@@ -154,18 +154,18 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			plan, e2 := getPlan(idStorageFactory(table, ingressDescriptor), autoTruncate)
 			if e2 != nil {
-				fmt.Fprintln(err, e2.Error())
+				fmt.Fprintln(err, e2.Error()) //nolint:errcheck
 				os.Exit(2)
 			}
 			log.Debug().Msg(fmt.Sprintf("call Push with mode %s", mode))
 
 			if catchErrors != "" {
-				errorFile, e4 := os.Create(catchErrors)
+				errorFile, e4 := os.Create(catchErrors) //nolint:gosec
 				if e4 != nil {
-					fmt.Fprintln(err, e4.Error())
+					fmt.Fprintln(err, e4.Error()) //nolint:errcheck
 					os.Exit(4)
 				}
-				defer errorFile.Close()
+				defer errorFile.Close() //nolint:errcheck
 				rowExporter = rowExporterFactory(errorFile)
 			} else {
 				rowExporter = push.NoErrorCaptureRowWriter{}
@@ -231,15 +231,15 @@ func loadTranslator(pkTranslations map[string]string) error {
 
 		fileToKeys[filename] = []push.Key{key}
 
-		file, err := os.Open(filename)
+		file, err := os.Open(filename) //nolint:gosec
 		if err != nil {
 			return err
 		}
 
-		defer file.Close()
+		defer file.Close() //nolint:errcheck
 
 		rowIterator := rowIteratorFactory(file)
-		defer rowIterator.Close()
+		defer rowIterator.Close() //nolint:errcheck
 
 		fileToRows[filename] = rowIterator
 	}

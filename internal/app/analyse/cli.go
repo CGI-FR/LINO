@@ -83,7 +83,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 			dataConnector := args[0]
 			dataSource, primaryKeys, e0 := getDatasource(dataConnector)
 			if e0 != nil {
-				fmt.Fprintln(err, e0.Error())
+				fmt.Fprintln(err, e0.Error()) //nolint:errcheck
 				os.Exit(1)
 			}
 
@@ -94,7 +94,7 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 
 			extractor, e1 := getExtractor(dataConnector, out)
 			if e1 != nil {
-				fmt.Fprintln(err, e1.Error())
+				fmt.Fprintln(err, e1.Error()) //nolint:errcheck
 				os.Exit(1)
 			}
 
@@ -111,8 +111,8 @@ func NewCommand(fullName string, err *os.File, out *os.File, in *os.File) *cobra
 				},
 			)
 			if e2 := driver.Analyse(); e2 != nil {
-				fmt.Fprintf(err, "analyse failed '%s'", dataConnector)
-				fmt.Fprintln(err)
+				fmt.Fprintf(err, "analyse failed '%s'", dataConnector) //nolint:errcheck
+				fmt.Fprintln(err)                                      //nolint:errcheck
 				os.Exit(5)
 			}
 		},
@@ -142,7 +142,7 @@ func getExtractor(dataconnectorName string, out io.Writer) (analyse.ExtractorFac
 		return nil, e1
 	}
 	if alias == nil {
-		return nil, fmt.Errorf("Data Connector %s not found", dataconnectorName)
+		return nil, fmt.Errorf("data connector %s not found", dataconnectorName)
 	}
 
 	u := urlbuilder.BuildURL(alias, out)

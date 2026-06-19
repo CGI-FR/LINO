@@ -168,7 +168,7 @@ func (rw *HTTPRowWriter) Request() {
 	if err != nil {
 		log.Error().Err(err).Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Str("status", resp.Status).Msg("response")
 	}
-	resp.Body.Close()
+	resp.Body.Close() //nolint:errcheck,gosec
 	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Str("status", resp.Status).Msg("response")
 	rw.cmpl <- resp.StatusCode
 }
@@ -191,8 +191,8 @@ func (rw *HTTPRowWriter) Write(row push.Row, where push.Row) *push.Error {
 // close table writer
 func (rw *HTTPRowWriter) Close() *push.Error {
 	log.Debug().Str("url", rw.dd.url).Str("schema", rw.dd.schema).Str("table", rw.table.Name()).Msg("close")
-	rw.buf.Close()
-	rw.req.Body.Close()
+	rw.buf.Close()      //nolint:errcheck,gosec
+	rw.req.Body.Close() //nolint:errcheck,gosec
 	// wait for request completion
 	code := <-rw.cmpl
 	if code < 200 || code >= 300 {

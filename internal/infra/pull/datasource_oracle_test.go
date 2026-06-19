@@ -17,7 +17,7 @@ func TestCreateSelectOracle(t *testing.T) {
 
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	assert.Nil(t, err)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	// Check SQL query is correctly created
 	ds := infra.NewSQLDataSource("pg://server/name", "", nil, db, commonsql.OracleDialect{})
@@ -51,7 +51,7 @@ func TestCreateSelectOracleWithColumns(t *testing.T) {
 
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	assert.Nil(t, err)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	// Check SQL query is correctly created
 	ds := infra.NewSQLDataSource("pg://server/name", "", nil, db, commonsql.OracleDialect{})

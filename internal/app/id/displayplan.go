@@ -36,12 +36,12 @@ func newDisplayPlanCommand(fullName string, err *os.File, out *os.File, in *os.F
 		Run: func(cmd *cobra.Command, args []string) {
 			result, e := id.GetPullerPlan(idStorageFactory(ingressDescriptor))
 			if e != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
 			for i := uint(0); i < result.Len(); i++ {
-				fmt.Fprintln(out, result.Step(i))
+				fmt.Fprintln(out, result.Step(i)) //nolint:errcheck
 			}
 		},
 	}

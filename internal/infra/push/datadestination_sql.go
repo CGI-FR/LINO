@@ -287,8 +287,8 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 
 	log.Debug().Msg(fmt.Sprintf("received mode %s", rw.dd.mode))
 
-	switch {
-	case rw.dd.mode == push.Delete:
+	switch rw.dd.mode {
+	case push.Delete:
 		/* #nosec */
 		prepareStmt = "DELETE FROM " + rw.tableName() + " WHERE "
 		for i := 0; i < len(whereValues); i++ {
@@ -299,7 +299,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 		}
 		rw.headers = whereValues
 
-	case rw.dd.mode == push.Update:
+	case push.Update:
 		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpdateStatement(rw.tableName(), selectValues, whereValues, rw.table.PrimaryKey())
 		if pusherr != nil {
 			return pusherr
@@ -308,7 +308,7 @@ func (rw *SQLRowWriter) createStatement(row push.Row, where push.Row) *push.Erro
 			prepareStmt += " AND (" + rw.dd.whereClause + ")"
 		}
 
-	case rw.dd.mode == push.Upsert:
+	case push.Upsert:
 		prepareStmt, rw.headers, pusherr = rw.dd.dialect.UpsertStatement(rw.tableName(), selectValues, whereValues, rw.table.PrimaryKey())
 		if pusherr != nil {
 			return pusherr
@@ -427,7 +427,7 @@ func (rw *SQLRowWriter) disableConstraints() *push.Error {
 			return &push.Error{Description: err.Error()}
 		}
 
-		defer result.Close()
+		defer result.Close() //nolint:errcheck
 
 		var tableName, constraintName string
 		for result.Next() {

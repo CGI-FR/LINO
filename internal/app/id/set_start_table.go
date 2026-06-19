@@ -38,11 +38,11 @@ func newSetStartTableCommand(fullName string, err *os.File, out *os.File, in *os
 
 			e := id.SetStartTable(id.NewTable(table), idStorageFactory(ingressDescriptor))
 			if e != nil {
-				fmt.Fprintln(err, e.Description)
+				fmt.Fprintln(err, e.Description) //nolint:errcheck
 				os.Exit(1)
 			}
 
-			fmt.Fprintln(out, "successfully update start table ingress descriptor")
+			fmt.Fprintln(out, "successfully update start table ingress descriptor") //nolint:errcheck
 		},
 	}
 	cmd.SetOut(out)

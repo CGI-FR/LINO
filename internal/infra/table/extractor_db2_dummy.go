@@ -45,7 +45,7 @@ type Db2Dialect struct {
 }
 
 func (d Db2Dialect) SQL(schema string) string {
-	panic(fmt.Errorf("Not implemented"))
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (d Db2Dialect) GetExportType(dbtype string) (string, bool) {

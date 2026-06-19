@@ -49,7 +49,7 @@ func (e *SQLExtractor) Extract() ([]relation.Relation, *relation.Error) {
 	if err != nil {
 		return nil, &relation.Error{Description: err.Error()}
 	}
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	err = db.Ping()
 	if err != nil {

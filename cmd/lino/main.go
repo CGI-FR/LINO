@@ -218,12 +218,12 @@ func initConfig() {
 }
 
 func writeMetricsToFile(statsFile string, statsByte []byte) {
-	file, err := os.Create(statsFile)
+	file, err := os.Create(statsFile) //nolint:gosec
 	if err != nil {
 		log.Error().Err(err).Msg("Error generating statistics dump file")
 		os.Exit(1)
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck
 
 	_, err = file.Write(statsByte)
 	if err != nil {

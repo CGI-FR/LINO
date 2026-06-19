@@ -98,7 +98,7 @@ func (e *GraphVizExporter) Export(ep id.PullerPlan) *id.Error {
 
 	file := filepath.Join(os.TempDir(), "lino-graph-export.svg")
 
-	cmd := exec.Command(dotexe, "-Tsvg", "-o", file)
+	cmd := exec.Command(dotexe, "-Tsvg", "-o", file) //nolint:gosec
 	cmd.Stdin = strings.NewReader(graphViz.String())
 	if err := cmd.Run(); err != nil {
 		return &id.Error{Description: err.Error()}

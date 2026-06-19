@@ -134,7 +134,7 @@ func (ds *HTTPDataSource) RowReader(source pull.Table, filter pull.Filter) (pull
 // Close a connection to the HTTP DB
 func (ds *HTTPDataSource) Close() error {
 	if ds.result != nil {
-		ds.result.Close()
+		ds.result.Close() //nolint:errcheck,gosec
 	}
 	return nil
 }

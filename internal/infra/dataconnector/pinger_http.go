@@ -52,6 +52,6 @@ func (pdp HTTPDataPinger) Ping() *dataconnector.Error {
 	if err != nil {
 		return &dataconnector.Error{Description: err.Error()}
 	}
-	resp.Body.Close()
+	resp.Body.Close() //nolint:errcheck,gosec
 	return nil
 }

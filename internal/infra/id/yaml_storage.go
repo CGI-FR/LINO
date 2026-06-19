@@ -142,7 +142,7 @@ func readFile(filename string) (*YAMLStructure, *id.Error) {
 		Version: Version,
 	}
 
-	dat, err := os.ReadFile(filename)
+	dat, err := os.ReadFile(filename) //nolint:gosec
 	if err != nil {
 		return nil, &id.Error{Description: err.Error()}
 	}

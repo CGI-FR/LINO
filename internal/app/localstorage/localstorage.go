@@ -175,7 +175,7 @@ func readFile() (*YAMLCredentialsStore, error) {
 		return store, nil
 	}
 
-	dat, err := os.ReadFile(storeFile)
+	dat, err := os.ReadFile(storeFile) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func writeFile(list *YAMLCredentialsStore) error {
 
 	storeDir := path.Join(home, FilePath)
 	if _, err2 := os.Stat(storeDir); os.IsNotExist(err2) {
-		err = os.MkdirAll(storeDir, 0700)
+		err = os.MkdirAll(storeDir, 0o700)
 		if err != nil {
 			return err
 		}
@@ -219,7 +219,7 @@ func writeFile(list *YAMLCredentialsStore) error {
 
 	storeFile := path.Join(storeDir, FileName)
 
-	err = os.WriteFile(storeFile, out.Bytes(), 0600)
+	err = os.WriteFile(storeFile, out.Bytes(), 0o600)
 	if err != nil {
 		return err
 	}

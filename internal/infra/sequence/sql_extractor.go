@@ -54,7 +54,7 @@ func (e *SQLUpdator) Extract() ([]string, *sequence.Error) {
 	if err != nil {
 		return nil, &sequence.Error{Description: err.Error()}
 	}
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	err = db.Ping()
 	if err != nil {
@@ -89,7 +89,7 @@ func (e SQLUpdator) Status(seq sequence.Sequence) (sequence.Sequence, *sequence.
 	if err != nil {
 		return seq, &sequence.Error{Description: err.Error()}
 	}
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	err = db.Ping()
 	if err != nil {
@@ -122,7 +122,7 @@ func (e *SQLUpdator) Update(seqList []sequence.Sequence) *sequence.Error {
 	if err != nil {
 		return &sequence.Error{Description: err.Error()}
 	}
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	err = db.Ping()
 	if err != nil {

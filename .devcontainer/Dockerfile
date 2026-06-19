@@ -15,4 +15,4 @@
 # You should have received a copy of the GNU General Public License
 # along with LINO.  If not, see <http://www.gnu.org/licenses/>.
 
-FROM ghcr.io/cgi-fr/lino-dev-container:v3.0.0
+FROM ghcr.io/cgi-fr/lino-dev-container:v3.0.1

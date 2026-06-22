@@ -10,7 +10,7 @@ require (
 	github.com/cgi-fr/rimo v0.4.0
 	github.com/coder/websocket v1.8.15
 	github.com/docker/docker-credential-helpers v0.9.5
-	github.com/go-sql-driver/mysql v1.9.3
+	github.com/go-sql-driver/mysql v1.10.0
 	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ibmdb/go_ibm_db v0.5.4
@@ -32,7 +32,7 @@ require (
 )
 
 require (
-	filippo.io/edwards25519 v1.1.0 // indirect
+	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect

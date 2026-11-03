@@ -14,6 +14,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## [3.8.0]
+
+- `Added` support loading URL from environment variable [#446](https://github.com/CGI-FR/LINO/issues/446)
+
 ## [3.7.0]
 
 - `Added` logging opening DB connexion for `lino query` command that use new SafeURL for display connection URLs without user and password

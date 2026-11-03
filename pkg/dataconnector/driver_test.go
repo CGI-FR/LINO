@@ -59,8 +59,8 @@ func (s *ErrorStorage) Store(m *dataconnector.DataConnector) *dataconnector.Erro
 }
 
 func TestAddToNonEmptyStorage(t *testing.T) {
-	storage := &MemoryStorage{repo: []dataconnector.DataConnector{dataconnector.DataConnector{Name: "First", URL: "test://localhost:1234"}}}
-	alias := &dataconnector.DataConnector{Name: "Second", URL: "test://localhost:1234"}
+	storage := &MemoryStorage{repo: []dataconnector.DataConnector{dataconnector.DataConnector{Name: "First", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}}}}
+	alias := &dataconnector.DataConnector{Name: "Second", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}}
 
 	err := dataconnector.Add(storage, alias)
 	aliases, _ := storage.List()
@@ -70,8 +70,8 @@ func TestAddToNonEmptyStorage(t *testing.T) {
 }
 
 func TestAddExistingToStorage(t *testing.T) {
-	storage := &MemoryStorage{repo: []dataconnector.DataConnector{dataconnector.DataConnector{Name: "Exists", URL: "test://localhost:1234"}}}
-	alias := &dataconnector.DataConnector{Name: "Exists", URL: "test://localhost:1234"}
+	storage := &MemoryStorage{repo: []dataconnector.DataConnector{dataconnector.DataConnector{Name: "Exists", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}}}}
+	alias := &dataconnector.DataConnector{Name: "Exists", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}}
 
 	err := dataconnector.Add(storage, alias)
 	aliases, _ := storage.List()
@@ -82,7 +82,7 @@ func TestAddExistingToStorage(t *testing.T) {
 
 func TestAddStorageListErrorHandling(t *testing.T) {
 	storage := &ErrorStorage{&dataconnector.Error{Description: "ListError"}, nil}
-	alias := &dataconnector.DataConnector{Name: "Test", URL: "test://localhost:1234"}
+	alias := &dataconnector.DataConnector{Name: "Test", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}}
 
 	err := dataconnector.Add(storage, alias)
 
@@ -92,7 +92,7 @@ func TestAddStorageListErrorHandling(t *testing.T) {
 
 func TestAddStorageStoreErrorHandling(t *testing.T) {
 	storage := &ErrorStorage{nil, &dataconnector.Error{Description: "StoreError"}}
-	alias := &dataconnector.DataConnector{Name: "Test", URL: "test://localhost:1234"}
+	alias := &dataconnector.DataConnector{Name: "Test", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}}
 
 	err := dataconnector.Add(storage, alias)
 
@@ -111,7 +111,7 @@ func TestGetFromEmptyStorage(t *testing.T) {
 }
 
 func TestGetFromNonEmptyStorage(t *testing.T) {
-	storage := &MemoryStorage{repo: []dataconnector.DataConnector{dataconnector.DataConnector{Name: "First", URL: "test://localhost:1234"}, dataconnector.DataConnector{Name: "Second", URL: "test://localhost:5678"}}}
+	storage := &MemoryStorage{repo: []dataconnector.DataConnector{dataconnector.DataConnector{Name: "First", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}}, dataconnector.DataConnector{Name: "Second", URL: dataconnector.ValueHolder{Value: "test://localhost:5678"}}}}
 	name := "First"
 
 	alias, err := dataconnector.Get(storage, name)
@@ -119,11 +119,11 @@ func TestGetFromNonEmptyStorage(t *testing.T) {
 	assert.Nil(t, err, "An error occurred while using Get method")
 	assert.NotNil(t, alias, "An alias should be returned")
 	assert.Equal(t, name, alias.Name, "Name of returned alias is invalid")
-	assert.Equal(t, "test://localhost:1234", alias.URL, "URL of returned alias is invalid")
+	assert.Equal(t, "test://localhost:1234", alias.URL.Value, "URL of returned alias is invalid")
 }
 
 func TestGetNonExistingFromNonEmptyStorage(t *testing.T) {
-	storage := &MemoryStorage{repo: []dataconnector.DataConnector{dataconnector.DataConnector{Name: "First", URL: "test://localhost:1234"}, dataconnector.DataConnector{Name: "Second", URL: "test://localhost:5678"}}}
+	storage := &MemoryStorage{repo: []dataconnector.DataConnector{dataconnector.DataConnector{Name: "First", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}}, dataconnector.DataConnector{Name: "Second", URL: dataconnector.ValueHolder{Value: "test://localhost:5678"}}}}
 	name := "Third"
 
 	alias, err := dataconnector.Get(storage, name)
@@ -153,7 +153,7 @@ func TestListFromEmptyStorage(t *testing.T) {
 }
 
 func TestListFromNonEmptyStorage(t *testing.T) {
-	storage := &MemoryStorage{repo: []dataconnector.DataConnector{dataconnector.DataConnector{Name: "First", URL: "test://localhost:1234"}, dataconnector.DataConnector{Name: "Second", URL: "test://localhost:5678"}}}
+	storage := &MemoryStorage{repo: []dataconnector.DataConnector{dataconnector.DataConnector{Name: "First", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}}, dataconnector.DataConnector{Name: "Second", URL: dataconnector.ValueHolder{Value: "test://localhost:5678"}}}}
 
 	aliases, err := dataconnector.List(storage)
 
@@ -187,7 +187,7 @@ func TestAdd(t *testing.T) {
 			want *dataconnector.Error
 		}{name: "Empty storage", args: args{
 			&MemoryStorage{},
-			&dataconnector.DataConnector{Name: "Test", URL: "test://localhost:1234"},
+			&dataconnector.DataConnector{Name: "Test", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}},
 		}, want: nil},
 		struct {
 			name string
@@ -195,7 +195,7 @@ func TestAdd(t *testing.T) {
 			want *dataconnector.Error
 		}{name: "read only alias", args: args{
 			&MemoryStorage{},
-			&dataconnector.DataConnector{Name: "readonly", URL: "test://localhost:1234", ReadOnly: true},
+			&dataconnector.DataConnector{Name: "readonly", URL: dataconnector.ValueHolder{Value: "test://localhost:1234"}, ReadOnly: true},
 		}, want: nil},
 	}
 	for _, tt := range tests {

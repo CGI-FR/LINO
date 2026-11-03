@@ -1,9 +1,11 @@
 package urlbuilder
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 
+	"github.com/cgi-fr/lino/pkg/dataconnector"
 	"github.com/stretchr/testify/assert"
 	"github.com/xo/dburl"
 )
@@ -35,4 +37,30 @@ func TestBuildOracleURL(t *testing.T) {
 			assert.Equal(t, tt.want, strings.ReplaceAll(strings.ReplaceAll(url.DSN, "TIMEOUT=0&", ""), "&TIMEOUT=0", ""))
 		})
 	}
+}
+
+func TestBuildURLFromEnv(t *testing.T) {
+	connectionURL := "postgres://postgres:secret@localhost/test"
+	t.Setenv("LINO_DB_URL", connectionURL)
+	dc := dataconnector.DataConnector{
+		URL: dataconnector.ValueHolder{ValueFromEnv: "LINO_DB_URL"},
+	}
+
+	u := BuildURL(&dc, nil)
+
+	assert.Equal(t, connectionURL, u.URL.String())
+}
+
+func TestBuildURLFromEnvUsesValueWhenMissing(t *testing.T) {
+	t.Setenv("LINO_DB_URL", "")
+	connectionURL := "postgres://postgres:secret@localhost/test"
+	dc := dataconnector.DataConnector{
+		URL: dataconnector.ValueHolder{Value: connectionURL, ValueFromEnv: "LINO_DB_URL"},
+	}
+	var output bytes.Buffer
+
+	u := BuildURL(&dc, &output)
+
+	assert.Equal(t, connectionURL, u.URL.String())
+	assert.Contains(t, output.String(), "warn: missing environment variable LINO_DB_URL")
 }

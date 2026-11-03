@@ -96,6 +96,26 @@ dataconnectors:
     url: postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable
 ```
 
+The URL, user and password can be loaded from environment variables when adding a connector:
+
+```bash
+$ lino dataconnector add --url-from-env DB_URL --user-from-env DB_USER --password-from-env DB_PASSWORD source
+```
+
+This writes the following configuration. Existing literal URL values remain supported.
+
+```yaml
+version: v1
+dataconnectors:
+  - name: source
+    url:
+      valueFromEnv: DB_URL
+    user:
+      valueFromEnv: DB_USER
+    password:
+      valueFromEnv: DB_PASSWORD
+```
+
 ## Create relationships
 
 LINO create a consistent sample database. To perform extraction that respect foreign keys constraints LINO have to extract relationships between tables.

@@ -39,6 +39,17 @@ testcases:
       - result.code ShouldEqual 1
       - result.systemout ShouldContainSubstring "ping failed"
 
+- name: ping success url from env
+  steps:
+  - script: rm -f credentials.yaml dataconnector.yaml
+  - script: lino dataconnector add --url-from-env=DB_URL source
+    assertions:
+      - result.code ShouldEqual 0
+  - script: DB_URL='postgresql://postgres:sakila@source:5432/postgres?sslmode=disable' lino dataconnector ping source
+    assertions:
+      - result.code ShouldEqual 0
+      - result.systemout ShouldContainSubstring "ping success"
+
 - name: ping success password from env
   steps:
   # Clean working directory

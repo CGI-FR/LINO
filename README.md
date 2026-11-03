@@ -110,10 +110,10 @@ dataconnectors:
   - name: source
     url:
       valueFromEnv: DB_URL
-              user:
-                valueFromEnv: DB_USER
-              password:
-                valueFromEnv: DB_PASSWORD
+    user:
+      valueFromEnv: DB_USER
+    password:
+      valueFromEnv: DB_PASSWORD
 ```
 
 ## Create relationships

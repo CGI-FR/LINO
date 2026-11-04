@@ -79,7 +79,6 @@ type echoServer struct {
 func (s echoServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("Authorization")
 	if len(auth) > 0 {
-		log.Printf("receive header auth  %v", auth)
 		if userpass, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(auth, "Basic ")); err != nil {
 			s.logf("failed to decode basic auth %s %v", r.RemoteAddr, err)
 			return

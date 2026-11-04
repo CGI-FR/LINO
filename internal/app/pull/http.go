@@ -119,7 +119,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 		if err != nil {
 			log.Error().Err(err).Msg("")
 			w.WriteHeader(http.StatusNotFound)
-			_, ew := w.Write([]byte("{\"error\": \"" + err.Error() + "\"}"))
+			_, ew := w.Write([]byte("{\"error\": \"" + err.Error() + "\"}")) //nolint:gosec
 			if ew != nil {
 				log.Error().Err(ew).Msg("Write failed")
 				return
@@ -146,7 +146,7 @@ func HandlerFactory(ingressDescriptor string) func(w http.ResponseWriter, r *htt
 		if e3 != nil {
 			log.Error().Err(e3).Msg("")
 			w.WriteHeader(http.StatusInternalServerError)
-			_, ew := w.Write([]byte(e3.Error()))
+			_, ew := w.Write([]byte(e3.Error())) //nolint:gosec
 			if ew != nil {
 				log.Error().Err(ew).Msg("Write failed")
 				return

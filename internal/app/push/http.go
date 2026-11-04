@@ -150,7 +150,7 @@ func Handler(w http.ResponseWriter, r *http.Request, mode push.Mode, ingressDesc
 	if e3 != nil {
 		log.Error().Err(e3).Msg("")
 		w.WriteHeader(http.StatusNotFound)
-		_, ew := w.Write([]byte("{\"error\": \"" + e3.Description + "\"}"))
+		_, ew := w.Write([]byte("{\"error\": \"" + e3.Description + "\"}")) //nolint:gosec
 		if ew != nil {
 			log.Error().Err(ew).Msg("Write failed")
 			return

@@ -212,3 +212,30 @@ testcases:
         assertions:
           - result.code ShouldEqual 0
           - result.systemout ShouldBeEmpty
+
+  - name: add dataconnector with url-from-env
+    steps:
+      - type: exec
+        script: rm -f *
+      - type: exec
+        script: lino dataconnector add --url-from-env=DB_URL --user-from-env=DB_USER --password-from-env=DB_PASSWORD source
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldContainSubstring success
+      - script: |-
+          cat > expected.yml <<EOF
+          version: v1
+          dataconnectors:
+            - name: source
+              url:
+                valueFromEnv: DB_URL
+              readonly: false
+              user:
+                valueFromEnv: DB_USER
+              password:
+                valueFromEnv: DB_PASSWORD
+          EOF
+      - script: diff expected.yml dataconnector.yaml
+        assertions:
+          - result.code ShouldEqual 0
+          - result.systemout ShouldBeEmpty

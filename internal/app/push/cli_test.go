@@ -30,7 +30,7 @@ import (
 )
 
 func Test_getDataDestination(t *testing.T) {
-	readOnlyDC := dataconnector.DataConnector{Name: "connector-ro", URL: "postgres://localhost/test", ReadOnly: true}
+	readOnlyDC := dataconnector.DataConnector{Name: "connector-ro", URL: dataconnector.ValueHolder{Value: "postgres://localhost/test"}, ReadOnly: true}
 	dcStorage := dataconnector.MockStorage{}
 	dcStorage.On("List").Return([]dataconnector.DataConnector{readOnlyDC}, nil)
 

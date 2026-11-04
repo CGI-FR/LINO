@@ -20,7 +20,7 @@ package dataconnector
 // DataConnector holds a name (alias) and a URI to a database.
 type DataConnector struct {
 	Name     string
-	URL      string
+	URL      ValueHolder
 	ReadOnly bool
 	Schema   string
 	User     ValueHolder

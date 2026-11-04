@@ -38,7 +38,7 @@ type YAMLStructure struct {
 // YAMLDataConnector defines how to store a dataconnector in YAML format
 type YAMLDataConnector struct {
 	Name     string           `yaml:"name"`
-	URL      string           `yaml:"url"`
+	URL      YAMLURL          `yaml:"url"`
 	ReadOnly bool             `yaml:"readonly"`
 	Schema   string           `yaml:"schema,omitempty"`
 	User     *YAMLValueHolder `yaml:"user,omitempty"`
@@ -48,6 +48,30 @@ type YAMLDataConnector struct {
 type YAMLValueHolder struct {
 	Value        *string `yaml:"value,omitempty"`
 	ValueFromEnv *string `yaml:"valueFromEnv,omitempty"`
+}
+
+type YAMLURL struct {
+	YAMLValueHolder
+}
+
+func (u *YAMLURL) UnmarshalYAML(node *yaml.Node) error {
+	if node.Kind == yaml.ScalarNode {
+		u.Value = &node.Value
+		return nil
+	}
+
+	return node.Decode(&u.YAMLValueHolder)
+}
+
+func (u YAMLURL) MarshalYAML() (interface{}, error) {
+	if u.ValueFromEnv == nil {
+		if u.Value != nil {
+			return *u.Value, nil
+		}
+		return "", nil
+	}
+
+	return u.YAMLValueHolder, nil
 }
 
 // NewYAMLStorage create a new YAML storage
@@ -70,9 +94,15 @@ func (s YAMLStorage) List() ([]dataconnector.DataConnector, *dataconnector.Error
 	for _, ym := range list.DataConnectors {
 		m := dataconnector.DataConnector{
 			Name:     ym.Name,
-			URL:      ym.URL,
+			URL:      dataconnector.ValueHolder{},
 			ReadOnly: ym.ReadOnly,
 			Schema:   ym.Schema,
+		}
+		if ym.URL.Value != nil {
+			m.URL.Value = *ym.URL.Value
+		}
+		if ym.URL.ValueFromEnv != nil {
+			m.URL.ValueFromEnv = *ym.URL.ValueFromEnv
 		}
 		if ym.User != nil {
 			if ym.User.Value != nil {
@@ -102,11 +132,16 @@ func (s YAMLStorage) Store(m *dataconnector.DataConnector) *dataconnector.Error 
 
 	yml := YAMLDataConnector{
 		Name:     m.Name,
-		URL:      m.URL,
 		ReadOnly: m.ReadOnly,
 		Schema:   m.Schema,
 		User:     nil,
 		Password: nil,
+	}
+	if m.URL.Value != "" {
+		yml.URL.Value = &m.URL.Value
+	}
+	if m.URL.ValueFromEnv != "" {
+		yml.URL.ValueFromEnv = &m.URL.ValueFromEnv
 	}
 
 	if m.User.ValueFromEnv != "" || m.User.Value != "" {

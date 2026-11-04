@@ -145,7 +145,19 @@ func init() {
 }
 
 func BuildURL(dc *dataconnector.DataConnector, out io.Writer) *dburl.URL {
-	u, e2 := dburl.Parse(dc.URL)
+	connectionURL := dc.URL.Value
+	if dc.URL.ValueFromEnv != "" {
+		urlFromEnv := os.Getenv(dc.URL.ValueFromEnv)
+		if urlFromEnv == "" {
+			if out != nil {
+				fmt.Fprintf(out, "warn: missing environment variable %s", dc.URL.ValueFromEnv) //nolint:errcheck
+				fmt.Fprintln(out)                                                              //nolint:errcheck
+			}
+		} else {
+			connectionURL = urlFromEnv
+		}
+	}
+	u, e2 := dburl.Parse(connectionURL)
 	if e2 != nil {
 		fmt.Fprintln(out, e2.Error()) //nolint:errcheck
 		os.Exit(3)

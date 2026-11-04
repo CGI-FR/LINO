@@ -37,33 +37,47 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 	var flagPasswordFromEnv string
 	var flagUserFromEnv string
 	var flagUserValue string
+	var flagURLFromEnv string
 
 	cmd := &cobra.Command{
 		Use:     "add [Name] [URL]",
 		Short:   "Add database aliases",
 		Long:    "",
 		Example: fmt.Sprintf("  %[1]s dataconnector add mydatabase postgresql://postgres:sakila@localhost:5432/postgres?sslmode=disable", fullName),
-		Args:    cobra.ExactArgs(2),
+		Args: func(cmd *cobra.Command, args []string) error {
+			if flagURLFromEnv != "" {
+				if flagAskPassword {
+					return fmt.Errorf("cannot use --password with --url-from-env, use --password-from-env")
+				}
+				return cobra.ExactArgs(1)(cmd, args)
+			}
+			return cobra.ExactArgs(2)(cmd, args)
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-			urlin := args[1]
-
-			u, e2 := dburl.Parse(urlin)
-			if e2 != nil {
-				fmt.Fprintln(err, e2.Error()) //nolint:errcheck
-				os.Exit(3)
+			var u *dburl.URL
+			username := ""
+			password := ""
+			if len(args) == 2 {
+				var e2 error
+				u, e2 = dburl.Parse(args[1])
+				if e2 != nil {
+					fmt.Fprintln(err, e2.Error()) //nolint:errcheck
+					os.Exit(3)
+				}
+				var isset bool
+				password, isset = u.User.Password()
+				if isset {
+					fmt.Fprintln(err, "warn: password should not be included in URI, use --password-from-env or --password") //nolint:errcheck
+					u.User = url.User(u.User.Username())
+				}
+				username = u.User.Username()
 			}
-
-			password, isset := u.User.Password()
-			if isset {
-				fmt.Fprintln(err, "warn: password should not be included in URI, use --password-from-env or --password") //nolint:errcheck
-				u.User = url.User(u.User.Username())
-			}
-
-			username := u.User.Username()
 			if flagUserValue != "" {
 				username = flagUserValue
-				u.User = url.User(username)
+				if u != nil {
+					u.User = url.User(username)
+				}
 			}
 
 			if flagAskPassword {
@@ -79,17 +93,24 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 				}
 			}
 
-			if password != "" {
+			if password != "" && u != nil {
 				e3 := urlbuilder.StorePassword(u, password, err)
 				if e3 != nil {
 					fmt.Fprintln(err, e3.Error()) //nolint:errcheck
 					os.Exit(3)
 				}
 			}
+			connectionURL := ""
+			if u != nil {
+				connectionURL = u.URL.String()
+			}
 
 			alias := dataconnector.DataConnector{
-				Name:     name,
-				URL:      u.URL.String(),
+				Name: name,
+				URL: dataconnector.ValueHolder{
+					Value:        connectionURL,
+					ValueFromEnv: flagURLFromEnv,
+				},
 				ReadOnly: flagReadonly,
 				Schema:   flagSchema,
 				User: dataconnector.ValueHolder{
@@ -114,6 +135,7 @@ func newAddCommand(fullName string, err *os.File, out *os.File, in *os.File) *co
 	}
 	cmd.Flags().BoolVarP(&flagReadonly, "read-only", "r", false, "Write protection flag that prevents modification")
 	cmd.Flags().StringVarP(&flagSchema, "schema", "s", "", "Default schema to use with that dataconnector")
+	cmd.Flags().StringVar(&flagURLFromEnv, "url-from-env", "", "Name of environment variable containing URL")
 	cmd.Flags().StringVarP(&flagPasswordFromEnv, "password-from-env", "P", "", "Name of environment variable containing password")
 	cmd.Flags().StringVarP(&flagUserFromEnv, "user-from-env", "U", "", "Name of environment variable containing username")
 	cmd.Flags().StringVarP(&flagUserValue, "user", "u", "", "Username to connect")

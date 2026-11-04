@@ -117,11 +117,11 @@ func open(url string) error {
 
 	switch runtime.GOOS {
 	case "linux":
-		err = exec.Command("xdg-open", url).Start()
+		err = exec.Command("xdg-open", url).Start() //nolint:gosec
 	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start() //nolint:gosec
 	case "darwin":
-		err = exec.Command("open", url).Start()
+		err = exec.Command("open", url).Start() //nolint:gosec
 	default:
 		err = fmt.Errorf("unsupported platform")
 	}

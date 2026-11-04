@@ -40,7 +40,7 @@ func TestBuildOracleURL(t *testing.T) {
 }
 
 func TestBuildURLFromEnv(t *testing.T) {
-	connectionURL := "postgres://postgres:secret@localhost/test"
+	connectionURL := "postgres://postgres:secret@localhost/test" //nolint:gosec
 	t.Setenv("LINO_DB_URL", connectionURL)
 	dc := dataconnector.DataConnector{
 		URL: dataconnector.ValueHolder{ValueFromEnv: "LINO_DB_URL"},
@@ -53,7 +53,7 @@ func TestBuildURLFromEnv(t *testing.T) {
 
 func TestBuildURLFromEnvUsesValueWhenMissing(t *testing.T) {
 	t.Setenv("LINO_DB_URL", "")
-	connectionURL := "postgres://postgres:secret@localhost/test"
+	connectionURL := "postgres://postgres:secret@localhost/test" //nolint:gosec
 	dc := dataconnector.DataConnector{
 		URL: dataconnector.ValueHolder{Value: connectionURL, ValueFromEnv: "LINO_DB_URL"},
 	}
